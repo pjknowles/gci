@@ -16,7 +16,6 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    Hello.cpp \
     TreeCIHamiltonian.cpp
 
 HEADERS += \
