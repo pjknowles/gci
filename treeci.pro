@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core
+QT       -= core
 
 QT       -= gui
 
@@ -16,10 +16,12 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    TreeCIHamiltonian.cpp
+    TreeCIHamiltonian.cpp \
+    TreeCIParameters.cpp
 
 HEADERS += \
-    TreeCIHamiltonian.h
+    TreeCIHamiltonian.h \
+    TreeCIParameters.h
 
 
 
