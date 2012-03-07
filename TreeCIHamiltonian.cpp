@@ -3,6 +3,8 @@
 #include <sstream>
 #include <istream>
 #include <fstream>
+#include <ostream>
+#include <iterator>
 
 using namespace std;
 
@@ -21,15 +23,15 @@ void TreeCIHamiltonian::loadHamiltonian(string filename) {
 
     ijSize = (basisSize*(basisSize+1))/2;
     ijklSize =ijSize*ijSize;
-    integrals_a = new double[ijSize];
+    integrals_a = new vector<double>(ijSize,0.0);
     if (spinUnrestricted)
-        integrals_b = new double[ijSize];
+        integrals_b = new vector<double>(ijSize,0.0);
     else
         integrals_b = integrals_a;
-    integrals_aa = new double[ijklSize];
+    integrals_aa = new vector<double>(ijklSize,0.0);
     if (spinUnrestricted) {
-        integrals_ab = new double[ijklSize];
-        integrals_bb = new double[ijklSize];
+        integrals_ab = new vector<double>(ijklSize,0.0);
+        integrals_bb = new vector<double>(ijklSize,0.0);
     } else {
         integrals_ab = integrals_aa;
         integrals_bb = integrals_aa;
@@ -43,25 +45,25 @@ void TreeCIHamiltonian::loadHamiltonian(string filename) {
     int i,j,k,l,ij,kl,ijkl;
     while (s >> ss && ss != "&END") ;
     while (s >> value) {
-        s >> i;
-        s >> j;
-        s >> k;
-        s >> l;
+        s >> i; s >> j; s >> k; s >> l;
         ij = i > j ? (i*(i-1))/2+j : (j*(j-1))/2+i;
         kl = k > l ? (k*(k-1))/2+l : (l*(l-1))/2+k;
         if (kl) {
          ijkl = (ij-1)*ijSize+kl-1;
-        cout << "("<< i << j <<"|"<< k << l <<") = " << value <<endl;
-        integrals_aa[ijkl]=value;
+//        cout << "("<< i << j <<"|"<< k << l <<") = " << value <<endl;
+        integrals_aa->at(ijkl)=value;
         } else if (ij) {
-            cout << "h("<< i <<","<< j <<") = " << value <<endl;
-            integrals_a[ij-1]=value;
+//            cout << "h("<< i <<","<< j <<") = " << value <<endl;
+            integrals_a->at(ij-1)=value;
         } else
             coreEnergy = value;
     }
     s.close();
     loaded=true;
-}
+//    cout << "integrals_a: ";copy(integrals_a->begin(), integrals_a->end(), ostream_iterator<double>(cout, ", "));cout <<endl;
+//    cout << "integrals_aa: ";copy(integrals_aa->begin(), integrals_aa->end(), ostream_iterator<double>(cout, ", "));cout <<endl;
+
+    }
 
 void TreeCIHamiltonian::unloadHamiltonian() {
     delete [] integrals_a;

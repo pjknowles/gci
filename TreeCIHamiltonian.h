@@ -1,6 +1,7 @@
 #ifndef TREECIHAMILTONIAN_H
 #define TREECIHAMILTONIAN_H
 #include <string>
+#include <vector>
 #include "TreeCIParameters.h"
 using namespace std;
 /**
@@ -22,11 +23,11 @@ public:
     bool loaded;  /**< whether the integrals are loaded */
     bool spinUnrestricted; /**< whether alpha and beta spin orbitals are different */
     double coreEnergy; /**< core energy */
-    double *integrals_a;  /**< point to aa integrals */
-    double *integrals_b; /**< point to bb integrals */
-    double *integrals_aa; /**< point to aaaa integrals */
-    double *integrals_ab; /**< point to aabb integrals */
-    double *integrals_bb; /**< point to bbbb integrals */
+    vector<double> *integrals_a;  /**< point to aa integrals */
+    vector<double> *integrals_b; /**< point to bb integrals */
+    vector<double> *integrals_aa; /**< point to aaaa integrals */
+    vector<double> *integrals_ab; /**< point to aabb integrals */
+    vector<double> *integrals_bb; /**< point to bbbb integrals */
 private:
     int ijSize;
     int ijklSize;
