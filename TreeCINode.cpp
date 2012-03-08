@@ -15,5 +15,3 @@ TreeCINode::TreeCINode(TreeCINode* myparent,TreeCIExcitation myexcitation)
 //{
 ////    if (parent!=NULL)
 //}
-
-TreeCIExcitation TreeCINode::emptyExcitation=TreeCIExcitation();
