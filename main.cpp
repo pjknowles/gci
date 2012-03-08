@@ -3,8 +3,7 @@
 int main(int argc, char *argv[])
 {
 
-  TreeCIHamiltonian hh;
-  hh.loadHamiltonian();
+    TreeCIHamiltonian hh("FCIDUMP");
 
   return 0;
 }

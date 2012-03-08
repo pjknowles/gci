@@ -8,17 +8,21 @@
 
 using namespace std;
 
-TreeCIHamiltonian::TreeCIHamiltonian()
+TreeCIHamiltonian::TreeCIHamiltonian(string filename)
 {
+    loaded = false;
+    verbosity=1;
+    if (filename != "") load(filename);
 }
 
 TreeCIHamiltonian::~TreeCIHamiltonian() {
 
 }
 
-void TreeCIHamiltonian::loadHamiltonian(string filename) {
-    cout <<"Load hamiltonian from " << filename <<endl;
-    loadParameters(filename);
+void TreeCIHamiltonian::load(string filename) {
+    if (loaded) unload();
+    if (verbosity) cout <<"Load hamiltonian from " << filename <<endl;
+    TreeCIParameters::load(filename);
     spinUnrestricted=false;
 
     ijSize = (basisSize*(basisSize+1))/2;
@@ -50,28 +54,32 @@ void TreeCIHamiltonian::loadHamiltonian(string filename) {
         kl = k > l ? (k*(k-1))/2+l : (l*(l-1))/2+k;
         if (kl) {
          ijkl = (ij-1)*ijSize+kl-1;
-//        cout << "("<< i << j <<"|"<< k << l <<") = " << value <<endl;
+        if (verbosity>2) cout << "("<< i << j <<"|"<< k << l <<") = " << value <<endl;
         integrals_aa->at(ijkl)=value;
         } else if (ij) {
-//            cout << "h("<< i <<","<< j <<") = " << value <<endl;
+            if (verbosity>1) cout << "h("<< i <<","<< j <<") = " << value <<endl;
             integrals_a->at(ij-1)=value;
         } else
             coreEnergy = value;
     }
     s.close();
     loaded=true;
-//    cout << "integrals_a: ";copy(integrals_a->begin(), integrals_a->end(), ostream_iterator<double>(cout, ", "));cout <<endl;
-//    cout << "integrals_aa: ";copy(integrals_aa->begin(), integrals_aa->end(), ostream_iterator<double>(cout, ", "));cout <<endl;
+    if (verbosity>3) {
+        cout << "integrals_a: ";copy(integrals_a->begin(), integrals_a->end(), ostream_iterator<double>(cout, ", "));cout <<endl;
+        cout << "integrals_aa: ";copy(integrals_aa->begin(), integrals_aa->end(), ostream_iterator<double>(cout, ", "));cout <<endl;
+    }
 
     }
 
-void TreeCIHamiltonian::unloadHamiltonian() {
+void TreeCIHamiltonian::unload() {
+    if (loaded) {
     delete [] integrals_a;
     delete [] integrals_aa;
     if (spinUnrestricted) {
         delete [] integrals_b;
         delete [] integrals_ab;
         delete [] integrals_bb;
+    }
     }
     loaded=false;
 }

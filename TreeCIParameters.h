@@ -11,24 +11,21 @@
 class TreeCIParameters
 {
 public:
+
 /**
  * @brief
  *
+ * @param filename is the file containing the FCIDUMP. If present, loadParameters is called.
  */
-    TreeCIParameters();
+    TreeCIParameters(std::string filename="");
+
     ~TreeCIParameters();
-/**
- * @brief
- *
- * @param file
- */
-    TreeCIParameters(std::string file);
-    /**
-     * @brief
-     *
-     * @param file
-     */
-    void loadParameters(std::string file="FCIDUMP");
+    /*!
+     \brief
+    load basis size, number of electrons, spin from FCIDUMP file.
+     \param filename is the file containing the FCIDUMP.
+    */
+    void load(std::string filename="FCIDUMP"); /**< something */
     int basisSize; /**< number of orbitals */
     int nelec; /**< number of electrons */
     int ms2; /**< twice the spin quantum number, ie multiplicity minus one */

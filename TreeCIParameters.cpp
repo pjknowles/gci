@@ -4,23 +4,24 @@ using namespace std;
 #include <istream>
 #include <sstream>
 
-TreeCIParameters::TreeCIParameters()
+TreeCIParameters::TreeCIParameters(string filename)
 {
+    if (filename!="") load(filename);
 }
 
 TreeCIParameters::~TreeCIParameters()
 {
 }
 
-/**
- * @brief
- *
- * @param file
- */
-void TreeCIParameters::loadParameters(string file) { // dirty sucking in from FCIDUMP namelist
+
+void TreeCIParameters::load(string filename) { // dirty sucking in from FCIDUMP namelist
 //    cout << "loadParameters " <<file << endl;
     ifstream s;
-    s.open(file.c_str());
+    s.open(filename.c_str());
+    if ( (s.rdstate() & ifstream::failbit ) != 0 ) {
+        cerr << "Error opening " << filename <<endl;
+        throw "file missing";
+    }
     string ss, sslast="";
     while (s >> ss && ss != "&END") {
         string first = ss.substr(0,1);

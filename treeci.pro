@@ -12,16 +12,22 @@ TARGET = treeci
 CONFIG   += console
 CONFIG   -= app_bundle
 
+#INCLUDEPATH += /usr/local/boost
+
 TEMPLATE = app
 
 
 SOURCES += main.cpp \
     TreeCIHamiltonian.cpp \
-    TreeCIParameters.cpp
+    TreeCIParameters.cpp \
+    TreeCINode.cpp \
+    TreeCIExcitation.cpp
 
 HEADERS += \
     TreeCIHamiltonian.h \
-    TreeCIParameters.h
+    TreeCIParameters.h \
+    TreeCINode.h \
+    TreeCIExcitation.h
 
 
 

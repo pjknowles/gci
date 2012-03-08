@@ -12,14 +12,16 @@ using namespace std;
 class TreeCIHamiltonian : public TreeCIParameters
 {
 public:
-/**
- * @brief
- *
- */
-    TreeCIHamiltonian();
+
+/*!
+ \brief
+
+ \param filename : if present, call load
+*/
+    TreeCIHamiltonian(string filename="");
     ~TreeCIHamiltonian();
-    void loadHamiltonian(string filename="FCIDUMP"); /**< load integrals from FCIDUMP */
-    void unloadHamiltonian(); /**< destroy loaded integrals */
+    void load(string filename="FCIDUMP"); /**< load integrals from FCIDUMP */
+    void unload(); /**< destroy loaded integrals */
     bool loaded;  /**< whether the integrals are loaded */
     bool spinUnrestricted; /**< whether alpha and beta spin orbitals are different */
     double coreEnergy; /**< core energy */
@@ -31,6 +33,7 @@ public:
 private:
     int ijSize;
     int ijklSize;
+    int verbosity;
 };
 
 #endif // TREECIHAMILTONIAN_H
