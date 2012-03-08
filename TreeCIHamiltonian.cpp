@@ -8,21 +8,21 @@
 
 using namespace std;
 
-TreeCIHamiltonian::TreeCIHamiltonian(string filename)
+Hamiltonian::Hamiltonian(string filename)
 {
     loaded = false;
     verbosity=1;
     if (filename != "") load(filename);
 }
 
-TreeCIHamiltonian::~TreeCIHamiltonian() {
+Hamiltonian::~Hamiltonian() {
 
 }
 
-void TreeCIHamiltonian::load(string filename) {
+void Hamiltonian::load(string filename) {
     if (loaded) unload();
     if (verbosity) cout <<"Load hamiltonian from " << filename <<endl;
-    TreeCIParameters::load(filename);
+    Parameters::load(filename);
     spinUnrestricted=false;
 
     ijSize = (basisSize*(basisSize+1))/2;
@@ -71,7 +71,7 @@ void TreeCIHamiltonian::load(string filename) {
 
     }
 
-void TreeCIHamiltonian::unload() {
+void Hamiltonian::unload() {
     if (loaded) {
     delete [] integrals_a;
     delete [] integrals_aa;

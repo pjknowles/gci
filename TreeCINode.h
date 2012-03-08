@@ -2,25 +2,30 @@
 #define TREECINODE_H
 #include <vector>
 #include "TreeCIExcitation.h"
+
+namespace TreeCI {
 /*!
  \brief
 
 */
-class TreeCINode
+class Node
 {
 public:
 /*!
  \brief
 
 */
-    TreeCINode(TreeCINode* parent=NULL,TreeCIExcitation excitation=TreeCIExcitation::emptyTreeCIExcitation);
+    Node(Node* parent=NULL,Excitation excitation=Excitation::emptyTreeCIExcitation);
 
-    TreeCINode* parent; /*!< the parent of this node */
+    Node* parent; /*!< the parent of this node */
     bool terminal; /*!< whether or not this is a terminal node */
-    std::vector<TreeCINode> children; /*!< the children of this node */
-    TreeCIExcitation excitation; /*!< the excitation that produced this node from its parent */
-    std::vector<TreeCIExcitation> excitations;
+    std::vector<Node> children; /*!< the children of this node */
+    Excitation excitation; /*!< the excitation that produced this node from its parent */
+    std::vector<Excitation> excitations;
 
 };
+}
+
+using namespace TreeCI;
 
 #endif // TREECINODE_H

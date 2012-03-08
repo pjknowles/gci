@@ -3,12 +3,13 @@
 #include <string>
 #include <iostream>
 
+namespace TreeCI {
 /**
  * @brief
  * Class holds dimension and other parameters for FCI basis
  *
  */
-class TreeCIParameters
+class Parameters
 {
 public:
 
@@ -17,9 +18,9 @@ public:
  *
  * @param filename is the file containing the FCIDUMP. If present, loadParameters is called.
  */
-    TreeCIParameters(std::string filename="");
+    Parameters(std::string filename="");
 
-    ~TreeCIParameters();
+    ~Parameters();
     /*!
      \brief
     load basis size, number of electrons, spin from FCIDUMP file.
@@ -32,5 +33,8 @@ public:
 
 
 };
+}
+
+using namespace TreeCI;
 
 #endif // TREECIPARAMETERS_H

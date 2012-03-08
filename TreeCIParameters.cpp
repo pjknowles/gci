@@ -4,17 +4,17 @@ using namespace std;
 #include <istream>
 #include <sstream>
 
-TreeCIParameters::TreeCIParameters(string filename)
+Parameters::Parameters(string filename)
 {
     if (filename!="") load(filename);
 }
 
-TreeCIParameters::~TreeCIParameters()
+Parameters::~Parameters()
 {
 }
 
 
-void TreeCIParameters::load(string filename) { // dirty sucking in from FCIDUMP namelist
+void Parameters::load(string filename) { // dirty sucking in from FCIDUMP namelist
 //    cout << "loadParameters " <<file << endl;
     ifstream s;
     s.open(filename.c_str());

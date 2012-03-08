@@ -4,12 +4,14 @@
 #include <vector>
 #include "TreeCIParameters.h"
 using namespace std;
+
+namespace TreeCI {
 /**
  * @brief
  * Class holds hamiltonian operator for FCI or other calculation
  *
  */
-class TreeCIHamiltonian : public TreeCIParameters
+class Hamiltonian : public Parameters
 {
 public:
 
@@ -18,8 +20,8 @@ public:
 
  \param filename : if present, call load
 */
-    TreeCIHamiltonian(string filename="");
-    ~TreeCIHamiltonian();
+    Hamiltonian(string filename="");
+    ~Hamiltonian();
     void load(string filename="FCIDUMP"); /**< load integrals from FCIDUMP */
     void unload(); /**< destroy loaded integrals */
     bool loaded;  /**< whether the integrals are loaded */
@@ -35,5 +37,8 @@ private:
     int ijklSize;
     int verbosity;
 };
+}
+
+using namespace TreeCI;
 
 #endif // TREECIHAMILTONIAN_H

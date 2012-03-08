@@ -1,11 +1,11 @@
 #ifndef TREECIEXCITATION_H
 #define TREECIEXCITATION_H
-
+namespace TreeCI {
 /*!
  \brief
 
 */
-class TreeCIExcitation
+class Excitation
 {
 public:
 /*!
@@ -16,11 +16,14 @@ public:
  \brief
 
 */
-    TreeCIExcitation();
+    Excitation();
     int h1,h2,p1,p2;
     int rank;
 
-    static TreeCIExcitation emptyTreeCIExcitation;
+    static Excitation emptyTreeCIExcitation;
 };
+}
+
+using namespace TreeCI;
 
 #endif // TREECIEXCITATION_H

@@ -1,7 +1,7 @@
 #include "TreeCIDeterminant.h"
 #include <iostream>
 
-TreeCIDeterminant::TreeCIDeterminant(TreeCIParameters* parameters)
+Determinant::Determinant(Parameters* parameters)
 {
     if (parameters == NULL) {
         nelec=999999999;
@@ -14,7 +14,7 @@ TreeCIDeterminant::TreeCIDeterminant(TreeCIParameters* parameters)
     }
 }
 
-int TreeCIDeterminant::create(int orbital) {
+int Determinant::create(int orbital) {
 //    std::cout << "orbitals.size()" << orbitals.size() << "orbital "<<orbital <<std::endl;
     if (orbital==(int)0 || orbital > (int) basisSize || orbital < -(int)basisSize) throw "invalid orbital";
     int phase=1;
@@ -44,7 +44,7 @@ int TreeCIDeterminant::create(int orbital) {
     return phase;
 }
 
-int TreeCIDeterminant::destroy(int orbital) {
+int Determinant::destroy(int orbital) {
     if (orbital==(int)0 || orbital > (int) basisSize || orbital < -(int)basisSize) throw "invalid orbital";
     if (orbital > 0) {
         if (orbitalsAlpha.size() <= 0) throw "too few electrons in determinant";

@@ -3,11 +3,12 @@
 #include "TreeCIParameters.h"
 #include <vector>
 
+namespace TreeCI {
 /*!
  \brief
 
 */
-class TreeCIDeterminant : public TreeCIParameters
+class Determinant : public Parameters
 {
 public:
 /*!
@@ -15,7 +16,7 @@ public:
 
  \param parameters some object from which to copy number of electrons etc for bound checking
 */
-    TreeCIDeterminant(TreeCIParameters* parameters=NULL);
+    Determinant(Parameters* parameters=NULL);
     /*!
      \brief
 
@@ -34,5 +35,8 @@ public:
 private:
     std::vector<int> orbitalsAlpha, orbitalsBeta; /*!< The orbitals that make up the determinant */
 };
+}
+
+using namespace TreeCI;
 
 #endif // TREECIDETERMINANT_H

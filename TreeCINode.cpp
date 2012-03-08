@@ -1,6 +1,7 @@
 #include "TreeCINode.h"
 
-TreeCINode::TreeCINode(TreeCINode* myparent,TreeCIExcitation myexcitation)
+
+Node::Node(Node* myparent,Excitation myexcitation)
 {
     parent=myparent;
     excitation=myexcitation;

@@ -1,9 +1,9 @@
 #include "TreeCIExcitation.h"
 
-TreeCIExcitation::TreeCIExcitation()
+Excitation::Excitation()
 {
     rank=0;
 }
 
 
-TreeCIExcitation TreeCIExcitation::emptyTreeCIExcitation=TreeCIExcitation();
+Excitation Excitation::emptyTreeCIExcitation=Excitation();
