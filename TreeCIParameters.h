@@ -26,9 +26,9 @@ public:
      \param filename is the file containing the FCIDUMP.
     */
     void load(std::string filename="FCIDUMP"); /**< something */
-    int basisSize; /**< number of orbitals */
-    int nelec; /**< number of electrons */
-    int ms2; /**< twice the spin quantum number, ie multiplicity minus one */
+    unsigned int basisSize; /**< number of orbitals */
+    unsigned int nelec; /**< number of electrons */
+    unsigned int ms2; /**< twice the spin quantum number, ie multiplicity minus one */
 
 
 };

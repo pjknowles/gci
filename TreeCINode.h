@@ -19,6 +19,7 @@ public:
     bool terminal; /*!< whether or not this is a terminal node */
     std::vector<TreeCINode> children; /*!< the children of this node */
     TreeCIExcitation excitation; /*!< the excitation that produced this node from its parent */
+    std::vector<TreeCIExcitation> excitations;
 
 };
 
