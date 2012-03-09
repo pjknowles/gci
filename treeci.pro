@@ -22,14 +22,16 @@ SOURCES += main.cpp \
     TreeCIParameters.cpp \
     TreeCINode.cpp \
     TreeCIExcitation.cpp \
-    TreeCIDeterminant.cpp
+    TreeCIDeterminant.cpp \
+    TreeCIString.cpp
 
 HEADERS += \
     TreeCIHamiltonian.h \
     TreeCIParameters.h \
     TreeCINode.h \
     TreeCIExcitation.h \
-    TreeCIDeterminant.h
+    TreeCIDeterminant.h \
+    TreeCIString.h
 
 
 

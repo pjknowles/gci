@@ -1,5 +1,6 @@
 #ifndef TREECIEXCITATION_H
 #define TREECIEXCITATION_H
+#include "TreeCIDeterminant.h"
 namespace TreeCI {
 /*!
  \brief
