@@ -68,16 +68,17 @@ std::string String::printable() {
 
 int String::next() {
     unsigned int limit=basisSize;
-    std::vector<unsigned int>::reverse_iterator j;
+    std::vector<unsigned int>::iterator k;
+    unsigned int floor;
     for (std::vector<unsigned int>::reverse_iterator i = orbitals_.rbegin(); i!=orbitals_.rend(); ++i) {
-        j=i;
-        if (++(*i) <= limit) break;
+        floor=++(*i);
+        k=i.base();
+        if (*i <= limit) break;
         limit--;
     }
-    if (limit < basisSize-orbitals_.size()) return 0;
-    limit=*j;
-    for (--j; j!=orbitals_.rend();++j)
-        *(j)=(--limit);
+    if (limit <= basisSize-orbitals_.size()) return 0;
+    while (k!=orbitals_.rbegin().base())
+        *(k++)=++floor;
     return 1;
 }
 
