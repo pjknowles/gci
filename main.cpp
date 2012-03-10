@@ -20,9 +20,10 @@ int main()
     orbital=1;phase=s1.create(orbital); std::cout << "Add orbital " << orbital << "; phase=" <<phase <<"; string=" <<s1.printable() <<endl;
     orbital=2;phase=s1.create(orbital); std::cout << "Add orbital " << orbital << "; phase=" <<phase <<"; string=" <<s1.printable() <<endl;
     orbital=3;phase=s1.create(orbital); std::cout << "Add orbital " << orbital << "; phase=" <<phase <<"; string=" <<s1.printable() <<endl;
+    s1.first(2);
 //    orbital=5;phase=s1.create(orbital); std::cout << "Add orbital " << orbital << "; phase=" <<phase <<"; string=" <<s1.printable() <<endl;
     int n=0;
-    for (int i=1; i && n<20; n++,i=s1.next()) {
+    for (bool i=true; i && n<20; n++,i=s1.next()) {
         std::cout << "Advance string=" <<s1.printable() <<endl;
     }
 

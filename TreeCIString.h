@@ -35,9 +35,15 @@ public:
     /*!
      \brief
     advance to the canonically next string
-     \return 1 if successful, 0 otherwise
+     \return whether successful; false if you try to advance the canonically last string
     */
-    int next();
+    bool next();
+    /*!
+     \brief
+    Set to the first string with n objects
+    \param n the number of objects. If 0, use whatever we have presently.
+    */
+    void first(int n=0);
     std::vector<unsigned int> orbitals();  /*!< The orbitals that make up the string */
     /*!
      \brief

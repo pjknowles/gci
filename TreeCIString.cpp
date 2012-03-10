@@ -66,7 +66,7 @@ std::string String::printable() {
     return result;
 }
 
-int String::next() {
+bool String::next() {
     unsigned int limit=basisSize;
     std::vector<unsigned int>::iterator k;
     unsigned int floor;
@@ -76,10 +76,17 @@ int String::next() {
         if (*i <= limit) break;
         limit--;
     }
-    if (limit <= basisSize-orbitals_.size()) return 0;
+    if (limit <= basisSize-orbitals_.size()) return false; // we ran out of boxes to put the objects into
     while (k!=orbitals_.rbegin().base())
         *(k++)=++floor;
-    return 1;
+    return true;
+}
+
+void String::first(int n) {
+    if (n <=0 ) n=orbitals_.size();
+    orbitals_.clear();
+    for (int i=1;i<=n;i++)
+        orbitals_.push_back(i);
 }
 
 String String::exhausted;
