@@ -34,10 +34,10 @@ public:
     int destroy(unsigned int orbital);
     /*!
      \brief
-    get the canonically next string
-     \return String
+    advance to the canonically next string
+     \return 1 if successful, 0 otherwise
     */
-    String next();
+    int next();
     std::vector<unsigned int> orbitals();  /*!< The orbitals that make up the string */
     /*!
      \brief
