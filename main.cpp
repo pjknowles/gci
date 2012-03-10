@@ -16,7 +16,7 @@ int main()
 
     String s1(&hh);
     int phase;
-    int orbital;
+    unsigned int orbital;
     orbital=1;phase=s1.create(orbital); std::cout << "Add orbital " << orbital << "; phase=" <<phase <<"; string=" <<s1.printable() <<endl;
     orbital=2;phase=s1.create(orbital); std::cout << "Add orbital " << orbital << "; phase=" <<phase <<"; string=" <<s1.printable() <<endl;
     orbital=3;phase=s1.create(orbital); std::cout << "Add orbital " << orbital << "; phase=" <<phase <<"; string=" <<s1.printable() <<endl;

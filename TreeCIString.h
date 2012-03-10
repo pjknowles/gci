@@ -24,30 +24,31 @@ public:
      \param orbital Add an orbital to the string.
      \return int On exit, the phase change required to bring the determinant into canonical form is returned (plus or minus 1), or else zero if the orbital was already present in the determinant.
     */
-    int create(int orbital);
+    int create(unsigned int orbital);
     /*!
      \brief
 
      \param orbital Remove an orbital from the string.
-     \return int On exit, return 1 if successful (orbital was in the determinant originally) or 0 if not (it wasn't)
+     \return int the phase change required to bring the determinant into canonical form before annihilation is returned (plus or minus 1), or else zero if the orbital was not present in the determinant.
     */
-    int destroy(int orbital);
+    int destroy(unsigned int orbital);
     /*!
      \brief
     get the canonically next string
      \return String
     */
     String next();
-    std::vector<int> orbitals();  /*!< The orbitals that make up the string */
+    std::vector<unsigned int> orbitals();  /*!< The orbitals that make up the string */
     /*!
      \brief
     printable form of the String.
      \return std::string
     */
     std::string printable();
+    static String exhausted; /*!< returned by next() when we're already on the last string */
 
 private:
-    std::vector<int> orbitals_; /*!< The orbitals that make up the string */
+    std::vector<unsigned int> orbitals_; /*!< The orbitals that make up the string */
 };
 }
 

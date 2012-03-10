@@ -1,6 +1,7 @@
 #ifndef TREECIDETERMINANT_H
 #define TREECIDETERMINANT_H
 #include "TreeCIParameters.h"
+#include "TreeCIString.h"
 #include <vector>
 
 namespace TreeCI {
@@ -39,7 +40,7 @@ public:
     Determinant next();
 
 private:
-    std::vector<int> orbitalsAlpha, orbitalsBeta; /*!< The orbitals that make up the determinant */
+    String stringAlpha, stringBeta; /*!< The orbitals that make up the determinant */
 };
 }
 
