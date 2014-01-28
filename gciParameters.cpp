@@ -1,4 +1,4 @@
-#include "FCIParameters.h"
+#include "gciParameters.h"
 using namespace std;
 #include <fstream>
 #include <istream>
@@ -14,7 +14,7 @@ Parameters::~Parameters()
 }
 
 
-void Parameters::load(string filename) { // dirty sucking in from FCIDUMP namelist
+void Parameters::load(string filename) { // dirty sucking in from gciDUMP namelist
 //    cout << "loadParameters " <<file << endl;
     ifstream s;
     s.open(filename.c_str());

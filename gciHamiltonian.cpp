@@ -1,4 +1,4 @@
-#include "FCIHamiltonian.h"
+#include "gciHamiltonian.h"
 #include <iostream>
 #include <sstream>
 #include <istream>

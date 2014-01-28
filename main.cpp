@@ -1,15 +1,15 @@
-#include "FCIHamiltonian.h"
-#include "FCIDeterminant.h"
-#include "FCIString.h"
+#include "gciHamiltonian.h"
+#include "gciDeterminant.h"
+#include "gciString.h"
 #include <iostream>
-using namespace FCI;
+using namespace gci;
 //int main(int argc, char *argv[])
 int main()
 {
 
     Hamiltonian hh("FCIDUMP");
 
-    FCI::Determinant d1(&hh);
+    gci::Determinant d1(&hh);
 
     d1.create(3);
     d1.create(-1);

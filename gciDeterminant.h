@@ -1,10 +1,10 @@
-#ifndef FCIDETERMINANT_H
-#define FCIDETERMINANT_H
-#include "FCIParameters.h"
-#include "FCIString.h"
+#ifndef gciDETERMINANT_H
+#define gciDETERMINANT_H
+#include "gciParameters.h"
+#include "gciString.h"
 #include <vector>
 
-namespace FCI {
+namespace gci {
 /*!
  \brief
 A Slater determinant
@@ -44,6 +44,6 @@ private:
 };
 }
 
-using namespace FCI;
+using namespace gci;
 
-#endif // FCIDETERMINANT_H
+#endif // gciDETERMINANT_H

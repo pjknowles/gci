@@ -1,4 +1,4 @@
-#include "FCIDeterminant.h"
+#include "gciDeterminant.h"
 #include <iostream>
 
 Determinant::Determinant(Parameters* parameters)

@@ -1,7 +1,7 @@
-#ifndef FCIEXCITATION_H
-#define FCIEXCITATION_H
-#include "FCIDeterminant.h"
-namespace FCI {
+#ifndef gciEXCITATION_H
+#define gciEXCITATION_H
+#include "gciDeterminant.h"
+namespace gci {
 /*!
  \brief
 
@@ -22,10 +22,10 @@ public:
     int h1,h2,p1,p2; /*!< The orbitals destroyed and created */
     int rank; /*!< How many electrons are moved */
 
-    static Excitation emptyFCIExcitation;
+    static Excitation emptygciExcitation;
 };
 }
 
-using namespace FCI;
+using namespace gci;
 
-#endif // FCIEXCITATION_H
+#endif // gciEXCITATION_H

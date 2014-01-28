@@ -1,10 +1,10 @@
-#ifndef FCISTRING_H
-#define FCISTRING_H
+#ifndef gciSTRING_H
+#define gciSTRING_H
 
-#include "FCIParameters.h"
+#include "gciParameters.h"
 #include <vector>
 
-namespace FCI {
+namespace gci {
 /*!
  \brief
 A string, which is an ordered set of orbitals
@@ -58,6 +58,6 @@ private:
 };
 }
 
-using namespace FCI;
+using namespace gci;
 
-#endif // FCISTRING_H
+#endif // gciSTRING_H

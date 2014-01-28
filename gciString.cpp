@@ -1,4 +1,4 @@
-#include "FCIString.h"
+#include "gciString.h"
 
 #include <iostream>
 #include <sstream>

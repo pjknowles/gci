@@ -1,4 +1,4 @@
-#include "FCINode.h"
+#include "gciNode.h"
 
 
 Node::Node(Node* myparent,Excitation myexcitation)
@@ -12,7 +12,7 @@ Node::Node(Node* myparent,Excitation myexcitation)
     }
 }
 
-//FCINode::~FCINode()
+//gciNode::~gciNode()
 //{
 ////    if (parent!=NULL)
 //}

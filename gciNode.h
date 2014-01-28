@@ -1,11 +1,11 @@
-#ifndef FCINODE_H
-#define FCINODE_H
+#ifndef gciNODE_H
+#define gciNODE_H
 #include <vector>
-#include "FCIExcitation.h"
+#include "gciExcitation.h"
 
-using namespace FCI;
+using namespace gci;
 
-namespace FCI {
+namespace gci {
 /*!
  \brief
 A node in the tree representation of a wavefunction
@@ -17,7 +17,7 @@ public:
  \brief
 
 */
-    Node(Node* parent=NULL,Excitation excitation=Excitation::emptyFCIExcitation);
+    Node(Node* parent=NULL,Excitation excitation=Excitation::emptygciExcitation);
 
     /*!
      \brief
@@ -36,4 +36,4 @@ public:
 }
 
 
-#endif // FCINODE_H
+#endif // gciNODE_H

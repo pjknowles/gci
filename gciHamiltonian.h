@@ -1,14 +1,14 @@
-#ifndef FCIHAMILTONIAN_H
-#define FCIHAMILTONIAN_H
+#ifndef gciHAMILTONIAN_H
+#define gciHAMILTONIAN_H
 #include <string>
 #include <vector>
-#include "FCIParameters.h"
+#include "gciParameters.h"
 using namespace std;
 
-namespace FCI {
+namespace gci {
 /**
  * @brief
- * Class holds hamiltonian operator for FCI or other calculation
+ * Class holds hamiltonian operator for gci or other calculation
  *
  */
 class Hamiltonian : public Parameters
@@ -22,7 +22,7 @@ public:
 */
     Hamiltonian(string filename="");
     ~Hamiltonian();
-    void load(string filename="FCIDUMP"); /**< load integrals from FCIDUMP */
+    void load(string filename="gciDUMP"); /**< load integrals from gciDUMP */
     void unload(); /**< destroy loaded integrals */
     bool loaded;  /**< whether the integrals are loaded */
     bool spinUnrestricted; /**< whether alpha and beta spin orbitals are different */
@@ -39,6 +39,6 @@ private:
 };
 }
 
-using namespace FCI;
+using namespace gci;
 
-#endif // FCIHAMILTONIAN_H
+#endif // gciHAMILTONIAN_H
