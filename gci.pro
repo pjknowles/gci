@@ -32,7 +32,7 @@ HEADERS += \
     gciString.h
 
 dox.target = doxygen
-dox.commands = doxygen Doxyfile;
+dox.commands = doxygen $$PWD/Doxyfile;
 dox.depends =
 QMAKE_EXTRA_TARGETS += dox
 
