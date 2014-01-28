@@ -1,9 +1,9 @@
-#ifndef TREECIPARAMETERS_H
-#define TREECIPARAMETERS_H
+#ifndef FCIPARAMETERS_H
+#define FCIPARAMETERS_H
 #include <string>
 #include <iostream>
 
-namespace TreeCI {
+namespace FCI {
 /**
  * @brief
  * Class holds dimension and other parameters for FCI basis
@@ -35,6 +35,6 @@ public:
 };
 }
 
-using namespace TreeCI;
+using namespace FCI;
 
-#endif // TREECIPARAMETERS_H
+#endif // FCIPARAMETERS_H

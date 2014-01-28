@@ -1,4 +1,9 @@
 .DS_Store
 html/
 latex/
-*.pro.user
+*.pro.user*
+*.o
+.qmake.stash
+FCI
+FCIDUMP
+Makefile

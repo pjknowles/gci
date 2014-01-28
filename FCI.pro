@@ -8,7 +8,7 @@ QT       -= core
 
 QT       -= gui
 
-TARGET = treeci
+TARGET = FCI
 CONFIG   += console
 CONFIG   -= app_bundle
 
@@ -18,20 +18,20 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    TreeCIHamiltonian.cpp \
-    TreeCIParameters.cpp \
-    TreeCINode.cpp \
-    TreeCIExcitation.cpp \
-    TreeCIDeterminant.cpp \
-    TreeCIString.cpp
+    FCIHamiltonian.cpp \
+    FCIParameters.cpp \
+    FCINode.cpp \
+    FCIExcitation.cpp \
+    FCIDeterminant.cpp \
+    FCIString.cpp
 
 HEADERS += \
-    TreeCIHamiltonian.h \
-    TreeCIParameters.h \
-    TreeCINode.h \
-    TreeCIExcitation.h \
-    TreeCIDeterminant.h \
-    TreeCIString.h
+    FCIHamiltonian.h \
+    FCIParameters.h \
+    FCINode.h \
+    FCIExcitation.h \
+    FCIDeterminant.h \
+    FCIString.h
 
 
 

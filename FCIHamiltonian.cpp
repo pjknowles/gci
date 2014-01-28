@@ -1,4 +1,4 @@
-#include "TreeCIHamiltonian.h"
+#include "FCIHamiltonian.h"
 #include <iostream>
 #include <sstream>
 #include <istream>

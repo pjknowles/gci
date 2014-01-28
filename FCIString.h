@@ -1,10 +1,10 @@
-#ifndef TREECISTRING_H
-#define TREECISTRING_H
+#ifndef FCISTRING_H
+#define FCISTRING_H
 
-#include "TreeCIParameters.h"
+#include "FCIParameters.h"
 #include <vector>
 
-namespace TreeCI {
+namespace FCI {
 /*!
  \brief
 A string, which is an ordered set of orbitals
@@ -58,6 +58,6 @@ private:
 };
 }
 
-using namespace TreeCI;
+using namespace FCI;
 
-#endif // TREECISTRING_H
+#endif // FCISTRING_H

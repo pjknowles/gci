@@ -1,4 +1,4 @@
-#include "TreeCIParameters.h"
+#include "FCIParameters.h"
 using namespace std;
 #include <fstream>
 #include <istream>

@@ -1,11 +1,11 @@
-#ifndef TREECINODE_H
-#define TREECINODE_H
+#ifndef FCINODE_H
+#define FCINODE_H
 #include <vector>
-#include "TreeCIExcitation.h"
+#include "FCIExcitation.h"
 
-using namespace TreeCI;
+using namespace FCI;
 
-namespace TreeCI {
+namespace FCI {
 /*!
  \brief
 A node in the tree representation of a wavefunction
@@ -17,7 +17,13 @@ public:
  \brief
 
 */
-    Node(Node* parent=NULL,Excitation excitation=Excitation::emptyTreeCIExcitation);
+    Node(Node* parent=NULL,Excitation excitation=Excitation::emptyFCIExcitation);
+
+    /*!
+     \brief
+    Have children.
+    */
+    void procreate();
 
     Node* parent; /*!< the parent of this node */
     bool terminal; /*!< whether or not this is a terminal node */
@@ -30,4 +36,4 @@ public:
 }
 
 
-#endif // TREECINODE_H
+#endif // FCINODE_H

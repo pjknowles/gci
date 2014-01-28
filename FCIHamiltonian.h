@@ -1,11 +1,11 @@
-#ifndef TREECIHAMILTONIAN_H
-#define TREECIHAMILTONIAN_H
+#ifndef FCIHAMILTONIAN_H
+#define FCIHAMILTONIAN_H
 #include <string>
 #include <vector>
-#include "TreeCIParameters.h"
+#include "FCIParameters.h"
 using namespace std;
 
-namespace TreeCI {
+namespace FCI {
 /**
  * @brief
  * Class holds hamiltonian operator for FCI or other calculation
@@ -39,6 +39,6 @@ private:
 };
 }
 
-using namespace TreeCI;
+using namespace FCI;
 
-#endif // TREECIHAMILTONIAN_H
+#endif // FCIHAMILTONIAN_H

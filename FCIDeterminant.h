@@ -1,10 +1,10 @@
-#ifndef TREECIDETERMINANT_H
-#define TREECIDETERMINANT_H
-#include "TreeCIParameters.h"
-#include "TreeCIString.h"
+#ifndef FCIDETERMINANT_H
+#define FCIDETERMINANT_H
+#include "FCIParameters.h"
+#include "FCIString.h"
 #include <vector>
 
-namespace TreeCI {
+namespace FCI {
 /*!
  \brief
 A Slater determinant
@@ -44,6 +44,6 @@ private:
 };
 }
 
-using namespace TreeCI;
+using namespace FCI;
 
-#endif // TREECIDETERMINANT_H
+#endif // FCIDETERMINANT_H

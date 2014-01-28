@@ -1,4 +1,4 @@
-#include "TreeCIDeterminant.h"
+#include "FCIDeterminant.h"
 #include <iostream>
 
 Determinant::Determinant(Parameters* parameters)
