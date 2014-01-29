@@ -53,7 +53,7 @@ public:
      \return std::string
     */
     std::string printable();
-    int spin;
+    int spin; ///< \brief spin 1=alpha, -1=beta
     static String exhausted; /*!< returned by next() when we're already on the last string */
 
 private:

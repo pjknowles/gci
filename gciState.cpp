@@ -5,7 +5,7 @@ using namespace std;
 #include <iostream>
 #include <sstream>
 
-State::State(string filename)
+State::State(std::string filename)
 {
     hamiltonian=NULL;
     if (filename!="") load(filename);
@@ -22,7 +22,7 @@ State::~State()
 }
 
 
-void State::load(string filename) {
+void State::load(std::string filename) {
     FCIdump dump(filename);
     load(&dump);
 }

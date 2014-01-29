@@ -38,6 +38,7 @@ void Hamiltonian::load(FCIdump* dump) {
 //    State::load(filename);
 
     basisSize = dump->parameter("NORB").at(0);
+    orbital_symmetries = dump->parameter("ORBSYM");
     spinUnrestricted=false;
 
     ijSize = (basisSize*(basisSize+1))/2;
