@@ -1,9 +1,9 @@
 #ifndef GCIHAMILTONIAN_H
 #define GCIHAMILTONIAN_H
 #include "gci.h"
+#include "FCIdump.h"
 #include <string>
 #include <vector>
-#include "gciParameters.h"
 using namespace std;
 
 namespace gci {
@@ -12,7 +12,7 @@ namespace gci {
  * Class holds hamiltonian operator for gci or other calculation
  *
  */
-class Hamiltonian : public Parameters
+class Hamiltonian
 {
 public:
 
@@ -22,8 +22,10 @@ public:
  \param filename : if present, call load
 */
     Hamiltonian(string filename="");
+    Hamiltonian(FCIdump* dump);
     ~Hamiltonian();
     void load(string filename="FCIDUMP"); /**< load integrals from FCIDUMP */
+    void load(FCIdump* dump); /**< load integrals from FCIDUMP */
     void unload(); /**< destroy loaded integrals */
     bool loaded;  /**< whether the integrals are loaded */
     bool spinUnrestricted; /**< whether alpha and beta spin orbitals are different */
@@ -33,10 +35,13 @@ public:
     vector<double> *integrals_aa; /**< point to aaaa integrals */
     vector<double> *integrals_ab; /**< point to aabb integrals */
     vector<double> *integrals_bb; /**< point to bbbb integrals */
+    unsigned int basisSize;
 private:
-    int ijSize;
-    int ijklSize;
+    unsigned int ijSize;
+    unsigned int ijklSize;
     int verbosity;
+    vector<unsigned int> orbital_symmetries;
+    vector<unsigned int> symmetry_dimensions;
 };
 }
 

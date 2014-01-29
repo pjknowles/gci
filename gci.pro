@@ -17,21 +17,23 @@ TEMPLATE = app
 
 SOURCES += gci.cpp \
     gciHamiltonian.cpp \
-    gciParameters.cpp \
+    gciState.cpp \
     gciNode.cpp \
     gciExcitation.cpp \
     gciDeterminant.cpp \
     gciString.cpp \
-    gciWavefunction.cpp
+    gciWavefunction.cpp \
+    FCIdump.cpp
 
 HEADERS += gci.h \
     gciHamiltonian.h \
-    gciParameters.h \
+    gciState.h \
     gciNode.h \
     gciExcitation.h \
     gciDeterminant.h \
     gciString.h \
-    gciWavefunction.h
+    gciWavefunction.h \
+    FCIdump.h
 
 html.target = $$PWD/html
 html.commands = (cd $$PWD ; doxygen $$PWD/Doxyfile;)

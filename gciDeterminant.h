@@ -1,7 +1,7 @@
 #ifndef GCIDETERMINANT_H
 #define GCIDETERMINANT_H
 #include "gci.h"
-#include "gciParameters.h"
+#include "gciState.h"
 #include "gciString.h"
 #include <vector>
 namespace gci {
@@ -9,15 +9,18 @@ namespace gci {
  \brief
 A Slater determinant
 */
-class Determinant : public Parameters
+class Determinant : public State
 {
 public:
 /*!
  \brief
 
- \param parameters some object from which to copy number of electrons etc for bound checking
+ \param State some object from which to copy number of electrons etc for bound checking
+ \param alpha Alpha string
+ \param beta Beta string
 */
-    Determinant(Parameters* parameters=NULL);
+    Determinant(State* State=NULL, String* alpha=NULL, String* beta=NULL);
+
     /*!
      \brief
 
@@ -38,6 +41,8 @@ public:
      \return Determinant
     */
     Determinant next();
+
+
 
 private:
     String stringAlpha, stringBeta; /*!< The orbitals that make up the determinant */

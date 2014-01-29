@@ -2,7 +2,7 @@
 #define GCISTRING_H
 #include "gci.h"
 
-#include "gciParameters.h"
+#include "gciState.h"
 #include <vector>
 
 namespace gci {
@@ -10,15 +10,16 @@ namespace gci {
  \brief
 A string, which is an ordered set of orbitals
 */
-class String : public Parameters
+class String : public State
 {
 public:
 /*!
  \brief
 
- \param parameters some object from which to copy number of electrons etc for bound checking
+ \param State Some State object from which to copy number of electrons etc for bound checking
+ \param spin 1=alpha, -1=beta
 */
-    String(Parameters* parameters=NULL);
+    String(State* State=NULL, int spin=1);
     /*!
      \brief
 
@@ -52,6 +53,7 @@ public:
      \return std::string
     */
     std::string printable();
+    int spin;
     static String exhausted; /*!< returned by next() when we're already on the last string */
 
 private:

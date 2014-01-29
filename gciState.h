@@ -1,0 +1,62 @@
+#ifndef GCIState_H
+#define GCIState_H
+#include "gci.h"
+#include "FCIdump.h"
+#include "gciHamiltonian.h"
+#include <string>
+
+namespace gci {
+/**
+ * @brief
+ * Class represents a quantum-mechanical state with or without reference to a particular representation
+ *
+ */
+class State
+{
+public:
+
+/**
+ * @brief
+ *
+ * @param filename is the file containing the FCIDUMP. If present, load is called.
+ */
+    State(std::string filename="");
+    /**
+     * @brief
+     *
+     * @param dump points to an FCIdump object. If present, load is called.
+     */
+    State(FCIdump* dump);
+
+    ~State();
+    /*!
+     \brief
+    load number of electrons, spin from FCIDUMP file.
+     \param filename is the file containing the FCIDUMP.
+    */
+    void load(std::string filename="FCIDUMP");
+    /*!
+     \brief
+    load number of electrons, spin from FCIDUMP file.
+     \param dump is an FCIdump object.
+    */
+    void load(FCIdump* dump);
+    /*!
+      \brief
+      Second-quantized hamiltonian that defines the orbital basis set
+      */
+    Hamiltonian* hamiltonian;
+     /*! \brief Number of electrons */
+    unsigned int nelec;
+    /*! \brief Twice the spin quantum number, ie multiplicity minus one */
+    int ms2;
+    /*! \brief Spatial symmetry of state */
+    unsigned int symmetry;
+
+
+};
+}
+
+using namespace gci;
+
+#endif // GCIState_H

@@ -1,4 +1,5 @@
 #include "gciHamiltonian.h"
+#include "FCIdump.h"
 #include <iostream>
 #include <sstream>
 #include <istream>
@@ -15,14 +16,28 @@ Hamiltonian::Hamiltonian(string filename)
     if (filename != "") load(filename);
 }
 
+Hamiltonian::Hamiltonian(FCIdump* dump)
+{
+    loaded = false;
+    verbosity=1;
+    load(dump);
+}
+
 Hamiltonian::~Hamiltonian() {
 
 }
 
 void Hamiltonian::load(string filename) {
+    FCIdump d(filename);
+    load(&d);
+}
+
+void Hamiltonian::load(FCIdump* dump) {
     if (loaded) unload();
-    if (verbosity) cout <<"Load hamiltonian from " << filename <<endl;
-    Parameters::load(filename);
+    if (verbosity) cout <<"Load hamiltonian from " << dump->fileName <<endl;
+//    State::load(filename);
+
+    basisSize = dump->parameter("NORB").at(0);
     spinUnrestricted=false;
 
     ijSize = (basisSize*(basisSize+1))/2;
@@ -43,7 +58,7 @@ void Hamiltonian::load(string filename) {
 
 
     ifstream s;
-    s.open(filename.c_str());
+    s.open(dump->fileName.c_str());
     string ss;
     double value;
     int i,j,k,l,ij,kl,ijkl;

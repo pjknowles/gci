@@ -1,25 +1,30 @@
 #include "gciDeterminant.h"
 #include <iostream>
 
-Determinant::Determinant(Parameters* parameters)
+Determinant::Determinant(State* State, String* alpha, String*beta)
 {
-    if (parameters == NULL) {
+    if (State == NULL) {
         nelec=999999999;
-        basisSize=99999999;
+        hamiltonian=NULL;
         ms2=0;
     } else {
-        nelec=parameters->nelec;
-        basisSize=parameters->basisSize;
-        ms2=parameters->ms2;
+        nelec=State->nelec;
+        hamiltonian=State->hamiltonian;
+        ms2=State->ms2;
     }
+    if (alpha!=NULL) stringAlpha=*alpha;
+    if (beta!=NULL) stringBeta=*beta;
+    stringAlpha.hamiltonian=stringBeta.hamiltonian=hamiltonian;
+//    xout << "determinant constructor, hamiltonian="<<(hamiltonian!=NULL)<<hamiltonian->basisSize<<std::endl;
 }
 
 int Determinant::create(int orbital) {
-//    xout << "orbitals.size()" << orbitals.size() << "orbital "<<orbital <<std::endl;
+//    xout << "create orbital "<<orbital <<std::endl;
     unsigned int orbabs = orbital > 0 ? orbital : -orbital;
-    if (orbital==(int)0 || orbital > (int) basisSize || orbital < -(int)basisSize) throw "invalid orbital";
+    if (hamiltonian==NULL || orbital==(int)0 || orbital > (int) hamiltonian->basisSize || orbital < -(int)hamiltonian->basisSize) throw "invalid orbital";
     if (orbital > 0) {
         if (stringAlpha.orbitals().size() >= (nelec+ms2)/2) throw "too many electrons in determinant";
+//        xout <<"try to populate stringAlpha"<<std::endl;
         return stringAlpha.create(orbabs);
     } else {
         if (stringBeta.orbitals().size() >= (nelec-ms2)/2) throw "too many electrons in determinant";
@@ -28,7 +33,7 @@ int Determinant::create(int orbital) {
 }
 
 int Determinant::destroy(int orbital) {
-    if (orbital==(int)0 || orbital > (int) basisSize || orbital < -(int)basisSize) throw "invalid orbital";
+    if (hamiltonian==NULL || orbital==(int)0 || orbital > (int) hamiltonian->basisSize || orbital < -(int)hamiltonian->basisSize) throw "invalid orbital";
     unsigned int orbabs = orbital > 0 ? orbital : -orbital;
     String* string = orbital > 0 ? &stringAlpha : &stringBeta;
     if (string->orbitals().size() <= 0) throw "too few electrons in determinant";
