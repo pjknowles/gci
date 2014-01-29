@@ -13,7 +13,7 @@ String::String(Parameters* parameters)
 }
 
 int String::create(unsigned int orbital) {
-    //    std::cout << "orbitals_.size()" << orbitals_.size() << "orbital "<<orbital <<std::endl;
+    //    xout << "orbitals_.size()" << orbitals_.size() << "orbital "<<orbital <<std::endl;
     if (orbital==(unsigned int)0 || orbital > (unsigned int) basisSize) throw "invalid orbital";
     std::vector<unsigned int>::iterator ilast=orbitals_.begin();
 

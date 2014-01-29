@@ -1,9 +1,9 @@
-#ifndef gciDETERMINANT_H
-#define gciDETERMINANT_H
+#ifndef GCIDETERMINANT_H
+#define GCIDETERMINANT_H
+#include "gci.h"
 #include "gciParameters.h"
 #include "gciString.h"
 #include <vector>
-
 namespace gci {
 /*!
  \brief
@@ -46,4 +46,4 @@ private:
 
 using namespace gci;
 
-#endif // gciDETERMINANT_H
+#endif // GCIDETERMINANT_H

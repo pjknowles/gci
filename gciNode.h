@@ -1,5 +1,6 @@
-#ifndef gciNODE_H
-#define gciNODE_H
+#ifndef GCINODE_H
+#define GCINODE_H
+#include "gci.h"
 #include <vector>
 #include "gciExcitation.h"
 
@@ -36,4 +37,4 @@ public:
 }
 
 
-#endif // gciNODE_H
+#endif // GCINODE_H

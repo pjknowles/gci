@@ -15,7 +15,7 @@ Determinant::Determinant(Parameters* parameters)
 }
 
 int Determinant::create(int orbital) {
-//    std::cout << "orbitals.size()" << orbitals.size() << "orbital "<<orbital <<std::endl;
+//    xout << "orbitals.size()" << orbitals.size() << "orbital "<<orbital <<std::endl;
     unsigned int orbabs = orbital > 0 ? orbital : -orbital;
     if (orbital==(int)0 || orbital > (int) basisSize || orbital < -(int)basisSize) throw "invalid orbital";
     if (orbital > 0) {

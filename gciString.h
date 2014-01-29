@@ -1,5 +1,6 @@
-#ifndef gciSTRING_H
-#define gciSTRING_H
+#ifndef GCISTRING_H
+#define GCISTRING_H
+#include "gci.h"
 
 #include "gciParameters.h"
 #include <vector>
@@ -60,4 +61,4 @@ private:
 
 using namespace gci;
 
-#endif // gciSTRING_H
+#endif // GCISTRING_H

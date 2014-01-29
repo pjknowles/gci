@@ -1,5 +1,6 @@
-#ifndef gciPARAMETERS_H
-#define gciPARAMETERS_H
+#ifndef GCIPARAMETERS_H
+#define GCIPARAMETERS_H
+#include "gci.h"
 #include <string>
 #include <iostream>
 
@@ -37,4 +38,4 @@ public:
 
 using namespace gci;
 
-#endif // gciPARAMETERS_H
+#endif // GCIPARAMETERS_H

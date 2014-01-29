@@ -1,5 +1,6 @@
-#ifndef gciHAMILTONIAN_H
-#define gciHAMILTONIAN_H
+#ifndef GCIHAMILTONIAN_H
+#define GCIHAMILTONIAN_H
+#include "gci.h"
 #include <string>
 #include <vector>
 #include "gciParameters.h"
@@ -41,4 +42,4 @@ private:
 
 using namespace gci;
 
-#endif // gciHAMILTONIAN_H
+#endif // GCIHAMILTONIAN_H

@@ -1,5 +1,6 @@
-#ifndef gciEXCITATION_H
-#define gciEXCITATION_H
+#ifndef GCIEXCITATION_H
+#define GCIEXCITATION_H
+#include "gci.h"
 #include "gciDeterminant.h"
 namespace gci {
 /*!
@@ -28,4 +29,4 @@ public:
 
 using namespace gci;
 
-#endif // gciEXCITATION_H
+#endif // GCIEXCITATION_H

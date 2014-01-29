@@ -15,7 +15,7 @@ CONFIG   -= app_bundle
 TEMPLATE = app
 
 
-SOURCES += main.cpp \
+SOURCES += gci.cpp \
     gciHamiltonian.cpp \
     gciParameters.cpp \
     gciNode.cpp \
@@ -24,7 +24,7 @@ SOURCES += main.cpp \
     gciString.cpp \
     gciWavefunction.cpp
 
-HEADERS += \
+HEADERS += gci.h \
     gciHamiltonian.h \
     gciParameters.h \
     gciNode.h \

@@ -1,6 +1,6 @@
 #ifndef GCIWAVEFUNCTION_H
 #define GCIWAVEFUNCTION_H
-
+#include "gci.h"
 #include "gciHamiltonian.h"
 
 namespace gci {
