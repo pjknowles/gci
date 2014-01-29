@@ -18,8 +18,8 @@ TEMPLATE = app
 SOURCES += gci.cpp \
     gciHamiltonian.cpp \
     gciState.cpp \
-    gciNode.cpp \
-    gciExcitation.cpp \
+    #gciNode.cpp \
+    #gciExcitation.cpp \
     gciDeterminant.cpp \
     gciString.cpp \
     gciWavefunction.cpp \
@@ -28,8 +28,8 @@ SOURCES += gci.cpp \
 HEADERS += gci.h \
     gciHamiltonian.h \
     gciState.h \
-    gciNode.h \
-    gciExcitation.h \
+    #gciNode.h \
+    #bgciExcitation.h \
     gciDeterminant.h \
     gciString.h \
     gciWavefunction.h \
