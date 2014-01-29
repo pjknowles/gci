@@ -40,3 +40,21 @@ int Determinant::destroy(int orbital) {
     return string->destroy(orbabs);
 
 }
+
+void Determinant::first()
+{
+    stringAlpha.first((nelec+ms2)/2);
+    stringBeta.first((nelec-ms2)/2);
+}
+
+bool Determinant::next()
+{
+    if (stringBeta.next()) return true;
+    stringBeta.first();
+    return stringAlpha.next();
+}
+
+std::string Determinant::printable()
+{
+    return stringAlpha.printable()+"|"+stringBeta.printable();
+}

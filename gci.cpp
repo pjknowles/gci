@@ -33,6 +33,10 @@ int main()
     }
     xout <<"Total number of string="<<n<<std::endl;
 
+    d1.first(); while(d1.next()) {
+        xout << " Determinant " <<d1.printable() <<endl;
+    }
+
   return 0;
 }
 #endif

@@ -36,11 +36,20 @@ public:
     */
     int destroy(int orbital);
     /*!
+     * \brief Set to the canonically first determinant
+     */
+    void first();
+    /*!
      \brief
-    get the canonically next determinant
-     \return Determinant
+    Advance to the canonically next determinant
+     \return false if the end of the set is reached.
     */
-    Determinant next();
+    bool next();
+    /*!
+     * \brief Return a printable string representing the determinant
+     * \return
+     */
+    std::string printable();
 
 
 
