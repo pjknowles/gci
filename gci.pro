@@ -21,7 +21,8 @@ SOURCES += main.cpp \
     gciNode.cpp \
     gciExcitation.cpp \
     gciDeterminant.cpp \
-    gciString.cpp
+    gciString.cpp \
+    gciWavefunction.cpp
 
 HEADERS += \
     gciHamiltonian.h \
@@ -29,14 +30,18 @@ HEADERS += \
     gciNode.h \
     gciExcitation.h \
     gciDeterminant.h \
-    gciString.h
+    gciString.h \
+    gciWavefunction.h
 
-dox.target = doxygen
-dox.commands = doxygen $$PWD/Doxyfile;
-dox.depends =
-QMAKE_EXTRA_TARGETS += dox
+html.target = $$PWD/html
+html.commands = (cd $$PWD ; doxygen $$PWD/Doxyfile;)
+html.depends = $(OBJECTS)
+dox.target = html
+dox.depends = $$PWD/html
+QMAKE_EXTRA_TARGETS += dox html
+all.depends += html
 
-input.target = input
+input.target = FCIDUMP
 input.commands = ln -s $$PWD/FCIDUMP FCIDUMP
 input.depends =
 QMAKE_EXTRA_TARGETS += input

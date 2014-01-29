@@ -22,7 +22,7 @@ public:
 */
     Hamiltonian(string filename="");
     ~Hamiltonian();
-    void load(string filename="gciDUMP"); /**< load integrals from gciDUMP */
+    void load(string filename="FCIDUMP"); /**< load integrals from FCIDUMP */
     void unload(); /**< destroy loaded integrals */
     bool loaded;  /**< whether the integrals are loaded */
     bool spinUnrestricted; /**< whether alpha and beta spin orbitals are different */

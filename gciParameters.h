@@ -16,20 +16,20 @@ public:
 /**
  * @brief
  *
- * @param filename is the file containing the gciDUMP. If present, loadParameters is called.
+ * @param filename is the file containing the FCIDUMP. If present, loadParameters is called.
  */
     Parameters(std::string filename="");
 
     ~Parameters();
     /*!
      \brief
-    load basis size, number of electrons, spin from gciDUMP file.
-     \param filename is the file containing the gciDUMP.
+    load basis size, number of electrons, spin from FCIDUMP file.
+     \param filename is the file containing the FCIDUMP.
     */
-    void load(std::string filename="gciDUMP"); /**< something */
+    void load(std::string filename="FCIDUMP"); /**< something */
     unsigned int basisSize; /**< number of orbitals */
     unsigned int nelec; /**< number of electrons */
-    unsigned int ms2; /**< twice the spin quantum number, ie multiplicity minus one */
+    int ms2; /**< twice the spin quantum number, ie multiplicity minus one */
 
 
 };
