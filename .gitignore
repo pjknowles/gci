@@ -3,7 +3,7 @@ html/
 latex/
 *.pro.user*
 *.o
+*.exe
 .qmake.stash
-FCI
 FCIDUMP
 Makefile
