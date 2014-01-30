@@ -10,17 +10,16 @@ String::String(State* State, int Spin)
     } else {
         hamiltonian=State->hamiltonian;
     }
-    nelec=0;
-    ms2=0;
+    nullify();
     spin=Spin;
 }
 
 int String::create(unsigned int orbital) {
-        xout  << "create orbital "<<orbital <<" " <<orbitals_.size()<<std::endl;
-        xout << "hamiltonian "<<(hamiltonian!=NULL)<<std::endl;
+//        xout  << "create orbital "<<orbital <<" " <<orbitals_.size()<<std::endl;
+//        xout << "hamiltonian "<<(hamiltonian!=NULL)<<std::endl;
         if (hamiltonian==NULL)
             throw "String::create missing hamiltonian";
-        xout << "basisSize "<<hamiltonian->basisSize<<std::endl;
+//        xout << "basisSize "<<hamiltonian->basisSize<<std::endl;
     if (hamiltonian==NULL || orbital==(unsigned int)0 || orbital > (unsigned int) hamiltonian->basisSize) throw "invalid orbital";
 //    xout <<"make iterator "<<std::endl;
     std::vector<unsigned int>::iterator ilast=orbitals_.begin();
@@ -64,6 +63,14 @@ int String::destroy(unsigned int orbital) {
     return (int)0; // exclusion principle
 }
 
+void String::nullify()
+{
+    orbitals_.clear();
+    ms2=0;
+    nelec=0;
+    symmetry=1;
+}
+
 std::vector<unsigned int> String::orbitals() {
     return orbitals_;
 }
@@ -100,26 +107,29 @@ bool String::next() {
 }
 
 void String::first(int n) {
-    xout << "String::first " << n <<" nelec="<<nelec<< std::endl;
+//    xout << "String::first " << n <<" nelec="<<nelec<< std::endl;
     if (n <=0 ) n=nelec;
     if (n <=0 ) n=orbitals_.size();
-    nelec=0;
-    ms2=0;
+    nullify();
     for (int i=1;i<=n;i++)
         create(i);
-    xout <<"OK"<<std::endl;
-    xout << "String::first result " << printable(1) << std::endl;
+    nelec=n;
+//    xout <<"OK"<<nelec<<std::endl;
+//    xout << "String::first result " << printable(1) << std::endl;
 }
 
 String String::exhausted;
 
 void String::buildStrings(State prototype, std::vector<String> *strings)
 {
-    xout <<"buildStrings prototype"<<prototype.printable(1)<<std::endl;
+//    xout <<"buildStrings prototype"<<prototype.printable(1)<<std::endl;
     String string(&prototype);
     string.first(prototype.nelec);
     strings->erase(strings->begin(),strings->end());
     do {
+//        xout << "in buildStrings about to push_back " << string.printable(1) <<std::endl;
         strings->push_back(string);
     } while (string.next());
+//    xout << "in buildStrings final list: " <<std::endl ;
+    for (std::vector<String>::iterator s=strings->begin(); s!=strings->end(); s++) xout << s->printable()<<std::endl;
 }

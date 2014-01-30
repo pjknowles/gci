@@ -39,6 +39,10 @@ public:
     advance to the canonically next string
      \return whether successful; false if you try to advance the canonically last string
     */
+    /*!
+     * \brief Set the string to the vacuum
+     */
+    void nullify();
     bool next();
     /*!
      \brief

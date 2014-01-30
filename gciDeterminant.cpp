@@ -43,6 +43,7 @@ int Determinant::destroy(int orbital) {
 
 void Determinant::first()
 {
+//    xout <<"Determiant::first nelec="<<nelec<<", ms2="<<ms2<<(nelec+ms2)/2<<(nelec-ms2)/2<<std::endl;
     stringAlpha.first((nelec+ms2)/2);
     stringBeta.first((nelec-ms2)/2);
 }
@@ -50,7 +51,8 @@ void Determinant::first()
 bool Determinant::next()
 {
     if (stringBeta.next()) return true;
-    stringBeta.first();
+//    xout << "Determinant::next needs to make a new alpha string"<<std::endl;
+    stringBeta.first((nelec-ms2)/2);
     return stringAlpha.next();
 }
 

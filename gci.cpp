@@ -39,12 +39,12 @@ int main()
     d1.first(); while(d1.next()) {
         xout << " Determinant " <<d1.printable() <<endl;
     }
-
+    xout <<"done scanning through determinants"<<endl;
     Wavefunction w(&dump);
     xout << "Wavefunction before buildStrings:"<<w.printable(1)<<std::endl;
     xout << "back from printable"<<std::endl;
     w.buildStrings();
-    xout << "Wavefunction after buildStrings:"<<std::endl<<w.printable(1);
+    xout << "Wavefunction after buildStrings:"<<w.printable(1)<<std::endl;
 
   return 0;
     }
