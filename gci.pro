@@ -29,7 +29,7 @@ HEADERS += gci.h \
     gciHamiltonian.h \
     gciState.h \
     #gciNode.h \
-    #bgciExcitation.h \
+    #gciExcitation.h \
     gciDeterminant.h \
     gciString.h \
     gciWavefunction.h \

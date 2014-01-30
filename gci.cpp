@@ -1,6 +1,7 @@
 #include "gci.h"
 #include "gciHamiltonian.h"
 #include "gciDeterminant.h"
+#include "gciWavefunction.h"
 #include "gciString.h"
 #include "FCIdump.h"
 #include <iostream>
@@ -9,7 +10,8 @@ using namespace gci;
 //int main(int argc, char *argv[])
 int main()
 {
-    FCIdump dump("FCIDUMP");
+    try {
+        FCIdump dump("FCIDUMP");
     Hamiltonian hh(&dump);
     State ss(&dump);
     ss.hamiltonian=&hh;
@@ -33,11 +35,31 @@ int main()
     }
     xout <<"Total number of string="<<n<<std::endl;
 
+    xout << "Scan through constructing determinants:" << std::endl;
     d1.first(); while(d1.next()) {
         xout << " Determinant " <<d1.printable() <<endl;
     }
 
+    Wavefunction w(&dump);
+    xout << "Wavefunction before buildStrings:"<<w.printable(1)<<std::endl;
+    xout << "back from printable"<<std::endl;
+    w.buildStrings();
+    xout << "Wavefunction after buildStrings:"<<std::endl<<w.printable(1);
+
   return 0;
+    }
+    catch (const std::string& ex) {
+        xout << "uncaught exception: " << ex << std::endl;
+       throw "Error";
+    }
+    catch (char const* ex) {
+        xout << "uncaught exception: " << ex << std::endl;
+       throw "Error";
+    }
+//    catch (...) {
+//        xout << "uncaught exception: "  << std::endl;
+//       throw "Error";
+//    }
 }
 #endif
 

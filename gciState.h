@@ -27,6 +27,19 @@ public:
      * @param dump points to an FCIdump object. If present, load is called.
      */
     State(FCIdump* dump);
+    /*!
+     * \brief Construct a State object linked to a Hamiltonian
+     * \param h The hamiltonian
+     * \param nelec Number of electrons
+     * \param symmetry Spatial symmetry
+     * \param ms2 Sz quantum number times 2
+     */
+    State(Hamiltonian* h, int nelec=0, int symmetry=1, int ms2=0);
+    /*!
+     * \brief Construct a State object with data copied from another State
+     * \param s State to copy
+     */
+    State(State* s);
 
     ~State();
     /*!
@@ -52,6 +65,12 @@ public:
     int ms2;
     /*! \brief Spatial symmetry of state */
     unsigned int symmetry;
+    /*!
+     * \brief Genenerate a printable representation of the object
+     * \param verbosity How much to print
+     * \return
+     */
+    std::string printable(int verbosity);
 
 
 };

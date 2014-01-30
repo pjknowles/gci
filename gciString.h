@@ -50,9 +50,10 @@ public:
     /*!
      \brief
     printable form of the String.
+    \param verbosity How much to print
      \return std::string
     */
-    std::string printable();
+    std::string printable(int verbosity=0);
     int spin; ///< \brief spin 1=alpha, -1=beta
     static String exhausted; /*!< returned by next() when we're already on the last string */
 

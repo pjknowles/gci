@@ -16,9 +16,11 @@ String::String(State* State, int Spin)
 }
 
 int String::create(unsigned int orbital) {
-//        xout  << "create orbital "<<orbital <<" " <<orbitals_.size()<<std::endl;
-//        xout << "hamiltonian "<<(hamiltonian!=NULL)<<std::endl;
-//        xout << "basisSize "<<hamiltonian->basisSize<<std::endl;
+        xout  << "create orbital "<<orbital <<" " <<orbitals_.size()<<std::endl;
+        xout << "hamiltonian "<<(hamiltonian!=NULL)<<std::endl;
+        if (hamiltonian==NULL)
+            throw "String::create missing hamiltonian";
+        xout << "basisSize "<<hamiltonian->basisSize<<std::endl;
     if (hamiltonian==NULL || orbital==(unsigned int)0 || orbital > (unsigned int) hamiltonian->basisSize) throw "invalid orbital";
 //    xout <<"make iterator "<<std::endl;
     std::vector<unsigned int>::iterator ilast=orbitals_.begin();
@@ -66,15 +68,17 @@ std::vector<unsigned int> String::orbitals() {
     return orbitals_;
 }
 
-std::string String::printable() {
+std::string String::printable(int verbosity) {
     std::string result;
-    for (std::vector<unsigned int>::iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
-        if (i!=orbitals_.begin()) result.append(",");
-        std::stringstream ss;
-        ss << *i * spin;
-        std::string rr;
-        ss >> rr;
-        result.append(rr);
+    if (verbosity >=0) {
+        for (std::vector<unsigned int>::iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
+            if (i!=orbitals_.begin()) result.append(",");
+            std::stringstream ss;
+            ss << *i * spin;
+            std::string rr;
+            ss >> rr;
+            result.append(rr);
+        }
     }
     return result;
 }
@@ -96,16 +100,22 @@ bool String::next() {
 }
 
 void String::first(int n) {
+    xout << "String::first " << n <<" nelec="<<nelec<< std::endl;
+    if (n <=0 ) n=nelec;
     if (n <=0 ) n=orbitals_.size();
-    orbitals_.clear();
+    nelec=0;
+    ms2=0;
     for (int i=1;i<=n;i++)
-        orbitals_.push_back(i);
+        create(i);
+    xout <<"OK"<<std::endl;
+    xout << "String::first result " << printable(1) << std::endl;
 }
 
 String String::exhausted;
 
 void String::buildStrings(State prototype, std::vector<String> *strings)
 {
+    xout <<"buildStrings prototype"<<prototype.printable(1)<<std::endl;
     String string(&prototype);
     string.first(prototype.nelec);
     strings->erase(strings->begin(),strings->end());
