@@ -103,3 +103,13 @@ void String::first(int n) {
 }
 
 String String::exhausted;
+
+void String::buildStrings(State prototype, std::vector<String> *strings)
+{
+    String string(&prototype);
+    string.first(prototype.nelec);
+    strings->erase(strings->begin(),strings->end());
+    do {
+        strings->push_back(string);
+    } while (string.next());
+}
