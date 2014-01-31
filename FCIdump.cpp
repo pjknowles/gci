@@ -7,7 +7,6 @@ FCIdump::FCIdump(std::string filename)
 }
 
 #include "gciState.h"
-using namespace std;
 #include <fstream>
 #include <istream>
 #include <sstream>
@@ -16,21 +15,21 @@ using namespace std;
 
 std::vector<int> FCIdump::parameter(std::string key, std::vector<int> def) { // dirty sucking in from FCIDUMP namelist
     std::vector<int> answer;
-    ifstream s;
+    std::ifstream s;
     s.open(fileName.c_str());
-    if ( (s.rdstate() & ifstream::failbit ) != 0 ) {
-        cerr << "Error opening " << fileName <<endl;
+    if ( (s.rdstate() & std::ifstream::failbit ) != 0 ) {
+        std::cerr << "Error opening " << fileName <<std::endl;
         throw "FCIDUMP::parameter file missing";
     }
-    string ss;
-    string keyin("");// the current keyword
+    std::string ss;
+    std::string keyin("");// the current keyword
     while (s >> ss && ss != "&END" && ss != "/") {
         while (ss.size()) {
             // gobble up leading spaces
             while (ss.size() && ss[0]==' ') ss.erase(0,1);
             // gobble the next thing up to equals, comma, end of line
             size_t iend = ss.find_first_of("=,"); if (iend==std::string::npos) iend=ss.size();
-            string thisword = ss.substr(0,iend);
+            std::string thisword = ss.substr(0,iend);
             ss=ss.substr(iend >= ss.size()-1 ? ss.size() : iend+1 );
 //            xout << "thisword=" <<thisword <<"; new ss=" <<ss <<std::endl;
             if (isdigit(thisword[0])) {
@@ -48,7 +47,7 @@ std::vector<int> FCIdump::parameter(std::string key, std::vector<int> def) { // 
     }
     s.close();
 
-    xout << "parameter "<<key<<"="; for (std::vector<int>::iterator s=answer.begin(); s < answer.end(); s++) xout <<*s ; xout <<endl;
+    xout << "parameter "<<key<<"="; for (std::vector<int>::iterator s=answer.begin(); s < answer.end(); s++) xout <<*s ; xout <<std::endl;
     if (answer.size()==0) return def;
     return answer;
 }

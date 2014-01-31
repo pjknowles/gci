@@ -8,7 +8,7 @@ namespace gci {
 /*!
  * \brief The StringSet class holds a set of String objects, possibly the complete set for a given number of objects and boxes
  */
-class StringSet : public vector<String>
+class StringSet : public std::vector<String>
 {
 public:
     /*!
@@ -24,7 +24,7 @@ public:
     /*!
      * \brief PartialWeightArray holds the partial weight array for addressing the full set of String objects
      */
-    vector<vector<int> > PartialWeightArray;
+    std::vector<std::vector<int> > PartialWeightArray;
     /*!
      * \brief Populate the StringSet with the complete set of Strings
      */

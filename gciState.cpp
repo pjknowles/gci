@@ -1,6 +1,5 @@
 #include "gciState.h"
 #include "FCIdump.h"
-using namespace std;
 #include <fstream>
 #include <iostream>
 #include <sstream>

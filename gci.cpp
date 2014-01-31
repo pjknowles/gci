@@ -24,22 +24,22 @@ int main()
     String s1(&ss);
     int phase;
     unsigned int orbital;
-    orbital=1;phase=s1.create(orbital); xout << "Add orbital " << orbital << "; phase=" <<phase <<"; string=" <<s1.printable() <<endl;
-    orbital=3;phase=s1.create(orbital); xout << "Add orbital " << orbital << "; phase=" <<phase <<"; string=" <<s1.printable() <<endl;
-    orbital=2;phase=s1.create(orbital); xout << "Add orbital " << orbital << "; phase=" <<phase <<"; string=" <<s1.printable() <<endl;
+    orbital=1;phase=s1.create(orbital); xout << "Add orbital " << orbital << "; phase=" <<phase <<"; string=" <<s1.printable() <<std::endl;
+    orbital=3;phase=s1.create(orbital); xout << "Add orbital " << orbital << "; phase=" <<phase <<"; string=" <<s1.printable() <<std::endl;
+    orbital=2;phase=s1.create(orbital); xout << "Add orbital " << orbital << "; phase=" <<phase <<"; string=" <<s1.printable() <<std::endl;
     s1.first(3);
-//    orbital=5;phase=s1.create(orbital); xout << "Add orbital " << orbital << "; phase=" <<phase <<"; string=" <<s1.printable() <<endl;
+//    orbital=5;phase=s1.create(orbital); xout << "Add orbital " << orbital << "; phase=" <<phase <<"; string=" <<s1.printable() <<std::endl;
     int n=0;
     for (bool i=true; i && n<20; n++,i=s1.next()) {
-        xout << "Advance string=" <<s1.printable() <<endl;
+        xout << "Advance string=" <<s1.printable() <<std::endl;
     }
     xout <<"Total number of string="<<n<<std::endl;
 
     xout << "Scan through constructing determinants:" << std::endl;
     d1.first(); while(d1.next()) {
-        xout << " Determinant " <<d1.printable() <<endl;
+        xout << " Determinant " <<d1.printable() <<std::endl;
     }
-    xout <<"done scanning through determinants"<<endl;
+    xout <<"done scanning through determinants"<<std::endl;
     Wavefunction w(&dump);
     xout << "Wavefunction before buildStrings:"<<w.printable(1)<<std::endl;
     w.buildStrings();
