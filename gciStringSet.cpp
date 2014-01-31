@@ -3,10 +3,12 @@
 
 StringSet::StringSet() : vector<String>()
 {
+//    xout <<"StringSet default constructor"<<std::endl;
 }
 
 StringSet::StringSet(String prototype, bool all) : vector<String>()
 {
+//    xout <<"StringSet prototype constructor "<<all<<std::endl;
     // copy prototype
     proto = prototype;
     { // set up partial weight array for addressing binomial distributions
@@ -72,7 +74,7 @@ void StringSet::complete()
         this->push_back(string);
     } while (string.next());
 //    xout << "in StringSet::complete final list: " <<std::endl ;
-    for (iterator s=this->begin(); s!=this->end(); s++) xout << s->printable()<<std::endl;
+//    for (iterator s=this->begin(); s!=this->end(); s++) xout << s->printable()<<std::endl;
 
 }
 

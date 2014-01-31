@@ -62,7 +62,7 @@ std::string State::printable(int verbosity)
     if (verbosity >= 0) {
         s<< "nelec="<<nelec<<" ms2="<<ms2<<" symmetry="<<symmetry;
         if (hamiltonian!=NULL)
-            s << std::endl << "Hamiltonian is assigned, basisSize=" << hamiltonian->basisSize;
+            s << std::endl << "Hamiltonian: " << hamiltonian->printable(1);
     }
 //    xout << "basisSize=" << hamiltonian->basisSize <<std::endl;
     return s.str();

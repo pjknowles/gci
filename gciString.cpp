@@ -101,9 +101,9 @@ std::string String::printable(int verbosity) {
 unsigned int String::symmetry()
 {
     unsigned int s=0;
-    for (int i=0; i<orbitals_.size(); i++) {
-        s ^= hamiltonian->orbital_symmetries[orbitals_[i]];
-//        xout <<"orbital symmetry="<<hamiltonian->orbital_symmetries[orbitals_[i]]<<" total symmetry now "<<s<<std::endl;
+    for (int i=0; i<(int)orbitals_.size(); i++) {
+        s ^= hamiltonian->orbital_symmetries[orbitals_[i]-1];
+//        xout <<"orbital symmetry="<<hamiltonian->orbital_symmetries[orbitals_[i]-1]<<" total symmetry now "<<s<<std::endl;
     }
     return s;
 }
@@ -124,7 +124,7 @@ bool String::next() {
     return true;
 }
 
-void String::first(int n) {
+bool String::first(int n, int sym) {
 //    xout << "String::first " << n <<" nelec="<<nelec<< std::endl;
     if (n <=0 ) n=nelec;
     if (n <=0 ) n=orbitals_.size();
@@ -133,8 +133,14 @@ void String::first(int n) {
     for (unsigned int i=1;i<=(unsigned int)n;i++)
         create(i);
     nelec=n;
+    bool notexhausted=true;
+    if (sym>=0) {
+        while (symmetry() != (unsigned int) sym && (notexhausted=next())) ;
+    notexhausted = notexhausted && (unsigned int) sym == symmetry();
+    }
 //    xout <<"OK"<<nelec<<std::endl;
 //    xout << "String::first result " << printable(1) << std::endl;
+    return notexhausted;
 }
 
 String String::exhausted;

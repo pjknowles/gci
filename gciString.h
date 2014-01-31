@@ -48,8 +48,10 @@ public:
      \brief
     Set to the first string with n objects
     \param n the number of objects. If 0, use whatever we have presently.
+    \param sym the desired symmetry of the string. Negative signifies any will do.
+    \return false if it was not possible to make even one string, otherwise true
     */
-    void first(int n=0);
+    bool first(int n=0, int sym=-1);
     std::vector<unsigned int> orbitals();  /*!< The orbitals that make up the string */
     /*!
      \brief

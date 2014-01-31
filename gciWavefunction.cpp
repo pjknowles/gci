@@ -2,8 +2,13 @@
 #include <sstream>
 #include <iostream>
 
-Wavefunction::Wavefunction(FCIdump *dump) : State(dump) { }
-Wavefunction::Wavefunction(std::string filename) : State(filename) { }
+Wavefunction::Wavefunction(FCIdump *dump) : State(dump) {
+    buildStrings();
+}
+
+Wavefunction::Wavefunction(std::string filename) : State(filename) {
+    if (filename!="") buildStrings();
+}
 
 void Wavefunction::buildStrings()
 {
@@ -11,7 +16,7 @@ void Wavefunction::buildStrings()
     stringa.first((nelec+ms2)/2);
     StringSet stringsa(stringa);
     alphaStrings = stringsa;
-    for (StringSet::iterator s=stringsa.begin(); s!=stringsa.end(); s++) xout <<"Alpha string " << s->printable() <<std::endl;
+//    for (StringSet::iterator s=stringsa.begin(); s!=stringsa.end(); s++) xout <<"Alpha string " << s->printable() <<std::endl;
 //    xout << "before build beta" << std::endl;
     String stringb(this,-1);
     stringb.first((nelec-ms2)/2);
