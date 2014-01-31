@@ -42,7 +42,6 @@ int main()
     xout <<"done scanning through determinants"<<endl;
     Wavefunction w(&dump);
     xout << "Wavefunction before buildStrings:"<<w.printable(1)<<std::endl;
-    xout << "back from printable"<<std::endl;
     w.buildStrings();
     xout << "Wavefunction after buildStrings:"<<w.printable(1)<<std::endl;
 

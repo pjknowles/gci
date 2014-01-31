@@ -63,7 +63,7 @@ long StringSet::binomial_coefficient(unsigned long n, unsigned long k) {
 
 void StringSet::complete()
 {
-    xout <<"StringSet::complete prototype"<<proto.printable(1)<<std::endl;
+//    xout <<"StringSet::complete prototype"<<proto.printable(1)<<std::endl;
     String string(&proto);
     string.first(proto.nelec);
     this->erase(this->begin(),this->end());
@@ -71,7 +71,7 @@ void StringSet::complete()
 //        xout << "in StringSet::complete about to push_back " << string.printable(1) <<std::endl;
         this->push_back(string);
     } while (string.next());
-    xout << "in StringSet::complete final list: " <<std::endl ;
+//    xout << "in StringSet::complete final list: " <<std::endl ;
     for (iterator s=this->begin(); s!=this->end(); s++) xout << s->printable()<<std::endl;
 
 }

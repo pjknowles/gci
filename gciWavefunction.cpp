@@ -15,11 +15,11 @@ void Wavefunction::buildStrings()
 //    xout << "before build beta" << std::endl;
     String stringb(this,-1);
     stringb.first((nelec-ms2)/2);
-    xout << "Wavefunction::buildStrings nelec,ms2 "<<nelec<<ms2<<std::endl;
-    xout << "Wavefunction::buildStrings beta prototype "<<stringb.printable()<<std::endl;
+//    xout << "Wavefunction::buildStrings nelec,ms2 "<<nelec<<ms2<<std::endl;
+//    xout << "Wavefunction::buildStrings beta prototype "<<stringb.printable()<<std::endl;
     StringSet stringsb(stringb);
     betaStrings = stringsb;
-    for (StringSet::iterator s=stringsb.begin(); s!=stringsb.end(); s++) xout <<"beta string " << s->printable() <<std::endl;
+//    for (StringSet::iterator s=stringsb.begin(); s!=stringsb.end(); s++) xout <<"beta string " << s->printable() <<std::endl;
 //    xout << "end of Wavefunction::buildStrings" << std::endl;
 }
 
