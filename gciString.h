@@ -39,12 +39,12 @@ public:
     advance to the canonically next string
      \return whether successful; false if you try to advance the canonically last string
     */
+
+    bool next();
     /*!
      * \brief Set the string to the vacuum
      */
-    void nullify();
-    bool next();
-    /*!
+    void nullify();    /*!
      \brief
     Set to the first string with n objects
     \param n the number of objects. If 0, use whatever we have presently.
@@ -70,7 +70,9 @@ public:
 
 private:
     std::vector<unsigned int> orbitals_; /*!< The orbitals that make up the string */
+    static vector< vector<int> > PartialWeightArray (int nitem,int nbox);
 };
+    long binomial_coefficient(unsigned long n, unsigned long k) ;
 }
 
 using namespace gci;
