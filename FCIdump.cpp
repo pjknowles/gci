@@ -47,7 +47,7 @@ std::vector<int> FCIdump::parameter(std::string key, std::vector<int> def) { // 
     }
     s.close();
 
-    xout << "parameter "<<key<<"="; for (std::vector<int>::iterator s=answer.begin(); s < answer.end(); s++) xout <<*s ; xout <<std::endl;
+//    xout << "parameter "<<key<<"="; for (std::vector<int>::iterator s=answer.begin(); s < answer.end(); s++) xout <<*s ; xout <<std::endl;
     if (answer.size()==0) return def;
     return answer;
 }

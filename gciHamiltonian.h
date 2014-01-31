@@ -27,8 +27,8 @@ public:
      \param dump : if present, call load
     */   Hamiltonian(FCIdump* dump);
     ~Hamiltonian();
-    void load(std::string filename="FCIDUMP"); /**< \brief load integrals from FCIDUMP */
-    void load(FCIdump* dump); /**< \brief load integrals from FCIDUMP */
+    void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load integrals from FCIDUMP */
+    void load(FCIdump* dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */
     void unload(); /**< \brief destroy loaded integrals */
     /*!
      * \brief Construct a printable representation of the hamiltonian
@@ -48,7 +48,6 @@ public:
 private:
     unsigned int ijSize;
     unsigned int ijklSize;
-    int verbosity;
     std::vector<int> orbital_symmetries;
     std::vector<unsigned int> symmetry_dimensions;
 };

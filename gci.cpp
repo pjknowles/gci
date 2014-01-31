@@ -13,6 +13,7 @@ int main()
     try {
         FCIdump dump("FCIDUMP");
     Hamiltonian hh(&dump);
+    xout << "Hamiltonian: " <<hh.printable(3)<<std::endl;
     State ss(&dump);
     ss.hamiltonian=&hh;
 
