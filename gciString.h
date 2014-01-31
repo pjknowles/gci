@@ -59,6 +59,7 @@ public:
     */
     std::string printable(int verbosity=0);
     int spin; ///< \brief spin 1=alpha, -1=beta
+    unsigned int symmetry(); ///< \brief spatial symmetry (0-7)
     static String exhausted; /*!< returned by next() when we're already on the last string */
 
 private:

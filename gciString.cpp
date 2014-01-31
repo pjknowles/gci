@@ -70,7 +70,6 @@ void String::nullify()
     orbitals_.clear();
     ms2=0;
     nelec=0;
-    symmetry=1;
 }
 
 std::vector<unsigned int> String::orbitals() {
@@ -90,8 +89,23 @@ std::string String::printable(int verbosity) {
             ss >> rr;
             result.append(rr);
         }
-    }
+        std::stringstream ss;
+        ss << " ["<< symmetry()+1 <<"]"; // internally symmetries are implemented 0-7, but externally as 1-8
+        std::string rr;
+        ss >> rr;
+        result.append(rr)
+;    }
     return result;
+}
+
+unsigned int String::symmetry()
+{
+    unsigned int s=0;
+    for (int i=0; i<orbitals_.size(); i++) {
+        s ^= hamiltonian->orbital_symmetries[orbitals_[i]];
+//        xout <<"orbital symmetry="<<hamiltonian->orbital_symmetries[orbitals_[i]]<<" total symmetry now "<<s<<std::endl;
+    }
+    return s;
 }
 
 bool String::next() {

@@ -36,7 +36,13 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
     //    State::load(filename);
 
     basisSize = dump->parameter("NORB").at(0);
-    orbital_symmetries = dump->parameter("ORBSYM");
+    std::vector<int> syms = dump->parameter("ORBSYM");
+    orbital_symmetries = std::vector<unsigned int>(basisSize,0);
+    symmetry_dimensions=std::vector<unsigned int>(8,0);
+    {int i=0;for (std::vector<int>::iterator s=syms.begin(); s!=syms.end(); s++) {
+        orbital_symmetries[i++]=(*s)-1; // convert 1-8 to 0-7
+        symmetry_dimensions[*s]++;
+    }}
     spinUnrestricted=false;
 
     ijSize = (basisSize*(basisSize+1))/2;
@@ -103,11 +109,14 @@ std::string Hamiltonian::printable(int verbosity)
     std::ostringstream o;
     if (verbosity>=0) {
         o << "Basis size="<<basisSize<<" Spin unrestricted? "<<spinUnrestricted<<" Loaded? "<<loaded;
+        o << std::endl << "Symmetry dimensions of orbital space";
+        for (std::vector<unsigned int>::iterator i=symmetry_dimensions.begin(); i!=symmetry_dimensions.end(); i++)
+            o<<" "<<*i+1;
     }
     if (verbosity>=1) {
         o << std::endl << "Orbital symmetries";
-        for (std::vector<int>::iterator i=orbital_symmetries.begin(); i!=orbital_symmetries.end(); i++)
-            o<<" "<<*i;
+        for (std::vector<unsigned int>::iterator i=orbital_symmetries.begin(); i!=orbital_symmetries.end(); i++)
+            o<<" "<<*i+1;
     }
     if (verbosity>=2) {
         int precision=6;

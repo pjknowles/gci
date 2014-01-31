@@ -45,11 +45,11 @@ public:
     std::vector<double> *integrals_ab; /**< \brief point to aabb integrals */
     std::vector<double> *integrals_bb; /**< \brief point to bbbb integrals */
     unsigned int basisSize;///< \brief size of orbital basis set
+    std::vector<unsigned int> orbital_symmetries;///< \brief spatial symmetry of orbitals (0-7)
+    std::vector<unsigned int> symmetry_dimensions; ///< \brief number of orbitals in each symmetry
 private:
     unsigned int ijSize;
     unsigned int ijklSize;
-    std::vector<int> orbital_symmetries;
-    std::vector<unsigned int> symmetry_dimensions;
 };
 }
 
