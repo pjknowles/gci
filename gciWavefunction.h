@@ -3,7 +3,7 @@
 #include "gci.h"
 #include "gciHamiltonian.h"
 #include "gciState.h"
-#include "gciString.h"
+#include "gciStringSet.h"
 
 namespace gci {
 /*!
@@ -25,8 +25,8 @@ public:
      */
     Wavefunction(FCIdump* dump);
 
-    std::vector<String> alphaStrings; ///< The alpha-spin strings defining the CI basis
-    std::vector<String> betaStrings; ///< The beta-spin strings defining the CI basis
+    StringSet alphaStrings; ///< The alpha-spin strings defining the CI basis
+    StringSet betaStrings; ///< The beta-spin strings defining the CI basis
     double* buffer; ///< buffer to hold coefficients describing the object
 
     void buildStrings(); ///< build alphaStrings and betaStrings

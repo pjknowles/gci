@@ -23,7 +23,8 @@ SOURCES += gci.cpp \
     gciDeterminant.cpp \
     gciString.cpp \
     gciWavefunction.cpp \
-    FCIdump.cpp
+    FCIdump.cpp \
+    gciStringSet.cpp
 
 HEADERS += gci.h \
     gciHamiltonian.h \
@@ -33,7 +34,8 @@ HEADERS += gci.h \
     gciDeterminant.h \
     gciString.h \
     gciWavefunction.h \
-    FCIdump.h
+    FCIdump.h \
+    gciStringSet.h
 
 html.target = $$PWD/html
 html.commands = (cd $$PWD ; doxygen $$PWD/Doxyfile;)

@@ -15,7 +15,7 @@ String::String(State* State, int Spin)
 }
 
 int String::create(unsigned int orbital) {
-//        xout  << "create orbital "<<orbital <<" " <<orbitals_.size()<<std::endl;
+        xout  << "create orbital "<<orbital <<" " <<orbitals_.size()<<std::endl;
 //        xout << "hamiltonian "<<(hamiltonian!=NULL)<<std::endl;
         if (hamiltonian==NULL)
             throw "String::create missing hamiltonian";
@@ -26,12 +26,14 @@ int String::create(unsigned int orbital) {
 //    xout <<"iterator OK"<<std::endl;
 
     int phase=((orbitals_.size()/2)*2 == orbitals_.size()) ? 1 : -1;
-//    xout <<"phase="<<phase<<std::endl;
+    xout <<"phase="<<phase<<std::endl;
+    xout <<"spin="<<spin<<std::endl;
     ms2+=spin;
     nelec++;
     if (orbitals_.size() == 0 || *ilast > orbital) {
-//        xout <<"first"<<std::endl;
+        xout <<"first "<<orbital<<std::endl;
         orbitals_.insert(orbitals_.begin(),orbital);
+        xout <<"orbitals_[0]="<<orbitals_[0]<<std::endl;
         return phase;
     }
     for (std::vector<unsigned int>::iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
@@ -77,11 +79,13 @@ std::vector<unsigned int> String::orbitals() {
 
 std::string String::printable(int verbosity) {
     std::string result;
+//    xout <<"String::printable orbitals_[0]" <<orbitals_[0]<<std::endl;
     if (verbosity >=0) {
         for (std::vector<unsigned int>::iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
             if (i!=orbitals_.begin()) result.append(",");
             std::stringstream ss;
-            ss << *i * spin;
+            int ispin=(int)(*i)*(int)spin;
+            ss << ispin;
             std::string rr;
             ss >> rr;
             result.append(rr);
@@ -107,15 +111,16 @@ bool String::next() {
 }
 
 void String::first(int n) {
-//    xout << "String::first " << n <<" nelec="<<nelec<< std::endl;
+    xout << "String::first " << n <<" nelec="<<nelec<< std::endl;
     if (n <=0 ) n=nelec;
     if (n <=0 ) n=orbitals_.size();
     nullify();
-    for (int i=1;i<=n;i++)
+    xout << n <<std::endl;
+    for (unsigned int i=1;i<=(unsigned int)n;i++)
         create(i);
     nelec=n;
-//    xout <<"OK"<<nelec<<std::endl;
-//    xout << "String::first result " << printable(1) << std::endl;
+    xout <<"OK"<<nelec<<std::endl;
+    xout << "String::first result " << printable(1) << std::endl;
 }
 
 String String::exhausted;
