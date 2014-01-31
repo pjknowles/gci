@@ -61,18 +61,9 @@ public:
     int spin; ///< \brief spin 1=alpha, -1=beta
     static String exhausted; /*!< returned by next() when we're already on the last string */
 
-    /*!
-     * \brief Build the complete set of Strings
-     * \param prototype An object holding numbers of electrons and hamiltonian
-     * \param strings Container to hold the complete set of Strings
-     */
-    static void buildStrings (State prototype, std::vector<String>* strings);
-
 private:
     std::vector<unsigned int> orbitals_; /*!< The orbitals that make up the string */
-    static vector< vector<int> > PartialWeightArray (int nitem,int nbox);
 };
-    long binomial_coefficient(unsigned long n, unsigned long k) ;
 }
 
 using namespace gci;
