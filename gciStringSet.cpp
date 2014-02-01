@@ -6,7 +6,7 @@ StringSet::StringSet() : vector<String>()
 //    xout <<"StringSet default constructor"<<std::endl;
 }
 
-StringSet::StringSet(String prototype, bool all) : vector<String>()
+StringSet::StringSet(String prototype, bool all, int sym) : vector<String>()
 {
 //    xout <<"StringSet prototype constructor "<<all<<std::endl;
     // copy prototype
@@ -35,7 +35,7 @@ StringSet::StringSet(String prototype, bool all) : vector<String>()
         PartialWeightArray=inter;
         //    xout << "PartialWeightArray:"<<std::endl; for (int k=0;k<nitem;k++) { for (int l=0;l<nbox;l++) xout << " "<<PartialWeightArray[k][l]; xout <<std::endl; }
     }
-    if (all) complete();
+    if (all) complete(sym);
 
 }
 
@@ -63,17 +63,19 @@ long StringSet::binomial_coefficient(unsigned long n, unsigned long k) {
     return b;
 }
 
-void StringSet::complete()
+void StringSet::complete(int sym)
 {
 //    xout <<"StringSet::complete prototype"<<proto.printable(1)<<std::endl;
     String string(&proto);
-    string.first(proto.nelec);
     this->erase(this->begin(),this->end());
-    do {
-//        xout << "in StringSet::complete about to push_back " << string.printable(1) <<std::endl;
-        this->push_back(string);
-    } while (string.next());
-//    xout << "in StringSet::complete final list: " <<std::endl ;
+    if (string.first(proto.nelec,sym)) {
+        //    xout <<"StringSet::complete symmetry="<<sym<<" first String: "<<string.printable()<<std::endl;
+        do {
+            //        xout << "in StringSet::complete about to push_back " << string.printable(1) <<std::endl;
+            this->push_back(string);
+        } while (string.next(sym));
+    }
+    //    xout << "in StringSet::complete final list: " <<std::endl ;
 //    for (iterator s=this->begin(); s!=this->end(); s++) xout << s->printable()<<std::endl;
 
 }

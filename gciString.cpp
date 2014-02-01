@@ -108,7 +108,9 @@ unsigned int String::symmetry()
     return s;
 }
 
-bool String::next() {
+bool String::next(int sym) {
+    if (sym<0)
+    { // generate the next string of any symmetry
     unsigned int limit=hamiltonian->basisSize;
     std::vector<unsigned int>::iterator k;
     unsigned int floor;
@@ -122,6 +124,12 @@ bool String::next() {
     while (k!=orbitals_.rbegin().base())
         *(k++)=++floor;
     return true;
+    }
+    else { // call myself until we get the symmetry required
+        bool notexhausted;
+        while ((notexhausted=next())&&symmetry()!=(unsigned int)sym) ;
+        return notexhausted;
+    }
 }
 
 bool String::first(int n, int sym) {
@@ -133,14 +141,9 @@ bool String::first(int n, int sym) {
     for (unsigned int i=1;i<=(unsigned int)n;i++)
         create(i);
     nelec=n;
-    bool notexhausted=true;
-    if (sym>=0) {
-        while (symmetry() != (unsigned int) sym && (notexhausted=next())) ;
-    notexhausted = notexhausted && (unsigned int) sym == symmetry();
-    }
-//    xout <<"OK"<<nelec<<std::endl;
-//    xout << "String::first result " << printable(1) << std::endl;
-    return notexhausted;
+//    xout << "String::first first go, sym, symmetry() "<<sym<<symmetry()<<std::endl;
+    if (sym<0 || symmetry() == (unsigned int) sym) return true;
+    return next(sym);
 }
 
 String String::exhausted;

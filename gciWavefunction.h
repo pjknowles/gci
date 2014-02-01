@@ -25,8 +25,8 @@ public:
      */
     Wavefunction(FCIdump* dump);
 
-    StringSet alphaStrings; ///< The alpha-spin strings defining the CI basis
-    StringSet betaStrings; ///< The beta-spin strings defining the CI basis
+    StringSet alphaStrings[8]; ///< The alpha-spin strings defining the CI basis
+    StringSet betaStrings[8]; ///< The beta-spin strings defining the CI basis
     double* buffer; ///< buffer to hold coefficients describing the object
 
     void buildStrings(); ///< build alphaStrings and betaStrings

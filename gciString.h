@@ -35,12 +35,12 @@ public:
     */
     int destroy(unsigned int orbital);
     /*!
-     \brief
-    advance to the canonically next string
+     \brief advance to the canonically next string
+    \param sym the desired symmetry of the string. Negative signifies any will do.
      \return whether successful; false if you try to advance the canonically last string
     */
+    bool next(int sym=-1);
 
-    bool next();
     /*!
      * \brief Set the string to the vacuum
      */
