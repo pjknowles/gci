@@ -12,6 +12,7 @@ A string, which is an ordered set of orbitals
 */
 class String : public State
 {
+    friend class StringSet;
 public:
 /*!
  \brief

@@ -2,6 +2,7 @@
 #define GCISTRINGSET_H
 #include "gciString.h"
 #include <vector>
+#include <map>
 
 namespace gci {
 
@@ -27,10 +28,22 @@ public:
      */
     std::vector<std::vector<int> > PartialWeightArray;
     /*!
+     * \brief Map from the summed partial weights to the canonical index of a String in this set
+     */
+    std::map<long,long> addressMap;
+    /*!
      * \brief Populate the StringSet with the complete set of Strings
      * \param sym Restrict to those String objects with this symmetry if not negative
      */
     void complete(int sym=-1);
+    /*!
+     * \brief The symmetry of the StringSet, or -1 if no definite symmetry
+     */
+    int symmetry;
+    /*!
+     * \brief Calculate addressMap
+     */
+    void calculateAddressMap();
 private:
     String proto;
     long binomial_coefficient(unsigned long n, unsigned long k) ;

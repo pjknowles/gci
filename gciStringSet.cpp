@@ -36,6 +36,22 @@ StringSet::StringSet(String prototype, bool all, int sym) : vector<String>()
         //    xout << "PartialWeightArray:"<<std::endl; for (int k=0;k<nitem;k++) { for (int l=0;l<nbox;l++) xout << " "<<PartialWeightArray[k][l]; xout <<std::endl; }
     }
     if (all) complete(sym);
+    symmetry = sym;
+    calculateAddressMap();
+    // compute address map
+}
+
+void StringSet::calculateAddressMap()
+{
+    addressMap.clear();
+    long i=0;
+    for (StringSet::iterator s=this->begin(); s!=this->end(); s++) {
+        long j=0;
+        for (int k=0; k<(int)s->orbitals_.size(); k++) {
+            j+= PartialWeightArray[k][s->orbitals_[k]];
+        }
+        addressMap[j]=i++;
+    }
 
 }
 
