@@ -1,6 +1,6 @@
 #ifndef GCIEXCITATIONSET_H
 #define GCIEXCITATIONSET_H
-#include "gciStringSet.h"
+#include "gciString.h"
 #include <vector>
 
 namespace gci {
@@ -37,6 +37,7 @@ public:
 };
 
 
+class StringSet; // forward declaration
 /*!
  * \brief Container for a number of Excitation objects
  */
@@ -55,6 +56,8 @@ public:
     ExcitationSet(String &from, StringSet &to, int annihilations, int creations);
 };
 
+
 }
+#include "gciStringSet.h"
 
 #endif // GCIEXCITATIONSET_H

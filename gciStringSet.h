@@ -1,6 +1,7 @@
 #ifndef GCISTRINGSET_H
 #define GCISTRINGSET_H
 #include "gciString.h"
+#include "gciExcitationSet.h"
 #include <vector>
 #include <map>
 
@@ -50,6 +51,14 @@ public:
      * \return index in this, or -1 if not found
      */
     long offset(String &s);
+    /*!
+     * \brief Generate all excitations from this StringSet to StringSet to.
+     * \param to StringSet against which results will be indexed.
+     * \param annihilations How many annihilations.
+     * \param creations How many creations.
+     * \return The vector of ExcitationSet objects.
+     */
+    std::vector<ExcitationSet> allExcitations(StringSet &to, int annihilations, int creations);
 private:
     String proto;
     long binomial_coefficient(unsigned long n, unsigned long k) ;
