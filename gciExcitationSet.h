@@ -3,8 +3,10 @@
 #include "gciStringSet.h"
 #include <vector>
 
+namespace gci {
 /*!
  * \brief Holds a set of excitations from a single String.
+ *
  * Not stored in the class, but in the context in which it is used, are
  * the number of annihilations/creations in the excitation (which affects
  * the interpretation of orbitalAddress), and the StringSet into which the Excitation
@@ -52,5 +54,7 @@ public:
      */
     ExcitationSet(String &from, StringSet &to, int annihilations, int creations);
 };
+
+}
 
 #endif // GCIEXCITATIONSET_H
