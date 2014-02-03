@@ -12,6 +12,7 @@ A string, which is an ordered set of orbitals
 */
 class String : public State
 {
+    friend class ExcitationSet;
     friend class StringSet;
 public:
 /*!
@@ -62,11 +63,16 @@ public:
     */
     std::string printable(int verbosity=0);
     int spin; ///< \brief spin 1=alpha, -1=beta
-    unsigned int symmetry(); ///< \brief spatial symmetry (0-7)
+    /*!
+     * \brief Calculate the spatial symmetry
+     * \param nocheck If false, check whether the result is equal to the maintained symmetry variable
+     * \return
+     */
+    unsigned int computed_symmetry(bool nocheck=false);
     static String exhausted; /*!< returned by next() when we're already on the last string */
 
-private:
     std::vector<unsigned int> orbitals_; /*!< The orbitals that make up the string */
+private:
 };
 }
 

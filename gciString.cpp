@@ -28,8 +28,6 @@ int String::create(unsigned int orbital) {
     int phase=((orbitals_.size()/2)*2 == orbitals_.size()) ? 1 : -1;
 //    xout <<"phase="<<phase<<std::endl;
 //    xout <<"spin="<<spin<<std::endl;
-    ms2+=spin;
-    nelec++;
     if (orbitals_.size() == 0 || *ilast > orbital) {
 //        xout <<"first "<<orbital<<std::endl;
         orbitals_.insert(orbitals_.begin(),orbital);
@@ -39,6 +37,10 @@ int String::create(unsigned int orbital) {
     for (std::vector<unsigned int>::iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
         if (*i==orbital) return 0; // exclusion principle
         if (*ilast < orbital && *i > orbital){
+            ms2+=spin;
+            nelec++;
+            symmetry^=hamiltonian->orbital_symmetries[*i-1];
+//            xout <<"create orbital="<<*i <<" with symmetry="<<hamiltonian->orbital_symmetries[*i-1]<<", giving total symmetry"<<symmetry<<std::endl;
             orbitals_.insert(++ilast,orbital);
             return phase;
         }
@@ -53,11 +55,12 @@ int String::destroy(unsigned int orbital) {
     if (hamiltonian==NULL || orbital==(unsigned int)0 || orbital > (unsigned int) hamiltonian->basisSize ) throw "invalid orbital";
     if (orbitals_.size() <= 0) throw "too few electrons in String";
     int phase=1;
-    ms2-=spin;
-    nelec--;
     for (std::vector<unsigned int>::iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
         if (*i==orbital)  {
             orbitals_.erase(i);
+            ms2-=spin;
+            nelec--;
+            symmetry^=hamiltonian->orbital_symmetries[*i-1];
             return phase;
         }
         phase=-phase;
@@ -70,6 +73,8 @@ void String::nullify()
     orbitals_.clear();
     ms2=0;
     nelec=0;
+    symmetry=0;
+//    xout <<"nullify"<<std::endl;
 }
 
 std::vector<unsigned int> String::orbitals() {
@@ -90,7 +95,7 @@ std::string String::printable(int verbosity) {
             result.append(rr);
         }
         std::stringstream ss;
-        ss << " ["<< symmetry()+1 <<"]"; // internally symmetries are implemented 0-7, but externally as 1-8
+        ss << " ["<< computed_symmetry()+1 <<"]"; // internally symmetries are implemented 0-7, but externally as 1-8
         std::string rr;
         ss >> rr;
         result.append(rr)
@@ -98,12 +103,16 @@ std::string String::printable(int verbosity) {
     return result;
 }
 
-unsigned int String::symmetry()
+unsigned int String::computed_symmetry(bool nocheck)
 {
     unsigned int s=0;
     for (int i=0; i<(int)orbitals_.size(); i++) {
         s ^= hamiltonian->orbital_symmetries[orbitals_[i]-1];
-//        xout <<"orbital symmetry="<<hamiltonian->orbital_symmetries[orbitals_[i]-1]<<" total symmetry now "<<s<<std::endl;
+//        xout <<"orbital "<<orbitals_[i]<<",  symmetry="<<hamiltonian->orbital_symmetries[orbitals_[i]-1]<<" total symmetry now "<<s<<std::endl;
+    }
+    if (s!=symmetry && !nocheck) {
+        xout << "s="<<s<<", symmetry="<<symmetry<<std::endl;
+        throw "String symmetry messed up";
     }
     return s;
 }
@@ -123,11 +132,13 @@ bool String::next(int sym) {
     if (limit <= hamiltonian->basisSize-orbitals_.size()) return false; // we ran out of boxes to put the objects into
     while (k!=orbitals_.rbegin().base())
         *(k++)=++floor;
+    symmetry=computed_symmetry(true);
+//    xout << "String::next returns with symmetry="<<symmetry<<std::endl;
     return true;
     }
     else { // call myself until we get the symmetry required
         bool notexhausted;
-        while ((notexhausted=next())&&symmetry()!=(unsigned int)sym) ;
+        while ((notexhausted=next())&&(symmetry=computed_symmetry())!=(unsigned int)sym) ;
         return notexhausted;
     }
 }
@@ -141,8 +152,8 @@ bool String::first(int n, int sym) {
     for (unsigned int i=1;i<=(unsigned int)n;i++)
         create(i);
     nelec=n;
-//    xout << "String::first first go, sym, symmetry() "<<sym<<symmetry()<<std::endl;
-    if (sym<0 || symmetry() == (unsigned int) sym) return true;
+//    xout << "String::first first go, sym, symmetry "<<sym<<symmetry<<std::endl;
+    if (sym<0 || computed_symmetry() == (unsigned int) sym) return true;
     return next(sym);
 }
 

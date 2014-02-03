@@ -44,6 +44,12 @@ public:
      * \brief Calculate addressMap
      */
     void calculateAddressMap();
+    /*!
+     * \brief calculate the address of String in the Stringset
+     * \param s Pointer to the String
+     * \return index in this, or -1 if not found
+     */
+    long offset(String &s);
 private:
     String proto;
     long binomial_coefficient(unsigned long n, unsigned long k) ;

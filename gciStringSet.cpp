@@ -47,12 +47,18 @@ void StringSet::calculateAddressMap()
     long i=0;
     for (StringSet::iterator s=this->begin(); s!=this->end(); s++) {
         long j=0;
-        for (int k=0; k<(int)s->orbitals_.size(); k++) {
+        for (int k=0; k<(int)s->orbitals_.size(); k++)
             j+= PartialWeightArray[k][s->orbitals_[k]];
-        }
         addressMap[j]=i++;
     }
+}
 
+long StringSet::offset(String &s)
+{
+    long j=0;
+    for (int k=0; k<(int)s.orbitals_.size(); k++)
+            j+= PartialWeightArray[k][s.orbitals_[k]];
+    return addressMap.count(j) ? addressMap[j] : -1;
 }
 
 long StringSet::binomial_coefficient(unsigned long n, unsigned long k) {
