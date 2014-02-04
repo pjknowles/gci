@@ -54,6 +54,19 @@ public:
      * \param creations How many creations.
      */
     ExcitationSet(String &from, StringSet &to, int annihilations, int creations);
+    /*!
+     * \brief The String to which this set relates
+     */
+    String From;
+    /*!
+     * \brief The StringSet containing the excited String objects
+     */
+    StringSet* To;
+    /*!
+     * \brief Generate printable representation of the object
+     * \return Printable representation of the object
+     */
+    std::string printable();
 };
 
 

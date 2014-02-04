@@ -2,7 +2,8 @@
 #include "gciHamiltonian.h"
 #include "gciDeterminant.h"
 #include "gciWavefunction.h"
-#include "gciString.h"
+#include "gciStringSet.h"
+#include "gciExcitationSet.h"
 #include "FCIdump.h"
 #include <iostream>
 using namespace gci;
@@ -47,6 +48,16 @@ int main()
     xout << "Wavefunction after constructor:"<<w.printable(1)<<std::endl;
 //    w.buildStrings();
 //    xout << "Wavefunction after buildStrings:"<<w.printable(1)<<std::endl;
+
+    for (unsigned int syma=0; syma<8; syma++) {
+        unsigned int symb = syma ^ w.symmetry;
+        std::vector<ExcitationSet> seta;
+        seta = w.alphaStrings[syma].allExcitations(w.alphaStrings[syma],1,1);
+        xout << "Excitations from alpha strings of symmetry " << syma+1 <<std::endl;
+        for (std::vector<ExcitationSet>::iterator a=seta.begin(); a!=seta.end(); a++)
+            xout <<a->printable()<<std::endl;
+    }
+
 
   return 0;
     }

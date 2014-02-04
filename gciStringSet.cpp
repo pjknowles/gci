@@ -105,8 +105,10 @@ void StringSet::complete(int sym)
 std::vector<ExcitationSet> StringSet::allExcitations(StringSet &to, int annihilations, int creations)
 {
     std::vector<ExcitationSet> set;
-    for (iterator f=begin(); f!=end(); f++)
-        set.push_back(ExcitationSet(*f,to,annihilations,creations));
+    for (iterator f=begin(); f!=end(); f++) {
+        String ff = *f;
+        set.push_back(ExcitationSet(ff,to,annihilations,creations));
+    }
     return set;
 }
 
