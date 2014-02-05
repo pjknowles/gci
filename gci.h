@@ -7,13 +7,9 @@
 #define xout std::cout
 #endif
 
-//namespace gci {
-///*!
-// \brief
-//Top level of gci
-//*/
+namespace gci {
 
-//}
+}
 
 //using namespace gci;
 

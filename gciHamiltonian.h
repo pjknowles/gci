@@ -60,9 +60,28 @@ public:
      * \return Number of orbitals of the same symmetry canonically before i.
      */
     unsigned int orbitalIndex(unsigned int i);
+    /*!
+     * \brief calculate canonical address of a 1-electron integral
+     * \param i Absolute number (starting with 1) of first orbital.
+     * \param j Absolute number (starting with 1) of second orbital.
+     * \return
+     */
+    unsigned int int1Index (unsigned int i, unsigned int j);
+    /*!
+     * \brief calculate canonical address of a 2-electron integral
+     * \param i Absolute number (starting with 1) of first orbital.
+     * \param j Absolute number (starting with 1) of second orbital.
+     * \param k Absolute number (starting with 1) of third orbital.
+     * \param l Absolute number (starting with 1) of fourth orbital.
+     * \return
+     */
+    unsigned int int2Index (unsigned int i, unsigned int j, unsigned int k, unsigned int l);
 private:
     unsigned int ijSize;
     unsigned int ijklSize;
+    std::vector<unsigned int> symmetric_pair_dimensions;
+    std::vector<unsigned int> symmetry_offsets_pairs;
+    std::vector<unsigned int> symmetry_offsets_2e_ints;
 };
 }
 
