@@ -47,6 +47,19 @@ public:
     unsigned int basisSize;///< \brief size of orbital basis set
     std::vector<unsigned int> orbital_symmetries;///< \brief spatial symmetry of orbitals (0-7)
     std::vector<unsigned int> symmetry_dimensions; ///< \brief number of orbitals in each symmetry
+    /*!
+     * \brief calculate canonical index of a pair of orbitals.
+     * \param i Absolute number (starting with 1) of first orbital.
+     * \param j Absolute number (starting with 1) of second orbital.
+     * \return Number of orbital pairs of the same symmetry canonically before ij.
+     */
+    unsigned int pairIndex(unsigned int i, unsigned int j);
+    /*!
+     * \brief calculate canonical index of an orbital.
+     * \param i Absolute number (starting with 1) of orbital.
+     * \return Number of orbitals of the same symmetry canonically before i.
+     */
+    unsigned int orbitalIndex(unsigned int i);
 private:
     unsigned int ijSize;
     unsigned int ijklSize;

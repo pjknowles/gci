@@ -31,6 +31,7 @@ void Hamiltonian::load(std::string filename, int verbosity) {
 }
 
 void Hamiltonian::load(FCIdump* dump, int verbosity) {
+    int debug=1;
     if (loaded) unload();
     if (verbosity) xout <<"Load hamiltonian from " << dump->fileName <<std::endl;
     //    State::load(filename);
@@ -44,6 +45,16 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
         symmetry_dimensions[*s]++;
     }}
     spinUnrestricted=false;
+
+    if (debug) {//debugging
+        for (unsigned int i=0; i<basisSize; i++) {
+            xout <<"Orbital "<<i+1<<" symmetry="<<orbital_symmetries[i]+1<<", index="<<orbitalIndex(i+1)<<std::endl;
+            if (debug>1)
+                for (unsigned int j=0; j<basisSize; j++) {
+                    xout <<"Pair "<<i+1<<","<<j+1<<" symmetry="<<(orbital_symmetries[i]^orbital_symmetries[j])+1<<", index="<<pairIndex(i+1,j+1)<<std::endl;
+                }
+        }
+    }
 
     ijSize = (basisSize*(basisSize+1))/2;
     ijklSize =ijSize*ijSize;
@@ -149,4 +160,17 @@ std::string Hamiltonian::printable(int verbosity)
         }
     }
     return o.str();
+}
+
+unsigned int Hamiltonian::orbitalIndex(unsigned int i) {
+    unsigned int n=0;
+    for (unsigned int j=1; j<i; j++)
+        if (orbital_symmetries[j-1] == orbital_symmetries[i-1]) n++;
+    return n;
+}
+
+unsigned int Hamiltonian::pairIndex(unsigned int i, unsigned int j) {
+    unsigned int ii = orbitalIndex(i);
+    unsigned int jj = orbitalIndex(j);
+    return (ii>jj) ? (ii*(ii+1))/2+jj : (jj*(jj+1))/2+ii;
 }

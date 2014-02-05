@@ -55,7 +55,7 @@ int main()
         seta = w.alphaStrings[syma].allExcitations(w.alphaStrings[syma],1,1);
         xout << "Excitations from alpha strings of symmetry " << syma+1 <<std::endl;
         for (std::vector<ExcitationSet>::iterator a=seta.begin(); a!=seta.end(); a++)
-            xout <<a->printable()<<std::endl;
+            xout <<"ExcitationSet: " <<a->printable()<<std::endl;
     }
 
 

@@ -47,17 +47,21 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
         for (int j=0; j<(int)from.orbitals_.size(); j++) {
             String a = from;
             int phasea = a.destroy(j+1);
-            xout <<"j, phase, a "<<j+1<<phasea<<a.printable()<<std::endl;
+//            xout <<"j, phase, a "<<j+1<<phasea<<a.printable()<<std::endl;
             if (phasea) {
                 for (int i=0; i<(int)from.orbitals_.size(); i++) {
                     if (from.hamiltonian->orbital_symmetries[i]==((unsigned int)symexc^from.hamiltonian->orbital_symmetries[j]) || symexc==-1) {
                         String tt = a;
                         int phase = phasea*tt.create(i+1);
-                        xout <<"i, phase, tt "<<i+1<<phase<<std::endl;
+//                        xout <<"i, phase, tt "<<i+1<<phase<<std::endl;
                             if (phase) {
-                        xout <<"i, phase, tt "<<i+1<<phase<<tt.printable()<<std::endl;
                                 long ti=to.offset(tt);
-                                push_back(Excitation(ti,phase,i));
+                                if (ti < 0 || (size_type) ti>= to.size()) {
+                                    xout <<"i="<<i+1<<" phase="<<phase<<" ti="<<ti<<" tt="<<tt.printable()<<std::endl;
+                                    throw "index error in ExcitationSet";
+                                }
+                                xout << "found Excitation i="<<i+1<<", j="<<j+1<<",pairIndex="<<from.hamiltonian->pairIndex(i+1,j+1)<<std::endl;
+                                push_back(Excitation(ti,phase,from.hamiltonian->pairIndex(i+1,j+1)));
                             }
                     }
                 }
@@ -67,10 +71,13 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
 }
 
 std::string ExcitationSet::printable() {
+    if ((*To).size()==0) return "";
     std::stringstream ss;
-    ss<<"Excitations for String "<<From.printable() <<":";
+    ss<<"Excitations for String "<<From.printable() << " into symmetry " << (*To)[0].symmetry+1 <<":";
     for (ExcitationSet::iterator e=this->begin(); e!=this->end(); e++) {
-        ss<<std::endl<< "String index="<< e->stringIndex<<" phase="<<e->phase<<" orbitalAddress="<<e->orbitalAddress;
+        ss<<std::endl<< " String index="<< e->stringIndex
+         <<"("<<(*To)[e->stringIndex].printable()<<")"
+        <<" phase="<<e->phase<<" orbitalAddress="<<e->orbitalAddress;
     }
     return ss.str();
 }

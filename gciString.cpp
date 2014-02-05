@@ -15,7 +15,7 @@ String::String(State* State, int Spin)
 }
 
 int String::create(unsigned int orbital) {
-    xout << "String::create before="<<printable()<<", orbital="<<orbital<<std::endl;
+//    xout << "String::create before="<<printable()<<", orbital="<<orbital<<std::endl;
 //        xout  << "create orbital "<<orbital <<" " <<orbitals_.size()<<std::endl;
 //        xout << "hamiltonian "<<(hamiltonian!=NULL)<<std::endl;
         if (hamiltonian==NULL)
@@ -29,11 +29,14 @@ int String::create(unsigned int orbital) {
     int phase=((orbitals_.size()/2)*2 == orbitals_.size()) ? 1 : -1;
 //    xout <<"phase="<<phase<<std::endl;
 //    xout <<"spin="<<spin<<std::endl;
-    if (false && (orbitals_.size() == 0 || *ilast > orbital)) {
+    if (true && (orbitals_.size() == 0 || *ilast > orbital)) {
 //        xout <<"first "<<orbital<<std::endl;
+            ms2+=spin;
+            nelec++;
+            symmetry^=hamiltonian->orbital_symmetries[orbital-1];
         orbitals_.insert(orbitals_.begin(),orbital);
 //        xout <<"orbitals_[0]="<<orbitals_[0]<<std::endl;
-            xout << "String::create appends, after="<<printable()<<", phase="<<phase<<std::endl;
+//            xout << "String::create appends, after="<<printable()<<", phase="<<phase<<std::endl;
         return phase;
     }
     for (std::vector<unsigned int>::iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
@@ -44,7 +47,7 @@ int String::create(unsigned int orbital) {
             symmetry^=hamiltonian->orbital_symmetries[orbital-1];
 //            xout <<"create orbital="<<*i <<" with symmetry="<<hamiltonian->orbital_symmetries[*i-1]<<", giving total symmetry"<<symmetry<<std::endl;
             orbitals_.insert(++ilast,orbital);
-            xout << "String::create inserts, after="<<printable()<<", phase="<<phase<<std::endl;
+//            xout << "String::create inserts, after="<<printable()<<", phase="<<phase<<std::endl;
             return phase;
         }
         phase=-phase;
@@ -54,14 +57,14 @@ int String::create(unsigned int orbital) {
     nelec++;
     symmetry^=hamiltonian->orbital_symmetries[orbital-1];
     orbitals_.insert(orbitals_.end(),orbital);
-    xout << "String::create final append, after="<<printable()<<", phase="<<phase<<std::endl;
+//    xout << "String::create final append, after="<<printable()<<", phase="<<phase<<std::endl;
     return phase;
 }
 
 int String::destroy(unsigned int orbital) {
     if (hamiltonian==NULL || orbital==(unsigned int)0 || orbital > (unsigned int) hamiltonian->basisSize ) throw "invalid orbital";
     if (orbitals_.size() <= 0) throw "too few electrons in String";
-    xout << "String::destroy before="<<printable()<<", orbital="<<orbital<<std::endl;
+//    xout << "String::destroy before="<<printable()<<", orbital="<<orbital<<std::endl;
     int phase=1;
     for (std::vector<unsigned int>::iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
         if (*i==orbital)  {
@@ -69,12 +72,12 @@ int String::destroy(unsigned int orbital) {
             nelec--;
             symmetry^=hamiltonian->orbital_symmetries[*i-1];
             orbitals_.erase(i);
-            xout << "String::destroy succeeds, after="<<printable()<<", phase="<<phase<<std::endl;
+//            xout << "String::destroy succeeds, after="<<printable()<<", phase="<<phase<<std::endl;
             return phase;
         }
         phase=-phase;
     }
-    xout << "String::destroy fails, after="<<printable()<<std::endl;
+//    xout << "String::destroy fails, after="<<printable()<<std::endl;
     return (int)0; // exclusion principle
 }
 
