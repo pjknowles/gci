@@ -9,6 +9,9 @@ Wavefunction::Wavefunction(FCIdump *dump) : State(dump) {
 Wavefunction::Wavefunction(std::string filename) : State(filename) {
     if (filename!="") buildStrings();
 }
+Wavefunction::Wavefunction(Hamiltonian *h, int n, int s, int m2) : State(h,n,s,m2) {
+   buildStrings();
+}
 
 void Wavefunction::buildStrings()
 {

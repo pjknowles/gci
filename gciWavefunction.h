@@ -25,6 +25,15 @@ public:
      */
     Wavefunction(FCIdump* dump);
 
+    /*!
+     * \brief Construct a Wavefunction object linked to a Hamiltonian
+     * \param h The hamiltonian
+     * \param nelec Number of electrons
+     * \param symmetry Spatial symmetry
+     * \param ms2 Sz quantum number times 2
+     */
+    Wavefunction(Hamiltonian *h, int nelec, int symmetry, int ms2);
+
     StringSet alphaStrings[8]; ///< The alpha-spin strings defining the CI basis
     StringSet betaStrings[8]; ///< The beta-spin strings defining the CI basis
     double* buffer; ///< buffer to hold coefficients describing the object
