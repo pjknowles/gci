@@ -2,6 +2,7 @@
 #define GCIHAMILTONIAN_H
 #include "gci.h"
 #include "FCIdump.h"
+#include "gciSymmetry.h"
 #include <string>
 #include <vector>
 
@@ -46,7 +47,7 @@ public:
     std::vector<double> *integrals_bb; /**< \brief point to bbbb integrals */
     unsigned int basisSize;///< \brief size of orbital basis set
     std::vector<unsigned int> orbital_symmetries;///< \brief spatial symmetry of orbitals (0-7)
-    std::vector<unsigned int> symmetry_dimensions; ///< \brief number of orbitals in each symmetry
+    SymmetryOffset symmetry_dimensions; ///< \brief number of orbitals in each symmetry
     /*!
      * \brief calculate canonical index of a pair of orbitals.
      * \param i Absolute number (starting with 1) of first orbital.
@@ -79,9 +80,9 @@ public:
 private:
     unsigned int ijSize;
     unsigned int ijklSize;
-    std::vector<unsigned int> symmetric_pair_dimensions;
-    std::vector<unsigned int> symmetry_offsets_pairs;
-    std::vector<unsigned int> symmetry_offsets_2e_ints;
+    SymmetryOffset symmetric_pair_dimensions;
+    SymmetryOffset symmetry_offsets_pairs;
+    SymmetryOffset symmetry_offsets_2e_ints;
 };
 }
 

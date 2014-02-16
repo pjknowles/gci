@@ -4,13 +4,21 @@
 SymmetryOffset::SymmetryOffset()
 {
     resize(8,0);
+    Title="";
 }
 
-std::string SymmetryOffset::printable()
+SymmetryOffset::SymmetryOffset(std::string title)
+{
+    resize(8,0);
+    Title=title;
+}
+
+std::string SymmetryOffset::printable(std::string title)
 {
    std::ostringstream s;
+   s << ((title=="") ? Title : title);
    for (iterator x=begin(); x!=end(); x++) {
-       s << *x; if (x != end()-1) s << " ";
+       s << " " << *x;
    }
    return s.str();
 }

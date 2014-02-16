@@ -39,10 +39,9 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
     basisSize = dump->parameter("NORB").at(0);
     std::vector<int> syms = dump->parameter("ORBSYM");
     orbital_symmetries = std::vector<unsigned int>(basisSize,0);
-    symmetry_dimensions=std::vector<unsigned int>(8,0);
-    symmetric_pair_dimensions=std::vector<unsigned int>(8,0);
-    symmetry_offsets_pairs=std::vector<unsigned int>(8,0);
-    symmetry_offsets_2e_ints=std::vector<unsigned int>(8,0);
+//    orbital_symmetries = dump->parameter("ORBSYM");;
+    symmetry_dimensions = SymmetryOffset("Numbers of orbitals in each symmetry");
+    symmetric_pair_dimensions = SymmetryOffset("Numbers of orbital pairs in each symmetry");
     for (std::vector<int>::iterator s=syms.begin(); s!=syms.end(); s++) {
         orbital_symmetries[s-syms.begin()]=(*s)-1; // convert 1-8 to 0-7
         symmetry_dimensions[(*s)-1]++;
@@ -55,14 +54,16 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
     }
     unsigned int off1=0;
     unsigned int off2=0;
+    symmetry_offsets_pairs = SymmetryOffset("Orbital pair symmetry offsets");
+    symmetry_offsets_2e_ints = SymmetryOffset("2-electron integral symmetry offsets");
     for (unsigned int i=0; i<8; i++) {
         symmetry_offsets_pairs[i]=off1;
         symmetry_offsets_2e_ints[i]=off2;
         off1+=symmetry_dimensions[i]^2;
         off2+=symmetric_pair_dimensions[i]^2;
-        xout <<"symmetry="<<i+1<<", symmetry_dimensions="<<symmetry_dimensions[i]<<std::endl;
-        xout <<"symmetry="<<i+1<<", symmetric_pair_dimensions="<<symmetric_pair_dimensions[i]<<std::endl;
-        xout <<"symmetry="<<i+1<<", symmetry_offsets_2e_ints="<<symmetry_offsets_2e_ints[i]<<std::endl;
+//        xout <<"symmetry="<<i+1<<", symmetry_dimensions="<<symmetry_dimensions[i]<<std::endl;
+//        xout <<"symmetry="<<i+1<<", symmetric_pair_dimensions="<<symmetric_pair_dimensions[i]<<std::endl;
+//        xout <<"symmetry="<<i+1<<", symmetry_offsets_2e_ints="<<symmetry_offsets_2e_ints[i]<<std::endl;
     }
     spinUnrestricted=false;
 
@@ -140,9 +141,10 @@ std::string Hamiltonian::printable(int verbosity)
     std::ostringstream o;
     if (verbosity>=0) {
         o << "Basis size="<<basisSize<<" Spin unrestricted? "<<spinUnrestricted<<" Loaded? "<<loaded;
-        o << std::endl << "Symmetry dimensions of orbital space";
-        for (std::vector<unsigned int>::iterator i=symmetry_dimensions.begin(); i!=symmetry_dimensions.end(); i++)
-            o<<" "<<*i+1;
+        o << std::endl << symmetry_dimensions.printable();
+        o << std::endl << symmetric_pair_dimensions.printable();
+        o << std::endl << symmetry_offsets_pairs.printable();
+        o << std::endl << symmetry_offsets_2e_ints.printable();
     }
     if (verbosity>=1) {
         o << std::endl << "Orbital symmetries";
