@@ -61,7 +61,7 @@ public:
     std::vector<ExcitationSet> allExcitations(StringSet &to, int annihilations, int creations);
 private:
     String proto;
-    long binomial_coefficient(unsigned long n, unsigned long k) ;
+    static long binomial_coefficient(unsigned long n, unsigned long k) ;
 };
 
 }
