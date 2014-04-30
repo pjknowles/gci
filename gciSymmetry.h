@@ -19,7 +19,7 @@ public:
      * \param title Description, defaults to the object's title element
      * \return The string
      */
-    std::string printable(std::string title="");
+    std::string toString(std::string title="");
     /*!
      * \brief A string describing the object
      */

@@ -136,15 +136,15 @@ void Hamiltonian::unload() {
     loaded=false;
 }
 
-std::string Hamiltonian::printable(int verbosity)
+std::string Hamiltonian::toString(int verbosity)
 {
     std::ostringstream o;
     if (verbosity>=0) {
         o << "Basis size="<<basisSize<<" Spin unrestricted? "<<spinUnrestricted<<" Loaded? "<<loaded;
-        o << std::endl << symmetry_dimensions.printable();
-        o << std::endl << symmetric_pair_dimensions.printable();
-        o << std::endl << symmetry_offsets_pairs.printable();
-        o << std::endl << symmetry_offsets_2e_ints.printable();
+        o << std::endl << symmetry_dimensions.toString();
+        o << std::endl << symmetric_pair_dimensions.toString();
+        o << std::endl << symmetry_offsets_pairs.toString();
+        o << std::endl << symmetry_offsets_2e_ints.toString();
     }
     if (verbosity>=1) {
         o << std::endl << "Orbital symmetries";

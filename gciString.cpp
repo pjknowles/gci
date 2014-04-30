@@ -94,7 +94,7 @@ std::vector<unsigned int> String::orbitals() {
     return orbitals_;
 }
 
-std::string String::printable(int verbosity) {
+std::string String::toString(int verbosity) {
     std::string result;
 //    xout <<"String::printable orbitals_[0]" <<orbitals_[0]<<std::endl;
     if (verbosity >=0) {

@@ -36,7 +36,7 @@ public:
      * \param verbosity how much information to include
      * \return printable representation of the hamiltonian
      */
-    std::string printable(int verbosity=0);
+    std::string toString(int verbosity=0);
     bool loaded;  /**< \brief whether the integrals are loaded */
     bool spinUnrestricted; /**< \brief whether alpha and beta spin orbitals are different */
     double coreEnergy; /**< \brief core energy */

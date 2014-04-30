@@ -70,7 +70,7 @@ public:
      * \param verbosity How much to print
      * \return
      */
-    std::string printable(int verbosity);
+    std::string toString(int verbosity);
 
 
 };

@@ -14,7 +14,7 @@ int main()
     try {
         FCIdump dump("FCIDUMP");
     Hamiltonian hh(&dump);
-    xout << "Hamiltonian: " <<hh.printable(3)<<std::endl;
+    xout << "Hamiltonian: " <<hh.toString(3)<<std::endl;
     State ss(&dump);
     ss.hamiltonian=&hh;
 
@@ -45,7 +45,7 @@ int main()
 //    xout <<"done scanning through determinants"<<std::endl;
 
     Wavefunction w(&dump);
-    xout << "Wavefunction after constructor:"<<w.printable(1)<<std::endl;
+    xout << "Wavefunction after constructor:"<<w.toString(1)<<std::endl;
 //    w.buildStrings();
 //    xout << "Wavefunction after buildStrings:"<<w.printable(1)<<std::endl;
 
@@ -55,7 +55,7 @@ int main()
         seta = w.alphaStrings[syma].allExcitations(w.alphaStrings[syma],1,1);
         xout << "Excitations from alpha strings of symmetry " << syma+1 <<std::endl;
         for (std::vector<ExcitationSet>::iterator a=seta.begin(); a!=seta.end(); a++)
-            xout <<"ExcitationSet: " <<a->printable()<<std::endl;
+            xout <<"ExcitationSet: " <<a->toString()<<std::endl;
     }
 
 

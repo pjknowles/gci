@@ -56,7 +56,7 @@ bool Determinant::next()
     return stringAlpha.next();
 }
 
-std::string Determinant::printable()
+std::string Determinant::toString()
 {
-    return stringAlpha.printable()+"|"+stringBeta.printable();
+    return stringAlpha.toString()+"|"+stringBeta.toString();
 }

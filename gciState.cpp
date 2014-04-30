@@ -54,7 +54,7 @@ void State::load(FCIdump* dump)
 //    xout << "basisSize=" << hamiltonian->basisSize <<std::endl;
 }
 
-std::string State::printable(int verbosity)
+std::string State::toString(int verbosity)
 {
 //    xout << "State::printable hamiltonian=" << (hamiltonian != NULL) << verbosity << std::endl;
 //    xout << "basisSize=" << hamiltonian->basisSize <<std::endl;
@@ -62,7 +62,7 @@ std::string State::printable(int verbosity)
     if (verbosity >= 0) {
         s<< "nelec="<<nelec<<" ms2="<<ms2<<" symmetry="<<symmetry+1;
         if (hamiltonian!=NULL)
-            s << std::endl << "Hamiltonian: " << hamiltonian->printable(1);
+            s << std::endl << "Hamiltonian: " << hamiltonian->toString(1);
     }
 //    xout << "basisSize=" << hamiltonian->basisSize <<std::endl;
     return s.str();

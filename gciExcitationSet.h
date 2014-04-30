@@ -66,7 +66,7 @@ public:
      * \brief Generate printable representation of the object
      * \return Printable representation of the object
      */
-    std::string printable();
+    std::string toString();
 };
 
 

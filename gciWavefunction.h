@@ -44,7 +44,7 @@ public:
     printable form of the String.
      \return std::string
     */
-    std::string printable(int verbosity=0);
+
 private:
 };
 }

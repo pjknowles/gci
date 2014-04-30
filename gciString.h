@@ -61,7 +61,7 @@ public:
     \param verbosity How much to print
      \return std::string
     */
-    std::string printable(int verbosity=0);
+    std::string toString(int verbosity=0);
     int spin; ///< \brief spin 1=alpha, -1=beta
     /*!
      * \brief Calculate the spatial symmetry

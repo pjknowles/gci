@@ -13,7 +13,7 @@ SymmetryOffset::SymmetryOffset(std::string title)
     Title=title;
 }
 
-std::string SymmetryOffset::printable(std::string title)
+std::string SymmetryOffset::toString(std::string title)
 {
    std::ostringstream s;
    s << ((title=="") ? Title : title);

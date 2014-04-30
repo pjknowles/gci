@@ -49,7 +49,7 @@ public:
      * \brief Return a printable string representing the determinant
      * \return
      */
-    std::string printable();
+    std::string toString();
 
 
 
