@@ -55,12 +55,6 @@ public:
     */
     bool first(int n=0, int sym=-1);
     std::vector<unsigned int> orbitals();  /*!< The orbitals that make up the string */
-    /*!
-     \brief
-    printable form of the String.
-    \param verbosity How much to print
-     \return std::string
-    */
     std::string toString(int verbosity=0) const;
     int spin; ///< \brief spin 1=alpha, -1=beta
     /*!

@@ -21,14 +21,16 @@ public:
      \return std::string
     */
    virtual std::string toString(int verbosity=0) const=0;
-    /*!
-     \brief
-     Overloaded <<
-    */
+
 //    friend std::ostream& operator<<(std::ostream& os, Printable const& obj);
 
 };
-    std::ostream& operator<<(std::ostream& os, Printable const& obj);
+
+/*!
+ \brief
+ Overloaded <<
+*/
+std::ostream& operator<<(std::ostream& os, Printable const& obj);
 }
 using namespace gci;
 

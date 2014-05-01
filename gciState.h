@@ -66,11 +66,6 @@ public:
     int ms2;
     /*! \brief Spatial symmetry of state */
     unsigned int symmetry;
-    /*!
-     * \brief Genenerate a printable representation of the object
-     * \param verbosity How much to print
-     * \return
-     */
     std::string toString(int verbosity=0) const;
 
 

@@ -40,11 +40,6 @@ public:
     double* buffer; ///< buffer to hold coefficients describing the object
 
     void buildStrings(); ///< build alphaStrings and betaStrings
-    /*!
-     \brief
-    printable form of the String.
-     \return std::string
-    */
     std::string toString(int verbosity=0) const;
 
 private:

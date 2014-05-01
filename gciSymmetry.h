@@ -4,6 +4,8 @@
 #include <vector>
 #include "gciPrintable.h"
 
+namespace gci {
+
 /*!
  * \brief General class to hold offsets of symmetry blocks in a matrix or more general tensor
  */
@@ -15,16 +17,14 @@ public:
      * \param title String to associate with the object
      */
     SymmetryOffset(std::string title);
-    /*!
-     * \brief Generate a printable representation of the object
-     * \param verbosity How much to print
-     * \return The string
-     */
     std::string toString(int verbosity=0) const;
     /*!
      * \brief A string describing the object
      */
     std::string Title;
 };
+}
+
+using namespace gci;
 
 #endif // GCISYMMETRY_H
