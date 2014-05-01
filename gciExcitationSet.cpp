@@ -70,14 +70,19 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
     }
 }
 
-std::string ExcitationSet::toString() {
-    if ((*To).size()==0) return "";
+std::string ExcitationSet::toString(int verbosity) const {
+    if ((*To).size()==0 || verbosity < 0) return "";
     std::stringstream ss;
     ss<<"Excitations for String "<<From.toString() << " into symmetry " << (*To)[0].symmetry+1 <<":";
-    for (ExcitationSet::iterator e=this->begin(); e!=this->end(); e++) {
+    for (ExcitationSet::const_iterator e=this->begin(); e!=this->end(); e++) {
         ss<<std::endl<< " String index="<< e->stringIndex
          <<"("<<(*To)[e->stringIndex].toString()<<")"
         <<" phase="<<e->phase<<" orbitalAddress="<<e->orbitalAddress;
     }
     return ss.str();
+}
+
+std::ostream& gci::operator<<(std::ostream& os, ExcitationSet const& obj)
+{
+  return os << obj.toString();
 }

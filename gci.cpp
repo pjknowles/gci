@@ -47,7 +47,7 @@ int main()
     Wavefunction w(&dump);
     xout << "Wavefunction after constructor:"<<w.toString(1)<<std::endl;
 //    w.buildStrings();
-//    xout << "Wavefunction after buildStrings:"<<w.printable(1)<<std::endl;
+//    xout << "Wavefunction after buildStrings:"<<w.toString(1)<<std::endl;
 
     for (unsigned int syma=0; syma<8; syma++) {
         unsigned int symb = syma ^ w.symmetry;

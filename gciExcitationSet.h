@@ -66,9 +66,11 @@ public:
      * \brief Generate printable representation of the object
      * \return Printable representation of the object
      */
-    std::string toString();
+    std::string toString(int verbosity=0) const;
+
 };
 
+std::ostream& operator<<(std::ostream& os, ExcitationSet const& obj);
 
 }
 #include "gciStringSet.h"

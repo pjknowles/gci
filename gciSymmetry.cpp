@@ -13,12 +13,13 @@ SymmetryOffset::SymmetryOffset(std::string title)
     Title=title;
 }
 
-std::string SymmetryOffset::toString(std::string title)
+std::string SymmetryOffset::toString(int verbosity) const
 {
-   std::ostringstream s;
-   s << ((title=="") ? Title : title);
-   for (iterator x=begin(); x!=end(); x++) {
-       s << " " << *x;
-   }
-   return s.str();
+    if (verbosity < 0) return std::string("");
+    std::ostringstream s;
+    s << Title;
+    for (const_iterator x=begin(); x!=end(); x++) {
+        s << " " << *x;
+    }
+    return s.str();
 }

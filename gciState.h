@@ -3,6 +3,7 @@
 #include "gci.h"
 #include "FCIdump.h"
 #include "gciHamiltonian.h"
+#include "gciPrintable.h"
 #include <string>
 
 namespace gci {
@@ -11,7 +12,7 @@ namespace gci {
  * Class represents a quantum-mechanical state with or without reference to a particular representation
  *
  */
-class State
+class State : public Printable
 {
 public:
 
@@ -70,7 +71,7 @@ public:
      * \param verbosity How much to print
      * \return
      */
-    std::string toString(int verbosity);
+    std::string toString(int verbosity=0) const;
 
 
 };

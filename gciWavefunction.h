@@ -4,6 +4,7 @@
 #include "gciHamiltonian.h"
 #include "gciState.h"
 #include "gciStringSet.h"
+#include "gciPrintable.h"
 
 namespace gci {
 /*!
@@ -44,6 +45,7 @@ public:
     printable form of the String.
      \return std::string
     */
+    std::string toString(int verbosity=0) const;
 
 private:
 };

@@ -26,7 +26,7 @@ void Wavefunction::buildStrings()
     }
 }
 
-std::string Wavefunction::toString(int verbosity)
+std::string Wavefunction::toString(int verbosity) const
 {
     std::ostringstream s;
     if (verbosity >= 1) {
@@ -34,9 +34,9 @@ std::string Wavefunction::toString(int verbosity)
             unsigned int symb = syma ^ symmetry;
             if (alphaStrings[syma].size() && betaStrings[symb].size()) {
                 s<<std::endl<< "Alpha strings of symmetry "<<syma+1<<":";
-                for (StringSet::iterator i=alphaStrings[syma].begin(); i!=alphaStrings[syma].end(); i++) s <<std::endl<< i->toString();
+                for (StringSet::const_iterator i=alphaStrings[syma].begin(); i!=alphaStrings[syma].end(); i++) s <<std::endl<< i->toString();
                 s<<std::endl<< "Beta strings of symmetry "<<symb+1<<":";
-                for (StringSet::iterator i=betaStrings[symb].begin(); i!=betaStrings[symb].end(); i++) s <<std::endl<< i->toString();
+                for (StringSet::const_iterator i=betaStrings[symb].begin(); i!=betaStrings[symb].end(); i++) s <<std::endl<< i->toString();
             }
         }
     }

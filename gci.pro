@@ -27,7 +27,8 @@ SOURCES += gci.cpp \
     gciStringSet.cpp \
     gciExcitationSet.cpp \
     gciSymmetry.cpp \
-    gciOperator.cpp
+    gciOperator.cpp \
+    gciPrintable.cpp
 
 HEADERS += gci.h \
     gciHamiltonian.h \
@@ -41,7 +42,8 @@ HEADERS += gci.h \
     gciStringSet.h \
     gciExcitationSet.h \
     gciSymmetry.h \
-    gciOperator.h
+    gciOperator.h \
+    gciPrintable.h
 
 html.target = $$PWD/html
 html.commands = (cd $$PWD ; doxygen $$PWD/Doxyfile;)

@@ -61,14 +61,14 @@ public:
     \param verbosity How much to print
      \return std::string
     */
-    std::string toString(int verbosity=0);
+    std::string toString(int verbosity=0) const;
     int spin; ///< \brief spin 1=alpha, -1=beta
     /*!
      * \brief Calculate the spatial symmetry
      * \param nocheck If false, check whether the result is equal to the maintained symmetry variable
      * \return
      */
-    unsigned int computed_symmetry(bool nocheck=false);
+    unsigned int computed_symmetry(bool nocheck=false) const;
     static String exhausted; /*!< returned by next() when we're already on the last string */
 
     std::vector<unsigned int> orbitals_; /*!< The orbitals that make up the string */

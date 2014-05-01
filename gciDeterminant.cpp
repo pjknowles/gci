@@ -56,7 +56,7 @@ bool Determinant::next()
     return stringAlpha.next();
 }
 
-std::string Determinant::toString()
+std::string Determinant::toString(int verbosity) const
 {
-    return stringAlpha.toString()+"|"+stringBeta.toString();
+    return verbosity >= 0 ? stringAlpha.toString()+"|"+stringBeta.toString() : std::string("");
 }

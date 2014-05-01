@@ -45,11 +45,13 @@ public:
      \return false if the end of the set is reached.
     */
     bool next();
+
     /*!
-     * \brief Return a printable string representing the determinant
+     * \brief Genenerate a printable representation of the object
+     * \param verbosity How much to print
      * \return
      */
-    std::string toString();
+    std::string toString(int verbosity=0) const;
 
 
 

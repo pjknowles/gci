@@ -54,7 +54,7 @@ void State::load(FCIdump* dump)
 //    xout << "basisSize=" << hamiltonian->basisSize <<std::endl;
 }
 
-std::string State::toString(int verbosity)
+std::string State::toString(int verbosity) const
 {
 //    xout << "State::printable hamiltonian=" << (hamiltonian != NULL) << verbosity << std::endl;
 //    xout << "basisSize=" << hamiltonian->basisSize <<std::endl;

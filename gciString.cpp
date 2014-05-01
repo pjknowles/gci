@@ -94,11 +94,11 @@ std::vector<unsigned int> String::orbitals() {
     return orbitals_;
 }
 
-std::string String::toString(int verbosity) {
+std::string String::toString(int verbosity) const {
     std::string result;
 //    xout <<"String::printable orbitals_[0]" <<orbitals_[0]<<std::endl;
     if (verbosity >=0) {
-        for (std::vector<unsigned int>::iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
+        for (std::vector<unsigned int>::const_iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
             if (i!=orbitals_.begin()) result.append(",");
             std::stringstream ss;
             int ispin=(int)(*i)*(int)spin;
@@ -116,7 +116,7 @@ std::string String::toString(int verbosity) {
     return result;
 }
 
-unsigned int String::computed_symmetry(bool nocheck)
+unsigned int String::computed_symmetry(bool nocheck) const
 {
     unsigned int s=0;
     for (int i=0; i<(int)orbitals_.size(); i++) {
