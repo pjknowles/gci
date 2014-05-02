@@ -66,6 +66,7 @@ private:
     Wavefunction operator+(const Wavefunction &w1, const Wavefunction &w2); ///< add two wavefunctions
     Wavefunction operator-(const Wavefunction &w1, const Wavefunction &w2); ///< subtract two wavefunctions
     Wavefunction operator*(const Wavefunction &w1, const double &value);///< multiply by a scalar
+    Wavefunction operator*(const double &value, const Wavefunction &w1);///< multiply by a scalar
 }
 using namespace gci;
 #endif // GCIWAVEFUNCTION_H

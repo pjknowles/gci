@@ -73,7 +73,7 @@ int main()
     w2 = w;
     xout << "after w2=w, w:"<<w.toString(2)<<std::endl <<"...end w."<<std::endl<<std::endl;
     xout << "after w2=w, w2:"<<w2.toString(2)<<std::endl <<"...end w2."<<std::endl<<std::endl;
-    Wavefunction w3 = w2+w;//-(w*((double)99));
+    Wavefunction w3 = w2+(double)98*w-(w*((double)99));
     xout << "back from w3=..." <<std::endl;
     xout << "w:"<<w.toString(2)<<std::endl <<"...end w."<<std::endl<<std::endl;
     xout << "w2:"<<w2.toString(2)<<std::endl <<"...end w2."<<std::endl<<std::endl;

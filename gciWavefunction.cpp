@@ -19,13 +19,9 @@ Wavefunction::Wavefunction(const Wavefunction &other) : State(other)
     {
         alphaStrings[i] = other.alphaStrings[i];
         betaStrings[i] = other.betaStrings[i];
-        xout << "copy constructor i="<<i<<std::endl;
-        xout << "other.alphaStrings[i]: " << other.alphaStrings[i] <<std::endl;
-        xout << "alphaStrings[i]: " << alphaStrings[i] <<std::endl;
     }
     dimension = other.dimension;
     buffer = other.buffer;
-    xout << "copy constructor returning, dimension, buffer.size(): " << dimension << " " << buffer.size() << std::endl;
 }
 
 void Wavefunction::buildStrings()
@@ -106,6 +102,12 @@ Wavefunction gci::operator-(const Wavefunction &w1, const Wavefunction &w2)
 }
 
 Wavefunction gci::operator*(const Wavefunction &w1, const double &value)
+{
+    Wavefunction result = w1;
+    return result *= value;
+}
+
+Wavefunction gci::operator*(const double &value, const Wavefunction &w1)
 {
     Wavefunction result = w1;
     return result *= value;
