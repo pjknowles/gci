@@ -35,6 +35,12 @@ public:
      */
     Wavefunction(Hamiltonian *h, int nelec, int symmetry, int ms2);
 
+    /*!
+     * \brief Wavefunction copy constructor
+     * \param other The object to be copied
+     */
+    Wavefunction( const Wavefunction& other);
+
     StringSet alphaStrings[8]; ///< The alpha-spin strings defining the CI basis
     StringSet betaStrings[8]; ///< The beta-spin strings defining the CI basis
 
@@ -45,15 +51,21 @@ public:
 
 //    Wavefunction& operator=(const double &value);
     void set(const double val);///< set all elements to a scalar
+//    Wavefunction& operator=(const Wavefunction &other); ///< copy
     Wavefunction& operator*=(const double &value); ///< multiply by a scalar
-    Wavefunction& operator*(const double &value);///< multiply by a scalar
-    double operator*( const Wavefunction &ket);///< inner product of two wavefunctions
+    Wavefunction& operator+=(const Wavefunction &other); ///< add another wavefunction
+    Wavefunction& operator-=(const Wavefunction &other); ///< subtract another wavefunction
 
+    friend double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
 private:
     void buildStrings(); ///< build alphaStrings and betaStrings
     size_t dimension; ///< the size of the space
     std::vector<double> buffer; ///< buffer to hold coefficients describing the object
+    bool compatible(const Wavefunction &other) const; ///< whether this wavefunction is on the same space as another
 };
+    Wavefunction operator+(const Wavefunction &w1, const Wavefunction &w2); ///< add two wavefunctions
+    Wavefunction operator-(const Wavefunction &w1, const Wavefunction &w2); ///< subtract two wavefunctions
+    Wavefunction operator*(const Wavefunction &w1, const double &value);///< multiply by a scalar
 }
 using namespace gci;
 #endif // GCIWAVEFUNCTION_H

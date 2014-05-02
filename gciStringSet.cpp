@@ -1,5 +1,6 @@
 #include "gciStringSet.h"
 #include <iostream>
+#include <sstream>
 
 StringSet::StringSet() : vector<String>()
 {
@@ -100,6 +101,15 @@ void StringSet::complete(int sym)
     //    xout << "in StringSet::complete final list: " <<std::endl ;
 //    for (iterator s=this->begin(); s!=this->end(); s++) xout << s->printable()<<std::endl;
 
+}
+
+std::string StringSet::toString(int verbosity) const
+{
+    std::ostringstream s;
+    if (verbosity >= -1) {
+        s << "StringSet " << size();
+    }
+    return s.str();
 }
 
 std::vector<ExcitationSet> StringSet::allExcitations(StringSet &to, int annihilations, int creations)

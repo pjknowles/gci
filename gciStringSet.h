@@ -2,6 +2,7 @@
 #define GCISTRINGSET_H
 #include "gciString.h"
 #include "gciExcitationSet.h"
+#include "gciPrintable.h"
 #include <vector>
 #include <map>
 
@@ -10,7 +11,7 @@ namespace gci {
 /*!
  * \brief The StringSet class holds a set of String objects, possibly the complete set for a given number of objects and boxes
  */
-class StringSet : public std::vector<String>
+class StringSet : public std::vector<String>, public Printable
 {
 public:
     /*!
@@ -59,6 +60,8 @@ public:
      * \return The vector of ExcitationSet objects.
      */
     std::vector<ExcitationSet> allExcitations(StringSet &to, int annihilations, int creations);
+
+    std::string toString(int verbosity=0) const;
 private:
     String proto;
     static long binomial_coefficient(unsigned long n, unsigned long k) ;

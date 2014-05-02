@@ -55,6 +55,8 @@ int main()
     Wavefunction w2=w;
     xout << "Copied wavefunction:"<<w2.toString(2)<<std::endl
     <<"...end of copied wavefunction."<<std::endl<<std::endl;
+    xout << "Original wavefunction after copy:"<<w.toString(2)<<std::endl
+    <<"...end of original wavefunction."<<std::endl<<std::endl;
     w.set((double)1);
     xout << "Original wavefunction after original changed:"<<w.toString(2)<<std::endl
     <<"...end of original wavefunction."<<std::endl<<std::endl;
@@ -63,10 +65,20 @@ int main()
 
     xout << "w.w=" << w*w << std::endl;
     xout << "w2.w2=" << w2*w2 << std::endl;
+    xout << "Original wavefunction after w2.w2:"<<w.toString(2)<<std::endl
+    <<"...end of original wavefunction."<<std::endl<<std::endl;
 
-    w2=w;w2=w*5;
-    xout << "w.w=" << w*w << std::endl;
-    xout << "w2.w2=" << w2*w2 << std::endl;
+    //Wavefunction w3;
+    xout << "w:"<<w.toString(2)<<std::endl <<"...end w."<<std::endl<<std::endl;
+    w2 = w;
+    xout << "after w2=w, w:"<<w.toString(2)<<std::endl <<"...end w."<<std::endl<<std::endl;
+    xout << "after w2=w, w2:"<<w2.toString(2)<<std::endl <<"...end w2."<<std::endl<<std::endl;
+    Wavefunction w3 = w2+w;//-(w*((double)99));
+    xout << "back from w3=..." <<std::endl;
+    xout << "w:"<<w.toString(2)<<std::endl <<"...end w."<<std::endl<<std::endl;
+    xout << "w2:"<<w2.toString(2)<<std::endl <<"...end w2."<<std::endl<<std::endl;
+    xout << "w3:"<<w3.toString(2)<<std::endl <<"...end w3."<<std::endl<<std::endl;
+
 
     for (unsigned int syma=0; syma<8; syma++) {
         unsigned int symb = syma ^ w.symmetry;
