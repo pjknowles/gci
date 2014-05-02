@@ -45,9 +45,28 @@ int main()
 //    xout <<"done scanning through determinants"<<std::endl;
 
     Wavefunction w(&dump);
-    xout << "Wavefunction after constructor:"<<w.toString(1)<<std::endl;
+    xout << "Wavefunction after constructor:"<<w.toString(2)<<std::endl
+    <<"...end of Wavefunction after constructor."<<std::endl<<std::endl;
+    w.set((double)0.12345);
+    xout << "Wavefunction after assign:"<<w.toString(2)<<std::endl
+    <<"...end of Wavefunction after assign."<<std::endl<<std::endl;
 //    w.buildStrings();
 //    xout << "Wavefunction after buildStrings:"<<w.toString(1)<<std::endl;
+    Wavefunction w2=w;
+    xout << "Copied wavefunction:"<<w2.toString(2)<<std::endl
+    <<"...end of copied wavefunction."<<std::endl<<std::endl;
+    w.set((double)1);
+    xout << "Original wavefunction after original changed:"<<w.toString(2)<<std::endl
+    <<"...end of original wavefunction."<<std::endl<<std::endl;
+    xout << "Copied wavefunction after original changed:"<<w2.toString(2)<<std::endl
+    <<"...end of copied wavefunction."<<std::endl<<std::endl;
+
+    xout << "w.w=" << w*w << std::endl;
+    xout << "w2.w2=" << w2*w2 << std::endl;
+
+    w2=w;w2=w*5;
+    xout << "w.w=" << w*w << std::endl;
+    xout << "w2.w2=" << w2*w2 << std::endl;
 
     for (unsigned int syma=0; syma<8; syma++) {
         unsigned int symb = syma ^ w.symmetry;

@@ -37,12 +37,22 @@ public:
 
     StringSet alphaStrings[8]; ///< The alpha-spin strings defining the CI basis
     StringSet betaStrings[8]; ///< The beta-spin strings defining the CI basis
-    double* buffer; ///< buffer to hold coefficients describing the object
 
-    void buildStrings(); ///< build alphaStrings and betaStrings
+    void allocate_buffer(); ///< allocate buffer to full size
+    size_t size(); ///< the size of the space
+
     std::string toString(int verbosity=0) const;
 
+//    Wavefunction& operator=(const double &value);
+    void set(const double val);///< set all elements to a scalar
+    Wavefunction& operator*=(const double &value); ///< multiply by a scalar
+    Wavefunction& operator*(const double &value);///< multiply by a scalar
+    double operator*( const Wavefunction &ket);///< inner product of two wavefunctions
+
 private:
+    void buildStrings(); ///< build alphaStrings and betaStrings
+    size_t dimension; ///< the size of the space
+    std::vector<double> buffer; ///< buffer to hold coefficients describing the object
 };
 }
 using namespace gci;
