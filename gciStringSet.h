@@ -61,6 +61,14 @@ public:
      */
     std::vector<ExcitationSet> allExcitations(StringSet &to, int annihilations, int creations);
 
+    /*!
+     * \brief occupationNumbers
+     * \return a one-dimensional array representing a two-dimensional matrix
+     * dimensioned number of Strings in this Stringset (running fastest)
+     * by number of orbitals (running slowest)
+     */
+    std::vector<double> occupationNumbers();
+
     std::string toString(int verbosity=0) const;
 private:
     String proto;

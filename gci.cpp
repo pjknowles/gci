@@ -87,6 +87,14 @@ int main()
         xout << "Excitations from alpha strings of symmetry " << syma+1 <<std::endl;
         for (std::vector<ExcitationSet>::iterator a=seta.begin(); a!=seta.end(); a++)
             xout <<"ExcitationSet: " <<a->toString()<<std::endl;
+        xout << "Alpha occupation numbers"<<std::endl;
+        std::vector<double> on = w.alphaStrings[syma].occupationNumbers();
+        size_t ij=0;
+        for (size_t i=0; i < w.alphaStrings[syma].size(); i++) {
+            for (size_t j=0; j < w.hamiltonian->basisSize; j++)
+                xout << " " << on[i+j*w.alphaStrings[syma].size()];
+            xout << std::endl;
+        }
     }
 
 

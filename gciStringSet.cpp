@@ -122,3 +122,22 @@ std::vector<ExcitationSet> StringSet::allExcitations(StringSet &to, int annihila
     return set;
 }
 
+std::vector<double> StringSet::occupationNumbers()
+{
+    std::vector<double> result;
+    if (this->size()) {
+        String firstString=this->at(0);
+        result.resize(this->size()* firstString.hamiltonian->basisSize, (double) 0);
+        int stringoffset=0;
+        for (StringSet::iterator s=this->begin(); s!=this->end(); s++)
+        {
+            std::vector<unsigned int> orbitals = s->orbitals();
+            for (std::vector<unsigned int>::iterator i=orbitals.begin(); i !=orbitals.end(); i++) {
+//                xout << "StringSet::occupationNumbers stringoffset="<<stringoffset<<" *i="<<*i<<std::endl;
+                result[stringoffset+(*i-1)*this->size()]=(double)1;
+            }
+            stringoffset++;
+        }
+    }
+    return result;
+}
