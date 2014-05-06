@@ -79,9 +79,9 @@ public:
     unsigned int int2Index (unsigned int i, unsigned int j, unsigned int k, unsigned int l);
 
     /*!
-     * \brief int1 Generate array of one-electron integrals without symmetry packing
+     * \brief int1 Generate array of diagonal one-electron integrals
      * \param spin positive for alpha, negative for beta
-     * \return one-dimensional array with h(i,j) at i-1 + (j-1)*basisSize
+     * \return one-dimensional array with h(i,i) at i-1
      */
     std::vector<double> int1(int spin);
 

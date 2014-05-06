@@ -204,13 +204,10 @@ unsigned int Hamiltonian::int2Index(unsigned int i, unsigned int j, unsigned int
 }
 std::vector<double> Hamiltonian::int1(int spin)
 {
-    std::vector<double> result(basisSize*basisSize,(double)0);
+    std::vector<double> result(basisSize,(double)0);
     std::vector<double> * integrals = spin < 0 ? integrals_b : integrals_a;
-    for (unsigned int j=0; j < basisSize; j++) {
-        for (unsigned int i=0; i < basisSize; i++) {
-            if (orbital_symmetries[i]==orbital_symmetries[j])
-                result[i+j*basisSize] = integrals->at(int1Index(i+1,j+1));
-        }
+    for (unsigned int i=0; i < basisSize; i++) {
+        result[i+i*basisSize] = integrals->at(int1Index(i+1,i+1));
     }
     return result;
 }
