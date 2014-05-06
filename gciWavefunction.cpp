@@ -82,7 +82,7 @@ void Wavefunction::diagonalHamiltonian()
             for (size_t ia=0; ia < alphaStrings[syma].size(); ia++) {
                 std::vector<double> on(onb);
                 for (size_t ib=0; ib < betaStrings[symb].size(); ib++)
-                    on[ib] += ona[ia]
+                    on[ib] += ona[ia];
             }
         }
         offset += alphaStrings[syma].size()*betaStrings[symb].size();
