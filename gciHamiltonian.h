@@ -47,7 +47,7 @@ public:
     std::vector<double> *integrals_bb; /**< \brief point to bbbb integrals */
     unsigned int basisSize;///< \brief size of orbital basis set
     std::vector<unsigned int> orbital_symmetries;///< \brief spatial symmetry of orbitals (0-7)
-    SymmetryOffset symmetry_dimensions; ///< \brief number of orbitals in each symmetry
+    SymmetryOffset nt; ///< \brief number of orbitals in each symmetry
     /*!
      * \brief calculate canonical index of a pair of orbitals.
      * \param i Absolute number (starting with 1) of first orbital.
@@ -56,7 +56,7 @@ public:
      */
     unsigned int pairIndex(unsigned int i, unsigned int j);
     /*!
-     * \brief calculate canonical index of an orbital.
+     * \brief calculate canonical index of an orbital within its symmetry.
      * \param i Absolute number (starting with 1) of orbital.
      * \return Number of orbitals of the same symmetry canonically before i.
      */
@@ -77,11 +77,33 @@ public:
      * \return
      */
     unsigned int int2Index (unsigned int i, unsigned int j, unsigned int k, unsigned int l);
+
+    /*!
+     * \brief int1 Generate array of one-electron integrals without symmetry packing
+     * \param spin positive for alpha, negative for beta
+     * \return one-dimensional array with h(i,j) at i-1 + (j-1)*basisSize
+     */
+    std::vector<double> int1(int spin);
+
+
+    /*!
+     * \brief intJ Generate array of two-electron exchange integrals
+     * \param spini positive for alpha, negative for beta, first index
+     * \param spinj positive for alpha, negative for beta, second index
+     * \return one-dimensional array with (ii|jj) at i-1 + (j-1)*basisSize
+     */
+    std::vector<double> intJ(int spini, int spinj);
+    /*!
+     * \brief intK Generate array of two-electron Coulomb integrals
+     * \param spin positive for alpha, negative for beta
+     * \return one-dimensional array with (ij|ji) at i-1 + (j-1)*basisSize
+     */
+    std::vector<double> intK(int spin);
 private:
     unsigned int ijSize;
     unsigned int ijklSize;
-    SymmetryOffset symmetric_pair_dimensions;
-    SymmetryOffset symmetry_offsets_pairs;
+//    SymmetryOffset symmetric_pair_dimensions;
+//    SymmetryOffset symmetry_offsets_pairs;
     SymmetryOffset symmetry_offsets_2e_ints;
 };
 }

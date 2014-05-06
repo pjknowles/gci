@@ -1,6 +1,7 @@
 #include "gciWavefunction.h"
 #include <sstream>
 #include <iostream>
+#include "gciStringSet.h"
 
 Wavefunction::Wavefunction(FCIdump *dump) : State(dump) {
     buildStrings();
@@ -56,6 +57,29 @@ void Wavefunction::set(const double value)
     for (std::vector<double>::iterator b=buffer.begin(); b != buffer.end(); b++) *b=value;
 }
 
+void Wavefunction::diagonalHamiltonian()
+{
+    std::vector<double> haa=hamiltonian->int1(1);
+    std::vector<double> hbb=hamiltonian->int1(-1);
+    std::vector<double> Jaa=hamiltonian->intJ(1,1);
+    std::vector<double> Jab=hamiltonian->intJ(1,-1);
+    std::vector<double> Jbb=hamiltonian->intJ(1,1);
+    std::vector<double> Kaa=hamiltonian->intK(1);
+    std::vector<double> Kbb=hamiltonian->intK(-1);
+    xout << "Jbb" <<std::endl;
+    for (int j=0; j<hamiltonian->basisSize; j++) {
+        for (int i=0; i<hamiltonian->basisSize; i++)
+            xout << Jbb[i+j*hamiltonian->basisSize] << " ";
+        xout <<std::endl;
+    }
+    size_t offset=0;
+    for (unsigned int syma=0; syma<8; syma++) {
+        unsigned int symb = syma ^ symmetry;
+        std::vector<double> ona = alphaStrings[syma].occupationNumbers();
+        std::vector<double> onb = betaStrings[symb].occupationNumbers();
+        offset += alphaStrings[syma].size()*betaStrings[symb].size();
+    }
+}
 
 Wavefunction& Wavefunction::operator*=(const double &value)
 {

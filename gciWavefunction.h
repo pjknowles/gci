@@ -47,6 +47,8 @@ public:
     void allocate_buffer(); ///< allocate buffer to full size
     size_t size(); ///< the size of the space
 
+    void diagonalHamiltonian(); ///< set this object to the diagonal elements of the hamiltonian
+
     std::string toString(int verbosity=0) const;
 
 //    Wavefunction& operator=(const double &value);

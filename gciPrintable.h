@@ -3,6 +3,7 @@
 
 #include <string>
 #include <ostream>
+#include "gci.h"
 
 namespace gci {
 /**
