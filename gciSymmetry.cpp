@@ -44,6 +44,7 @@ void SymmetryOffset::calculateOffsets()
     size_t dimension=9;
     if (maxrank > 1) dimension += 8*9*2;
     offsets.resize(dimension,0);
+    xout <<"dimension="<<dimension<<std::endl;
     if (maxrank >= 1) {
         for (int s=0; s<8; s++)
             offsets[s+1] = offsets[s] + this->at(s);
