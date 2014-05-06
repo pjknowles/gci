@@ -48,7 +48,7 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
 //    xout << "orbital_symmetries:"; for (int i=0; i<basisSize; i++) xout <<" "<<orbital_symmetries[i]; xout <<std::endl;
     nt.calculateOffsets(); // set up the rest of the nt object
 //    xout << "orbital_symmetries:"; for (int i=0; i<basisSize; i++) xout <<" "<<orbital_symmetries[i]; xout <<std::endl;
-    xout << nt.toString(2) << std::endl;
+    xout << nt.str(2) << std::endl;
 //    symmetric_pair_dimensions = SymmetryOffset("Numbers of orbital pairs in each symmetry");
 //    for (std::vector<int>::iterator s=syms.begin(); s!=syms.end(); s++) {
 //        for (std::vector<int>::iterator t=syms.begin(); t<=s; t++) {
@@ -139,13 +139,13 @@ void Hamiltonian::unload() {
     loaded=false;
 }
 
-std::string Hamiltonian::toString(int verbosity)
+std::string Hamiltonian::str(int verbosity)
 {
     std::ostringstream o;
     if (verbosity>=0) {
         o << "Basis size="<<basisSize<<" Spin unrestricted? "<<spinUnrestricted<<" Loaded? "<<loaded;
-        o << std::endl << nt.toString();
-        o << std::endl << symmetry_offsets_2e_ints.toString();
+        o << std::endl << nt.str();
+        o << std::endl << symmetry_offsets_2e_ints.str();
     }
     if (verbosity>=1) {
         o << std::endl << "Orbital symmetries";

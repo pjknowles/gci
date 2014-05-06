@@ -49,7 +49,7 @@ public:
 
     void diagonalHamiltonian(); ///< set this object to the diagonal elements of the hamiltonian
 
-    std::string toString(int verbosity=0) const;
+    std::string str(int verbosity=0) const;
 
 //    Wavefunction& operator=(const double &value);
     void set(const double val);///< set all elements to a scalar

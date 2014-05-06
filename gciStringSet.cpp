@@ -103,7 +103,7 @@ void StringSet::complete(int sym)
 
 }
 
-std::string StringSet::toString(int verbosity) const
+std::string StringSet::str(int verbosity) const
 {
     std::ostringstream s;
     if (verbosity >= -1) {

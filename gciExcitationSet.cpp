@@ -12,7 +12,7 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
 {
     int symexc=-1;
     From = from;
-    xout <<"ExcitationSet taking From="<<From.toString()<<" annihilations="<<annihilations<<" creations="<<creations<<std::endl;
+    xout <<"ExcitationSet taking From="<<From.str()<<" annihilations="<<annihilations<<" creations="<<creations<<std::endl;
     To = &to;
     if (to.symmetry>=0) symexc = from.symmetry ^ to.symmetry; // use symmetry if we can
     if (annihilations==1 && creations==0) {
@@ -21,7 +21,7 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
                 String tt = from;
                 int phase = tt.destroy(i+1);
                 if (phase) {
-                    xout << "found annihilation from "<<from.toString()<<" to "<<tt.toString()<<" phase="<<phase<<" orbital="<<i+1<<std::endl;
+                    xout << "found annihilation from "<<from.str()<<" to "<<tt.str()<<" phase="<<phase<<" orbital="<<i+1<<std::endl;
                     long ti=to.offset(tt);
                     push_back(Excitation(ti,phase,i));
                 }
@@ -34,7 +34,7 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
                 String tt = from;
                 int phase = tt.create(i+1);
                 if (phase) {
-                    xout << "found creation from "<<from.toString()<<" to "<<tt.toString()<<" phase="<<phase<<" orbital="<<i+1<<std::endl;
+                    xout << "found creation from "<<from.str()<<" to "<<tt.str()<<" phase="<<phase<<" orbital="<<i+1<<std::endl;
                     long ti=to.offset(tt);
                     push_back(Excitation(ti,phase,i));
                 }
@@ -57,7 +57,7 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
                             if (phase) {
                                 long ti=to.offset(tt);
                                 if (ti < 0 || (size_type) ti>= to.size()) {
-                                    xout <<"i="<<i+1<<" phase="<<phase<<" ti="<<ti<<" tt="<<tt.toString()<<std::endl;
+                                    xout <<"i="<<i+1<<" phase="<<phase<<" ti="<<ti<<" tt="<<tt.str()<<std::endl;
                                     throw "index error in ExcitationSet";
                                 }
                                 xout << "found Excitation i="<<i+1<<", j="<<j+1<<",pairIndex="<<from.hamiltonian->pairIndex(i+1,j+1)<<std::endl;
@@ -70,13 +70,13 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
     }
 }
 
-std::string ExcitationSet::toString(int verbosity) const {
+std::string ExcitationSet::str(int verbosity) const {
     if ((*To).size()==0 || verbosity < 0) return "";
     std::stringstream ss;
-    ss<<"Excitations for String "<<From.toString() << " into symmetry " << (*To)[0].symmetry+1 <<":";
+    ss<<"Excitations for String "<<From.str() << " into symmetry " << (*To)[0].symmetry+1 <<":";
     for (ExcitationSet::const_iterator e=this->begin(); e!=this->end(); e++) {
         ss<<std::endl<< " String index="<< e->stringIndex
-         <<"("<<(*To)[e->stringIndex].toString()<<")"
+         <<"("<<(*To)[e->stringIndex].str()<<")"
         <<" phase="<<e->phase<<" orbitalAddress="<<e->orbitalAddress;
     }
     return ss.str();
@@ -84,5 +84,5 @@ std::string ExcitationSet::toString(int verbosity) const {
 
 std::ostream& gci::operator<<(std::ostream& os, ExcitationSet const& obj)
 {
-  return os << obj.toString();
+  return os << obj.str();
 }

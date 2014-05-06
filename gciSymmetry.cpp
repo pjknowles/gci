@@ -9,7 +9,7 @@ SymmetryOffset::SymmetryOffset(std::string title, int maxrank)
     resize(8,0);
 }
 
-std::string SymmetryOffset::toString(int verbosity) const
+std::string SymmetryOffset::str(int verbosity) const
 {
     if (verbosity < 0) return std::string("");
     std::ostringstream s;

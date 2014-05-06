@@ -22,7 +22,7 @@ public:
      * \brief The maximum rank of tensor
      */
     int maxrank;
-    std::string toString(int verbosity=0) const;
+    std::string str(int verbosity=0) const;
     /*!
      * \brief A string describing the object
      */

@@ -66,7 +66,7 @@ public:
     int ms2;
     /*! \brief Spatial symmetry of state */
     unsigned int symmetry;
-    std::string toString(int verbosity=0) const;
+    std::string str(int verbosity=0) const;
 
 
 };

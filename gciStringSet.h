@@ -69,7 +69,7 @@ public:
      */
     std::vector<double> occupationNumbers();
 
-    std::string toString(int verbosity=0) const;
+    std::string str(int verbosity=0) const;
 private:
     String proto;
     static long binomial_coefficient(unsigned long n, unsigned long k) ;

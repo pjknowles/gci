@@ -145,7 +145,7 @@ double gci::operator *(const Wavefunction &w1, const Wavefunction &w2)
     return result;
 }
 
-std::string Wavefunction::toString(int verbosity) const
+std::string Wavefunction::str(int verbosity) const
 {
     std::ostringstream s;
     if (verbosity >= 1) {
@@ -156,9 +156,9 @@ std::string Wavefunction::toString(int verbosity) const
             unsigned int symb = syma ^ symmetry ;
             if (alphaStrings[syma].size() && betaStrings[symb].size()) {
                 s<<std::endl<< "Alpha strings of  "<<syma+1<<":";
-                for (StringSet::const_iterator i=alphaStrings[syma].begin(); i!=alphaStrings[syma].end(); i++) s <<std::endl<< i->toString();
+                for (StringSet::const_iterator i=alphaStrings[syma].begin(); i!=alphaStrings[syma].end(); i++) s <<std::endl<< i->str();
                 s<<std::endl<< "Beta strings of symmetry "<<symb+1<<":";
-                for (StringSet::const_iterator i=betaStrings[symb].begin(); i!=betaStrings[symb].end(); i++) s <<std::endl<< i->toString();
+                for (StringSet::const_iterator i=betaStrings[symb].begin(); i!=betaStrings[symb].end(); i++) s <<std::endl<< i->str();
                 if (buffer.size() == dimension && verbosity >=2) {
                         s<<std::endl<<"Coefficients:";
                     for (size_t i=0; i<alphaStrings[syma].size(); i++) {
@@ -171,7 +171,7 @@ std::string Wavefunction::toString(int verbosity) const
             }
         }
     }
-    return this->State::toString(verbosity)+s.str();
+    return this->State::str(verbosity)+s.str();
 }
 
 bool Wavefunction::compatible(const Wavefunction &other) const

@@ -51,7 +51,7 @@ public:
      * \param verbosity How much to print
      * \return
      */
-    std::string toString(int verbosity=0) const;
+    std::string str(int verbosity=0) const;
 
 
 
