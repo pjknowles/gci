@@ -77,6 +77,14 @@ void Wavefunction::diagonalHamiltonian()
         unsigned int symb = syma ^ symmetry;
         std::vector<double> ona = alphaStrings[syma].occupationNumbers();
         std::vector<double> onb = betaStrings[symb].occupationNumbers();
+        if (hamiltonian->spinUnrestricted) { // UHF
+        } else { // RHF
+            for (size_t ia=0; ia < alphaStrings[syma].size(); ia++) {
+                std::vector<double> on(onb);
+                for (size_t ib=0; ib < betaStrings[symb].size(); ib++)
+                    on[ib] += ona[ia]
+            }
+        }
         offset += alphaStrings[syma].size()*betaStrings[symb].size();
     }
 }
