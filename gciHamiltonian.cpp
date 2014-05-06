@@ -40,7 +40,7 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
     std::vector<int> syms = dump->parameter("ORBSYM");
     orbital_symmetries = std::vector<unsigned int>(basisSize,0);
 //    orbital_symmetries = dump->parameter("ORBSYM");;
-    nt = SymmetryOffset("Numbers of orbitals in each symmetry");
+    nt = SymmetrySpace("Numbers of orbitals in each symmetry");
     for (std::vector<int>::iterator s=syms.begin(); s!=syms.end(); s++) {
         orbital_symmetries[s-syms.begin()]=(*s)-1; // convert 1-8 to 0-7
         nt[(*s)-1]++;
@@ -49,17 +49,17 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
     nt.calculateOffsets(); // set up the rest of the nt object
 //    xout << "orbital_symmetries:"; for (int i=0; i<basisSize; i++) xout <<" "<<orbital_symmetries[i]; xout <<std::endl;
     xout << nt.str(2) << std::endl;
-//    symmetric_pair_dimensions = SymmetryOffset("Numbers of orbital pairs in each symmetry");
+//    symmetric_pair_dimensions = SymmetrySpace("Numbers of orbital pairs in each symmetry");
 //    for (std::vector<int>::iterator s=syms.begin(); s!=syms.end(); s++) {
 //        for (std::vector<int>::iterator t=syms.begin(); t<=s; t++) {
 //            unsigned int stsym = orbital_symmetries[s-syms.begin()]^orbital_symmetries[t-syms.begin()];
 //            symmetric_pair_dimensions[stsym]++;
 //        }
 //    }
-    symmetry_offsets_2e_ints = SymmetryOffset("2-electron integral symmetry offsets");
+    symmetry_offsets_2e_ints = SymmetrySpace("2-electron integral symmetry offsets");
 //    unsigned int off1=0;
 //    unsigned int off2=0;
-//    symmetry_offsets_pairs = SymmetryOffset("Orbital pair symmetry offsets");
+//    symmetry_offsets_pairs = SymmetrySpace("Orbital pair symmetry offsets");
 //    for (unsigned int i=0; i<8; i++) {
 //        symmetry_offsets_pairs[i]=off1;
 //        symmetry_offsets_2e_ints[i]=off2;

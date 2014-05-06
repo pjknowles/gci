@@ -2,18 +2,18 @@
 #include <iostream>
 #include <sstream>
 
-SymmetryOffset::SymmetryOffset(std::string title, int maxrank)
+SymmetrySpace::SymmetrySpace(std::string title, int maxrank)
 {
     this->maxrank = maxrank;
     Title=title;
     resize(8,0);
 }
 
-std::string SymmetryOffset::str(int verbosity) const
+std::string SymmetrySpace::str(int verbosity) const
 {
     if (verbosity < 0) return std::string("");
     std::ostringstream s;
-    s << "SymmetryOffset object " << Title << ", dimensions:";
+    s << "SymmetrySpace object " << Title << ", dimensions:";
     for (const_iterator x=begin(); x!=end(); x++) {
         s << " " << *x;
     }
@@ -39,7 +39,7 @@ std::string SymmetryOffset::str(int verbosity) const
     return s.str();
 }
 
-void SymmetryOffset::calculateOffsets()
+void SymmetrySpace::calculateOffsets()
 {
     size_t dimension=9;
     if (maxrank > 1) dimension += 8*9*2;
@@ -74,22 +74,22 @@ void SymmetryOffset::calculateOffsets()
     }
 }
 
-size_t SymmetryOffset::offset(int sym1) const {
-    if (offsets.empty()) throw "SymmetryOffset::calculateOffsets has not been called";
+size_t SymmetrySpace::offset(int sym1) const {
+    if (offsets.empty()) throw "SymmetrySpace::calculateOffsets has not been called";
     return offsets[sym1];
 }
 
-size_t SymmetryOffset::offset(int sym1, int sym2, int parity) const
+size_t SymmetrySpace::offset(int sym1, int sym2, int parity) const
 {
-    if (offsets.empty()) throw "SymmetryOffset::calculateOffsets has not been called";
+    if (offsets.empty()) throw "SymmetrySpace::calculateOffsets has not been called";
     return offsets[9 + 8*9 * (parity ? 1 : 0) + sym1*9 + sym2];
 }
 
-size_t SymmetryOffset::total() const {
+size_t SymmetrySpace::total() const {
     return offset(8);
 }
 
-size_t SymmetryOffset::total(int sym1, int parity) const
+size_t SymmetrySpace::total(int sym1, int parity) const
 {
     return offset(sym1,8,parity);
 }

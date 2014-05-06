@@ -47,7 +47,7 @@ public:
     std::vector<double> *integrals_bb; /**< \brief point to bbbb integrals */
     unsigned int basisSize;///< \brief size of orbital basis set
     std::vector<unsigned int> orbital_symmetries;///< \brief spatial symmetry of orbitals (0-7)
-    SymmetryOffset nt; ///< \brief number of orbitals in each symmetry
+    SymmetrySpace nt; ///< \brief number of orbitals in each symmetry
     /*!
      * \brief calculate canonical index of a pair of orbitals.
      * \param i Absolute number (starting with 1) of first orbital.
@@ -102,9 +102,9 @@ public:
 private:
     unsigned int ijSize;
     unsigned int ijklSize;
-//    SymmetryOffset symmetric_pair_dimensions;
-//    SymmetryOffset symmetry_offsets_pairs;
-    SymmetryOffset symmetry_offsets_2e_ints;
+//    SymmetrySpace symmetric_pair_dimensions;
+//    SymmetrySpace symmetry_offsets_pairs;
+    SymmetrySpace symmetry_offsets_2e_ints;
 };
 }
 
