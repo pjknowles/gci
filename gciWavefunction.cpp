@@ -2,7 +2,7 @@
 #include <sstream>
 #include <iostream>
 #include "gciStringSet.h"
-#include "mkl.h"
+//#include "mkl.h"
 
 Wavefunction::Wavefunction(FCIdump *dump) : State(dump) {
     buildStrings();
