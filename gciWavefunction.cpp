@@ -2,6 +2,7 @@
 #include <sstream>
 #include <iostream>
 #include "gciStringSet.h"
+#include "mkl.h"
 
 Wavefunction::Wavefunction(FCIdump *dump) : State(dump) {
     buildStrings();
@@ -75,17 +76,56 @@ void Wavefunction::diagonalHamiltonian()
     size_t offset=0;
     for (unsigned int syma=0; syma<8; syma++) {
         unsigned int symb = syma ^ symmetry;
+        size_t nsa = alphaStrings[syma].size();
+        size_t nsb = betaStrings[symb].size();
+        size_t nact = hamiltonian->basisSize;
+        if (! nsa || ! nsb) continue;
         std::vector<double> ona = alphaStrings[syma].occupationNumbers();
         std::vector<double> onb = betaStrings[symb].occupationNumbers();
-        if (hamiltonian->spinUnrestricted) { // UHF
+        if (false && hamiltonian->spinUnrestricted) { // UHF
         } else { // RHF
-            for (size_t ia=0; ia < alphaStrings[syma].size(); ia++) {
+            for (size_t ia=0; ia < nsa; ia++) {
                 std::vector<double> on(onb);
-                for (size_t ib=0; ib < betaStrings[symb].size(); ib++)
+                for (size_t ib=0; ib < nsb*nact; ib++)
                     on[ib] += ona[ia];
+//                const double one=(double) 1;
+//                const MKL_INT ione = 1;
+//                const MKL_INT m = betaStrings[symb].size();
+//                const MKL_INT n = hamiltonian->basisSize;
+//                DGEMV("N",&m,&n, &one, &on[0], &m, &haa[0], &ione, &one, &buffer[offset+ia*m], &ione);
+                for (size_t i=0; i<nact; i++)
+                    for (size_t ib=0; ib < nsb; ib++)
+                        buffer[offset+ib] += on[ib+i*nsb] * haa[i];
+                for (size_t i=0; i<nact; i++) {
+                    for (size_t j=0; j<=i; j++) {
+                        double zz = Jaa[j+i*nact] - (double)0.5 * Kaa[j+i*nact];
+                        if (i == j) zz *= (double)0.5;
+                        for (size_t ib=0; ib < nsb; ib++)
+                        buffer[offset+ib] += on[ib+i*nsb] * on[ib+j*nsb] * zz;
+                    }
+                }
+                double vv = (double) ms2*ms2;
+                std::vector<double> f(nsb,(double)0);
+                for (size_t i=0; i<nact; i++)
+                    for (size_t ib=0; ib < nsb; ib++) {
+                        on[ib+i*nsb] *= ((double)2 - on[ib+ib*nsb]); // on becomes a mask for singly-occupied orbitals
+                        f[ib] += on[ib+ib*nsb];
+                    }
+                for (size_t ib=0; ib < nsb; ib++)
+                    f[ib] = f[ib] < (double) 1.1 ? (double) 1.1 : f[ib]; // mask off singularities (this code does nothing for 0 or 1 open-shell orbitals)
+                for (size_t ib=0; ib < nsb; ib++)
+                    f[ib] = (vv-f[ib]) / (f[ib]*(f[ib]-(double)1));
+                for (size_t i=0; i<nact; i++) {
+                    for (size_t j=0; j<=i; j++) {
+                        double zz = -(double)0.5 * Kaa[i*nact+j];
+                        if (i == j) zz *= (double)0.5;
+                        for (size_t ib=0; ib < nsb; ib++)
+                            buffer[offset+ib] += f[ib] * on[ib+i*nsb] * on[ib+j*nsb] * zz;
+                    }
+                }
+                offset += nsb;
             }
         }
-        offset += alphaStrings[syma].size()*betaStrings[symb].size();
     }
 }
 

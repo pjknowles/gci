@@ -97,6 +97,7 @@ int main()
     }
 
     w3.diagonalHamiltonian();
+    xout << "Diagonal elements: " << w3;
 
 
   return 0;
