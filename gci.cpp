@@ -80,6 +80,9 @@ int main()
     xout << "w3:"<<w3.str(2)<<std::endl <<"...end w3."<<std::endl<<std::endl;
 
 
+    w.diagonalHamiltonian();
+    xout << "Diagonal elements: " << w.str(2) << std::endl;
+
     for (unsigned int syma=0; syma<8; syma++) {
         unsigned int symb = syma ^ w.symmetry;
         std::vector<ExcitationSet> seta;
@@ -95,9 +98,6 @@ int main()
             xout << std::endl;
         }
     }
-
-    w3.diagonalHamiltonian();
-    xout << "Diagonal elements: " << w3;
 
 
   return 0;

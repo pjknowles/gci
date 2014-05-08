@@ -207,7 +207,7 @@ std::vector<double> Hamiltonian::int1(int spin)
     std::vector<double> result(basisSize,(double)0);
     std::vector<double> * integrals = spin < 0 ? integrals_b : integrals_a;
     for (unsigned int i=0; i < basisSize; i++) {
-        result[i+i*basisSize] = integrals->at(int1Index(i+1,i+1));
+        result[i] = integrals->at(int1Index(i+1,i+1));
     }
     return result;
 }

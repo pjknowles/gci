@@ -60,20 +60,31 @@ void Wavefunction::set(const double value)
 
 void Wavefunction::diagonalHamiltonian()
 {
-    std::vector<double> haa=hamiltonian->int1(1);
+    std::vector<double> ha=hamiltonian->int1(1);
     std::vector<double> hbb=hamiltonian->int1(-1);
     std::vector<double> Jaa=hamiltonian->intJ(1,1);
     std::vector<double> Jab=hamiltonian->intJ(1,-1);
     std::vector<double> Jbb=hamiltonian->intJ(1,1);
     std::vector<double> Kaa=hamiltonian->intK(1);
     std::vector<double> Kbb=hamiltonian->intK(-1);
-    xout << "Jbb" <<std::endl;
-    for (int j=0; j<hamiltonian->basisSize; j++) {
-        for (int i=0; i<hamiltonian->basisSize; i++)
-            xout << Jbb[i+j*hamiltonian->basisSize] << " ";
-        xout <<std::endl;
-    }
+//    xout << "ha" <<std::endl;
+//        for (size_t i=0; i<hamiltonian->basisSize; i++)
+//            xout << ha[i] << " ";
+//        xout <<std::endl;
+//    xout << "Jaa" <<std::endl;
+//    for (size_t j=0; j<hamiltonian->basisSize; j++) {
+//        for (size_t i=0; i<hamiltonian->basisSize; i++)
+//            xout << Jaa[i+j*hamiltonian->basisSize] << " ";
+//        xout <<std::endl;
+//    }
+//    xout << "Kaa" <<std::endl;
+//    for (size_t j=0; j<hamiltonian->basisSize; j++) {
+//        for (size_t i=0; i<hamiltonian->basisSize; i++)
+//            xout << Kaa[i+j*hamiltonian->basisSize] << " ";
+//        xout <<std::endl;
+//    }
     size_t offset=0;
+    set(hamiltonian->coreEnergy);
     for (unsigned int syma=0; syma<8; syma++) {
         unsigned int symb = syma ^ symmetry;
         size_t nsa = alphaStrings[syma].size();
@@ -86,16 +97,18 @@ void Wavefunction::diagonalHamiltonian()
         } else { // RHF
             for (size_t ia=0; ia < nsa; ia++) {
                 std::vector<double> on(onb);
-                for (size_t ib=0; ib < nsb*nact; ib++)
-                    on[ib] += ona[ia];
+                for (size_t i=0; i<nact; i++) {
+                    for (size_t ib=0; ib < nsb; ib++)
+                        on[ib+i*nsb] += ona[ia+i*nsa];
+                }
 //                const double one=(double) 1;
 //                const MKL_INT ione = 1;
 //                const MKL_INT m = betaStrings[symb].size();
 //                const MKL_INT n = hamiltonian->basisSize;
-//                DGEMV("N",&m,&n, &one, &on[0], &m, &haa[0], &ione, &one, &buffer[offset+ia*m], &ione);
+//                DGEMV("N",&m,&n, &one, &on[0], &m, &ha[0], &ione, &one, &buffer[offset+ia*m], &ione);
                 for (size_t i=0; i<nact; i++)
                     for (size_t ib=0; ib < nsb; ib++)
-                        buffer[offset+ib] += on[ib+i*nsb] * haa[i];
+                        buffer[offset+ib] += on[ib+i*nsb] * ha[i];
                 for (size_t i=0; i<nact; i++) {
                     for (size_t j=0; j<=i; j++) {
                         double zz = Jaa[j+i*nact] - (double)0.5 * Kaa[j+i*nact];
@@ -108,20 +121,22 @@ void Wavefunction::diagonalHamiltonian()
                 std::vector<double> f(nsb,(double)0);
                 for (size_t i=0; i<nact; i++)
                     for (size_t ib=0; ib < nsb; ib++) {
-                        on[ib+i*nsb] *= ((double)2 - on[ib+ib*nsb]); // on becomes a mask for singly-occupied orbitals
-                        f[ib] += on[ib+ib*nsb];
+                        on[ib+i*nsb] *= ((double)2 - on[ib+i*nsb]); // on becomes a mask for singly-occupied orbitals
+                        f[ib] += on[ib+i*nsb];
                     }
                 for (size_t ib=0; ib < nsb; ib++)
                     f[ib] = f[ib] < (double) 1.1 ? (double) 1.1 : f[ib]; // mask off singularities (this code does nothing for 0 or 1 open-shell orbitals)
                 for (size_t ib=0; ib < nsb; ib++)
                     f[ib] = (vv-f[ib]) / (f[ib]*(f[ib]-(double)1));
                 for (size_t i=0; i<nact; i++) {
-                    for (size_t j=0; j<=i; j++) {
+                    for (size_t j=0; j<i; j++) {
                         double zz = -(double)0.5 * Kaa[i*nact+j];
-                        if (i == j) zz *= (double)0.5;
                         for (size_t ib=0; ib < nsb; ib++)
                             buffer[offset+ib] += f[ib] * on[ib+i*nsb] * on[ib+j*nsb] * zz;
                     }
+                    double zz = -(double)0.25 * Kaa[i*nact+i];
+                    for (size_t ib=0; ib < nsb; ib++)
+                        buffer[offset+ib] += on[ib+i*nsb] * zz;
                 }
                 offset += nsb;
             }
@@ -198,7 +213,7 @@ std::string Wavefunction::str(int verbosity) const
     std::ostringstream s;
     if (verbosity >= 1) {
         s<<std::endl<<"Wavefunction object at address " << this ;
-        s<<std::endl<<"Coefficients at address " << &buffer <<" and of length " << buffer.size();
+        s<<std::endl<<"Values at address " << &buffer <<" and of length " << buffer.size();
         size_t address=0;
         for (unsigned int syma=0; syma<8; syma++) {
             unsigned int symb = syma ^ symmetry ;
@@ -208,7 +223,7 @@ std::string Wavefunction::str(int verbosity) const
                 s<<std::endl<< "Beta strings of symmetry "<<symb+1<<":";
                 for (StringSet::const_iterator i=betaStrings[symb].begin(); i!=betaStrings[symb].end(); i++) s <<std::endl<< i->str();
                 if (buffer.size() == dimension && verbosity >=2) {
-                        s<<std::endl<<"Coefficients:";
+                        s<<std::endl<<"Values:";
                     for (size_t i=0; i<alphaStrings[syma].size(); i++) {
                         s<<std::endl;
                         for (size_t j=0; j<betaStrings[symb].size(); j++) {
