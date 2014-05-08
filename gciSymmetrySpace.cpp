@@ -2,11 +2,10 @@
 #include <iostream>
 #include <sstream>
 
-SymmetrySpace::SymmetrySpace(std::string title, int maxrank)
+SymmetrySpace::SymmetrySpace(std::string title, int maxrank) : std::vector<size_t>(8,0)
 {
     this->maxrank = maxrank;
     Title=title;
-    resize(8,0);
 }
 
 std::string SymmetrySpace::str(int verbosity) const
@@ -59,7 +58,7 @@ void SymmetrySpace::calculateOffsets()
                 if (isym >= jsym)  {
                     offsets[9 + 8*9 + sym*9 + isym] = ntdg;
                     offsets[9 + 8*9 + sym*9 + jsym] = ntdg;
-                xout << "sym, isym, jsym: " << sym << isym << jsym<<"; ntdg=" <<ntdg << std::endl;
+//                xout << "sym, isym, jsym: " << sym << isym << jsym<<"; ntdg=" <<ntdg << std::endl;
                 }
                 ntqg += this->at(isym) * this->at(jsym);
                 if (isym > jsym) {

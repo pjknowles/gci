@@ -9,16 +9,16 @@
 #include <iomanip>
 #include <iterator>
 
-Hamiltonian::Hamiltonian(std::string filename)
+Hamiltonian::Hamiltonian(std::string filename) : OrbitalSpace(filename)
 {
     loaded = false;
     if (filename != "") load(filename);
 }
 
-Hamiltonian::Hamiltonian(FCIdump* dump)
+Hamiltonian::Hamiltonian(FCIdump* dump) : OrbitalSpace(dump)
 {
     loaded = false;
-    load(dump,3);
+    load(dump,0);
 }
 
 Hamiltonian::~Hamiltonian() {
@@ -31,35 +31,15 @@ void Hamiltonian::load(std::string filename, int verbosity) {
 }
 
 void Hamiltonian::load(FCIdump* dump, int verbosity) {
-    int debug=1;
     if (loaded) unload();
     if (verbosity) xout <<"Load hamiltonian from " << dump->fileName <<std::endl;
     //    State::load(filename);
 
     basisSize = dump->parameter("NORB").at(0);
-    std::vector<int> syms = dump->parameter("ORBSYM");
-    orbital_symmetries = std::vector<unsigned int>(basisSize,0);
-//    orbital_symmetries = dump->parameter("ORBSYM");;
-    nt = SymmetrySpace("Numbers of orbitals in each symmetry");
-    for (std::vector<int>::iterator s=syms.begin(); s!=syms.end(); s++) {
-        orbital_symmetries[s-syms.begin()]=(*s)-1; // convert 1-8 to 0-7
-        nt[(*s)-1]++;
-    }
-    nt.calculateOffsets(); // set up the rest of the nt object
-    xout << nt.str(2) << std::endl;
 
-    symmetry_offsets_2e_ints = SymmetrySpace("2-electron integral symmetry offsets");
-
-    spinUnrestricted=false;
-
-    ijSize = nt.total(0,1);
-    ijklSize = 0;
-    for (int isym=0; isym<8; isym++) {
-        symmetry_offsets_2e_ints[isym]=ijklSize;
-        ijklSize += nt.total(isym,1) * nt.total(isym,1);
-    }
-//    xout << symmetry_offsets_2e_ints << std::endl;
-//    xout << "ijklSize=" << ijklSize <<std::endl;
+    ijSize = total(0,1);
+    ijklSize = symmetricPairSpace.total(0);
+    xout << "ijklSize=" << ijklSize <<std::endl;
     integrals_a = new std::vector<double>(ijSize,0.0);
     if (spinUnrestricted)
         integrals_b = new std::vector<double>(ijSize,0.0);
@@ -88,6 +68,7 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
         if (kl) {
             ijkl = (ij-1)*ijSize+kl-1;
             if (verbosity>2) xout << "("<< i << j <<"|"<< k << l <<") [" << int2Index(i,j,k,l) << "]= " << value <<std::endl;
+            if (verbosity>2) xout << "("<< k << l <<"|"<< i << j <<") [" << int2Index(k,l,i,j) << "]= " << value <<std::endl;
             integrals_aa->at(int2Index(i,j,k,l))=value;
             integrals_aa->at(int2Index(k,l,i,j))=value;
         } else if (ij) {
@@ -118,19 +99,10 @@ void Hamiltonian::unload() {
     loaded=false;
 }
 
-std::string Hamiltonian::str(int verbosity)
+std::string Hamiltonian::str(int verbosity) const
 {
     std::ostringstream o;
-    if (verbosity>=0) {
-        o << "Basis size="<<basisSize<<" Spin unrestricted? "<<spinUnrestricted<<" Loaded? "<<loaded;
-        o << std::endl << nt.str();
-        o << std::endl << symmetry_offsets_2e_ints.str();
-    }
-    if (verbosity>=1) {
-        o << std::endl << "Orbital symmetries";
-        for (std::vector<unsigned int>::iterator i=orbital_symmetries.begin(); i!=orbital_symmetries.end(); i++)
-            o<<" "<<*i+1;
-    }
+    o << OrbitalSpace::str(verbosity);
     if (verbosity>=2) {
         int precision=6;
         o<<std::setprecision(precision);
@@ -165,43 +137,15 @@ std::string Hamiltonian::str(int verbosity)
     return o.str();
 }
 
-unsigned int Hamiltonian::orbitalIndex(unsigned int i) {
-    unsigned int n=0;
-    for (unsigned int j=1; j<i; j++)
-        if (orbital_symmetries[j-1] == orbital_symmetries[i-1]) n++;
-    return n;
+unsigned int Hamiltonian::int1Index(unsigned int i, unsigned int j) const {
+    return pairIndex(i,j,1);
 }
 
-unsigned int Hamiltonian::pairIndex(unsigned int i, unsigned int j) {
-    unsigned int ii = orbitalIndex(i);
-    unsigned int jj = orbitalIndex(j);
-    unsigned int isym = orbital_symmetries[i-1];
-    unsigned int jsym = orbital_symmetries[j-1];
-    if (isym == jsym)
-        return nt.offset(0,isym,1) + ((ii>jj) ? (ii*(ii+1))/2+jj : (jj*(jj+1))/2+ii);
-    else if (isym > jsym ) {
-//        xout << "in pairIndex(" << i << "," << j <<")="<< nt.offset(isym^jsym,isym,1) + jj*nt[isym] + ii <<"; offset=" << nt.offset(isym^jsym,isym,1) <<std::endl;
-        return nt.offset(isym^jsym,isym,1) + jj*nt[isym] + ii;
-    }
-    else
-        return nt.offset(isym^jsym,jsym,1) + ii*nt[jsym] + jj;
-}
-
-unsigned int Hamiltonian::int1Index(unsigned int i, unsigned int j) {
-    return pairIndex(i,j);
-}
-
-unsigned int Hamiltonian::int2Index(unsigned int i, unsigned int j, unsigned int k, unsigned int l)
+unsigned int Hamiltonian::int2Index(unsigned int i, unsigned int j, unsigned int k, unsigned int l) const
 {
-    unsigned int ijsym = orbital_symmetries[i-1]^orbital_symmetries[j-1];
-    unsigned int ij = pairIndex(i,j);
-    unsigned int kl = pairIndex(k,l);
-//    xout << "orbital_symmetries:"; for (int i=0; i<basisSize; i++) xout <<" "<<orbital_symmetries[i]; xout <<std::endl;
-//    xout << "int2Index - symmetries";  xout<<orbital_symmetries[i-1]<<":"<<orbital_symmetries[j-1]<<":"<<ijsym<<":"<<std::endl;
-//    xout << "int2Index - offset array "; for (int i=0; i<8; i++) xout <<symmetry_offsets_2e_ints[i]<<" "; xout<<std::endl;
-//    xout << "int2Index "<<i<<" "<<j<<" "<<k<<" "<<l<<"orbital indices"<< orbitalIndex(i)<<orbitalIndex(j)<<orbitalIndex(k)<<orbitalIndex(l)<<" ij="<<ij<<" kl="<<kl<<" offset="<<symmetry_offsets_2e_ints[ijsym]<<" address" <<symmetry_offsets_2e_ints[ijsym]+ij*nt.total(ijsym)+kl<<std::endl;
-    return symmetry_offsets_2e_ints[ijsym]+ij*nt.total(ijsym,1)+kl;
+    return quadIndex(i,j,k,l,1,0);
 }
+
 std::vector<double> Hamiltonian::int1(int spin)
 {
     std::vector<double> result(basisSize,(double)0);

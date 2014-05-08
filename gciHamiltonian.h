@@ -3,6 +3,7 @@
 #include "gci.h"
 #include "FCIdump.h"
 #include "gciSymmetrySpace.h"
+#include "gciOrbitalSpace.h"
 #include <string>
 #include <vector>
 
@@ -12,9 +13,10 @@ namespace gci {
  * Class holds hamiltonian operator for FCI or other calculation
  *
  */
-class Hamiltonian
+class Hamiltonian : public OrbitalSpace
 {
 public:
+
 
 /*!
  \brief construct Hamiltonian object
@@ -36,9 +38,8 @@ public:
      * \param verbosity how much information to include
      * \return printable representation of the hamiltonian
      */
-    std::string str(int verbosity=0);
+    std::string str(int verbosity=0) const;
     bool loaded;  /**< \brief whether the integrals are loaded */
-    bool spinUnrestricted; /**< \brief whether alpha and beta spin orbitals are different */
     double coreEnergy; /**< \brief core energy */
     std::vector<double> *integrals_a;  /**< \brief point to aa integrals */
     std::vector<double> *integrals_b; /**< \brief point to bb integrals */
@@ -46,28 +47,13 @@ public:
     std::vector<double> *integrals_ab; /**< \brief point to aabb integrals */
     std::vector<double> *integrals_bb; /**< \brief point to bbbb integrals */
     unsigned int basisSize;///< \brief size of orbital basis set
-    std::vector<unsigned int> orbital_symmetries;///< \brief spatial symmetry of orbitals (0-7)
-    SymmetrySpace nt; ///< \brief number of orbitals in each symmetry
     /*!
      * \brief calculate canonical index of a pair of orbitals.
      * \param i Absolute number (starting with 1) of first orbital.
      * \param j Absolute number (starting with 1) of second orbital.
      * \return Number of orbital pairs of the same symmetry canonically before ij.
      */
-    unsigned int pairIndex(unsigned int i, unsigned int j);
-    /*!
-     * \brief calculate canonical index of an orbital within its symmetry.
-     * \param i Absolute number (starting with 1) of orbital.
-     * \return Number of orbitals of the same symmetry canonically before i.
-     */
-    unsigned int orbitalIndex(unsigned int i);
-    /*!
-     * \brief calculate canonical address of a 1-electron integral
-     * \param i Absolute number (starting with 1) of first orbital.
-     * \param j Absolute number (starting with 1) of second orbital.
-     * \return
-     */
-    unsigned int int1Index (unsigned int i, unsigned int j);
+    unsigned int int1Index (unsigned int i, unsigned int j) const;
     /*!
      * \brief calculate canonical address of a 2-electron integral
      * \param i Absolute number (starting with 1) of first orbital.
@@ -76,7 +62,7 @@ public:
      * \param l Absolute number (starting with 1) of fourth orbital.
      * \return
      */
-    unsigned int int2Index (unsigned int i, unsigned int j, unsigned int k, unsigned int l);
+    unsigned int int2Index (unsigned int i, unsigned int j, unsigned int k, unsigned int l) const;
 
     /*!
      * \brief int1 Generate array of diagonal one-electron integrals
@@ -102,9 +88,6 @@ public:
 private:
     unsigned int ijSize;
     unsigned int ijklSize;
-//    SymmetrySpace symmetric_pair_dimensions;
-//    SymmetrySpace symmetry_offsets_pairs;
-    SymmetrySpace symmetry_offsets_2e_ints;
 };
 }
 

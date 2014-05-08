@@ -1,5 +1,5 @@
-#ifndef GCISYMMETRY_H
-#define GCISYMMETRY_H
+#ifndef GCISYMMETRYSPACE_H
+#define GCISYMMETRYSPACE_H
 #include <string>
 #include <vector>
 #include "gciPrintable.h"
@@ -64,4 +64,4 @@ private:
 
 using namespace gci;
 
-#endif // GCISYMMETRY_H
+#endif // GCISYMMETRYSPACE_H

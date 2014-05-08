@@ -4,6 +4,7 @@
 #include "gciWavefunction.h"
 #include "gciStringSet.h"
 #include "gciExcitationSet.h"
+#include "gciOrbitalSpace.h"
 #include "FCIdump.h"
 #include <iostream>
 using namespace gci;
@@ -13,8 +14,12 @@ int main()
 {
     try {
         FCIdump dump("FCIDUMP");
+        OrbitalSpace os("FCIDUMP");
+//        xout <<"Orbital space:" << os << std::endl;
+//        xout << "before Hamiltonian constructore"<<std::endl;
     Hamiltonian hh(&dump);
-    xout << "Hamiltonian: " <<hh.str(3)<<std::endl;
+    xout << "Hamiltonian: " <<hh.str()<<std::endl;
+    exit(0);
     State ss(&dump);
     ss.hamiltonian=&hh;
 
