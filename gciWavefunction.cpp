@@ -241,3 +241,41 @@ bool Wavefunction::compatible(const Wavefunction &other) const
 {
     return dimension==other.dimension && buffer.size() == other.buffer.size();
 }
+
+size_t Wavefunction::minloc()
+{
+    size_t result=0;
+    for (size_t offset=0; offset<buffer.size(); offset++)
+        if (buffer[offset] < buffer[result]) result=offset;
+    return result;
+}
+
+size_t Wavefunction::maxloc()
+{
+    size_t result=0;
+    for (size_t offset=0; offset<buffer.size(); offset++)
+        if (buffer[offset] > buffer[result]) result=offset;
+    return result;
+}
+
+double Wavefunction::at(size_t offset)
+{
+    return buffer.at(offset);
+}
+
+Determinant Wavefunction::determinantAt(size_t offset)
+{
+    size_t address=0;
+    for (unsigned int syma=0; syma<8; syma++) {
+        unsigned int symb = syma ^ symmetry ;
+        size_t newaddress = address +  alphaStrings[syma].size() * betaStrings[symb].size();
+        if (offset >= address && offset < newaddress) {
+            size_t a=(offset-address)/betaStrings[symb].size();
+            size_t b=offset-address-a*betaStrings[symb].size();
+            return Determinant(this,&alphaStrings[syma][a],&betaStrings[symb][b]);
+        }
+        address=newaddress;
+    }
+    throw "Wavefunction::determinantAt cannot find";
+}
+

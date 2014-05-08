@@ -5,6 +5,7 @@
 #include "gciState.h"
 #include "gciStringSet.h"
 #include "gciPrintable.h"
+#include "gciDeterminant.h"
 
 namespace gci {
 /*!
@@ -49,6 +50,30 @@ public:
 
     void diagonalHamiltonian(Hamiltonian& hamiltonian); ///< set this object to the diagonal elements of the hamiltonian
 
+    /*!
+     * \brief find the index of the smallest component
+     * \return offset in buffer
+     */
+    size_t minloc();
+    /*!
+     * \brief find the index of the largest component
+     * \return offset in buffer
+     */
+    size_t maxloc();
+
+    /*!
+     * \brief Get a component of the wavefunction
+     * \param offset which component to get
+     * \return  the value of the component
+     */
+    double at(size_t offset);
+    /*!
+     * \brief get the determinant corresponding to a particular component of the wavefunction
+     * \param offset which component to get
+     * \return  the determinant
+     */
+    Determinant determinantAt(size_t offset);
+
     std::string str(int verbosity=0) const;
 
 //    Wavefunction& operator=(const double &value);
@@ -64,6 +89,7 @@ private:
     size_t dimension; ///< the size of the space
     std::vector<double> buffer; ///< buffer to hold coefficients describing the object
     bool compatible(const Wavefunction &other) const; ///< whether this wavefunction is on the same space as another
+
 };
     Wavefunction operator+(const Wavefunction &w1, const Wavefunction &w2); ///< add two wavefunctions
     Wavefunction operator-(const Wavefunction &w1, const Wavefunction &w2); ///< subtract two wavefunctions

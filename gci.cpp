@@ -89,6 +89,9 @@ int main()
 
     w.diagonalHamiltonian(hh);
     xout << "Diagonal elements: " << w.str(2) << std::endl;
+    size_t i = w.minloc();
+    Determinant d = w.determinantAt(i);
+    xout << "Lowest determinant " << d <<" with energy "<<w.at(i)<<std::endl;
 
     for (unsigned int syma=0; syma<8; syma++) {
         unsigned int symb = syma ^ w.symmetry;
