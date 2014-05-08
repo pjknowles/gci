@@ -5,23 +5,23 @@ Determinant::Determinant(State* State, String* alpha, String*beta)
 {
     if (State == NULL) {
         nelec=999999999;
-        hamiltonian=NULL;
+        orbitalSpace=NULL;
         ms2=0;
     } else {
         nelec=State->nelec;
-        hamiltonian=State->hamiltonian;
+        orbitalSpace=State->orbitalSpace;
         ms2=State->ms2;
     }
     if (alpha!=NULL) stringAlpha=*alpha;
     if (beta!=NULL) stringBeta=*beta;
-    stringAlpha.hamiltonian=stringBeta.hamiltonian=hamiltonian;
-//    xout << "determinant constructor, hamiltonian="<<(hamiltonian!=NULL)<<hamiltonian->basisSize<<std::endl;
+    stringAlpha.orbitalSpace=stringBeta.orbitalSpace=orbitalSpace;
+//    xout << "determinant constructor, hamiltonian="<<(hamiltonian!=NULL)<<hamiltonian->total()<<std::endl;
 }
 
 int Determinant::create(int orbital) {
 //    xout << "create orbital "<<orbital <<std::endl;
     unsigned int orbabs = orbital > 0 ? orbital : -orbital;
-    if (hamiltonian==NULL || orbital==(int)0 || orbital > (int) hamiltonian->basisSize || orbital < -(int)hamiltonian->basisSize) throw "invalid orbital";
+    if (orbitalSpace==NULL || orbital==(int)0 || orbital > (int) orbitalSpace->total() || orbital < -(int)orbitalSpace->total()) throw "invalid orbital";
     if (orbital > 0) {
         if (stringAlpha.orbitals().size() >= (nelec+ms2)/2) throw "too many electrons in determinant";
 //        xout <<"try to populate stringAlpha"<<std::endl;
@@ -33,7 +33,7 @@ int Determinant::create(int orbital) {
 }
 
 int Determinant::destroy(int orbital) {
-    if (hamiltonian==NULL || orbital==(int)0 || orbital > (int) hamiltonian->basisSize || orbital < -(int)hamiltonian->basisSize) throw "invalid orbital";
+    if (orbitalSpace==NULL || orbital==(int)0 || orbital > (int) orbitalSpace->total() || orbital < -(int)orbitalSpace->total()) throw "invalid orbital";
     unsigned int orbabs = orbital > 0 ? orbital : -orbital;
     String* string = orbital > 0 ? &stringAlpha : &stringBeta;
     if (string->orbitals().size() <= 0) throw "too few electrons in determinant";

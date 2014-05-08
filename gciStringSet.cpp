@@ -14,7 +14,7 @@ StringSet::StringSet(String prototype, bool all, int sym) : vector<String>()
     proto = prototype;
     { // set up partial weight array for addressing binomial distributions
         int nitem = proto.nelec;
-        int nbox = proto.hamiltonian->basisSize;
+        int nbox = proto.orbitalSpace->total();
         vector< vector<int> > inter(nitem, vector<int>(nbox));
         //    xout << "in StringSet::PartialWeightArray "<<nitem << " " << nbox <<std::endl;
         for (int k=0;k<nitem;k++) {
@@ -127,7 +127,7 @@ std::vector<double> StringSet::occupationNumbers()
     std::vector<double> result;
     if (this->size()) {
         String firstString=this->at(0);
-        result.resize(this->size()* firstString.hamiltonian->basisSize, (double) 0);
+        result.resize(this->size()* firstString.orbitalSpace->total(), (double) 0);
         int stringoffset=0;
         for (StringSet::iterator s=this->begin(); s!=this->end(); s++)
         {

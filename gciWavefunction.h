@@ -27,13 +27,13 @@ public:
     Wavefunction(FCIdump* dump);
 
     /*!
-     * \brief Construct a Wavefunction object linked to a Hamiltonian
+     * \brief Construct a Wavefunction object linked to an OrbitalSpace
      * \param h The hamiltonian
      * \param nelec Number of electrons
      * \param symmetry Spatial symmetry
      * \param ms2 Sz quantum number times 2
      */
-    Wavefunction(Hamiltonian *h, int nelec, int symmetry, int ms2);
+    Wavefunction(OrbitalSpace *h, int nelec, int symmetry, int ms2);
 
     /*!
      * \brief Wavefunction copy constructor
@@ -47,7 +47,7 @@ public:
     void allocate_buffer(); ///< allocate buffer to full size
     size_t size(); ///< the size of the space
 
-    void diagonalHamiltonian(); ///< set this object to the diagonal elements of the hamiltonian
+    void diagonalHamiltonian(Hamiltonian& hamiltonian); ///< set this object to the diagonal elements of the hamiltonian
 
     std::string str(int verbosity=0) const;
 

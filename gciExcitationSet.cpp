@@ -17,7 +17,7 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
     if (to.symmetry>=0) symexc = from.symmetry ^ to.symmetry; // use symmetry if we can
     if (annihilations==1 && creations==0) {
         for (int i=0; i<(int)from.orbitals_.size(); i++) {
-            if (from.hamiltonian->orbital_symmetries[i]==(unsigned int)symexc || symexc==-1) {
+            if (from.orbitalSpace->orbital_symmetries[i]==(unsigned int)symexc || symexc==-1) {
                 String tt = from;
                 int phase = tt.destroy(i+1);
                 if (phase) {
@@ -30,7 +30,7 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
     }
     else if (annihilations==0 && creations==1) {
         for (int i=0; i<(int)from.orbitals_.size(); i++) {
-            if (from.hamiltonian->orbital_symmetries[i]==(unsigned int)symexc || symexc==-1) {
+            if (from.orbitalSpace->orbital_symmetries[i]==(unsigned int)symexc || symexc==-1) {
                 String tt = from;
                 int phase = tt.create(i+1);
                 if (phase) {
@@ -50,7 +50,7 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
 //            xout <<"j, phase, a "<<j+1<<phasea<<a.printable()<<std::endl;
             if (phasea) {
                 for (int i=0; i<(int)from.orbitals_.size(); i++) {
-                    if (from.hamiltonian->orbital_symmetries[i]==((unsigned int)symexc^from.hamiltonian->orbital_symmetries[j]) || symexc==-1) {
+                    if (from.orbitalSpace->orbital_symmetries[i]==((unsigned int)symexc^from.orbitalSpace->orbital_symmetries[j]) || symexc==-1) {
                         String tt = a;
                         int phase = phasea*tt.create(i+1);
 //                        xout <<"i, phase, tt "<<i+1<<phase<<std::endl;
@@ -60,8 +60,8 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
                                     xout <<"i="<<i+1<<" phase="<<phase<<" ti="<<ti<<" tt="<<tt.str()<<std::endl;
                                     throw "index error in ExcitationSet";
                                 }
-                                xout << "found Excitation i="<<i+1<<", j="<<j+1<<",pairIndex="<<from.hamiltonian->pairIndex(i+1,j+1)<<std::endl;
-                                push_back(Excitation(ti,phase,from.hamiltonian->pairIndex(i+1,j+1)));
+                                xout << "found Excitation i="<<i+1<<", j="<<j+1<<",pairIndex="<<from.orbitalSpace->pairIndex(i+1,j+1)<<std::endl;
+                                push_back(Excitation(ti,phase,from.orbitalSpace->pairIndex(i+1,j+1)));
                             }
                     }
                 }

@@ -6,9 +6,9 @@
 String::String(State* State, int Spin)
 {
     if (State == NULL) {
-        hamiltonian=NULL;
+        orbitalSpace=NULL;
     } else {
-        hamiltonian=State->hamiltonian;
+        orbitalSpace=State->orbitalSpace;
     }
     nullify();
     spin=Spin;
@@ -18,10 +18,10 @@ int String::create(unsigned int orbital) {
 //    xout << "String::create before="<<printable()<<", orbital="<<orbital<<std::endl;
 //        xout  << "create orbital "<<orbital <<" " <<orbitals_.size()<<std::endl;
 //        xout << "hamiltonian "<<(hamiltonian!=NULL)<<std::endl;
-        if (hamiltonian==NULL)
+        if (orbitalSpace==NULL)
             throw "String::create missing hamiltonian";
-//        xout << "basisSize "<<hamiltonian->basisSize<<std::endl;
-    if (hamiltonian==NULL || orbital==(unsigned int)0 || orbital > (unsigned int) hamiltonian->basisSize) throw "invalid orbital";
+//        xout << "basisSize "<<hamiltonian->total()<<std::endl;
+    if (orbitalSpace==NULL || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total()) throw "invalid orbital";
 //    xout <<"make iterator "<<std::endl;
     std::vector<unsigned int>::iterator ilast=orbitals_.begin();
 //    xout <<"iterator OK"<<std::endl;
@@ -33,7 +33,7 @@ int String::create(unsigned int orbital) {
 //        xout <<"first "<<orbital<<std::endl;
             ms2+=spin;
             nelec++;
-            symmetry^=hamiltonian->orbital_symmetries[orbital-1];
+            symmetry^=orbitalSpace->orbital_symmetries[orbital-1];
         orbitals_.insert(orbitals_.begin(),orbital);
 //        xout <<"orbitals_[0]="<<orbitals_[0]<<std::endl;
 //            xout << "String::create appends, after="<<printable()<<", phase="<<phase<<std::endl;
@@ -44,7 +44,7 @@ int String::create(unsigned int orbital) {
         if (*ilast < orbital && *i > orbital){
             ms2+=spin;
             nelec++;
-            symmetry^=hamiltonian->orbital_symmetries[orbital-1];
+            symmetry^=orbitalSpace->orbital_symmetries[orbital-1];
 //            xout <<"create orbital="<<*i <<" with symmetry="<<hamiltonian->orbital_symmetries[*i-1]<<", giving total symmetry"<<symmetry<<std::endl;
             orbitals_.insert(++ilast,orbital);
 //            xout << "String::create inserts, after="<<printable()<<", phase="<<phase<<std::endl;
@@ -55,14 +55,14 @@ int String::create(unsigned int orbital) {
     }
     ms2+=spin;
     nelec++;
-    symmetry^=hamiltonian->orbital_symmetries[orbital-1];
+    symmetry^=orbitalSpace->orbital_symmetries[orbital-1];
     orbitals_.insert(orbitals_.end(),orbital);
 //    xout << "String::create final append, after="<<printable()<<", phase="<<phase<<std::endl;
     return phase;
 }
 
 int String::destroy(unsigned int orbital) {
-    if (hamiltonian==NULL || orbital==(unsigned int)0 || orbital > (unsigned int) hamiltonian->basisSize ) throw "invalid orbital";
+    if (orbitalSpace==NULL || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total() ) throw "invalid orbital";
     if (orbitals_.size() <= 0) throw "too few electrons in String";
 //    xout << "String::destroy before="<<printable()<<", orbital="<<orbital<<std::endl;
     int phase=1;
@@ -70,7 +70,7 @@ int String::destroy(unsigned int orbital) {
         if (*i==orbital)  {
             ms2-=spin;
             nelec--;
-            symmetry^=hamiltonian->orbital_symmetries[*i-1];
+            symmetry^=orbitalSpace->orbital_symmetries[*i-1];
             orbitals_.erase(i);
 //            xout << "String::destroy succeeds, after="<<printable()<<", phase="<<phase<<std::endl;
             return phase;
@@ -120,7 +120,7 @@ unsigned int String::computed_symmetry(bool nocheck) const
 {
     unsigned int s=0;
     for (int i=0; i<(int)orbitals_.size(); i++) {
-        s ^= hamiltonian->orbital_symmetries[orbitals_[i]-1];
+        s ^= orbitalSpace->orbital_symmetries[orbitals_[i]-1];
 //        xout <<"orbital "<<orbitals_[i]<<",  symmetry="<<hamiltonian->orbital_symmetries[orbitals_[i]-1]<<" total symmetry now "<<s<<std::endl;
     }
     if (s!=symmetry && !nocheck) {
@@ -133,7 +133,7 @@ unsigned int String::computed_symmetry(bool nocheck) const
 bool String::next(int sym) {
     if (sym<0)
     { // generate the next string of any symmetry
-    unsigned int limit=hamiltonian->basisSize;
+    unsigned int limit=orbitalSpace->total();
     std::vector<unsigned int>::iterator k;
     unsigned int floor;
     for (std::vector<unsigned int>::reverse_iterator i = orbitals_.rbegin(); i!=orbitals_.rend(); ++i) {
@@ -142,7 +142,7 @@ bool String::next(int sym) {
         if (*i <= limit) break;
         limit--;
     }
-    if (limit <= hamiltonian->basisSize-orbitals_.size()) return false; // we ran out of boxes to put the objects into
+    if (limit <= orbitalSpace->total()-orbitals_.size()) return false; // we ran out of boxes to put the objects into
     while (k!=orbitals_.rbegin().base())
         *(k++)=++floor;
     symmetry=computed_symmetry(true);

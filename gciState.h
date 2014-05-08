@@ -2,7 +2,7 @@
 #define GCIState_H
 #include "gci.h"
 #include "FCIdump.h"
-#include "gciHamiltonian.h"
+#include "gciOrbitalSpace.h"
 #include "gciPrintable.h"
 #include <string>
 
@@ -29,13 +29,13 @@ public:
      */
     State(FCIdump* dump);
     /*!
-     * \brief Construct a State object linked to a Hamiltonian
-     * \param h The hamiltonian
+     * \brief Construct a State object linked to a OrbitalSpace
+     * \param os The orbital space
      * \param nelec Number of electrons
      * \param symmetry Spatial symmetry
      * \param ms2 Sz quantum number times 2
      */
-    State(Hamiltonian* h, int nelec=0, int symmetry=1, int ms2=0);
+    State(OrbitalSpace *os, int nelec=0, int symmetry=1, int ms2=0);
     /*!
      * \brief Construct a State object with data copied from another State
      * \param s State to copy
@@ -57,9 +57,9 @@ public:
     void load(FCIdump* dump);
     /*!
       \brief
-      Second-quantized hamiltonian that defines the orbital basis set
+       Pointer to orbital basis set, if any
       */
-    Hamiltonian* hamiltonian;
+    OrbitalSpace* orbitalSpace;
      /*! \brief Number of electrons */
     unsigned int nelec;
     /*! \brief Twice the spin quantum number, ie multiplicity minus one */

@@ -14,14 +14,16 @@ int main()
 {
     try {
         FCIdump dump("FCIDUMP");
-        OrbitalSpace os("FCIDUMP");
+//        OrbitalSpace os("FCIDUMP");
 //        xout <<"Orbital space:" << os << std::endl;
-//        xout << "before Hamiltonian constructore"<<std::endl;
+//       xout << "before Hamiltonian constructore"<<std::endl;
     Hamiltonian hh(&dump);
     xout << "Hamiltonian: " <<hh.str()<<std::endl;
-    exit(0);
+    OrbitalSpace os = hh;
+    xout << "Orbital space: " << os.str(1) <<std::endl;
+//    exit(0);
     State ss(&dump);
-    ss.hamiltonian=&hh;
+    ss.orbitalSpace=&os;
 
 //    Determinant d1(&ss);
 
@@ -85,7 +87,7 @@ int main()
     xout << "w3:"<<w3.str(2)<<std::endl <<"...end w3."<<std::endl<<std::endl;
 
 
-    w.diagonalHamiltonian();
+    w.diagonalHamiltonian(hh);
     xout << "Diagonal elements: " << w.str(2) << std::endl;
 
     for (unsigned int syma=0; syma<8; syma++) {
@@ -98,7 +100,7 @@ int main()
         xout << "Alpha occupation numbers"<<std::endl;
         std::vector<double> on = w.alphaStrings[syma].occupationNumbers();
         for (size_t i=0; i < w.alphaStrings[syma].size(); i++) {
-            for (size_t j=0; j < w.hamiltonian->basisSize; j++)
+            for (size_t j=0; j < w.orbitalSpace->total(); j++)
                 xout << " " << on[i+j*w.alphaStrings[syma].size()];
             xout << std::endl;
         }

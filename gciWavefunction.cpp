@@ -11,7 +11,7 @@ Wavefunction::Wavefunction(FCIdump *dump) : State(dump) {
 Wavefunction::Wavefunction(std::string filename) : State(filename) {
     if (filename!="") buildStrings();
 }
-Wavefunction::Wavefunction(Hamiltonian *h, int n, int s, int m2) : State(h,n,s,m2) {
+Wavefunction::Wavefunction(OrbitalSpace* h, int n, int s, int m2) : State(h,n,s,m2) {
     buildStrings();
 }
 
@@ -58,15 +58,15 @@ void Wavefunction::set(const double value)
     for (std::vector<double>::iterator b=buffer.begin(); b != buffer.end(); b++) *b=value;
 }
 
-void Wavefunction::diagonalHamiltonian()
+void Wavefunction::diagonalHamiltonian(Hamiltonian &hamiltonian)
 {
-    std::vector<double> ha=hamiltonian->int1(1);
-    std::vector<double> hbb=hamiltonian->int1(-1);
-    std::vector<double> Jaa=hamiltonian->intJ(1,1);
-    std::vector<double> Jab=hamiltonian->intJ(1,-1);
-    std::vector<double> Jbb=hamiltonian->intJ(1,1);
-    std::vector<double> Kaa=hamiltonian->intK(1);
-    std::vector<double> Kbb=hamiltonian->intK(-1);
+    std::vector<double> ha=hamiltonian.int1(1);
+    std::vector<double> hbb=hamiltonian.int1(-1);
+    std::vector<double> Jaa=hamiltonian.intJ(1,1);
+    std::vector<double> Jab=hamiltonian.intJ(1,-1);
+    std::vector<double> Jbb=hamiltonian.intJ(1,1);
+    std::vector<double> Kaa=hamiltonian.intK(1);
+    std::vector<double> Kbb=hamiltonian.intK(-1);
 //    xout << "ha" <<std::endl;
 //        for (size_t i=0; i<hamiltonian->basisSize; i++)
 //            xout << ha[i] << " ";
@@ -84,16 +84,16 @@ void Wavefunction::diagonalHamiltonian()
 //        xout <<std::endl;
 //    }
     size_t offset=0;
-    set(hamiltonian->coreEnergy);
+    set(hamiltonian.coreEnergy);
     for (unsigned int syma=0; syma<8; syma++) {
         unsigned int symb = syma ^ symmetry;
         size_t nsa = alphaStrings[syma].size();
         size_t nsb = betaStrings[symb].size();
-        size_t nact = hamiltonian->basisSize;
+        size_t nact = orbitalSpace->total();
         if (! nsa || ! nsb) continue;
         std::vector<double> ona = alphaStrings[syma].occupationNumbers();
         std::vector<double> onb = betaStrings[symb].occupationNumbers();
-        if (false && hamiltonian->spinUnrestricted) { // UHF
+        if (false && orbitalSpace->spinUnrestricted) { // UHF
         } else { // RHF
             for (size_t ia=0; ia < nsa; ia++) {
                 std::vector<double> on(onb);
