@@ -33,7 +33,7 @@ std::string SymmetrySpace::str(int verbosity) const
         if (verbosity > 1) {
             s <<std::endl;
             s << "Raw offsets:";
-            for (int i=0; i<offsets.size(); i++) s << " " << offsets[i] ;
+            for (size_t i=0; i<offsets.size(); i++) s << " " << offsets[i] ;
         }
     }
     return s.str();
