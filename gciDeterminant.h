@@ -56,6 +56,7 @@ public:
 
 
 private:
+    friend class Hamiltonian;
     String stringAlpha, stringBeta; /*!< The orbitals that make up the determinant */
 };
 }

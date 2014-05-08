@@ -86,13 +86,6 @@ int main()
     xout << "w2:"<<w2.str(2)<<std::endl <<"...end w2."<<std::endl<<std::endl;
     xout << "w3:"<<w3.str(2)<<std::endl <<"...end w3."<<std::endl<<std::endl;
 
-
-    w.diagonalHamiltonian(hh);
-    xout << "Diagonal elements: " << w.str(2) << std::endl;
-    size_t i = w.minloc();
-    Determinant d = w.determinantAt(i);
-    xout << "Lowest determinant " << d <<" with energy "<<w.at(i)<<std::endl;
-
     for (unsigned int syma=0; syma<8; syma++) {
         unsigned int symb = syma ^ w.symmetry;
         std::vector<ExcitationSet> seta;
@@ -108,6 +101,16 @@ int main()
             xout << std::endl;
         }
     }
+
+
+    w.diagonalHamiltonian(hh);
+    xout << "Diagonal elements: " << w.str(2) << std::endl;
+    size_t i = w.minloc();
+    Determinant d = w.determinantAt(i);
+    xout << "Lowest determinant " << d <<" with energy "<<w.at(i)<<std::endl;
+
+    Hamiltonian fh = hh.FockHamiltonian(d);
+    xout << "Fock hamiltonian: " << fh.str(3) << std::endl;
 
 
   return 0;

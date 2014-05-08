@@ -111,6 +111,7 @@ std::string Hamiltonian::str(int verbosity) const
             o<<std::endl << "1-electron integrals:";
             for (unsigned int i=1; i<=basisSize; i++) {
                 for (unsigned int j=1; j<=i; j++) {
+                    if (orbital_symmetries[i-1]^orbital_symmetries[j-1]) continue;
                     unsigned int ij = int1Index(i,j);
                     if (integrals_a->at(ij) != (double)0 || integrals_b->at(ij) != (double)0) o<<std::endl<<std::setw(4)<<i<<" "<<j<<" "<<std::setw(precision+7)<<integrals_a->at(ij)<<" "<<integrals_b->at(ij);
                 }
@@ -123,7 +124,7 @@ std::string Hamiltonian::str(int verbosity) const
                     unsigned int ij = i > j ? (i*(i-1))/2+j-1 : (j*(j-1))/2+i-1;
                     for (unsigned int k=1; k<=i; k++) {
                         for (unsigned int l=1; l<=i; l++) {
-                            if (orbital_symmetries[i-1]^orbital_symmetries[j-1]^orbital_symmetries[k-1]^orbital_symmetries[l-1]) break;
+                            if (orbital_symmetries[i-1]^orbital_symmetries[j-1]^orbital_symmetries[k-1]^orbital_symmetries[l-1]) continue;
                             unsigned int kl = k > l ? (k*(k-1))/2+l-1 : (l*(l-1))/2+k-1;
                             if (kl>ij) break;
                             unsigned int ijkl = int2Index(i,j,k,l);
@@ -164,7 +165,7 @@ std::vector<double> Hamiltonian::intJ(int spini, int spinj)
     for (unsigned int j=0; j < basisSize; j++) {
         for (unsigned int i=0; i < basisSize; i++) {
             result[i+j*basisSize] = integrals->at(int2Index(i+1,i+1,j+1,j+1));
-//            xout <<"intJ["<<i<<","<<j<<"]="<<result[i+j*basisSize]<<std::endl;
+            //            xout <<"intJ["<<i<<","<<j<<"]="<<result[i+j*basisSize]<<std::endl;
         }
     }
     return result;
@@ -180,4 +181,61 @@ std::vector<double> Hamiltonian::intK(int spin)
         }
     }
     return result;
+}
+
+Hamiltonian Hamiltonian::FockHamiltonian(Determinant &reference)
+{
+    Hamiltonian f;
+    for (int i=0; i<8; i++)
+        f[i]=at(i);
+    f.calculateOffsets();
+    f.spinUnrestricted = spinUnrestricted;
+    f.coreEnergy = coreEnergy;
+    f.basisSize = basisSize;
+    f.ijklSize = ijklSize;
+    f.ijSize = ijSize;
+    f.orbital_symmetries = orbital_symmetries;
+    f.integrals_a = integrals_a;
+    for (std::vector<unsigned int>::const_iterator o=reference.stringAlpha.orbitals().begin(); o != reference.stringAlpha.orbitals().end(); o++)
+    {
+        for (unsigned int i=1; i<=basisSize; i++)
+            for (unsigned int j=1; j<=i; j++) {
+                if (orbital_symmetries[i-1]!=orbital_symmetries[j-1]) continue;
+                (*f.integrals_a)[int1Index(i,j)] += (*integrals_aa)[int2Index(i,j,*o,*o)] - (*integrals_aa)[int2Index(i,*o,*o,j)];
+            }
+    }
+    for (std::vector<unsigned int>::const_iterator o=reference.stringBeta.orbitals().begin(); o != reference.stringBeta.orbitals().end(); o++)
+    {
+        for (unsigned int i=1; i<=basisSize; i++)
+            for (unsigned int j=1; j<=i; j++) {
+                if (orbital_symmetries[i-1]!=orbital_symmetries[j-1]) continue;
+                (*f.integrals_a)[int1Index(i,j)] += (*integrals_ab)[int2Index(i,j,*o,*o)];
+            }
+    }
+    f.integrals_aa = NULL;
+    f.integrals_ab = NULL;
+    f.integrals_bb = NULL;
+    if (spinUnrestricted) {
+        f.integrals_b = integrals_b;
+        for (std::vector<unsigned int>::const_iterator o=reference.stringBeta.orbitals().begin(); o != reference.stringBeta.orbitals().end(); o++)
+        {
+            for (unsigned int i=1; i<=basisSize; i++)
+                for (unsigned int j=1; j<=i; j++) {
+                    if (orbital_symmetries[i-1]!=orbital_symmetries[j-1]) continue;
+                    (*f.integrals_a)[int1Index(i,j)] += (*integrals_bb)[int2Index(i,j,*o,*o)] - (*integrals_bb)[int2Index(i,*o,*o,j)];
+                }
+        }
+        for (std::vector<unsigned int>::const_iterator o=reference.stringAlpha.orbitals().begin(); o != reference.stringAlpha.orbitals().end(); o++)
+        {
+            for (unsigned int i=1; i<=basisSize; i++)
+                for (unsigned int j=1; j<=i; j++) {
+                    if (orbital_symmetries[i-1]!=orbital_symmetries[j-1]) continue;
+                    (*f.integrals_a)[int1Index(i,j)] += (*integrals_ab)[int2Index(*o,*o,i,j)];
+                }
+        }
+    } else {
+        f.integrals_b = f.integrals_a;
+    }
+    f.loaded = true;
+    return f;
 }

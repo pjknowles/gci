@@ -3,6 +3,7 @@
 #include "gci.h"
 #include "FCIdump.h"
 #include "gciSymmetrySpace.h"
+#include "gciDeterminant.h"
 #include "gciOrbitalSpace.h"
 #include <string>
 #include <vector>
@@ -85,6 +86,13 @@ public:
      * \return one-dimensional array with (ij|ji) at i-1 + (j-1)*basisSize
      */
     std::vector<double> intK(int spin);
+
+    /*!
+     * \brief Generate a new object containing the Fock hamiltonian corresponding to a given reference determinant
+     * \param reference the reference Slater determinant
+     * \return  the Fock hamiltonian
+     */
+    Hamiltonian FockHamiltonian(Determinant& reference);
 private:
     unsigned int ijSize;
     unsigned int ijklSize;
