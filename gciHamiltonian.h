@@ -2,7 +2,7 @@
 #define GCIHAMILTONIAN_H
 #include "gci.h"
 #include "FCIdump.h"
-#include "gciSymmetry.h"
+#include "gciSymmetrySpace.h"
 #include <string>
 #include <vector>
 

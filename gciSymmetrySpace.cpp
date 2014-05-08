@@ -1,4 +1,4 @@
-#include "gciSymmetry.h"
+#include "gciSymmetrySpace.h"
 #include <iostream>
 #include <sstream>
 
