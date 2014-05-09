@@ -77,6 +77,7 @@ public:
     std::string str(int verbosity=0) const;
 
 //    Wavefunction& operator=(const double &value);
+    void set(size_t offset, const double val);///< set one element to a scalar
     void set(const double val);///< set all elements to a scalar
 //    Wavefunction& operator=(const Wavefunction &other); ///< copy
     Wavefunction& operator*=(const double &value); ///< multiply by a scalar

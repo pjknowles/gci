@@ -51,6 +51,10 @@ void Wavefunction::allocate_buffer()
     buffer.resize(dimension,(double)0);
 }
 
+void Wavefunction::set(size_t offset, const double val)
+{
+    buffer.at(offset) = val;
+}
 
 void Wavefunction::set(const double value)
 {
