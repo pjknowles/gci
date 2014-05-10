@@ -55,6 +55,7 @@ public:
     */
     bool first(int n=0, int sym=-1);
     std::vector<unsigned int> orbitals();  /*!< The orbitals that make up the string */
+    size_t key; ///< \brief Hash key that can be associated with this object
     std::string str(int verbosity=0) const;
     int spin; ///< \brief spin 1=alpha, -1=beta
     /*!
