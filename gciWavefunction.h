@@ -74,6 +74,13 @@ public:
      */
     Determinant determinantAt(size_t offset);
 
+    /*!
+     * \brief Fill this object with the action of a hamiltonian operator on another wavefunction
+     * \param h the hamiltonian
+     * \param w the wavefunction
+     */
+    void hamiltonianOnWavefunction(Hamiltonian& h, Wavefunction& w);
+
     std::string str(int verbosity=0) const;
 
 //    Wavefunction& operator=(const double &value);

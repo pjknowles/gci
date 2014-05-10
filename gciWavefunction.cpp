@@ -283,3 +283,7 @@ Determinant Wavefunction::determinantAt(size_t offset)
     throw "Wavefunction::determinantAt cannot find";
 }
 
+void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, Wavefunction &w)
+{
+    buffer = w.buffer; // temporary!
+}
