@@ -34,7 +34,7 @@ public:
      */
     std::map<long,long> addressMap;
     /*!
-     * \brief Populate the StringSet with the complete set of Strings
+     * \brief Populate the StringSet with the complete set of String objects
      * \param sym Restrict to those String objects with this symmetry if not negative
      */
     void complete(int sym=-1);
@@ -43,7 +43,7 @@ public:
      */
     int symmetry;
     /*!
-     * \brief calculate the address of String in the Stringset.
+     * \brief calculate the address of String in the StringSet.
      * A checked version of addressMap[s.key].
      * \param s Pointer to the String
      * \return index in this, or -1 if not found
@@ -61,7 +61,7 @@ public:
     /*!
      * \brief occupationNumbers
      * \return a one-dimensional array representing a two-dimensional matrix
-     * dimensioned number of Strings in this Stringset (running fastest)
+     * dimensioned number of String objects in this StringSet (running fastest)
      * by number of orbitals (running slowest)
      */
     std::vector<double> occupationNumbers();
