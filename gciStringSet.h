@@ -43,13 +43,6 @@ public:
      */
     int symmetry;
     /*!
-     * \brief calculate the address of String in the StringSet.
-     * A checked version of addressMap[s.key].
-     * \param s Pointer to the String
-     * \return index in this, or -1 if not found
-     */
-    size_t offset(String &s);
-    /*!
      * \brief Generate all excitations from this StringSet to StringSet to.
      * \param to StringSet against which results will be indexed.
      * \param annihilations How many annihilations.

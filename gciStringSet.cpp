@@ -42,10 +42,6 @@ StringSet::StringSet(String prototype, bool all, int sym) : std::vector<String>(
     // compute address map
 }
 
-size_t StringSet::offset(String &s)
-{
-    return addressMap.count(s.key) ? addressMap[s.key] : -1;
-}
 
 long StringSet::binomial_coefficient(unsigned long n, unsigned long k) {
     unsigned long i;
