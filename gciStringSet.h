@@ -32,7 +32,7 @@ public:
     /*!
      * \brief Map from the summed partial weights to the canonical index of a String in this set
      */
-    std::map<long,long> addressMap;
+    std::map<size_t,size_t> addressMap;
     /*!
      * \brief Populate the StringSet with the complete set of String objects
      * \param sym Restrict to those String objects with this symmetry if not negative

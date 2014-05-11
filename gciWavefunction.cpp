@@ -222,7 +222,7 @@ std::string Wavefunction::str(int verbosity) const
         for (unsigned int syma=0; syma<8; syma++) {
             unsigned int symb = syma ^ symmetry ;
             if (alphaStrings[syma].size() && betaStrings[symb].size()) {
-                s<<std::endl<< "Alpha strings of  "<<syma+1<<":";
+                s<<std::endl<< "Alpha strings of symmetry "<<syma+1<<":";
                 for (StringSet::const_iterator i=alphaStrings[syma].begin(); i!=alphaStrings[syma].end(); i++) s <<std::endl<< i->str();
                 s<<std::endl<< "Beta strings of symmetry "<<symb+1<<":";
                 for (StringSet::const_iterator i=betaStrings[symb].begin(); i!=betaStrings[symb].end(); i++) s <<std::endl<< i->str();

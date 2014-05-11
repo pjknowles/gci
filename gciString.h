@@ -67,8 +67,8 @@ public:
     static String exhausted; /*!< returned by next() when we're already on the last string */
 
     std::vector<unsigned int> orbitals_; /*!< The orbitals that make up the string */
+    const static size_t keyUnassigned=ULLONG_MAX; ///< conventional null value for key
 private:
-    const static size_t keyUnassigned=ULLONG_MAX;
 };
 }
 
