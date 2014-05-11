@@ -2,12 +2,12 @@
 #include <iostream>
 #include <sstream>
 
-StringSet::StringSet() : vector<String>()
+StringSet::StringSet() : std::vector<String>()
 {
 //    xout <<"StringSet default constructor"<<std::endl;
 }
 
-StringSet::StringSet(String prototype, bool all, int sym) : vector<String>()
+StringSet::StringSet(String prototype, bool all, int sym) : std::vector<String>()
 {
 //    xout <<"StringSet prototype constructor "<<all<<std::endl;
     // copy prototype
@@ -15,7 +15,7 @@ StringSet::StringSet(String prototype, bool all, int sym) : vector<String>()
     { // set up partial weight array for addressing binomial distributions
         int nitem = proto.nelec;
         int nbox = proto.orbitalSpace->total();
-        vector< vector<int> > inter(nitem, vector<int>(nbox));
+        std::vector< std::vector<int> > inter(nitem, std::vector<int>(nbox));
         //    xout << "in StringSet::PartialWeightArray "<<nitem << " " << nbox <<std::endl;
         for (int k=0;k<nitem;k++) {
             for (int l=0;l<nbox;l++) {
@@ -34,32 +34,17 @@ StringSet::StringSet(String prototype, bool all, int sym) : vector<String>()
         }
 
         PartialWeightArray=inter;
-        //    xout << "PartialWeightArray:"<<std::endl; for (int k=0;k<nitem;k++) { for (int l=0;l<nbox;l++) xout << " "<<PartialWeightArray[k][l]; xout <<std::endl; }
+            xout << "PartialWeightArray:"<<std::endl; for (int k=0;k<nitem;k++) { for (int l=0;l<nbox;l++) xout << " "<<PartialWeightArray[k][l]; xout <<std::endl; }
     }
     if (all) complete(sym);
     symmetry = sym;
-    calculateAddressMap();
+//    calculateAddressMap();
     // compute address map
 }
 
-void StringSet::calculateAddressMap()
+size_t StringSet::offset(String &s)
 {
-    addressMap.clear();
-    long i=0;
-    for (StringSet::iterator s=this->begin(); s!=this->end(); s++) {
-        long j=0;
-        for (int k=0; k<(int)s->orbitals_.size(); k++)
-            j+= PartialWeightArray[k][s->orbitals_[k]];
-        addressMap[j]=i++;
-    }
-}
-
-long StringSet::offset(String &s)
-{
-    long j=0;
-    for (int k=0; k<(int)s.orbitals_.size(); k++)
-            j+= PartialWeightArray[k][s.orbitals_[k]];
-    return addressMap.count(j) ? addressMap[j] : -1;
+    return addressMap.count(s.key) ? addressMap[s.key] : -1;
 }
 
 long StringSet::binomial_coefficient(unsigned long n, unsigned long k) {
@@ -101,6 +86,16 @@ void StringSet::complete(int sym)
     //    xout << "in StringSet::complete final list: " <<std::endl ;
 //    for (iterator s=this->begin(); s!=this->end(); s++) xout << s->printable()<<std::endl;
 
+}
+
+void StringSet::push_back(String& s)
+{
+    s.key=0;
+    for (int k=0; k<(int)s.orbitals_.size(); k++)
+        s.key+= PartialWeightArray[k][s.orbitals_[k]-1];
+    addressMap[s.key]=size();
+    xout <<"StringSet::push_back " <<s <<" size()=" <<size()<<std::endl;
+    std::vector<String>::push_back(s);
 }
 
 std::string StringSet::str(int verbosity) const

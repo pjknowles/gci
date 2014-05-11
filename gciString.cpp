@@ -12,6 +12,7 @@ String::String(State* State, int Spin)
     }
     nullify();
     spin=Spin;
+    key=keyUnassigned;
 }
 
 int String::create(unsigned int orbital) {
@@ -108,7 +109,9 @@ std::string String::str(int verbosity) const {
             result.append(rr);
         }
         std::stringstream ss;
-        ss << " ["<< computed_symmetry()+1 <<"]"; // internally symmetries are implemented 0-7, but externally as 1-8
+        ss << " [";
+        if (key != keyUnassigned) ss << key << ".";
+        ss << computed_symmetry()+1 <<"]"; // internally symmetries are implemented 0-7, but externally as 1-8
         std::string rr;
         ss >> rr;
         result.append(rr)

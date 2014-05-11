@@ -68,6 +68,7 @@ public:
 
     std::vector<unsigned int> orbitals_; /*!< The orbitals that make up the string */
 private:
+    const static size_t keyUnassigned=ULLONG_MAX;
 };
 }
 

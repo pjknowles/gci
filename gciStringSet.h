@@ -43,15 +43,12 @@ public:
      */
     int symmetry;
     /*!
-     * \brief Calculate addressMap
-     */
-    void calculateAddressMap();
-    /*!
-     * \brief calculate the address of String in the Stringset
+     * \brief calculate the address of String in the Stringset.
+     * A checked version of addressMap[s.key].
      * \param s Pointer to the String
      * \return index in this, or -1 if not found
      */
-    long offset(String &s);
+    size_t offset(String &s);
     /*!
      * \brief Generate all excitations from this StringSet to StringSet to.
      * \param to StringSet against which results will be indexed.
@@ -68,6 +65,11 @@ public:
      * by number of orbitals (running slowest)
      */
     std::vector<double> occupationNumbers();
+    /*!
+     * \brief Add a new element to the end of the set
+     * \param s The element to add
+     */
+    void push_back(String &s);
 
     std::string str(int verbosity=0) const;
 private:
