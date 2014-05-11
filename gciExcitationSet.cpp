@@ -1,7 +1,7 @@
 #include "gciExcitationSet.h"
 #include <iostream>
 #include <sstream>
-Excitation::Excitation(long StringIndex, int Phase, long OrbitalAddress)
+Excitation::Excitation(size_t StringIndex, int Phase, size_t OrbitalAddress)
 {
     stringIndex = StringIndex;
     phase = Phase;
@@ -22,7 +22,7 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
                 int phase = tt.destroy(i+1);
                 if (phase) {
                     xout << "found annihilation from "<<from.str()<<" to "<<tt.str()<<" phase="<<phase<<" orbital="<<i+1<<std::endl;
-                    long ti=to.addressMap[tt.key];
+                    size_t ti=to.addressMap[tt.key];
                     push_back(Excitation(ti,phase,i));
                 }
             }
@@ -35,7 +35,7 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
                 int phase = tt.create(i+1);
                 if (phase) {
                     xout << "found creation from "<<from.str()<<" to "<<tt.str()<<" phase="<<phase<<" orbital="<<i+1<<std::endl;
-                    long ti=to.addressMap[tt.key];
+                    size_t ti=to.addressMap[tt.key];
                     push_back(Excitation(ti,phase,i));
                 }
             }
@@ -55,8 +55,8 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
                         int phase = phasea*tt.create(i+1);
 //                        xout <<"i, phase, tt "<<i+1<<phase<<std::endl;
                             if (phase) {
-                                long ti=to.addressMap[tt.key];
-                                if (ti < 0 || (size_type) ti>= to.size()) {
+                                size_t ti=to.addressMap[tt.key];
+                                if (ti < 0 || ti>= to.size()) {
                                     xout <<"i="<<i+1<<" phase="<<phase<<" ti="<<ti<<" tt="<<tt.str()<<std::endl;
                                     throw "index error in ExcitationSet";
                                 }

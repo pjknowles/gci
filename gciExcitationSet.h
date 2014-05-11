@@ -21,11 +21,11 @@ public:
      * \param Phase plus or minus one, giving the parity of the line-up permutation
      * \param OrbitalAddress An address representing the orbital(s) involved.
      */
-    Excitation(long StringIndex, int Phase, long OrbitalAddress);
+    Excitation(size_t StringIndex, int Phase, size_t OrbitalAddress);
     /*!
      * \brief stringIndex points to the destination of the excitation in a StringSet
      */
-    long stringIndex;
+    size_t stringIndex;
     /*!
      * \brief phase plus or minus one, giving the parity of the line-up permutation
      */
@@ -33,7 +33,7 @@ public:
     /*!
      * \brief orbitalAddress An address representing the orbital(s) involved.
      */
-    long orbitalAddress;
+    size_t orbitalAddress;
 };
 
 
