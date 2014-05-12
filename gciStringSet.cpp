@@ -26,7 +26,18 @@ void StringSet::makekey(String &s)
 
 StringSet::StringSet(StringSet &referenceSpace, int annihilations, int creations, int sym)
 {
-    bool first=true;
+    addByOperators(referenceSpace, annihilations, creations, sym);
+}
+
+StringSet::StringSet(std::vector<StringSet>& referenceSpaces, int annihilations, int creations, int sym)
+{
+    for (std::vector<StringSet>::iterator referenceSpace=referenceSpaces.begin(); referenceSpace != referenceSpaces.end(); referenceSpace++)
+        addByOperators(*referenceSpace, annihilations, creations, sym);
+}
+
+void StringSet::addByOperators(StringSet &referenceSpace, int annihilations, int creations, int sym)
+{
+    bool first=size()==0;
     symmetry = sym;
 //    xout << "in StringSet creator, referenceSpace="<<referenceSpace.str(5)<<std::endl;
     if ((int) referenceSpace.proto.nelec + creations - annihilations < 0
@@ -42,8 +53,10 @@ StringSet::StringSet(StringSet &referenceSpace, int annihilations, int creations
                     String tt = from;
                     int phase = (annihilations > 0) ? tt.destroy(i+1) : tt.create(i+1);
                     if (phase) {
-                        insert(tt);
-                        if (first) proto = tt; first = false;
+                        if (first) {
+                            proto = tt; setupPartialWeightArray(); insert(tt); proto = tt; first = false;
+                        } else
+                            insert(tt);
                     }
                 }
             }
@@ -58,8 +71,10 @@ StringSet::StringSet(StringSet &referenceSpace, int annihilations, int creations
                             String tt = a;
                             int phase = (annihilations > 1) ? phasea*tt.destroy(i+1) : phasea*tt.create(i+1);
                             if (phase) {
-                                insert(tt);
-                                if (first) proto = tt; first = false;
+                                if (first) {
+                                    proto = tt; setupPartialWeightArray(); insert(tt); proto = tt; first = false;
+                                } else
+                                    insert(tt);
                             }
                         }
                     }

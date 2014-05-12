@@ -17,6 +17,7 @@ Wavefunction::Wavefunction(OrbitalSpace* h, int n, int s, int m2) : State(h,n,s,
 
 Wavefunction::Wavefunction(const Wavefunction &other) : State(other)
 {
+    alphaStrings.resize(8); betaStrings.resize(8);
     for (int i=0;i<8;i++)
     {
         alphaStrings[i] = other.alphaStrings[i];
@@ -28,6 +29,7 @@ Wavefunction::Wavefunction(const Wavefunction &other) : State(other)
 
 void Wavefunction::buildStrings()
 {
+    alphaStrings.resize(8); betaStrings.resize(8);
     dimension = 0;
     for (unsigned int syma=0; syma<8; syma++) {
         unsigned int symb = syma ^ symmetry;

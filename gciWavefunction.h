@@ -1,5 +1,6 @@
 #ifndef GCIWAVEFUNCTION_H
 #define GCIWAVEFUNCTION_H
+#include <vector>
 #include "gci.h"
 #include "gciHamiltonian.h"
 #include "gciState.h"
@@ -42,8 +43,8 @@ public:
      */
     Wavefunction( const Wavefunction& other);
 
-    StringSet alphaStrings[8]; ///< The alpha-spin strings defining the CI basis
-    StringSet betaStrings[8]; ///< The beta-spin strings defining the CI basis
+    std::vector<StringSet> alphaStrings; ///< The alpha-spin strings defining the CI basis
+    std::vector<StringSet> betaStrings; ///< The beta-spin strings defining the CI basis
 
     void allocate_buffer(); ///< allocate buffer to full size
     size_t size(); ///< the size of the space
