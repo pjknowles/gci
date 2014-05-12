@@ -38,7 +38,7 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
     basisSize = dump->parameter("NORB").at(0);
 
     ijSize = total(0,1);
-    ijklSize = symmetricPairSpace.total(0);
+    ijklSize = pairSpace[1].total(0);
     xout << "ijklSize=" << ijklSize <<std::endl;
     integrals_a = new std::vector<double>(ijSize,0.0);
     if (spinUnrestricted)

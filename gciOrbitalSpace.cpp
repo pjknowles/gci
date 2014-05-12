@@ -29,18 +29,18 @@ void OrbitalSpace::load(FCIdump* dump, int verbosity) {
     calculateOffsets(); // set up the rest of the underlying SymmetrySpace object
 //    xout << this->str(2) << std::endl;
 
-    antisymmetricPairSpace = SymmetrySpace("Antisymmetric pairs of orbitals");
-    pairSpace = SymmetrySpace("Pairs of orbitals");
-    symmetricPairSpace = SymmetrySpace("Symmetric pairs of orbitals");
+    pairSpace[-1] = SymmetrySpace("Antisymmetric pairs of orbitals");
+    pairSpace[0] = SymmetrySpace("Pairs of orbitals");
+    pairSpace[1] = SymmetrySpace("Symmetric pairs of orbitals");
     for (int isym=0; isym<8; isym++) {
-        antisymmetricPairSpace[isym] = total(isym,-1);
-        pairSpace[isym] = total(isym,0);
-        symmetricPairSpace[isym] = total(isym,1);
+        pairSpace[-1][isym] = total(isym,-1);
+        pairSpace[0][isym] = total(isym,0);
+        pairSpace[1][isym] = total(isym,1);
     }
-    antisymmetricPairSpace.calculateOffsets();
-    pairSpace.calculateOffsets();
-    symmetricPairSpace.calculateOffsets();
-//    xout << "symmetricPairSpace constructed: " << symmetricPairSpace;
+    pairSpace[-1].calculateOffsets();
+    pairSpace[0].calculateOffsets();
+    pairSpace[1].calculateOffsets();
+//    xout << "symmetricPairSpace constructed: " << pairSpace[1];
 
     spinUnrestricted=dump->parameter("IUHF").at(0)!=0;
 
@@ -69,7 +69,7 @@ size_t OrbitalSpace::quadIndex(unsigned int i, unsigned int j, unsigned int k, u
     unsigned int jsym = orbital_symmetries[j-1];
     unsigned int ksym = orbital_symmetries[k-1];
     unsigned int lsym = orbital_symmetries[l-1];
-    return (parity ? symmetricPairSpace : pairSpace ).offset(isym^jsym^ksym^lsym,isym^jsym,parity2)
+    return pairSpace.find(parity)->second.offset(isym^jsym^ksym^lsym,isym^jsym,parity2)
             + pairIndex(i,j,parity)
             + pairIndex(k,l,parity) * total(isym^jsym,parity);
 }
@@ -87,8 +87,9 @@ std::string OrbitalSpace::str(int verbosity) const
     o << SymmetrySpace::str(verbosity);
     if (verbosity>=0) {
         o << std::endl << "Basis size="<<total()<<" Spin unrestricted? "<<spinUnrestricted;
-        o << std::endl << pairSpace.str(verbosity);
-        o << std::endl << symmetricPairSpace.str(verbosity);
+        for (int i=-1; i<2; i++)
+            if (pairSpace.find(i) != pairSpace.end())
+                o << std::endl << pairSpace.find(i)->second.str(verbosity);
     }
     if (verbosity>=1) {
         o << std::endl << "Orbital symmetries";

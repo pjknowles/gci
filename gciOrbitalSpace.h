@@ -2,6 +2,7 @@
 #define GCIORBITALSPACE_H
 #include "gciSymmetrySpace.h"
 #include "FCIdump.h"
+#include <map>
 
 namespace gci {
 /*!
@@ -28,9 +29,10 @@ public:
 
     bool spinUnrestricted; /**< \brief whether alpha and beta spin orbitals are different */
     std::vector<unsigned int> orbital_symmetries;///< \brief spatial symmetry of orbitals (0-7)
-    SymmetrySpace antisymmetricPairSpace; ///< \brief pairs of orbitals, ij equiv ji, antisymmetric
-    SymmetrySpace pairSpace; ///< \brief pairs of orbitals, ij not equiv ji
-    SymmetrySpace symmetricPairSpace; ///< \brief pairs of orbitals, ij equiv ji
+//    SymmetrySpace antisymmetricPairSpace; ///< \brief pairs of orbitals, ij equiv ji, antisymmetric
+    std::map<int,SymmetrySpace> pairSpace; ///< \brief pairs of orbitals, ij not equiv ji
+//    SymmetrySpace symmetricPairSpace; ///< \brief pairs of orbitals, ij equiv ji
+//    size_t std::map<int,SymmetrySpace>::operator [](size_t index) const;
 
     /*!
      * \brief Construct a printable representation of the object
