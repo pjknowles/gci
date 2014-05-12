@@ -41,7 +41,7 @@ std::string SymmetrySpace::str(int verbosity) const
 void SymmetrySpace::calculateOffsets()
 {
     size_t dimension=9;
-    if (maxrank > 1) dimension += 8*9*2;
+    if (maxrank > 1) dimension += 8*9*3;
     offsets.resize(dimension,0);
 //    xout <<"dimension="<<dimension<<std::endl;
     if (maxrank >= 1) {
@@ -51,24 +51,29 @@ void SymmetrySpace::calculateOffsets()
 //    xout << "calculateOffsets sizes="; for (int i=0; i<8; i++) xout << this->at(i) << " "; xout <<std::endl;
     if (maxrank >= 2) {
         for (int sym=0; sym<8; sym++) {
-                size_t ntqg=0; size_t ntdg=0;
+                size_t ntqg=0; size_t ntdg=0; size_t ntag=0;
             for (int isym=0; isym<8; isym++) {
                 int jsym = sym ^ isym;
-                offsets[9 + sym*9 + isym] = ntqg;
+                offsets[9 + 8*9 + sym*9 + isym] = ntqg;
                 if (isym >= jsym)  {
-                    offsets[9 + 8*9 + sym*9 + isym] = ntdg;
-                    offsets[9 + 8*9 + sym*9 + jsym] = ntdg;
+                    offsets[9 + 2*8*9 + sym*9 + isym] = ntdg;
+                    offsets[9 + 2*8*9 + sym*9 + jsym] = ntdg;
+                    offsets[9 + 0*8*9 + sym*9 + isym] = ntag;
+                    offsets[9 + 0*8*9 + sym*9 + jsym] = ntag;
 //                xout << "sym, isym, jsym: " << sym << isym << jsym<<"; ntdg=" <<ntdg << std::endl;
                 }
                 ntqg += this->at(isym) * this->at(jsym);
                 if (isym > jsym) {
                     ntdg += this->at(isym) * this->at(jsym);
+                    ntag += this->at(isym) * this->at(jsym);
                 } else if (isym == jsym) {
                     ntdg += (this->at(isym) * (this->at(isym)+1))/2;
+                    ntag += (this->at(isym) * (this->at(isym)-1))/2;
                 }
             }
-            offsets[9 + sym*9 + 8] = ntqg;
-            offsets[9 + 8*9 + sym*9 + 8] = ntdg;
+            offsets[9 + sym*9 + 8] = ntag;
+            offsets[9 + 8*9 + sym*9 + 8] = ntqg;
+            offsets[9 + 2*8*9 + sym*9 + 8] = ntdg;
         }
     }
 }
@@ -81,7 +86,7 @@ size_t SymmetrySpace::offset(int sym1) const {
 size_t SymmetrySpace::offset(int sym1, int sym2, int parity) const
 {
     if (offsets.empty()) throw "SymmetrySpace::calculateOffsets has not been called";
-    return offsets[9 + 8*9 * (parity ? 1 : 0) + sym1*9 + sym2];
+    return offsets[9 + 8*9 * (parity + 1) + sym1*9 + sym2];
 }
 
 size_t SymmetrySpace::total() const {
