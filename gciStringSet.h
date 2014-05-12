@@ -22,9 +22,17 @@ public:
      * \brief StringSet constructor
      * \param prototype A String object that will be copied into this as a source of the number of objects and boxes, and symmetry information
      * \param all Whether or not to construct the complete set of String objects
-     * \param sym If all, specify symmetry of String objects
+     * \param sym If all, specify symmetry of String objects; -1 denotes all symmetries
      */
     StringSet(String prototype, bool all=true, int sym=-1);
+    /*!
+     * \brief Construct a StringSet from another one by applying annihilations and creations
+     * \param referenceSpace
+     * \param annihilations
+     * \param creations
+     * \param sym specify symmetry of String objects; -1 denotes all symmetries
+     */
+    StringSet(StringSet& referenceSpace, int annihilations, int creations, int sym=-1);
     /*!
      * \brief PartialWeightArray holds the partial weight array for addressing the full set of String objects
      */
@@ -62,12 +70,14 @@ public:
      * \brief Add a new element to the end of the set
      * \param s The element to add
      */
-    void push_back(String &s);
+    void insert(String &s);
 
     std::string str(int verbosity=0) const;
 private:
     String proto;
+    void setupPartialWeightArray();
     static long binomial_coefficient(unsigned long n, unsigned long k) ;
+    void makekey(String &s);
 };
 
 }

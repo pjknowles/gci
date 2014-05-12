@@ -112,6 +112,12 @@ int main()
     Hamiltonian fh = hh.FockHamiltonian(d);
     xout << "Fock hamiltonian: " << fh.str(3) << std::endl;
 
+    xout << "Start looking for annihilation spaces using w=" << w.str(5) << std::endl;
+    for (unsigned int syma=0; syma<8; syma++) {
+//        xout << "w.alphaStrings[0]" << w.alphaStrings[0].str(1) << std::endl;
+        StringSet ka(w.alphaStrings[0],1,0,syma);
+        xout << "N-1 alpha StringSet: " << ka.str(1) << std::endl;
+    }
 
   return 0;
     }

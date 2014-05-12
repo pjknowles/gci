@@ -4,44 +4,96 @@
 
 StringSet::StringSet() : std::vector<String>()
 {
-//    xout <<"StringSet default constructor"<<std::endl;
+    //    xout <<"StringSet default constructor"<<std::endl;
 }
 
 StringSet::StringSet(String prototype, bool all, int sym) : std::vector<String>()
 {
-//    xout <<"StringSet prototype constructor "<<all<<std::endl;
+    //    xout <<"StringSet prototype constructor "<<all<<std::endl;
     // copy prototype
     proto = prototype;
-    { // set up partial weight array for addressing binomial distributions
-        int nitem = proto.nelec;
-        int nbox = proto.orbitalSpace->total();
-        std::vector< std::vector<int> > inter(nitem, std::vector<int>(nbox));
-        //    xout << "in StringSet::PartialWeightArray "<<nitem << " " << nbox <<std::endl;
-        for (int k=0;k<nitem;k++) {
-            for (int l=0;l<nbox;l++) {
-                inter[k][l]=0;
-            }
-            for (int l=k;l<nbox-nitem+k;l++)
-                inter[k][l+1] = binomial_coefficient(nbox-l-1,nitem-k-1)+inter[k][l];
-        }
-        for (int k=0;k<nitem-1;k++) {
-            for (int l=k;l<nbox-nitem+k+1;l++) {
-                inter[k][l] = inter[k][l] - inter[k+1][l+1];
-            }
-        }
-        for (int l=nitem-1;l<nbox;l++) {
-            inter[nitem-1][l] = l-nitem+1;
-        }
-
-        PartialWeightArray=inter;
-            xout << "PartialWeightArray:"<<std::endl; for (int k=0;k<nitem;k++) { for (int l=0;l<nbox;l++) xout << " "<<PartialWeightArray[k][l]; xout <<std::endl; }
-    }
-    if (all) complete(sym);
     symmetry = sym;
-//    calculateAddressMap();
-    // compute address map
+    setupPartialWeightArray();
+    if (all) complete(sym);
 }
 
+void StringSet::makekey(String &s)
+{
+    s.key=0;
+    for (int k=0; k<(int)s.orbitals_.size(); k++)
+        s.key+= PartialWeightArray[k][s.orbitals_[k]-1];
+}
+
+StringSet::StringSet(StringSet &referenceSpace, int annihilations, int creations, int sym)
+{
+    bool first=true;
+    symmetry = sym;
+//    xout << "in StringSet creator, referenceSpace="<<referenceSpace.str(5)<<std::endl;
+    if ((int) referenceSpace.proto.nelec + creations - annihilations < 0
+            || (int) referenceSpace.proto.nelec + creations - annihilations > (int) referenceSpace.proto.orbitals_.size())
+        return; // null space because not enough electrons or holes left
+    int symexc = (referenceSpace.symmetry>=0 && sym >=0) ? referenceSpace.symmetry ^ sym : -1 ; // use symmetry if we can
+    for (StringSet::iterator s = referenceSpace.begin(); s != referenceSpace.end(); s++) {
+        String from = *s;
+//        xout << "from="<<from.str(5)<<std::endl;
+        if (annihilations + creations ==1) {
+            for (int i=0; i<(int)from.orbitalSpace->orbital_symmetries.size(); i++) {
+                if (from.orbitalSpace->orbital_symmetries[i]==(unsigned int)symexc || symexc==-1) {
+                    String tt = from;
+                    int phase = (annihilations > 0) ? tt.destroy(i+1) : tt.create(i+1);
+                    if (phase) {
+                        insert(tt);
+                        if (first) proto = tt; first = false;
+                    }
+                }
+            }
+        }
+        else if (annihilations+creations==2) {
+            for (int j=0; j<(int)from.orbitalSpace->orbital_symmetries.size(); j++) {
+                String a = from;
+                int phasea = (annihilations > 0) ?  a.destroy(j+1) : a.create(j+1);
+                if (phasea) {
+                    for (int i=0; i<(int)from.orbitalSpace->orbital_symmetries.size(); i++) {
+                        if (from.orbitalSpace->orbital_symmetries[i]==((unsigned int)symexc^from.orbitalSpace->orbital_symmetries[j]) || symexc==-1) {
+                            String tt = a;
+                            int phase = (annihilations > 1) ? phasea*tt.destroy(i+1) : phasea*tt.create(i+1);
+                            if (phase) {
+                                insert(tt);
+                                if (first) proto = tt; first = false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void StringSet::setupPartialWeightArray()
+{ // set up partial weight array for addressing binomial distributions
+    int nitem = proto.nelec;
+    int nbox = proto.orbitalSpace->total();
+    std::vector< std::vector<int> > inter(nitem, std::vector<int>(nbox));
+    //    xout << "in StringSet::PartialWeightArray "<<nitem << " " << nbox <<std::endl;
+    for (int k=0;k<nitem;k++) {
+        for (int l=0;l<nbox;l++) {
+            inter[k][l]=0;
+        }
+        for (int l=k;l<nbox-nitem+k;l++)
+            inter[k][l+1] = binomial_coefficient(nbox-l-1,nitem-k-1)+inter[k][l];
+    }
+    for (int k=0;k<nitem-1;k++) {
+        for (int l=k;l<nbox-nitem+k+1;l++) {
+            inter[k][l] = inter[k][l] - inter[k+1][l+1];
+        }
+    }
+    for (int l=nitem-1;l<nbox;l++) {
+        inter[nitem-1][l] = l-nitem+1;
+    }
+
+    PartialWeightArray=inter;
+    xout << "PartialWeightArray:"<<std::endl; for (int k=0;k<nitem;k++) { for (int l=0;l<nbox;l++) xout << " "<<PartialWeightArray[k][l]; xout <<std::endl; }
+}
 
 long StringSet::binomial_coefficient(unsigned long n, unsigned long k) {
     unsigned long i;
@@ -69,36 +121,46 @@ long StringSet::binomial_coefficient(unsigned long n, unsigned long k) {
 
 void StringSet::complete(int sym)
 {
-//    xout <<"StringSet::complete prototype"<<proto.printable(1)<<std::endl;
+    //    xout <<"StringSet::complete prototype"<<proto.printable(1)<<std::endl;
     String string(&proto);
     this->erase(this->begin(),this->end());
     if (string.first(proto.nelec,sym)) {
         //    xout <<"StringSet::complete symmetry="<<sym<<" first String: "<<string.printable()<<std::endl;
         do {
             //        xout << "in StringSet::complete about to push_back " << string.printable(1) <<std::endl;
-            this->push_back(string);
+            this->insert(string);
         } while (string.next(sym));
     }
     //    xout << "in StringSet::complete final list: " <<std::endl ;
-//    for (iterator s=this->begin(); s!=this->end(); s++) xout << s->printable()<<std::endl;
+    //    for (iterator s=this->begin(); s!=this->end(); s++) xout << s->printable()<<std::endl;
 
 }
 
-void StringSet::push_back(String& s)
+void StringSet::insert(String& s)
 {
     s.key=0;
     for (int k=0; k<(int)s.orbitals_.size(); k++)
         s.key+= PartialWeightArray[k][s.orbitals_[k]-1];
-    addressMap[s.key]=size();
-    xout <<"StringSet::push_back " <<s <<" size()=" <<size()<<std::endl;
-    std::vector<String>::push_back(s);
+    if (addressMap.count(s.key)) {
+        if (addressMap[s.key] >= size()) throw "something wrong in StringSet reset";
+        at(addressMap[s.key]) = s;
+    } else {
+        addressMap[s.key]=size();
+//        xout <<"StringSet::push_back " <<s <<" size()=" <<size()<<std::endl;
+        std::vector<String>::push_back(s);
+    }
 }
 
 std::string StringSet::str(int verbosity) const
 {
     std::ostringstream s;
     if (verbosity >= -1) {
-        s << "StringSet " << size();
+        s << "StringSet size=" << size();
+    }
+    if (verbosity >0 )
+    {
+        for (StringSet::const_iterator i=begin(); i!=end(); i++)
+            s << std::endl << i->str();
     }
     return s.str();
 }
@@ -124,7 +186,7 @@ std::vector<double> StringSet::occupationNumbers()
         {
             std::vector<unsigned int> orbitals = s->orbitals();
             for (std::vector<unsigned int>::iterator i=orbitals.begin(); i !=orbitals.end(); i++) {
-//                xout << "StringSet::occupationNumbers stringoffset="<<stringoffset<<" *i="<<*i<<std::endl;
+                //                xout << "StringSet::occupationNumbers stringoffset="<<stringoffset<<" *i="<<*i<<std::endl;
                 result[stringoffset+(*i-1)*this->size()]=(double)1;
             }
             stringoffset++;
