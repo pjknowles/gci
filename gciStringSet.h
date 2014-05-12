@@ -28,16 +28,16 @@ public:
     /*!
      * \brief Construct a StringSet from another one by applying annihilations and creations
      * \param referenceSpace
-     * \param annihilations
-     * \param creations
+     * \param annihilations number of annihilations to make
+     * \param creations number of creations to make
      * \param sym specify symmetry of String objects; -1 denotes all symmetries
      */
     StringSet(StringSet &referenceSpace, int annihilations, int creations, int sym=-1);
     /*!
      * \brief Construct a StringSet from a vector of other ones by applying annihilations and creations
-     * \param referenceSpace
-     * \param annihilations
-     * \param creations
+     * \param referenceSpaces vector of reference spaces
+     * \param annihilations number of annihilations to make
+     * \param creations number of creations to make
      * \param sym specify symmetry of String objects; -1 denotes all symmetries
      */
     StringSet(std::vector<StringSet>& referenceSpaces, int annihilations, int creations, int sym=-1);

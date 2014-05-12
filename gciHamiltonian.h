@@ -48,7 +48,7 @@ public:
     std::vector<double> *integrals_ab; /**< \brief point to aabb integrals */
     std::vector<double> *integrals_bb; /**< \brief point to bbbb integrals */
     std::vector<double> *bracket_integrals_aa; /**< \brief point to aaaa integrals in bra-ket form, antisymmetrised */
-    std::vector<double> *bracket_integrals_ab; /**< \brief point to aabb integrals in bra-ket form */
+    std::vector<double> *bracket_integrals_ab; /**< \brief point to abab integrals in bra-ket form */
     std::vector<double> *bracket_integrals_bb; /**< \brief point to bbbb integrals in bra-ket form, antisymmetrised */
     unsigned int basisSize;///< \brief size of orbital basis set
     /*!

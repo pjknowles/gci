@@ -84,6 +84,11 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
         xout << "integrals_aa: ";copy(integrals_aa->begin(), integrals_aa->end(), std::ostream_iterator<double>(xout, ", "));xout <<std::endl;
     }
 
+    // construct <ik||jl> = (ij|kl) - (il|kj)
+    for (unsigned int symik=0; symik<8; symik++) {
+
+    }
+
 }
 
 void Hamiltonian::unload() {

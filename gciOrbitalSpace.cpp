@@ -29,12 +29,15 @@ void OrbitalSpace::load(FCIdump* dump, int verbosity) {
     calculateOffsets(); // set up the rest of the underlying SymmetrySpace object
 //    xout << this->str(2) << std::endl;
 
-    symmetricPairSpace = SymmetrySpace("Symmetric pairs of orbitals");
+    antisymmetricPairSpace = SymmetrySpace("Antisymmetric pairs of orbitals");
     pairSpace = SymmetrySpace("Pairs of orbitals");
+    symmetricPairSpace = SymmetrySpace("Symmetric pairs of orbitals");
     for (int isym=0; isym<8; isym++) {
+        antisymmetricPairSpace[isym] = total(isym,-1);
         pairSpace[isym] = total(isym,0);
         symmetricPairSpace[isym] = total(isym,1);
     }
+    antisymmetricPairSpace.calculateOffsets();
     pairSpace.calculateOffsets();
     symmetricPairSpace.calculateOffsets();
 //    xout << "symmetricPairSpace constructed: " << symmetricPairSpace;
