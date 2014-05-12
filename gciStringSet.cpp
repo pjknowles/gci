@@ -88,26 +88,21 @@ void StringSet::setupPartialWeightArray()
 { // set up partial weight array for addressing binomial distributions
     int nitem = proto.nelec;
     int nbox = proto.orbitalSpace->total();
-    std::vector< std::vector<int> > inter(nitem, std::vector<int>(nbox));
-    //    xout << "in StringSet::PartialWeightArray "<<nitem << " " << nbox <<std::endl;
+    PartialWeightArray = std::vector< std::vector<int> > (nitem, std::vector<int>(nbox));
     for (int k=0;k<nitem;k++) {
-        for (int l=0;l<nbox;l++) {
-            inter[k][l]=0;
-        }
+        for (int l=0;l<nbox;l++)
+            PartialWeightArray[k][l]=0;
         for (int l=k;l<nbox-nitem+k;l++)
-            inter[k][l+1] = binomial_coefficient(nbox-l-1,nitem-k-1)+inter[k][l];
+            PartialWeightArray[k][l+1] = binomial_coefficient(nbox-l-1,nitem-k-1)+PartialWeightArray[k][l];
     }
     for (int k=0;k<nitem-1;k++) {
-        for (int l=k;l<nbox-nitem+k+1;l++) {
-            inter[k][l] = inter[k][l] - inter[k+1][l+1];
-        }
+        for (int l=k;l<nbox-nitem+k+1;l++)
+            PartialWeightArray[k][l] = PartialWeightArray[k][l] - PartialWeightArray[k+1][l+1];
     }
-    for (int l=nitem-1;l<nbox;l++) {
-        inter[nitem-1][l] = l-nitem+1;
-    }
+    for (int l=nitem-1;l<nbox;l++)
+        PartialWeightArray[nitem-1][l] = l-nitem+1;
 
-    PartialWeightArray=inter;
-    xout << "PartialWeightArray:"<<std::endl; for (int k=0;k<nitem;k++) { for (int l=0;l<nbox;l++) xout << " "<<PartialWeightArray[k][l]; xout <<std::endl; }
+//    xout << "PartialWeightArray:"<<std::endl; for (int k=0;k<nitem;k++) { for (int l=0;l<nbox;l++) xout << " "<<PartialWeightArray[k][l]; xout <<std::endl; }
 }
 
 long StringSet::binomial_coefficient(unsigned long n, unsigned long k) {
