@@ -39,7 +39,7 @@ public:
 
 class StringSet; // forward declaration
 /*!
- * \brief Container for a number of Excitation objects
+ * \brief Container for a number of Excitation objects all arising from the same base String
  */
 class ExcitationSet : std::vector<Excitation>
 {
