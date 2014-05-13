@@ -6,6 +6,7 @@
 #include <vector>
 
 namespace gci {
+    class StringSet;
 /*!
  \brief
 A string, which is an ordered set of orbitals
@@ -68,6 +69,14 @@ public:
 
     std::vector<unsigned int> orbitals_; /*!< The orbitals that make up the string */
     const static size_t keyUnassigned=ULLONG_MAX; ///< conventional null value for key
+
+    const static size_t StringNotFound=ULLONG_MAX; ///< conventional null value for index
+    /*!
+     * \brief Find the location of this String in a given StringSet
+     * \param set the StringSet that hopefully contains this String
+     * \return the offset in set or StringNotFound if not in set
+     */
+    size_t index(const StringSet& set) const;
 private:
 };
 }

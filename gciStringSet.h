@@ -88,6 +88,13 @@ public:
      */
     void insert(String &s);
 
+    /*!
+     * \brief Find the locations of the String objects of this in a given other StringSet
+     * \param set the StringSet that hopefully contains this String
+     * \return the offsets in set or StringNotFound if not in set
+     */
+    std::vector<size_t> index(const StringSet& set) const;
+
     std::string str(int verbosity=0) const;
 private:
     String proto;

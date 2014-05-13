@@ -204,3 +204,11 @@ std::vector<double> StringSet::occupationNumbers()
     }
     return result;
 }
+
+std::vector<size_t> StringSet::index(const StringSet &set) const
+{
+    std::vector<size_t> result;
+    for (const_iterator s=begin(); s!=end(); s++)
+        result.push_back(s->index(set));
+    return result;
+}

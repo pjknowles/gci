@@ -1,4 +1,5 @@
 #include "gciString.h"
+#include "gciStringSet.h"
 
 #include <iostream>
 #include <sstream>
@@ -176,3 +177,9 @@ bool String::first(int n, int sym) {
 String String::exhausted;
 
 
+size_t String::index(const StringSet& set) const
+{
+ std::map<size_t,size_t>::const_iterator i;
+ i = set.addressMap.find(key);
+ return (i == set.addressMap.end()) ? String::StringNotFound : i->second;
+}
