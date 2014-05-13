@@ -15,25 +15,25 @@ namespace gci {
 class Excitation
 {
 public:
-    /*!
+  /*!
      * \brief Constructor
      * \param StringIndex points to the destination of the excitation in a StringSet
      * \param Phase plus or minus one, giving the parity of the line-up permutation
      * \param OrbitalAddress An address representing the orbital(s) involved.
      */
-    Excitation(size_t StringIndex, int Phase, size_t OrbitalAddress);
-    /*!
+  Excitation(size_t StringIndex, int Phase, size_t OrbitalAddress);
+  /*!
      * \brief stringIndex points to the destination of the excitation in a StringSet
      */
-    size_t stringIndex;
-    /*!
+  size_t stringIndex;
+  /*!
      * \brief phase plus or minus one, giving the parity of the line-up permutation
      */
-    int phase;
-    /*!
+  int phase;
+  /*!
      * \brief orbitalAddress An address representing the orbital(s) involved.
      */
-    size_t orbitalAddress;
+  size_t orbitalAddress;
 };
 
 
@@ -44,7 +44,7 @@ class StringSet; // forward declaration
 class ExcitationSet : public std::vector<Excitation>
 {
 public:
-    /*!
+  /*!
      * \brief Construct the ExcitationSet containing all excitations
      * from a given String
      * with a specified number of annihilations and creations.
@@ -53,20 +53,20 @@ public:
      * \param annihilations How many annihilations.
      * \param creations How many creations.
      */
-    ExcitationSet(String &from, StringSet &to, int annihilations, int creations);
-    /*!
+  ExcitationSet(String &from, StringSet &to, int annihilations, int creations);
+  /*!
      * \brief The String to which this set relates
      */
-    String From;
-    /*!
+  String From;
+  /*!
      * \brief The StringSet containing the excited String objects
      */
-    StringSet* To;
-    /*!
+  StringSet* To;
+  /*!
      * \brief Generate printable representation of the object
      * \return Printable representation of the object
      */
-    std::string str(int verbosity=0) const;
+  std::string str(int verbosity=0) const;
 
 };
 

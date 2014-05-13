@@ -13,7 +13,7 @@ namespace gci {
 class TransitionDensity : public std::vector<double>
 {
 public:
-    TransitionDensity();
+  TransitionDensity();
 };
 }
 

@@ -12,52 +12,52 @@ A Slater determinant
 class Determinant : public State
 {
 public:
-/*!
+  /*!
  \brief
 
  \param State some object from which to copy number of electrons etc for bound checking
  \param alpha Alpha string
  \param beta Beta string
 */
-    Determinant(State* State=NULL, String* alpha=NULL, String* beta=NULL);
+  Determinant(State* State=NULL, String* alpha=NULL, String* beta=NULL);
 
-    /*!
+  /*!
      \brief
 
      \param orbital Add an orbital to the determinant. Negative means beta spin.
      \return int On exit, the phase change required to bring the determinant into canonical form is returned (plus or minus 1), or else zero if the orbital was already present in the determinant.
     */
-    int create(int orbital);
-    /*!
+  int create(int orbital);
+  /*!
      \brief
 
      \param orbital Remove an orbital from the determinant. Negative means beta spin
      \return int On exit, return 1 if successful (orbital was in the determinant originally) or 0 if not (it wasn't)
     */
-    int destroy(int orbital);
-    /*!
+  int destroy(int orbital);
+  /*!
      * \brief Set to the canonically first determinant
      */
-    void first();
-    /*!
+  void first();
+  /*!
      \brief
     Advance to the canonically next determinant
      \return false if the end of the set is reached.
     */
-    bool next();
+  bool next();
 
-    /*!
+  /*!
      * \brief Genenerate a printable representation of the object
      * \param verbosity How much to print
      * \return
      */
-    std::string str(int verbosity=0) const;
+  std::string str(int verbosity=0) const;
 
 
 
 private:
-    friend class Hamiltonian;
-    String stringAlpha, stringBeta; /*!< The orbitals that make up the determinant */
+  friend class Hamiltonian;
+  String stringAlpha, stringBeta; /*!< The orbitals that make up the determinant */
 };
 }
 

@@ -19,46 +19,46 @@ class Hamiltonian : public OrbitalSpace
 public:
 
 
-/*!
+  /*!
  \brief construct Hamiltonian object
 
  \param filename : if present, call load
 */
-    Hamiltonian(std::string filename="");
-    /*!
+  Hamiltonian(std::string filename="");
+  /*!
      \brief construct Hamiltonian object
 
      \param dump : if present, call load
     */   Hamiltonian(FCIdump* dump);
-    ~Hamiltonian();
-    void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load integrals from FCIDUMP */
-    void load(FCIdump* dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */
-    void unload(); /**< \brief destroy loaded integrals */
-    /*!
+  ~Hamiltonian();
+  void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load integrals from FCIDUMP */
+  void load(FCIdump* dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */
+  void unload(); /**< \brief destroy loaded integrals */
+  /*!
      * \brief Construct a printable representation of the hamiltonian
      * \param verbosity how much information to include
      * \return printable representation of the hamiltonian
      */
-    std::string str(int verbosity=0) const;
-    bool loaded;  /**< \brief whether the integrals are loaded */
-    double coreEnergy; /**< \brief core energy */
-    std::vector<double> *integrals_a;  /**< \brief point to aa integrals */
-    std::vector<double> *integrals_b; /**< \brief point to bb integrals */
-    std::vector<double> *integrals_aa; /**< \brief point to aaaa integrals */
-    std::vector<double> *integrals_ab; /**< \brief point to aabb integrals */
-    std::vector<double> *integrals_bb; /**< \brief point to bbbb integrals */
-    std::vector<double> *bracket_integrals_aa; /**< \brief point to aaaa integrals in bra-ket form, antisymmetrised */
-    std::vector<double> *bracket_integrals_ab; /**< \brief point to abab integrals in bra-ket form */
-    std::vector<double> *bracket_integrals_bb; /**< \brief point to bbbb integrals in bra-ket form, antisymmetrised */
-    unsigned int basisSize;///< \brief size of orbital basis set
-    /*!
+  std::string str(int verbosity=0) const;
+  bool loaded;  /**< \brief whether the integrals are loaded */
+  double coreEnergy; /**< \brief core energy */
+  std::vector<double> *integrals_a;  /**< \brief point to aa integrals */
+  std::vector<double> *integrals_b; /**< \brief point to bb integrals */
+  std::vector<double> *integrals_aa; /**< \brief point to aaaa integrals */
+  std::vector<double> *integrals_ab; /**< \brief point to aabb integrals */
+  std::vector<double> *integrals_bb; /**< \brief point to bbbb integrals */
+  std::vector<double> *bracket_integrals_aa; /**< \brief point to aaaa integrals in bra-ket form, antisymmetrised */
+  std::vector<double> *bracket_integrals_ab; /**< \brief point to abab integrals in bra-ket form */
+  std::vector<double> *bracket_integrals_bb; /**< \brief point to bbbb integrals in bra-ket form, antisymmetrised */
+  unsigned int basisSize;///< \brief size of orbital basis set
+  /*!
      * \brief calculate canonical index of a pair of orbitals.
      * \param i Absolute number (starting with 1) of first orbital.
      * \param j Absolute number (starting with 1) of second orbital.
      * \return Number of orbital pairs of the same symmetry canonically before ij.
      */
-    unsigned int int1Index (unsigned int i, unsigned int j) const;
-    /*!
+  unsigned int int1Index (unsigned int i, unsigned int j) const;
+  /*!
      * \brief calculate canonical address of a 2-electron integral
      * \param i Absolute number (starting with 1) of first orbital.
      * \param j Absolute number (starting with 1) of second orbital.
@@ -66,39 +66,39 @@ public:
      * \param l Absolute number (starting with 1) of fourth orbital.
      * \return
      */
-    unsigned int int2Index (unsigned int i, unsigned int j, unsigned int k, unsigned int l) const;
+  unsigned int int2Index (unsigned int i, unsigned int j, unsigned int k, unsigned int l) const;
 
-    /*!
+  /*!
      * \brief int1 Generate array of diagonal one-electron integrals
      * \param spin positive for alpha, negative for beta
      * \return one-dimensional array with h(i,i) at i-1
      */
-    std::vector<double> int1(int spin);
+  std::vector<double> int1(int spin);
 
 
-    /*!
+  /*!
      * \brief intJ Generate array of two-electron exchange integrals
      * \param spini positive for alpha, negative for beta, first index
      * \param spinj positive for alpha, negative for beta, second index
      * \return one-dimensional array with (ii|jj) at i-1 + (j-1)*basisSize
      */
-    std::vector<double> intJ(int spini, int spinj);
-    /*!
+  std::vector<double> intJ(int spini, int spinj);
+  /*!
      * \brief intK Generate array of two-electron Coulomb integrals
      * \param spin positive for alpha, negative for beta
      * \return one-dimensional array with (ij|ji) at i-1 + (j-1)*basisSize
      */
-    std::vector<double> intK(int spin);
+  std::vector<double> intK(int spin);
 
-    /*!
+  /*!
      * \brief Generate a new object containing the Fock hamiltonian corresponding to a given reference determinant
      * \param reference the reference Slater determinant
      * \return  the Fock hamiltonian
      */
-    Hamiltonian FockHamiltonian(Determinant& reference);
+  Hamiltonian FockHamiltonian(Determinant& reference);
 private:
-    unsigned int ijSize;
-    unsigned int ijklSize;
+  unsigned int ijSize;
+  unsigned int ijklSize;
 };
 }
 

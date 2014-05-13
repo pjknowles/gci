@@ -9,24 +9,24 @@
 class FCIdump
 {
 public:
-    /*!
+  /*!
      * \brief Construct FCIdump object
      * \param filename The file containing the FCIDUMP data
      */
-    FCIdump(std::string filename="FCIDUMP");
+  FCIdump(std::string filename="FCIDUMP");
 
-    /*!
+  /*!
      * \brief parameter Obtain a namelist parameter from the FCIDUMP data.
      * \param key The name of the parameter
      * \param def Default value if the parameter is not found.
      * \return  The result as a vector of integers.
      */
-    std::vector<int> parameter(std::string key, std::vector<int> def=std::vector<int>(1,0));
+  std::vector<int> parameter(std::string key, std::vector<int> def=std::vector<int>(1,0));
 
-    /*!
+  /*!
      * \brief fileName The file containing the FCIDUMP data
      */
-    std::string fileName;
+  std::string fileName;
 };
 
 #endif // FCIDUMP_H

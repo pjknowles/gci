@@ -15,15 +15,15 @@ namespace gci {
 class Printable
 {
 public:
-    Printable();
-    /*!
+  Printable();
+  /*!
      \brief
     printable form of the object.
      \return std::string
     */
-   virtual std::string str(int verbosity=0) const=0;
+  virtual std::string str(int verbosity=0) const=0;
 
-//    friend std::ostream& operator<<(std::ostream& os, Printable const& obj);
+  //    friend std::ostream& operator<<(std::ostream& os, Printable const& obj);
 
 };
 
