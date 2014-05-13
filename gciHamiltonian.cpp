@@ -102,67 +102,67 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
                 if ((*this)[symj]==0) continue;
                 if ((*this)[symk]==0) continue;
                 if ((*this)[syml]==0) continue;
-                xout << "symi symj symk syml" << symi<<symj<<symk<<syml;
-                xout << "; pairSpace offset="<<pairSpace[0].offset(0,symik)<<"; within-pair offsets: "
-                                            <<offset(symik,symj,0) <<" "
-                                            <<offset(symik,symj,0)
-                     <<std::endl;
+//                xout << "symi symj symk syml" << symi<<symj<<symk<<syml;
+//                xout << "; pairSpace offset="<<pairSpace[0].offset(0,symik)<<"; within-pair offsets: "
+//                     <<offset(symik,symj,0) <<" "
+//                    <<offset(symik,symj,0)
+//                   <<std::endl;
                 for (size_t i=0; i< (*this)[symi] ; i++) {
                     for (size_t j=0; j< (*this)[symj] ; j++) {
                         for (size_t k=0; k< (*this)[symk] ; k++) {
                             for (size_t l=0; l< (*this)[syml] ; l++) {
                                 if (symij==0)
                                 {
-                                    xout << "i,j,k,l,toaddress, fromaddress "<<i<<" "<<j<<" "<<k<<" "<<l<<" " <<
-                                                pairSpace[0].offset(0,symik)
-                                            + (offset(symik,symi,0)+i+k*at(symi))*total(symik,0)
-                                            + (offset(symik,symj,0)+j+l*at(symj))
-                            <<" " <<
-                                            pairSpace[0].offset(0,symij)
-                                            + (offset(symij,symi,1)+((i>j) ? (i*(i+1))/2+j : (j*(j+1))/2+i)) * total(symij,1)
-                                            + (offset(symij,symk,1)+((k>l) ? (k*(k+1))/2+l : (l*(l+1))/2+k))
-                                    <<"="<<
-                                            integrals_ab->at(pairSpace[0].offset(0,symij)
-                                            + (offset(symij,symi,1)+((i>j) ? (i*(i+1))/2+j : (j*(j+1))/2+i)) * total(symij,1)
-                                            + (offset(symij,symk,1)+((k>l) ? (k*(k+1))/2+l : (l*(l+1))/2+k))
-                                            )
-                                            <<std::endl;
+//                                    xout << "i,j,k,l,toaddress, fromaddress "<<i<<" "<<j<<" "<<k<<" "<<l<<" " <<
+//                                            pairSpace[0].offset(0,symik)
+//                                            + (offset(symik,symi,0)+i+k*at(symi))*total(symik,0)
+//                                            + (offset(symik,symj,0)+j+l*at(symj))
+//                                         <<" " <<
+//                                           pairSpace[1].offset(0,symij)
+//                                           + (offset(symij,symi,1)+((i>j) ? (i*(i+1))/2+j : (j*(j+1))/2+i)) * total(symij,1)
+//                                           + (offset(symij,symk,1)+((k>l) ? (k*(k+1))/2+l : (l*(l+1))/2+k))
+//                                        <<"="<<
+//                                          integrals_ab->at(pairSpace[0].offset(0,symij)
+//                                          + (offset(symij,symi,1)+((i>j) ? (i*(i+1))/2+j : (j*(j+1))/2+i)) * total(symij,1)
+//                                          + (offset(symij,symk,1)+((k>l) ? (k*(k+1))/2+l : (l*(l+1))/2+k))
+//                                          )
+//                                            <<std::endl;
                                     bracket_integrals_ab->at(
                                                 pairSpace[0].offset(0,symik)
                                             + (offset(symik,symi,0)+i+k*at(symi))*total(symik,0)
                                             + (offset(symik,symj,0)+j+l*at(symj))
                                             ) =
-                                            integrals_ab->at(pairSpace[0].offset(0,symij)
+                                            integrals_ab->at(pairSpace[1].offset(0,symij)
                                             + (offset(symij,symi,1)+((i>j) ? (i*(i+1))/2+j : (j*(j+1))/2+i)) * total(symij,1)
                                             + (offset(symij,symk,1)+((k>l) ? (k*(k+1))/2+l : (l*(l+1))/2+k))
                                             );
                                 }
                                 else
                                 {
-                                    xout << "i,j,k,l,toaddress, fromaddress "<<i<<" "<<j<<" "<<k<<" "<<l<<" " <<
-                                                pairSpace[0].offset(0,symik)
-                                            + (offset(symik,symi,0)+i+k*at(symi))*total(symik,0)
-                                            + (offset(symik,symj,0)+j+l*at(symj))
-                            <<" " <<
-                                      pairSpace[1].offset(0,symij)
-                                            + ((symi > symj) ?
-                                                   offset(symij,symi,1)+j*at(symi)+i
-                                                 : offset(symij,symj,1)+i*at(symj)+j
-                                                   ) * total(symij,1)
-                                            + ((symk > syml) ?
-                                                   offset(symij,symk,1)+l*at(symk)+k
-                                                 : offset(symij,syml,1)+k*at(syml)+l)
-                                    <<"="<<
-                                      integrals_ab->at(pairSpace[1].offset(0,symij)
-                                            + ((symi > symj) ?
-                                                   offset(symij,symi,1)+j*at(symi)+i
-                                                 : offset(symij,symj,1)+i*at(symj)+j
-                                                   ) * total(symij,1)
-                                            + ((symk > syml) ?
-                                                   offset(symij,symk,1)+l*at(symk)+k
-                                                 : offset(symij,syml,1)+k*at(syml)+l)
-                                                  )
-                                            <<std::endl;
+//                                    xout << "i,j,k,l,toaddress, fromaddress "<<i<<" "<<j<<" "<<k<<" "<<l<<" " <<
+//                                            pairSpace[0].offset(0,symik)
+//                                            + (offset(symik,symi,0)+i+k*at(symi))*total(symik,0)
+//                                            + (offset(symik,symj,0)+j+l*at(symj))
+//                                         <<" " <<
+//                                           pairSpace[1].offset(0,symij)
+//                                           + ((symi > symj) ?
+//                                                  offset(symij,symi,1)+j*at(symi)+i
+//                                                : offset(symij,symj,1)+i*at(symj)+j
+//                                                  ) * total(symij,1)
+//                                           + ((symk > syml) ?
+//                                                  offset(symij,symk,1)+l*at(symk)+k
+//                                                : offset(symij,syml,1)+k*at(syml)+l)
+//                                        <<"="<<
+//                                          integrals_ab->at(pairSpace[1].offset(0,symij)
+//                                          + ((symi > symj) ?
+//                                                 offset(symij,symi,1)+j*at(symi)+i
+//                                               : offset(symij,symj,1)+i*at(symj)+j
+//                                                 ) * total(symij,1)
+//                                          + ((symk > syml) ?
+//                                                 offset(symij,symk,1)+l*at(symk)+k
+//                                               : offset(symij,syml,1)+k*at(syml)+l)
+//                                          )
+//                                            <<std::endl;
                                     bracket_integrals_ab->at(
                                                 pairSpace[0].offset(0,symik)
                                             + (offset(symik,symi,0)+i+k*at(symi))*total(symik,0)
@@ -183,10 +183,65 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
                         }
                     }
                 }
+                // alpha-alpha and beta-beta
+                unsigned int symil = symi^syml;
+                unsigned int symjl = symj^syml;
+                if (symi >= symk && symj >=syml) {
+                    for (size_t i=0; i< (*this)[symi] ; i++) {
+                        size_t klimit = symi == symk ? i : (*this)[symk];
+                        for (size_t j=0; j< (*this)[symj] ; j++) {
+                            size_t llimit = symj == syml ? j : (*this)[syml];
+                            for (size_t k=0; k< klimit ; k++) {
+                                for (size_t l=0; l< llimit ; l++) {
+                                    size_t ijkl =
+                                               pairSpace[1].offset(0,symij) +
+                                            ((symij==0) ?
+                                                ((offset(symij,symi,1)+((i>j) ? (i*(i+1))/2+j : (j*(j+1))/2+i)) * total(symij,1)
+                                                +(offset(symij,symk,1)+((k>l) ? (k*(k+1))/2+l : (l*(l+1))/2+k)))
+                                             :
+                                               ((symi > symj) ?
+                                                      (offset(symij,symi,1)+j*at(symi)+i)
+                                                    : (offset(symij,symj,1)+i*at(symj)+j)
+                                                      ) * total(symij,1)
+                                               +((symk > syml) ?
+                                                      (offset(symij,symk,1)+l*at(symk)+k)
+                                                    : (offset(symij,syml,1)+k*at(syml)+l))
+                                                 )
+                                            ;
+                                    size_t ilkj =
+                                               pairSpace[1].offset(0,symil) +
+                                            ((symil==0) ?
+                                                ((offset(symil,symi,1)+((i>l) ? (i*(i+1))/2+l : (l*(l+1))/2+i)) * total(symil,1)
+                                                +(offset(symil,symk,1)+((k>j) ? (k*(k+1))/2+j : (j*(j+1))/2+k)))
+                                              :
+                                               ((symi > syml) ?
+                                                      offset(symil,symi,1)+l*at(symi)+i
+                                                    : offset(symil,syml,1)+i*at(syml)+l
+                                                      ) * total(symil,1))
+                                               +((symk > symj) ?
+                                                      offset(symil,symk,1)+j*at(symk)+k
+                                                    : offset(symil,symj,1)+k*at(symj)+j)
+                                            ;
+                                    size_t ik = offset(symik,symi,-1) +  ((symi == symk) ? ((i*(i-1))/2+k) : (i+k*at(symi))) ;
+                                    size_t jl = offset(symjl,symj,-1) +  ((symj == syml) ? ((j*(j-1))/2+l) : (j+l*at(symj))) ;
+//xout << "i,j,k,l,ijkl,ilkj,ik,jl: "<<i<<" "<<j<<" "<<k<<" "<<l<<" "
+//        <<ijkl<<" "
+//        <<ilkj<<" "
+//        <<ik<<" "
+//        <<jl<<" destination: "
+//                                     <<pairSpace[-1].offset(0,symik,0) + ik*total(symik,-1) + jl  << " value: "
+//                                     <<integrals_aa->at(ijkl) -integrals_aa->at(ilkj)<<std::endl;
+                                    bracket_integrals_aa->at(pairSpace[-1].offset(0,symik,0) + ik*total(symik,-1) + jl ) = integrals_aa->at(ijkl) -integrals_aa->at(ilkj);
+                                    bracket_integrals_bb->at(pairSpace[-1].offset(0,symik,0) + ik*total(symik,-1) + jl ) = integrals_bb->at(ijkl) -integrals_bb->at(ilkj);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
-xout <<str(3) <<std::endl;exit(0);
+//    xout <<str(3) <<std::endl;exit(0);
 }
 
 void Hamiltonian::unload() {
@@ -254,14 +309,16 @@ std::string Hamiltonian::str(int verbosity) const
             }
         }
         if (bracket_integrals_aa != NULL && bracket_integrals_bb != NULL) {
-            o<<std::endl << "2-electron integrals (bracket form, antisymmetrised, aa and bb):";
+            o<<std::endl << "2-electron integrals (bracket form, antisymmetrised, {aa,bb}):";
             for (int symij=0; symij<8; symij++) {
                 if (total(symij,-1))
                     o<<std::endl <<"symmetry block " << symij;//<<" " <<pairSpace.at(0).offset(0,symij,0);
                 for (size_t ij=0; ij< total(symij,-1); ij++) {
                     o<<std::endl;
                     for (size_t kl=0; kl< total(symij,-1); kl++) {
-                        o << bracket_integrals_ab->at( pairSpace.at(0).offset(-1,symij,0) + ij * total(symij,-1) + kl ) <<" ";
+                        o <<"{"
+                         << bracket_integrals_aa->at( pairSpace.at(-1).offset(0,symij,0) + ij * total(symij,-1) + kl ) <<","
+                         << bracket_integrals_bb->at( pairSpace.at(-1).offset(0,symij,0) + ij * total(symij,-1) + kl ) <<"} ";
                     }
                 }
             }
