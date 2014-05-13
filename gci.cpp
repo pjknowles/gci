@@ -87,7 +87,7 @@ int main()
     xout << "w3:"<<w3.str(2)<<std::endl <<"...end w3."<<std::endl<<std::endl;
 
     for (unsigned int syma=0; syma<8; syma++) {
-        unsigned int symb = syma ^ w.symmetry;
+//        unsigned int symb = syma ^ w.symmetry;
         std::vector<ExcitationSet> seta;
         seta = w.alphaStrings[syma].allExcitations(w.alphaStrings[syma],1,1);
         xout << "Excitations from alpha strings of symmetry " << syma+1 <<std::endl;
@@ -112,13 +112,21 @@ int main()
     Hamiltonian fh = hh.FockHamiltonian(d);
     xout << "Fock hamiltonian: " << fh.str(3) << std::endl;
 
-    xout << "Start looking for annihilation spaces using w=" << w.str(5) << std::endl;
-    for (unsigned int syma=0; syma<8; syma++) {
+    w2.set((double)0); w2.set(w.minloc(), (double) 1);
+
+    xout << "trial wavefunction: " << w2.str(2) <<std::endl;
+
+    w3.hamiltonianOnWavefunction(fh, w2);
+    xout << "action of Fock hamiltonian on trial wavefunction: " << w3.str(2) <<std::endl;
+
+//    xout << "Start looking for annihilation spaces using w=" << w.str(5) << std::endl;
+//    for (unsigned int syma=0; syma<8; syma++) {
 //        xout << "w.alphaStrings[0]" << w.alphaStrings[0].str(1) << std::endl;
-        StringSet ka(w.alphaStrings,1,0,syma);
-        xout << "N-1 alpha StringSet: " << ka.str(1) << std::endl;
-    }
-    xout << "Hamiltonian: " <<hh.str(3)<<std::endl;
+//        StringSet ka(w.alphaStrings,1,0,syma);
+//        xout << "N-1 alpha StringSet: " << ka.str(1) << std::endl;
+//    }
+//    xout << "Hamiltonian: " <<hh.str(3)<<std::endl;
+
 
   return 0;
     }

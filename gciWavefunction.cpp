@@ -285,7 +285,33 @@ Determinant Wavefunction::determinantAt(size_t offset)
     throw "Wavefunction::determinantAt cannot find";
 }
 
-void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, Wavefunction &w)
+void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction &w)
 {
-    buffer = w.buffer; // temporary!
+    for (size_t i=0; i<buffer.size(); i++)
+        buffer[i] = h.coreEnergy * w.buffer[i];
+    size_t offset=0;
+    for (unsigned int syma=0; syma<8; syma++) {
+        unsigned int symb = w.symmetry^syma;
+        size_t nsa = alphaStrings[syma].size();
+        size_t nsb = betaStrings[symb].size();
+        size_t offa = offset;
+        for (StringSet::iterator s = alphaStrings[syma].begin(); s != alphaStrings[syma].end(); s++) {
+            ExcitationSet ee(*s,alphaStrings[syma],1,1);
+            for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
+                for (size_t ib=0; ib<nsb; ib++)
+                    buffer[offa+ib] += (*h.integrals_a)[e->orbitalAddress] * e->phase * w.buffer[offset+e->stringIndex*nsb+ib];
+            }
+            offa += nsb;
+        }
+        size_t offb = offset;
+        for (StringSet::iterator s = betaStrings[symb].begin(); s != betaStrings[symb].end(); s++) {
+            ExcitationSet ee(*s,betaStrings[symb],1,1);
+            for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
+                for (size_t ia=0; ia<nsa; ia++)
+                    buffer[offb+ia*nsb] += (*h.integrals_b)[e->orbitalAddress] * e->phase * w.buffer[offset+e->stringIndex+ia*nsb];
+            }
+            offb ++;
+        }
+        offset += nsa*nsb;
+    }
 }

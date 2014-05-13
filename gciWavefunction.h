@@ -80,7 +80,7 @@ public:
      * \param h the hamiltonian
      * \param w the wavefunction
      */
-    void hamiltonianOnWavefunction(Hamiltonian& h, Wavefunction& w);
+    void hamiltonianOnWavefunction(Hamiltonian& h, const Wavefunction &w);
 
     std::string str(int verbosity=0) const;
 
@@ -100,6 +100,7 @@ private:
     bool compatible(const Wavefunction &other) const; ///< whether this wavefunction is on the same space as another
 
 };
+    double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
     Wavefunction operator+(const Wavefunction &w1, const Wavefunction &w2); ///< add two wavefunctions
     Wavefunction operator-(const Wavefunction &w1, const Wavefunction &w2); ///< subtract two wavefunctions
     Wavefunction operator*(const Wavefunction &w1, const double &value);///< multiply by a scalar
