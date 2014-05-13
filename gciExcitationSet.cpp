@@ -12,7 +12,7 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
 {
     int symexc=-1;
     From = from;
-    xout <<"ExcitationSet taking From="<<From.str()<<" annihilations="<<annihilations<<" creations="<<creations<<std::endl;
+//    xout <<"ExcitationSet taking From="<<From.str()<<" annihilations="<<annihilations<<" creations="<<creations<<std::endl;
     To = &to;
     if (to.symmetry>=0) symexc = from.symmetry ^ to.symmetry; // use symmetry if we can
     if (annihilations + creations ==1) {
@@ -21,6 +21,9 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
                 String tt = from;
                 int phase = (annihilations > 0) ? tt.destroy(i+1) : tt.create(i+1);
                 if (phase) {
+                    tt.key=0;
+                    for (int k=0; k<(int)tt.orbitals_.size(); k++)
+                        tt.key+= to.PartialWeightArray[k][tt.orbitals_[k]-1];
                     size_t ti=to.addressMap[tt.key];
                     push_back(Excitation(ti,phase,i));
                 }
@@ -29,6 +32,8 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
     }
     else if (annihilations+creations==2) {
         int parity = annihilations==creations ? 1 : -1 ; // could be changed
+//        xout << "two-orbital excitation, parity="<<parity<<std::endl;
+//        xout <<"from="<<from<<std::endl;
         for (int j=0; j<(int)from.orbitalSpace->orbital_symmetries.size(); j++) {
             String a = from;
             int phasea = (annihilations > 0) ?  a.destroy(j+1) : a.create(j+1);
@@ -38,6 +43,9 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
                         String tt = a;
                         int phase = (annihilations > 1) ? phasea*tt.destroy(i+1) : phasea*tt.create(i+1);
                         if (phase) {
+                            tt.key=0; for (int k=0; k<(int)tt.orbitals_.size(); k++) // can be speeded
+                                tt.key+= to.PartialWeightArray[k][tt.orbitals_[k]-1];
+//                            xout<< "i="<<i+1<<", j="<<j+1<<", phase="<<phase<<", tt="<<tt<<std::endl;
                             size_t ti=to.addressMap[tt.key];
                             if (tt.key == String::keyUnassigned || ti>= to.size()) {
                                 xout <<"i="<<i+1<<" phase="<<phase<<" ti="<<ti<<" tt="<<tt.str()<<std::endl;

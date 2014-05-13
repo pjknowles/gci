@@ -296,8 +296,11 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
         size_t nsb = betaStrings[symb].size();
         size_t offa = offset;
         for (StringSet::iterator s = alphaStrings[syma].begin(); s != alphaStrings[syma].end(); s++) {
+//            xout << "alpha string "<<*s<<std::endl;
             ExcitationSet ee(*s,alphaStrings[syma],1,1);
+//            xout << "alpha excitations " << ee.str() <<std::endl;
             for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
+//                xout << "alpha excitation " << e->orbitalAddress <<"="<<(*h.integrals_a)[e->orbitalAddress]<<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
                 for (size_t ib=0; ib<nsb; ib++)
                     buffer[offa+ib] += (*h.integrals_a)[e->orbitalAddress] * e->phase * w.buffer[offset+e->stringIndex*nsb+ib];
             }
@@ -307,6 +310,7 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
         for (StringSet::iterator s = betaStrings[symb].begin(); s != betaStrings[symb].end(); s++) {
             ExcitationSet ee(*s,betaStrings[symb],1,1);
             for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
+//                xout << "beta excitation " << e->orbitalAddress <<"="<<(*h.integrals_b)[e->orbitalAddress]<<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
                 for (size_t ia=0; ia<nsa; ia++)
                     buffer[offb+ia*nsb] += (*h.integrals_b)[e->orbitalAddress] * e->phase * w.buffer[offset+e->stringIndex+ia*nsb];
             }
