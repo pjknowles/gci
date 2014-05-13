@@ -28,11 +28,12 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
         }
     }
     else if (annihilations+creations==2) {
+        int parity = annihilations==creations ? 1 : -1 ; // could be changed
         for (int j=0; j<(int)from.orbitalSpace->orbital_symmetries.size(); j++) {
             String a = from;
             int phasea = (annihilations > 0) ?  a.destroy(j+1) : a.create(j+1);
             if (phasea) {
-                for (int i=0; i<(int)from.orbitalSpace->orbital_symmetries.size(); i++) {
+                for (int i=0; i<(int)(annihilations == creations ? from.orbitalSpace->orbital_symmetries.size() : j) ; i++) {
                     if (from.orbitalSpace->orbital_symmetries[i]==((unsigned int)symexc^from.orbitalSpace->orbital_symmetries[j]) || symexc==-1) {
                         String tt = a;
                         int phase = (annihilations > 1) ? phasea*tt.destroy(i+1) : phasea*tt.create(i+1);
@@ -42,7 +43,7 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
                                 xout <<"i="<<i+1<<" phase="<<phase<<" ti="<<ti<<" tt="<<tt.str()<<std::endl;
                                     throw "index error in ExcitationSet";
                                 }
-                                push_back(Excitation(ti,phase,from.orbitalSpace->pairIndex(i+1,j+1)));
+                                push_back(Excitation(ti,phase,from.orbitalSpace->pairIndex(i+1,j+1,parity)));
                             }
                     }
                 }
