@@ -85,20 +85,121 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
     }
 
     // construct <ik||jl> = (ij|kl) - (il|kj)
-    for (unsigned int symik=0; symik<8; symik++) {
-
+    bracket_integrals_aa = new std::vector<double>(pairSpace[-1].total(0),0.0);
+    bracket_integrals_ab = new std::vector<double>(pairSpace[0].total(0),999.0);
+    if (spinUnrestricted) {
+        bracket_integrals_bb = new std::vector<double>(pairSpace[-1].total(0),0.0);
+    } else {
+        bracket_integrals_bb = bracket_integrals_aa;
     }
-
+    for (unsigned int symik=0; symik<8; symik++) {
+        for (unsigned int symi=0; symi<8; symi++) {
+            for (unsigned int symj=0; symj<8; symj++) {
+                unsigned int symk = symi^symik;
+                unsigned int syml = symj^symik;
+                unsigned int symij = symi^symj;
+                if ((*this)[symi]==0) continue;
+                if ((*this)[symj]==0) continue;
+                if ((*this)[symk]==0) continue;
+                if ((*this)[syml]==0) continue;
+                xout << "symi symj symk syml" << symi<<symj<<symk<<syml;
+                xout << "; pairSpace offset="<<pairSpace[0].offset(0,symik)<<"; within-pair offsets: "
+                                            <<offset(symik,symj,0) <<" "
+                                            <<offset(symik,symj,0)
+                     <<std::endl;
+                for (size_t i=0; i< (*this)[symi] ; i++) {
+                    for (size_t j=0; j< (*this)[symj] ; j++) {
+                        for (size_t k=0; k< (*this)[symk] ; k++) {
+                            for (size_t l=0; l< (*this)[syml] ; l++) {
+                                if (symij==0)
+                                {
+                                    xout << "i,j,k,l,toaddress, fromaddress "<<i<<" "<<j<<" "<<k<<" "<<l<<" " <<
+                                                pairSpace[0].offset(0,symik)
+                                            + (offset(symik,symi,0)+i+k*at(symi))*total(symik,0)
+                                            + (offset(symik,symj,0)+j+l*at(symj))
+                            <<" " <<
+                                            pairSpace[0].offset(0,symij)
+                                            + (offset(symij,symi,1)+((i>j) ? (i*(i+1))/2+j : (j*(j+1))/2+i)) * total(symij,1)
+                                            + (offset(symij,symk,1)+((k>l) ? (k*(k+1))/2+l : (l*(l+1))/2+k))
+                                    <<"="<<
+                                            integrals_ab->at(pairSpace[0].offset(0,symij)
+                                            + (offset(symij,symi,1)+((i>j) ? (i*(i+1))/2+j : (j*(j+1))/2+i)) * total(symij,1)
+                                            + (offset(symij,symk,1)+((k>l) ? (k*(k+1))/2+l : (l*(l+1))/2+k))
+                                            )
+                                            <<std::endl;
+                                    bracket_integrals_ab->at(
+                                                pairSpace[0].offset(0,symik)
+                                            + (offset(symik,symi,0)+i+k*at(symi))*total(symik,0)
+                                            + (offset(symik,symj,0)+j+l*at(symj))
+                                            ) =
+                                            integrals_ab->at(pairSpace[0].offset(0,symij)
+                                            + (offset(symij,symi,1)+((i>j) ? (i*(i+1))/2+j : (j*(j+1))/2+i)) * total(symij,1)
+                                            + (offset(symij,symk,1)+((k>l) ? (k*(k+1))/2+l : (l*(l+1))/2+k))
+                                            );
+                                }
+                                else
+                                {
+                                    xout << "i,j,k,l,toaddress, fromaddress "<<i<<" "<<j<<" "<<k<<" "<<l<<" " <<
+                                                pairSpace[0].offset(0,symik)
+                                            + (offset(symik,symi,0)+i+k*at(symi))*total(symik,0)
+                                            + (offset(symik,symj,0)+j+l*at(symj))
+                            <<" " <<
+                                      pairSpace[1].offset(0,symij)
+                                            + ((symi > symj) ?
+                                                   offset(symij,symi,1)+j*at(symi)+i
+                                                 : offset(symij,symj,1)+i*at(symj)+j
+                                                   ) * total(symij,1)
+                                            + ((symk > syml) ?
+                                                   offset(symij,symk,1)+l*at(symk)+k
+                                                 : offset(symij,syml,1)+k*at(syml)+l)
+                                    <<"="<<
+                                      integrals_ab->at(pairSpace[1].offset(0,symij)
+                                            + ((symi > symj) ?
+                                                   offset(symij,symi,1)+j*at(symi)+i
+                                                 : offset(symij,symj,1)+i*at(symj)+j
+                                                   ) * total(symij,1)
+                                            + ((symk > syml) ?
+                                                   offset(symij,symk,1)+l*at(symk)+k
+                                                 : offset(symij,syml,1)+k*at(syml)+l)
+                                                  )
+                                            <<std::endl;
+                                    bracket_integrals_ab->at(
+                                                pairSpace[0].offset(0,symik)
+                                            + (offset(symik,symi,0)+i+k*at(symi))*total(symik,0)
+                                            + (offset(symik,symj,0)+j+l*at(symj))
+                                            ) =
+                                            integrals_ab->at(pairSpace[1].offset(0,symij)
+                                            + ((symi > symj) ?
+                                                   offset(symij,symi,1)+j*at(symi)+i
+                                                 : offset(symij,symj,1)+i*at(symj)+j
+                                                   ) * total(symij,1)
+                                            + ((symk > syml) ?
+                                                   offset(symij,symk,1)+l*at(symk)+k
+                                                 : offset(symij,syml,1)+k*at(syml)+l
+                                                   )
+                                            );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+xout <<str(3) <<std::endl;exit(0);
 }
 
 void Hamiltonian::unload() {
     if (loaded) {
         delete [] integrals_a;
         delete [] integrals_aa;
+        delete [] bracket_integrals_aa;
+        delete [] bracket_integrals_ab;
         if (spinUnrestricted) {
             delete [] integrals_b;
             delete [] integrals_ab;
             delete [] integrals_bb;
+            delete [] bracket_integrals_bb;
         }
     }
     loaded=false;
@@ -135,6 +236,32 @@ std::string Hamiltonian::str(int verbosity) const
                             unsigned int ijkl = int2Index(i,j,k,l);
                             if (integrals_aa->at(ijkl) != (double)0 || integrals_ab->at(ijkl) != (double)0 || integrals_bb->at(ijkl) != (double)0) o<<std::endl<<std::setw(4)<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<std::setw(precision+7)<<integrals_aa->at(ijkl)<<" "<<integrals_ab->at(ijkl)<<" "<<integrals_bb->at(ijkl);
                         }
+                    }
+                }
+            }
+        }
+        if (bracket_integrals_ab != NULL) {
+            o<<std::endl << "2-electron integrals (bracket form, ab):";
+            for (int symij=0; symij<8; symij++) {
+                if (total(symij,0))
+                    o<<std::endl <<"symmetry block " << symij;//<<" " <<pairSpace.at(0).offset(0,symij,0);
+                for (size_t ij=0; ij< total(symij,0); ij++) {
+                    o<<std::endl;
+                    for (size_t kl=0; kl< total(symij,0); kl++) {
+                        o << bracket_integrals_ab->at( pairSpace.at(0).offset(0,symij,0) + ij * total(symij,0) + kl ) <<" ";
+                    }
+                }
+            }
+        }
+        if (bracket_integrals_aa != NULL && bracket_integrals_bb != NULL) {
+            o<<std::endl << "2-electron integrals (bracket form, antisymmetrised, aa and bb):";
+            for (int symij=0; symij<8; symij++) {
+                if (total(symij,-1))
+                    o<<std::endl <<"symmetry block " << symij;//<<" " <<pairSpace.at(0).offset(0,symij,0);
+                for (size_t ij=0; ij< total(symij,-1); ij++) {
+                    o<<std::endl;
+                    for (size_t kl=0; kl< total(symij,-1); kl++) {
+                        o << bracket_integrals_ab->at( pairSpace.at(0).offset(-1,symij,0) + ij * total(symij,-1) + kl ) <<" ";
                     }
                 }
             }

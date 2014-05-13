@@ -118,6 +118,7 @@ int main()
         StringSet ka(w.alphaStrings,1,0,syma);
         xout << "N-1 alpha StringSet: " << ka.str(1) << std::endl;
     }
+    xout << "Hamiltonian: " <<hh.str(3)<<std::endl;
 
   return 0;
     }
