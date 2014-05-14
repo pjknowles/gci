@@ -45,7 +45,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w, const StringSet &alp
       ExcitationSet ee(*s,w.alphaStrings[wsyma],1,1);
       //          xout << "alpha excitations " << ee.str() <<std::endl;
       for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
-        //                xout << "alpha excitation " << e->orbitalAddress <<"="<<(*h.integrals_a)[e->orbitalAddress]<<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
+        xout << "alpha excitation " << e->orbitalAddress <<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
         if (e->phase < 0)
           for (size_t ib=0; ib<nsb; ib++)
             (*this)[offa+nsa*nsb*e->orbitalAddress+ib]-=
@@ -58,6 +58,12 @@ TransitionDensity::TransitionDensity(const Wavefunction &w, const StringSet &alp
       offa += nsb;
       woffa += wnsb;
     }
+    xout <<"after alpha"<<std::endl;
+  for (size_t ij=0; ij < excitations; ij++) {
+    for (size_t ab=0; ab < nsa*nsb; ab++)
+      xout << (*this)[ab+ij*nsa*nsb] <<" ";
+    xout <<std::endl;
+  }
 
     // beta excitations
     woffset=0;
@@ -77,7 +83,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w, const StringSet &alp
     for (StringSet::const_iterator s = betaStrings.begin(); s != betaStrings.end(); s++) {
       ExcitationSet ee(*s,w.betaStrings[wsymb],1,1);
       for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
-        //                xout << "beta excitation " << e->orbitalAddress <<"="<<(*h.integrals_b)[e->orbitalAddress]<<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
+        xout << "beta excitation " << e->orbitalAddress <<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
         if (e->phase < 0)
           for (size_t ia=0; ia<nsa; ia++)
             (*this)[offb+nsa*nsb*e->orbitalAddress+ia*nsb]-=
