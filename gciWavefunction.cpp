@@ -2,6 +2,7 @@
 #include <sstream>
 #include <iostream>
 #include "gciStringSet.h"
+#include "gciTransitionDensity.h"
 //#include "mkl.h"
 
 Wavefunction::Wavefunction(FCIdump *dump) : State(dump) {
@@ -289,11 +290,16 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
 {
   for (size_t i=0; i<buffer.size(); i++)
     buffer[i] = h.coreEnergy * w.buffer[i];
+
+
   size_t offset=0;
   for (unsigned int syma=0; syma<8; syma++) {
     unsigned int symb = w.symmetry^syma;
     size_t nsa = alphaStrings[syma].size();
     size_t nsb = betaStrings[symb].size();
+    xout << "syma="<<syma<<", symb="<<symb<<std::endl;
+    TransitionDensity d(w,w.alphaStrings[syma],w.betaStrings[symb],1);
+    xout <<"Transition density: "<<d<<std::endl;
     size_t offa = offset;
     for (StringSet::iterator s = alphaStrings[syma].begin(); s != alphaStrings[syma].end(); s++) {
       //            xout << "alpha string "<<*s<<std::endl;

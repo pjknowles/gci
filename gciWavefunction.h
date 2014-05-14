@@ -92,6 +92,7 @@ public:
   Wavefunction& operator+=(const Wavefunction &other); ///< add another wavefunction
   Wavefunction& operator-=(const Wavefunction &other); ///< subtract another wavefunction
 
+  friend class TransitionDensity;
   friend double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
 private:
   void buildStrings(); ///< build alphaStrings and betaStrings

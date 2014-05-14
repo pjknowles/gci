@@ -53,7 +53,7 @@ public:
      * \param annihilations How many annihilations.
      * \param creations How many creations.
      */
-  ExcitationSet(String &from, StringSet &to, int annihilations, int creations);
+  ExcitationSet(const String &from, const StringSet &to, int annihilations, int creations);
   /*!
      * \brief The String to which this set relates
      */
@@ -61,7 +61,7 @@ public:
   /*!
      * \brief The StringSet containing the excited String objects
      */
-  StringSet* To;
+  const StringSet* To;
   /*!
      * \brief Generate printable representation of the object
      * \return Printable representation of the object

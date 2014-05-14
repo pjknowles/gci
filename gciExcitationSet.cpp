@@ -8,7 +8,7 @@ Excitation::Excitation(size_t StringIndex, int Phase, size_t OrbitalAddress)
   orbitalAddress = OrbitalAddress;
 }
 
-ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int creations)
+ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihilations, int creations)
 {
   int symexc=-1;
   From = from;
@@ -24,7 +24,7 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
           tt.key=0;
           for (int k=0; k<(int)tt.orbitals_.size(); k++)
             tt.key+= to.PartialWeightArray[k][tt.orbitals_[k]-1];
-          size_t ti=to.addressMap[tt.key];
+          size_t ti=to.addressMap.at(tt.key);
           push_back(Excitation(ti,phase,i));
         }
       }
@@ -46,7 +46,7 @@ ExcitationSet::ExcitationSet(String &from, StringSet &to, int annihilations, int
               tt.key=0; for (int k=0; k<(int)tt.orbitals_.size(); k++) // can be speeded
                 tt.key+= to.PartialWeightArray[k][tt.orbitals_[k]-1];
               //                            xout<< "i="<<i+1<<", j="<<j+1<<", phase="<<phase<<", tt="<<tt<<std::endl;
-              size_t ti=to.addressMap[tt.key];
+              size_t ti=to.addressMap.at(tt.key);
               if (tt.key == String::keyUnassigned || ti>= to.size()) {
                 xout <<"i="<<i+1<<" phase="<<phase<<" ti="<<ti<<" tt="<<tt.str()<<std::endl;
                 throw "index error in ExcitationSet";

@@ -96,8 +96,8 @@ public:
   std::vector<size_t> index(const StringSet& set) const;
 
   std::string str(int verbosity=0) const;
-private:
   String proto;
+private:
   void setupPartialWeightArray();
   static long binomial_coefficient(unsigned long n, unsigned long k) ;
   void makekey(String &s);
