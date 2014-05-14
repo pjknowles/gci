@@ -298,30 +298,40 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
     size_t nsa = alphaStrings[syma].size();
     size_t nsb = betaStrings[symb].size();
     xout << "syma="<<syma<<", symb="<<symb<<std::endl;
-    TransitionDensity d(w,w.alphaStrings[syma],w.betaStrings[symb],1);
+    TransitionDensity d(w,w.alphaStrings[syma],w.betaStrings[symb],1,true, !h.spinUnrestricted);
     xout <<"Transition density: "<<d<<std::endl;
-    size_t offa = offset;
-    for (StringSet::iterator s = alphaStrings[syma].begin(); s != alphaStrings[syma].end(); s++) {
-      //            xout << "alpha string "<<*s<<std::endl;
-      ExcitationSet ee(*s,alphaStrings[syma],1,1);
-      //            xout << "alpha excitations " << ee.str() <<std::endl;
-      for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
-        //                xout << "alpha excitation " << e->orbitalAddress <<"="<<(*h.integrals_a)[e->orbitalAddress]<<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
-        for (size_t ib=0; ib<nsb; ib++)
-          buffer[offa+ib] += (*h.integrals_a)[e->orbitalAddress] * e->phase * w.buffer[offset+e->stringIndex*nsb+ib];
-      }
-      offa += nsb;
+    for (size_t iab=0; iab<nsa*nsb; iab++)
+      for (size_t ij=0; ij<w.orbitalSpace->total(0,1); ij++)
+        buffer[offset+iab]+=d[ij*nsa*nsb+iab] * (*h.integrals_a)[ij];
+    if (h.spinUnrestricted) {
+    TransitionDensity d(w,w.alphaStrings[syma],w.betaStrings[symb],1,false, true);
+    xout <<"Transition density: "<<d<<std::endl;
+    for (size_t iab=0; iab<nsa*nsb; iab++)
+      for (size_t ij=0; ij<w.orbitalSpace->total(0,1); ij++)
+        buffer[offset+iab]+=d[ij*nsa*nsb+iab] * (*h.integrals_b)[ij];
     }
-    size_t offb = offset;
-    for (StringSet::iterator s = betaStrings[symb].begin(); s != betaStrings[symb].end(); s++) {
-      ExcitationSet ee(*s,betaStrings[symb],1,1);
-      for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
-        //                xout << "beta excitation " << e->orbitalAddress <<"="<<(*h.integrals_b)[e->orbitalAddress]<<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
-        for (size_t ia=0; ia<nsa; ia++)
-          buffer[offb+ia*nsb] += (*h.integrals_b)[e->orbitalAddress] * e->phase * w.buffer[offset+e->stringIndex+ia*nsb];
-      }
-      offb ++;
-    }
+//    size_t offa = offset;
+//    for (StringSet::iterator s = alphaStrings[syma].begin(); s != alphaStrings[syma].end(); s++) {
+//      //            xout << "alpha string "<<*s<<std::endl;
+//      ExcitationSet ee(*s,alphaStrings[syma],1,1);
+//      //            xout << "alpha excitations " << ee.str() <<std::endl;
+//      for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
+//        //                xout << "alpha excitation " << e->orbitalAddress <<"="<<(*h.integrals_a)[e->orbitalAddress]<<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
+//        for (size_t ib=0; ib<nsb; ib++)
+//          buffer[offa+ib] += (*h.integrals_a)[e->orbitalAddress] * e->phase * w.buffer[offset+e->stringIndex*nsb+ib];
+//      }
+//      offa += nsb;
+//    }
+//    size_t offb = offset;
+//    for (StringSet::iterator s = betaStrings[symb].begin(); s != betaStrings[symb].end(); s++) {
+//      ExcitationSet ee(*s,betaStrings[symb],1,1);
+//      for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
+//        //                xout << "beta excitation " << e->orbitalAddress <<"="<<(*h.integrals_b)[e->orbitalAddress]<<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
+//        for (size_t ia=0; ia<nsa; ia++)
+//          buffer[offb+ia*nsb] += (*h.integrals_b)[e->orbitalAddress] * e->phase * w.buffer[offset+e->stringIndex+ia*nsb];
+//      }
+//      offb ++;
+//    }
     offset += nsa*nsb;
   }
 }

@@ -2,8 +2,11 @@
 #include <iostream>
 #include <sstream>
 
-TransitionDensity::TransitionDensity(const Wavefunction &w, const StringSet &alphaStrings, const StringSet &betaStrings, int parity)
+TransitionDensity::TransitionDensity(const Wavefunction &w, const StringSet& alphaStrings, const StringSet& betaStrings, int parity, const bool doAlpha, const bool doBeta)
 {
+  this->parity = parity;
+  this->alphaStrings = &alphaStrings;
+  this->betaStrings = &betaStrings;
   // first parse the type of transition
   nsa = alphaStrings.size();
   nsb = betaStrings.size();
@@ -27,6 +30,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w, const StringSet &alp
     unsigned int wsyma;
     unsigned int wsymb;
     size_t wnsa, wnsb;
+    if (doAlpha) {
     // alpha excitations
     for (wsyma=0; wsyma<8; wsyma++) {
       wsymb = w.symmetry^wsyma;
@@ -65,7 +69,9 @@ TransitionDensity::TransitionDensity(const Wavefunction &w, const StringSet &alp
 //      xout << (*this)[ab+ij*nsa*nsb] <<" ";
 //    xout <<std::endl;
 //  }
+    }
 
+    if (doBeta) {
     // beta excitations
     woffset=0;
     for (wsyma=0; wsyma<syma; wsyma++) {
@@ -96,12 +102,18 @@ TransitionDensity::TransitionDensity(const Wavefunction &w, const StringSet &alp
       }
       offb ++;
     }
+    }
 
   } else if (deltaAlpha==2) { // wavefunction has 2 more alpha electrons than interacting states
   } else if (deltaBeta==2) { // wavefunction has 2 more beta electrons than interacting states
   } else {
     throw "unimplemented case";
   }
+}
+
+void TransitionDensity::action(Wavefunction &g)
+{
+
 }
 
 std::string TransitionDensity::str(int verbosity) const
