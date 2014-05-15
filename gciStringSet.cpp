@@ -24,18 +24,18 @@ void StringSet::makekey(String &s)
     s.key+= PartialWeightArray[k][s.orbitals_[k]-1];
 }
 
-StringSet::StringSet(StringSet &referenceSpace, int annihilations, int creations, int sym)
+StringSet::StringSet(const StringSet &referenceSpace, int annihilations, int creations, int sym)
 {
   addByOperators(referenceSpace, annihilations, creations, sym);
 }
 
-StringSet::StringSet(std::vector<StringSet>& referenceSpaces, int annihilations, int creations, int sym)
+StringSet::StringSet(const std::vector<StringSet>& referenceSpaces, int annihilations, int creations, int sym)
 {
-  for (std::vector<StringSet>::iterator referenceSpace=referenceSpaces.begin(); referenceSpace != referenceSpaces.end(); referenceSpace++)
+  for (std::vector<StringSet>::const_iterator referenceSpace=referenceSpaces.begin(); referenceSpace != referenceSpaces.end(); referenceSpace++)
     addByOperators(*referenceSpace, annihilations, creations, sym);
 }
 
-void StringSet::addByOperators(StringSet &referenceSpace, int annihilations, int creations, int sym)
+void StringSet::addByOperators(const StringSet &referenceSpace, int annihilations, int creations, int sym)
 {
   bool first=size()==0;
   symmetry = sym;
@@ -44,7 +44,7 @@ void StringSet::addByOperators(StringSet &referenceSpace, int annihilations, int
       || (int) referenceSpace.proto.nelec + creations - annihilations > (int) referenceSpace.proto.orbitals_.size())
     return; // null space because not enough electrons or holes left
   int symexc = (referenceSpace.symmetry>=0 && sym >=0) ? referenceSpace.symmetry ^ sym : -1 ; // use symmetry if we can
-  for (StringSet::iterator s = referenceSpace.begin(); s != referenceSpace.end(); s++) {
+  for (StringSet::const_iterator s = referenceSpace.begin(); s != referenceSpace.end(); s++) {
     String from = *s;
     //        xout << "from="<<from.str(5)<<std::endl;
     if (annihilations + creations ==1) {
@@ -99,8 +99,9 @@ void StringSet::setupPartialWeightArray()
     for (int l=k;l<nbox-nitem+k+1;l++)
       PartialWeightArray[k][l] = PartialWeightArray[k][l] - PartialWeightArray[k+1][l+1];
   }
-  for (int l=nitem-1;l<nbox;l++)
-    PartialWeightArray[nitem-1][l] = l-nitem+1;
+  if (nitem > 0)
+    for (int l=nitem-1;l<nbox;l++)
+      PartialWeightArray[nitem-1][l] = l-nitem+1;
 
   //    xout << "PartialWeightArray:"<<std::endl; for (int k=0;k<nitem;k++) { for (int l=0;l<nbox;l++) xout << " "<<PartialWeightArray[k][l]; xout <<std::endl; }
 }

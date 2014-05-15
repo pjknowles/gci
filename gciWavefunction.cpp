@@ -345,19 +345,31 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
     offset += nsa*nsb;
   }
 
-  if (h.bracket_integrals_aa != NULL) { // two-electron contribution
-    size_t nsaMax = 64; // temporary static
+  if (h.bracket_integrals_aa != NULL) { // two-electron contribution, alpha-alpha
+    size_t nsaaMax = 64; // temporary static
     size_t nsbMax = 64; // temporary static
     for (unsigned int syma=0; syma<8; syma++) {
-      size_t nsa = alphaStrings[syma].size();
+      StringSet aa(w.alphaStrings,2,0,syma);
+      xout <<"StringSet aa" <<aa.str(2)<<std::endl;
       for (unsigned int symb=0; symb<8; symb++) {
-        size_t nsb = betaStrings[symb].size();
-        unsigned int symab=syma^symb;
-        for (size_t osa=0; osa < nsa; osa+=nsaMax) {
-          for (size_t osb=0; osb < nsb; osb+=nsaMax) {
-//            TransitionDensity d(w,w.alphaStrings[syma],w.betaStrings[symb],symab,false,false);
-//            xout <<"Transition density: "<<d<<std::endl;
-          }
+        unsigned int symexc = syma^symb^w.symmetry;
+        size_t nexc = h.pairSpace[-1][symexc];
+        size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
+        for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
+          size_t nsa = aa1-aa0;
+          xout <<"nsa= "<<nsa<<std::endl;
+          TransitionDensity d(w,aa0,aa1,w.betaStrings[symb].begin(),w.betaStrings[symb].end(),-1,false,false);
+          xout <<"Transition density aa: "<<d<<std::endl;
+          TransitionDensity e(d); e.assign(d.size(),(double)0);
+          xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsa="<<nsa<<", nsb="<<nsb<<std::endl;
+          xout << "h.pairSpace[-1].at(symexc)"<<h.pairSpace[-1][symexc]<<std::endl;
+          if (nexc * nsa * nsb != d.size()) throw "nexc";
+          for (size_t excd=0; excd<nexc; excd++)
+            for (size_t exce=0; exce<nexc; exce++)
+              for (size_t ab=0; ab < nsa*nsb; ab++)
+                e[ab+exce*nsa*nsb] += d[ab+excd*nsa*nsb]
+                    * (*h.bracket_integrals_aa)[h.pairSpace[-1].offset(0,symexc,0)+excd*nexc+exce];
+          e.action(*this);
         }
       }
     }

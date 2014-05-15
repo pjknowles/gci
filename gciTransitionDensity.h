@@ -29,7 +29,7 @@ public:
                     const StringSet::const_iterator &alphaStringsEnd,
                     const StringSet::const_iterator &betaStringsBegin,
                     const StringSet::const_iterator &betaStringsEnd,
-                    int parity, const bool doAlpha=true, const bool doBeta=true);
+                    const int parity, const bool doAlpha=true, const bool doBeta=true);
   /*!
    * \brief Collapse onto a configuration-space residual
    * g(I) += E(K,exc) <I|exc|K>

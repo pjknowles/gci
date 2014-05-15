@@ -7,7 +7,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
                                      const StringSet::const_iterator &alphaStringsEnd,
                                      const StringSet::const_iterator &betaStringsBegin,
                                      const StringSet::const_iterator &betaStringsEnd,
-                                     int parity, const bool doAlpha, const bool doBeta)
+                                     const int parity, const bool doAlpha, const bool doBeta)
 {
   this->parity = parity;
   this->alphaStringsBegin = alphaStringsBegin;
