@@ -2,23 +2,30 @@
 #include <iostream>
 #include <sstream>
 
-TransitionDensity::TransitionDensity(const Wavefunction &w, const StringSet& alphaStrings, const StringSet& betaStrings, int parity, const bool doAlpha, const bool doBeta)
+TransitionDensity::TransitionDensity(const Wavefunction &w,
+                                     const StringSet::const_iterator &alphaStringsBegin,
+                                     const StringSet::const_iterator &alphaStringsEnd,
+                                     const StringSet::const_iterator &betaStringsBegin,
+                                     const StringSet::const_iterator &betaStringsEnd,
+                                     int parity, const bool doAlpha, const bool doBeta)
 {
   this->parity = parity;
-  this->alphaStrings = &alphaStrings;
-  this->betaStrings = &betaStrings;
+  this->alphaStringsBegin = alphaStringsBegin;
+  this->alphaStringsEnd = alphaStringsEnd;
+  this->betaStringsBegin = betaStringsBegin;
+  this->betaStringsEnd = betaStringsEnd;
   // first parse the type of transition
-  nsa = alphaStrings.size();
-  nsb = betaStrings.size();
+  nsa = std::distance(alphaStringsBegin,alphaStringsEnd);
+  nsb = std::distance(betaStringsBegin,betaStringsEnd);
   if (nsa==0 || nsb==0) return;
-  unsigned int syma = alphaStrings[0].computed_symmetry();
-  unsigned int symb =  betaStrings[0].computed_symmetry();
+  unsigned int syma = alphaStringsBegin->computed_symmetry();
+  unsigned int symb =  betaStringsBegin->computed_symmetry();
 //  xout << "syma="<<syma<<", nsa="<<nsa<<std::endl;
 //  xout << "symb="<<symb<<", nsb="<<nsb<<std::endl;
   unsigned int symexc = w.symmetry ^ syma ^ symb;
   excitations = w.orbitalSpace->total(symexc,parity);
-  int deltaAlpha = w.alphaStrings[0].proto.nelec - alphaStrings.proto.nelec;
-  int deltaBeta = w.betaStrings[0].proto.nelec - betaStrings.proto.nelec;
+  int deltaAlpha = w.alphaStrings[0].proto.nelec - alphaStringsBegin->nelec;
+  int deltaBeta = w.betaStrings[0].proto.nelec - betaStringsBegin->nelec;
 
 //  xout <<"TransitionDensity "<<symexc<<" "<<nsa*nsb*excitations<<std::endl;
   resize(nsa*nsb*excitations,(double)0);
@@ -40,11 +47,11 @@ TransitionDensity::TransitionDensity(const Wavefunction &w, const StringSet& alp
       woffset += wnsa*wnsb;
     }
     // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
-    woffset += betaStrings[0].index(w.betaStrings[wsymb]);
+    woffset += betaStringsBegin->index(w.betaStrings[wsymb]);
 //    xout << "alpha wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<std::endl;
 
     size_t offa=0;
-    for (StringSet::const_iterator s = alphaStrings.begin(); s != alphaStrings.end(); s++) {
+    for (StringSet::const_iterator s = alphaStringsBegin; s != alphaStringsEnd; s++) {
       //          xout << "alpha string "<<*s<<std::endl;
       ExcitationSet ee(*s,w.alphaStrings[wsyma],1,1);
       //          xout << "alpha excitations " << ee.str() <<std::endl;
@@ -84,10 +91,11 @@ TransitionDensity::TransitionDensity(const Wavefunction &w, const StringSet& alp
     wsymb = w.symmetry^wsyma;
     wnsa = w.alphaStrings[wsyma].size();
     wnsb = w.betaStrings[wsymb].size();
-    woffset += wnsb * alphaStrings[0].index(w.alphaStrings[wsyma]);
+    // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
+    woffset += wnsb * alphaStringsBegin->index(w.alphaStrings[wsyma]);
     size_t offb = 0;
 //    xout << "beta wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<", woffset="<<woffset<<std::endl;
-    for (StringSet::const_iterator s = betaStrings.begin(); s != betaStrings.end(); s++) {
+    for (StringSet::const_iterator s = betaStringsBegin; s != betaStringsEnd; s++) {
       ExcitationSet ee(*s,w.betaStrings[wsymb],1,1);
       for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
 //        xout << "beta excitation " << e->orbitalAddress <<" "<<e->phase <<" "<<e->stringIndex<<std::endl;

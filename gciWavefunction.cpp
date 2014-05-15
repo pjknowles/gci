@@ -298,13 +298,23 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
     size_t nsa = alphaStrings[syma].size();
     size_t nsb = betaStrings[symb].size();
     xout << "syma="<<syma<<", symb="<<symb<<std::endl;
-    TransitionDensity d(w,w.alphaStrings[syma],w.betaStrings[symb],1,true, !h.spinUnrestricted);
+    TransitionDensity d(w,
+                        w.alphaStrings[syma].begin(),
+                        w.alphaStrings[syma].end(),
+                        w.betaStrings[symb].begin(),
+                        w.betaStrings[symb].end(),
+                        1,true, !h.spinUnrestricted);
     xout <<"Transition density: "<<d<<std::endl;
     for (size_t iab=0; iab<nsa*nsb; iab++)
       for (size_t ij=0; ij<w.orbitalSpace->total(0,1); ij++)
         buffer[offset+iab]+=d[ij*nsa*nsb+iab] * (*h.integrals_a)[ij];
     if (h.spinUnrestricted) {
-    TransitionDensity d(w,w.alphaStrings[syma],w.betaStrings[symb],1,false, true);
+    TransitionDensity d(w,
+                        w.alphaStrings[syma].begin(),
+                        w.alphaStrings[syma].end(),
+                        w.betaStrings[symb].begin(),
+                        w.betaStrings[symb].end(),
+                        1,false, true);
     xout <<"Transition density: "<<d<<std::endl;
     for (size_t iab=0; iab<nsa*nsb; iab++)
       for (size_t ij=0; ij<w.orbitalSpace->total(0,1); ij++)

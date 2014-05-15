@@ -24,7 +24,12 @@ public:
    * \param doAlpha whether to process alpha excitations
    * \param doBeta whether to process beta excitations
    */
-  TransitionDensity(const Wavefunction& w, const StringSet &alphaStrings, const StringSet &betaStrings, int parity, const bool doAlpha=true, const bool doBeta=true);
+  TransitionDensity(const Wavefunction& w,
+                    const StringSet::const_iterator &alphaStringsBegin,
+                    const StringSet::const_iterator &alphaStringsEnd,
+                    const StringSet::const_iterator &betaStringsBegin,
+                    const StringSet::const_iterator &betaStringsEnd,
+                    int parity, const bool doAlpha=true, const bool doBeta=true);
   /*!
    * \brief Collapse onto a configuration-space residual
    * g(I) += E(K,exc) <I|exc|K>
@@ -36,8 +41,10 @@ private:
   size_t nsa; ///< number of alpha strings
   size_t nsb; ///< number of beta strings
   size_t excitations; ///< number of excitations
-  const StringSet* alphaStrings;
-  const StringSet* betaStrings;
+  StringSet::const_iterator alphaStringsBegin;
+  StringSet::const_iterator alphaStringsEnd;
+  StringSet::const_iterator betaStringsBegin;
+  StringSet::const_iterator betaStringsEnd;
   int parity;
 };
 }
