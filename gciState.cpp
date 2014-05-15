@@ -62,7 +62,7 @@ std::string State::str(int verbosity) const
   if (verbosity >= 0) {
     s<< "nelec="<<nelec<<" ms2="<<ms2<<" symmetry="<<symmetry+1;
     if (orbitalSpace!=NULL)
-      s << std::endl << "OrbitalSpace: " << orbitalSpace->str(verbosity);
+      s << std::endl << "OrbitalSpace: " << orbitalSpace->str(verbosity > 2 ? verbosity-1 : 0);
   }
   //    xout << "basisSize=" << orbitalSpace->basisSize <<std::endl;
   return s.str();

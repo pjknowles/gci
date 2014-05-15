@@ -334,4 +334,22 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
 //    }
     offset += nsa*nsb;
   }
+
+  if (h.bracket_integrals_aa != NULL) { // two-electron contribution
+    size_t nsaMax = 64; // temporary static
+    size_t nsbMax = 64; // temporary static
+    for (unsigned int syma=0; syma<8; syma++) {
+      size_t nsa = alphaStrings[syma].size();
+      for (unsigned int symb=0; symb<8; symb++) {
+        size_t nsb = betaStrings[symb].size();
+        unsigned int symab=syma^symb;
+        for (size_t osa=0; osa < nsa; osa+=nsaMax) {
+          for (size_t osb=0; osb < nsb; osb+=nsaMax) {
+//            TransitionDensity d(w,w.alphaStrings[syma],w.betaStrings[symb],symab,false,false);
+//            xout <<"Transition density: "<<d<<std::endl;
+          }
+        }
+      }
+    }
+  }
 }
