@@ -34,10 +34,10 @@ public:
                     const int parity, const bool doAlpha=true, const bool doBeta=true);
   /*!
    * \brief Collapse onto a configuration-space residual
-   * g(I) += E(K,exc) <I|exc|K>
-   * \param g a Wavefunction object that will receive contributions
+   * w(I) += E(K,exc) <I|exc|K>
+   * \param w a Wavefunction object that will receive contributions
    */
-  void action(Wavefunction& g);
+  void action(Wavefunction& w);
   std::string str(int verbosity) const;
 private:
   size_t nsa; ///< number of alpha strings
