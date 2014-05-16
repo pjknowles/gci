@@ -25,6 +25,7 @@ Wavefunction::Wavefunction(const Wavefunction &other) : State(other)
     betaStrings[i] = other.betaStrings[i];
   }
   dimension = other.dimension;
+  _blockOffset = other._blockOffset;
   buffer = other.buffer;
 }
 
@@ -32,6 +33,7 @@ void Wavefunction::buildStrings()
 {
   alphaStrings.resize(8); betaStrings.resize(8);
   dimension = 0;
+  _blockOffset.resize(8);
   for (unsigned int syma=0; syma<8; syma++) {
     unsigned int symb = syma ^ symmetry;
     String stringa(this,1);
@@ -40,6 +42,7 @@ void Wavefunction::buildStrings()
     String stringb(this,-1);
     stringb.first((nelec-ms2)/2);
     betaStrings[symb] = StringSet(stringb, true, symb);
+    _blockOffset[syma]=dimension;
     dimension += alphaStrings[syma].size()*betaStrings[symb].size();
   }
 }
@@ -286,6 +289,11 @@ Determinant Wavefunction::determinantAt(size_t offset)
   throw "Wavefunction::determinantAt cannot find";
 }
 
+size_t Wavefunction::blockOffset(const unsigned int syma) const
+{
+  return _blockOffset.at(syma);
+}
+
 void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction &w)
 {
   for (size_t i=0; i<buffer.size(); i++)
@@ -346,8 +354,7 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
   }
 
   if (h.bracket_integrals_aa != NULL) { // two-electron contribution, alpha-alpha
-    size_t nsaaMax = 64; // temporary static
-    size_t nsbMax = 64; // temporary static
+    size_t nsbbMax = 64; // temporary static
     for (unsigned int syma=0; syma<8; syma++) {
       StringSet aa(w.alphaStrings,2,0,syma);
       xout <<"StringSet aa" <<aa.str(2)<<std::endl;
@@ -355,7 +362,7 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
         unsigned int symexc = syma^symb^w.symmetry;
         size_t nexc = h.pairSpace[-1][symexc];
         size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
-        for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
+        for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsbbMax > aa.end() ? aa.end() : aa0+nsbbMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
           size_t nsa = aa1-aa0;
           xout <<"nsa= "<<nsa<<std::endl;
           TransitionDensity d(w,aa0,aa1,w.betaStrings[symb].begin(),w.betaStrings[symb].end(),-1,false,false);
@@ -374,4 +381,68 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
       }
     }
   }
+
+  if (h.bracket_integrals_bb != NULL) { // two-electron contribution, beta-beta
+    size_t nsbbMax = 64; // temporary static
+    for (unsigned int symb=0; symb<8; symb++) {
+      StringSet bb(w.betaStrings,2,0,symb);
+      xout <<"StringSet bb" <<bb.str(2)<<std::endl;
+      for (unsigned int syma=0; syma<8; syma++) {
+        unsigned int symexc = symb^syma^w.symmetry;
+        size_t nexc = h.pairSpace[-1][symexc];
+        size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
+        for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
+          size_t nsb = bb1-bb0;
+          xout <<"nsb= "<<nsb<<std::endl;
+          TransitionDensity d(w,w.alphaStrings[syma].begin(),w.alphaStrings[syma].end(),bb0,bb1,-1,false,false);
+          xout <<"Transition density bb: "<<d<<std::endl;
+          TransitionDensity e(d); e.assign(d.size(),(double)0);
+          xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsb="<<nsb<<", nsa="<<nsa<<std::endl;
+          xout << "h.pairSpace[-1].at(symexc)"<<h.pairSpace[-1][symexc]<<std::endl;
+          if (nexc * nsb * nsa != d.size()) throw "nexc";
+          for (size_t excd=0; excd<nexc; excd++)
+            for (size_t exce=0; exce<nexc; exce++)
+              for (size_t ab=0; ab < nsb*nsa; ab++)
+                e[ab+exce*nsb*nsa] += d[ab+excd*nsb*nsa]
+                    * (*h.bracket_integrals_bb)[h.pairSpace[-1].offset(0,symexc,0)+excd*nexc+exce];
+          e.action(*this);
+        }
+      }
+    }
+  }
+
+  if (h.bracket_integrals_ab != NULL) { // two-electron contribution, alpha-beta
+    size_t nsaaMax = 16; // temporary static
+    size_t nsbbMax = 16; // temporary static
+    for (unsigned int symb=0; symb<8; symb++) {
+      StringSet bb(w.betaStrings,1,0,symb);
+      xout <<"StringSet bb" <<bb.str(2)<<std::endl;
+      for (unsigned int syma=0; syma<8; syma++) {
+      StringSet aa(w.alphaStrings,1,0,syma);
+        unsigned int symexc = symb^syma^w.symmetry;
+        size_t nexc = h.pairSpace[0][symexc];
+        size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
+        for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
+          size_t nsa = aa1-aa0;
+          for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
+            size_t nsb = bb1-bb0;
+            xout <<"nsb= "<<nsb<<std::endl;
+            TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
+            xout <<"Transition density ab: "<<d<<std::endl;
+            TransitionDensity e(d); e.assign(d.size(),(double)0);
+            xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsb="<<nsb<<", nsa="<<nsa<<std::endl;
+            xout << "h.pairSpace[-1].at(symexc)"<<h.pairSpace[-1][symexc]<<std::endl;
+            if (nexc * nsb * nsa != d.size()) throw "nexc";
+            for (size_t excd=0; excd<nexc; excd++)
+              for (size_t exce=0; exce<nexc; exce++)
+                for (size_t ab=0; ab < nsb*nsa; ab++)
+                  e[ab+exce*nsb*nsa] += d[ab+excd*nsb*nsa]
+                      * (*h.bracket_integrals_ab)[h.pairSpace[0].offset(0,symexc,0)+excd*nexc+exce];
+            e.action(*this);
+          }
+        }
+      }
+    }
+  }
+
 }

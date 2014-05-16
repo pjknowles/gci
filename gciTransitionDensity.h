@@ -18,8 +18,10 @@ public:
   /*!
    * \brief Construct a TransitionDensity from a wavefunction to a subset of space defined by sets of alpha and beta String objects
    * \param w
-   * \param alphaStrings
-   * \param betaStrings
+   * \param alphaStringsBegin
+   * \param alphaStringsEnd
+   * \param betaStringsBegin
+   * \param betaStringsEnd
    * \param parity
    * \param doAlpha whether to process alpha excitations
    * \param doBeta whether to process beta excitations

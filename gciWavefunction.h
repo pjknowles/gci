@@ -82,6 +82,13 @@ public:
      */
   void hamiltonianOnWavefunction(Hamiltonian& h, const Wavefunction &w);
 
+  /*!
+   * \brief blockOffset gives the address of the start of a symmetry block of the Wavefunction object
+   * \param syma the symmetry of alpha strings
+   * \return  the offset
+   */
+  size_t blockOffset(const unsigned int syma) const;
+
   std::string str(int verbosity=0) const;
 
   //    Wavefunction& operator=(const double &value);
@@ -99,6 +106,7 @@ private:
   size_t dimension; ///< the size of the space
   std::vector<double> buffer; ///< buffer to hold coefficients describing the object
   bool compatible(const Wavefunction &other) const; ///< whether this wavefunction is on the same space as another
+  std::vector<size_t> _blockOffset;
 
 };
 double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
