@@ -16,6 +16,7 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
   To = &to;
   if (to.symmetry>=0) symexc = from.symmetry ^ to.symmetry; // use symmetry if we can
   if (annihilations + creations ==1) {
+    int ii=0;
     for (int i=0; i<(int)from.orbitalSpace->orbital_symmetries.size(); i++) {
       if (from.orbitalSpace->orbital_symmetries[i]==(unsigned int)symexc || symexc==-1) {
         String tt = from;
@@ -25,8 +26,9 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
           for (int k=0; k<(int)tt.orbitals_.size(); k++)
             tt.key+= to.PartialWeightArray[k][tt.orbitals_[k]-1];
           size_t ti=to.addressMap.at(tt.key);
-          push_back(Excitation(ti,phase,i));
+          push_back(Excitation(ti,phase,ii));
         }
+        ii++;
       }
     }
   }
