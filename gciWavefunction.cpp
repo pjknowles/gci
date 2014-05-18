@@ -186,6 +186,14 @@ Wavefunction& Wavefunction::operator-=(const Wavefunction &other)
 }
 
 
+Wavefunction& Wavefunction::operator/=(const Wavefunction &other)
+{
+  if (! compatible(other)) throw "attempt to add incompatible Wavefunction objects";
+  for (size_t i=0; i<buffer.size(); i++)  buffer[i] /= other.buffer[i];
+  return *this;
+}
+
+
 Wavefunction gci::operator+(const Wavefunction &w1, const Wavefunction &w2)
 {
   Wavefunction result = w1;
@@ -196,6 +204,12 @@ Wavefunction gci::operator-(const Wavefunction &w1, const Wavefunction &w2)
 {
   Wavefunction result = w1;
   return result -= w2;
+}
+
+Wavefunction gci::operator/(const Wavefunction &w1, const Wavefunction &w2)
+{
+  Wavefunction result = w1;
+  return result /= w2;
 }
 
 Wavefunction gci::operator*(const Wavefunction &w1, const double &value)
