@@ -85,10 +85,10 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
   }
 
   // construct <ik||jl> = (ij|kl) - (il|kj)
-  bracket_integrals_aa = new std::vector<double>(pairSpace[-1].total(0),0.0);
-  bracket_integrals_ab = new std::vector<double>(pairSpace[0].total(0),999.0);
+  bracket_integrals_aa = new std::vector<double>(pairSpace[-1].total(0,0),0.0);
+  bracket_integrals_ab = new std::vector<double>(pairSpace[0].total(0,0),999.0);
   if (spinUnrestricted) {
-    bracket_integrals_bb = new std::vector<double>(pairSpace[-1].total(0),0.0);
+    bracket_integrals_bb = new std::vector<double>(pairSpace[-1].total(0,0),0.0);
   } else {
     bracket_integrals_bb = bracket_integrals_aa;
   }
@@ -198,7 +198,7 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
                       ((symij==0) ?
                          ((offset(symij,symi,1)+((i>j) ? (i*(i+1))/2+j : (j*(j+1))/2+i)) * total(symij,1)
                           +(offset(symij,symk,1)+((k>l) ? (k*(k+1))/2+l : (l*(l+1))/2+k)))
-                       :
+                       : (
                          ((symi > symj) ?
                             (offset(symij,symi,1)+j*at(symi)+i)
                           : (offset(symij,symj,1)+i*at(symj)+j)
@@ -206,31 +206,31 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
                          +((symk > syml) ?
                              (offset(symij,symk,1)+l*at(symk)+k)
                            : (offset(symij,syml,1)+k*at(syml)+l))
-                         )
-                      ;
+                         )) ;
+                  size_t okj=(offset(symil,symk,1)+((k>j) ? (k*(k+1))/2+j : (j*(j+1))/2+k));
                   size_t ilkj =
                       pairSpace[1].offset(0,symil) +
                       ((symil==0) ?
                          ((offset(symil,symi,1)+((i>l) ? (i*(i+1))/2+l : (l*(l+1))/2+i)) * total(symil,1)
                           +(offset(symil,symk,1)+((k>j) ? (k*(k+1))/2+j : (j*(j+1))/2+k)))
-                       :
+                       : (
                          ((symi > syml) ?
-                            offset(symil,symi,1)+l*at(symi)+i
-                          : offset(symil,syml,1)+i*at(syml)+l
-                            ) * total(symil,1))
-                      +((symk > symj) ?
-                          offset(symil,symk,1)+j*at(symk)+k
-                        : offset(symil,symj,1)+k*at(symj)+j)
-                      ;
+                            (offset(symil,symi,1)+l*at(symi)+i)
+                          : (offset(symil,syml,1)+i*at(syml)+l)
+                            ) * total(symil,1)
+                      + ((symk > symj) ?
+                          (offset(symil,symk,1)+j*at(symk)+k)
+                        : (offset(symil,symj,1)+k*at(symj)+j))
+                      ));
                   size_t ik = offset(symik,symi,-1) +  ((symi == symk) ? ((i*(i-1))/2+k) : (i+k*at(symi))) ;
                   size_t jl = offset(symjl,symj,-1) +  ((symj == syml) ? ((j*(j-1))/2+l) : (j+l*at(symj))) ;
-                  //xout << "i,j,k,l,ijkl,ilkj,ik,jl: "<<i<<" "<<j<<" "<<k<<" "<<l<<" "
-                  //        <<ijkl<<" "
-                  //        <<ilkj<<" "
-                  //        <<ik<<" "
-                  //        <<jl<<" destination: "
-                  //                                     <<pairSpace[-1].offset(0,symik,0) + ik*total(symik,-1) + jl  << " value: "
-                  //                                     <<integrals_aa->at(ijkl) -integrals_aa->at(ilkj)<<std::endl;
+                  xout << "i,j,k,l,ijkl,ilkj,ik,jl: "<<i<<" "<<j<<" "<<k<<" "<<l<<" "
+                          <<ijkl<<" "
+                          <<ilkj<<" "
+                          <<ik<<" "
+                          <<jl<<" destination: "
+                                                       <<pairSpace[-1].offset(0,symik,0) + ik*total(symik,-1) + jl  << " value: "
+                                                       <<integrals_aa->at(ijkl) -integrals_aa->at(ilkj)<<std::endl;
                   bracket_integrals_aa->at(pairSpace[-1].offset(0,symik,0) + ik*total(symik,-1) + jl ) = integrals_aa->at(ijkl) -integrals_aa->at(ilkj);
                   bracket_integrals_bb->at(pairSpace[-1].offset(0,symik,0) + ik*total(symik,-1) + jl ) = integrals_bb->at(ijkl) -integrals_bb->at(ilkj);
                 }
@@ -384,7 +384,8 @@ Hamiltonian Hamiltonian::FockHamiltonian(Determinant &reference)
   f.ijklSize = ijklSize;
   f.ijSize = ijSize;
   f.orbital_symmetries = orbital_symmetries;
-  f.integrals_a = integrals_a;
+  f.integrals_a = new std::vector<double>(ijSize,0.0);
+  *f.integrals_a = *integrals_a;
   for (std::vector<unsigned int>::const_iterator o=reference.stringAlpha.orbitals().begin(); o != reference.stringAlpha.orbitals().end(); o++)
   {
     for (unsigned int i=1; i<=basisSize; i++)

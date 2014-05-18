@@ -76,7 +76,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       unsigned int wsymb = w.symmetry^wsyma;
       size_t wnsb = w.betaStrings[wsymb].size();
       // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
-      size_t woffset = w.blockOffset(syma) + wnsb * alphaStringsBegin->index(w.alphaStrings[wsyma]);
+      size_t woffset = w.blockOffset(wsyma) + wnsb * alphaStringsBegin->index(w.alphaStrings[wsyma]);
       size_t offb = 0;
       //    xout << "beta wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<", woffset="<<woffset<<std::endl;
       for (StringSet::const_iterator s = betaStringsBegin; s != betaStringsEnd; s++) {
@@ -129,7 +129,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
     unsigned int wsymb = w.symmetry^wsyma;
     size_t wnsb = w.betaStrings[wsymb].size();
     // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
-    size_t woffset = w.blockOffset(syma) + wnsb * alphaStringsBegin->index(w.alphaStrings[wsyma]);
+    size_t woffset = w.blockOffset(wsyma) + wnsb * alphaStringsBegin->index(w.alphaStrings[wsyma]);
     size_t offb = 0;
     //    xout << "beta wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<", woffset="<<woffset<<std::endl;
     for (StringSet::const_iterator s = betaStringsBegin; s != betaStringsEnd; s++) {
@@ -154,7 +154,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       unsigned int symexca = wsyma ^ syma;
       size_t intoff = w.orbitalSpace->offset(symexc,symexca,parity);
       size_t wnsb = w.betaStrings[wsymb].size();
-      size_t woffset = w.blockOffset(syma);
+      size_t woffset = w.blockOffset(wsyma);
       size_t offb = 0;
       for (StringSet::const_iterator sa = alphaStringsBegin; sa != alphaStringsEnd; sa++) {
         ExcitationSet eea(*sa,w.alphaStrings[wsyma],0,1);
@@ -232,7 +232,7 @@ void TransitionDensity::action(Wavefunction &w)
       unsigned int wsymb = w.symmetry^wsyma;
       size_t wnsb = w.betaStrings[wsymb].size();
       // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
-      size_t woffset = w.blockOffset(syma) + wnsb * alphaStringsBegin->index(w.alphaStrings[wsyma]);
+      size_t woffset = w.blockOffset(wsyma) + wnsb * alphaStringsBegin->index(w.alphaStrings[wsyma]);
       size_t offb = 0;
       //    xout << "beta wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<", woffset="<<woffset<<std::endl;
       for (StringSet::const_iterator s = betaStringsBegin; s != betaStringsEnd; s++) {
@@ -282,7 +282,7 @@ void TransitionDensity::action(Wavefunction &w)
     unsigned int wsymb = w.symmetry^wsyma;
     size_t wnsb = w.betaStrings[wsymb].size();
     // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
-    size_t woffset = w.blockOffset(syma) + wnsb * alphaStringsBegin->index(w.alphaStrings[wsyma]);
+    size_t woffset = w.blockOffset(wsyma) + wnsb * alphaStringsBegin->index(w.alphaStrings[wsyma]);
     size_t offb = 0;
     //    xout << "beta wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<", woffset="<<woffset<<std::endl;
     for (StringSet::const_iterator s = betaStringsBegin; s != betaStringsEnd; s++) {
@@ -307,14 +307,37 @@ void TransitionDensity::action(Wavefunction &w)
       unsigned int symexca = wsyma ^ syma;
       size_t intoff = w.orbitalSpace->offset(symexc,symexca,parity);
       size_t wnsb = w.betaStrings[wsymb].size();
-      size_t woffset = w.blockOffset(syma);
+      size_t woffset = w.blockOffset(wsyma);
       size_t offb = 0;
-      for (StringSet::const_iterator sa = alphaStringsBegin; sa != alphaStringsEnd; sa++) {
+//      xout <<"ab action"
+//             <<", syma="<<syma
+//             <<", symb="<<symb
+//             <<", wsyma="<<wsyma
+//             <<", wsymb="<<wsymb
+//             <<", symexca="<<symexca
+//            <<std::endl;
+     for (StringSet::const_iterator sa = alphaStringsBegin; sa != alphaStringsEnd; sa++) {
         ExcitationSet eea(*sa,w.alphaStrings[wsyma],0,1);
         for (StringSet::const_iterator sb = betaStringsBegin; sb != betaStringsEnd; sb++) {
           ExcitationSet eeb(*sb,w.betaStrings[wsymb],0,1);
           for (ExcitationSet::const_iterator ea=eea.begin(); ea!=eea.end(); ea++) {
             for (ExcitationSet::const_iterator eb=eeb.begin(); eb!=eeb.end(); eb++) {
+//              xout <<"ab action E: " <<
+//                     "nsa="<<nsa<<", "<<
+//                     "nsb="<<nsb<<", "<<
+//                     "intoff="<<intoff<<", "<<
+//                     "ea->orbitalAddress="<<ea->orbitalAddress<<", "<<
+//                     "eb->orbitalAddress="<<eb->orbitalAddress<<", "<<
+//                  offb + nsa*nsb*(intoff +
+//                                          ea->orbitalAddress +
+//                                          eb->orbitalAddress*(*w.orbitalSpace)[symexca])
+//                     <<" "<<
+//                  (*this)[offb + nsa*nsb*(intoff +
+//                                          ea->orbitalAddress +
+//                                          eb->orbitalAddress*(*w.orbitalSpace)[symexca]) ]
+//                       <<" to w at "
+//              <<woffset + eb->stringIndex + wnsb * ea->stringIndex
+//                     <<std::endl;
               w.buffer[woffset + eb->stringIndex + wnsb * ea->stringIndex]
                   += ea->phase * eb->phase *
                   (*this)[offb + nsa*nsb*(intoff +

@@ -353,11 +353,14 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
     offset += nsa*nsb;
   }
 
+  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
+
   if (h.bracket_integrals_aa != NULL) { // two-electron contribution, alpha-alpha
     size_t nsbbMax = 64; // temporary static
     for (unsigned int syma=0; syma<8; syma++) {
       StringSet aa(w.alphaStrings,2,0,syma);
-      xout <<"StringSet aa" <<aa.str(2)<<std::endl;
+      if (aa.size()==0) continue;
+      xout <<"StringSet aa: " <<aa.str(2)<<std::endl;
       for (unsigned int symb=0; symb<8; symb++) {
         unsigned int symexc = syma^symb^w.symmetry;
         size_t nexc = h.pairSpace[-1][symexc];
@@ -377,6 +380,7 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
                 e[ab+exce*nsa*nsb] += d[ab+excd*nsa*nsb]
                     * (*h.bracket_integrals_aa)[h.pairSpace[-1].offset(0,symexc,0)+excd*nexc+exce];
           e.action(*this);
+          xout <<"residual after aa:"<<std::endl<<str(2)<<std::endl;
         }
       }
     }
@@ -386,7 +390,8 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
     size_t nsbbMax = 64; // temporary static
     for (unsigned int symb=0; symb<8; symb++) {
       StringSet bb(w.betaStrings,2,0,symb);
-      xout <<"StringSet bb" <<bb.str(2)<<std::endl;
+      if (bb.size()==0) continue;
+      xout <<"StringSet bb: " <<bb.str(2)<<std::endl;
       for (unsigned int syma=0; syma<8; syma++) {
         unsigned int symexc = symb^syma^w.symmetry;
         size_t nexc = h.pairSpace[-1][symexc];
@@ -406,6 +411,7 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
                 e[ab+exce*nsb*nsa] += d[ab+excd*nsb*nsa]
                     * (*h.bracket_integrals_bb)[h.pairSpace[-1].offset(0,symexc,0)+excd*nexc+exce];
           e.action(*this);
+          xout <<"residual after bb:"<<std::endl<<str(2)<<std::endl;
         }
       }
     }
@@ -416,9 +422,11 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
     size_t nsbbMax = 16; // temporary static
     for (unsigned int symb=0; symb<8; symb++) {
       StringSet bb(w.betaStrings,1,0,symb);
-      xout <<"StringSet bb" <<bb.str(2)<<std::endl;
+      if (bb.size()==0) continue;
+      xout <<"StringSet bb: " <<bb.str(2)<<std::endl;
       for (unsigned int syma=0; syma<8; syma++) {
       StringSet aa(w.alphaStrings,1,0,syma);
+      if (aa.size()==0) continue;
         unsigned int symexc = symb^syma^w.symmetry;
         size_t nexc = h.pairSpace[0][symexc];
         size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
@@ -438,7 +446,9 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
                 for (size_t ab=0; ab < nsb*nsa; ab++)
                   e[ab+exce*nsb*nsa] += d[ab+excd*nsb*nsa]
                       * (*h.bracket_integrals_ab)[h.pairSpace[0].offset(0,symexc,0)+excd*nexc+exce];
+            xout <<"E matrix ab: "<<e<<std::endl;
             e.action(*this);
+          xout <<"residual after ab:"<<std::endl<<str(2)<<std::endl;
           }
         }
       }
