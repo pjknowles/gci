@@ -72,11 +72,14 @@ void Wavefunction::diagonalHamiltonian(Hamiltonian &hamiltonian)
 {
   std::vector<double> ha=hamiltonian.int1(1);
   std::vector<double> hbb=hamiltonian.int1(-1);
-  std::vector<double> Jaa=hamiltonian.intJ(1,1);
-  std::vector<double> Jab=hamiltonian.intJ(1,-1);
-  std::vector<double> Jbb=hamiltonian.intJ(1,1);
-  std::vector<double> Kaa=hamiltonian.intK(1);
-  std::vector<double> Kbb=hamiltonian.intK(-1);
+  std::vector<double> Jaa, Jab, Jbb, Kaa, Kbb;
+  if (hamiltonian.integrals_aa != NULL) {
+    Jaa=hamiltonian.intJ(1,1);
+    Jab=hamiltonian.intJ(1,-1);
+    Jbb=hamiltonian.intJ(1,1);
+    Kaa=hamiltonian.intK(1);
+    Kbb=hamiltonian.intK(-1);
+  }
   //    xout << "ha" <<std::endl;
   //        for (size_t i=0; i<hamiltonian->basisSize; i++)
   //            xout << ha[i] << " ";
@@ -119,34 +122,36 @@ void Wavefunction::diagonalHamiltonian(Hamiltonian &hamiltonian)
         for (size_t i=0; i<nact; i++)
           for (size_t ib=0; ib < nsb; ib++)
             buffer[offset+ib] += on[ib+i*nsb] * ha[i];
-        for (size_t i=0; i<nact; i++) {
-          for (size_t j=0; j<=i; j++) {
-            double zz = Jaa[j+i*nact] - (double)0.5 * Kaa[j+i*nact];
-            if (i == j) zz *= (double)0.5;
-            for (size_t ib=0; ib < nsb; ib++)
-              buffer[offset+ib] += on[ib+i*nsb] * on[ib+j*nsb] * zz;
+        if (hamiltonian.integrals_aa != NULL) {
+          for (size_t i=0; i<nact; i++) {
+            for (size_t j=0; j<=i; j++) {
+              double zz = Jaa[j+i*nact] - (double)0.5 * Kaa[j+i*nact];
+              if (i == j) zz *= (double)0.5;
+              for (size_t ib=0; ib < nsb; ib++)
+                buffer[offset+ib] += on[ib+i*nsb] * on[ib+j*nsb] * zz;
+            }
           }
-        }
-        double vv = (double) ms2*ms2;
-        std::vector<double> f(nsb,(double)0);
-        for (size_t i=0; i<nact; i++)
-          for (size_t ib=0; ib < nsb; ib++) {
-            on[ib+i*nsb] *= ((double)2 - on[ib+i*nsb]); // on becomes a mask for singly-occupied orbitals
-            f[ib] += on[ib+i*nsb];
-          }
-        for (size_t ib=0; ib < nsb; ib++)
-          f[ib] = f[ib] < (double) 1.1 ? (double) 1.1 : f[ib]; // mask off singularities (this code does nothing for 0 or 1 open-shell orbitals)
-        for (size_t ib=0; ib < nsb; ib++)
-          f[ib] = (vv-f[ib]) / (f[ib]*(f[ib]-(double)1));
-        for (size_t i=0; i<nact; i++) {
-          for (size_t j=0; j<i; j++) {
-            double zz = -(double)0.5 * Kaa[i*nact+j];
-            for (size_t ib=0; ib < nsb; ib++)
-              buffer[offset+ib] += f[ib] * on[ib+i*nsb] * on[ib+j*nsb] * zz;
-          }
-          double zz = -(double)0.25 * Kaa[i*nact+i];
+          double vv = (double) ms2*ms2;
+          std::vector<double> f(nsb,(double)0);
+          for (size_t i=0; i<nact; i++)
+            for (size_t ib=0; ib < nsb; ib++) {
+              on[ib+i*nsb] *= ((double)2 - on[ib+i*nsb]); // on becomes a mask for singly-occupied orbitals
+              f[ib] += on[ib+i*nsb];
+            }
           for (size_t ib=0; ib < nsb; ib++)
-            buffer[offset+ib] += on[ib+i*nsb] * zz;
+            f[ib] = f[ib] < (double) 1.1 ? (double) 1.1 : f[ib]; // mask off singularities (this code does nothing for 0 or 1 open-shell orbitals)
+          for (size_t ib=0; ib < nsb; ib++)
+            f[ib] = (vv-f[ib]) / (f[ib]*(f[ib]-(double)1));
+          for (size_t i=0; i<nact; i++) {
+            for (size_t j=0; j<i; j++) {
+              double zz = -(double)0.5 * Kaa[i*nact+j];
+              for (size_t ib=0; ib < nsb; ib++)
+                buffer[offset+ib] += f[ib] * on[ib+i*nsb] * on[ib+j*nsb] * zz;
+            }
+            double zz = -(double)0.25 * Kaa[i*nact+i];
+            for (size_t ib=0; ib < nsb; ib++)
+              buffer[offset+ib] += on[ib+i*nsb] * zz;
+          }
         }
         offset += nsb;
       }
@@ -172,7 +177,7 @@ Wavefunction& Wavefunction::operator*=(const double &value)
 Wavefunction& Wavefunction::operator+=(const Wavefunction &other)
 {
   if (! compatible(other)) throw "attempt to add incompatible Wavefunction objects";
-  xout << "Wavefunction::operator += &this=" << this <<" &other="<<&other <<std::endl;
+//  xout << "Wavefunction::operator += &this=" << this <<" &other="<<&other <<std::endl;
   for (size_t i=0; i<buffer.size(); i++)  buffer[i] += other.buffer[i];
   return *this;
 }
@@ -182,6 +187,12 @@ Wavefunction& Wavefunction::operator-=(const Wavefunction &other)
 {
   if (! compatible(other)) throw "attempt to add incompatible Wavefunction objects";
   for (size_t i=0; i<buffer.size(); i++)  buffer[i] -= other.buffer[i];
+  return *this;
+}
+
+Wavefunction& Wavefunction::operator-=(const double other)
+{
+  for (size_t i=0; i<buffer.size(); i++)  buffer[i] -= other;
   return *this;
 }
 
@@ -230,6 +241,13 @@ double gci::operator *(const Wavefunction &w1, const Wavefunction &w2)
   double result=(double)0;
   for (size_t i=0; i<w1.buffer.size(); i++) result += w1.buffer[i]*w2.buffer[i];
   return result;
+}
+
+Wavefunction& gci::Wavefunction::operator -()
+{
+  for (size_t i=0; i<buffer.size(); i++)
+    buffer[i]=-buffer[i];
+  return *this;
 }
 
 std::string Wavefunction::str(int verbosity) const
@@ -319,74 +337,75 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
     unsigned int symb = w.symmetry^syma;
     size_t nsa = alphaStrings[syma].size();
     size_t nsb = betaStrings[symb].size();
-    xout << "syma="<<syma<<", symb="<<symb<<std::endl;
+//    xout << "syma="<<syma<<", symb="<<symb<<std::endl;
     TransitionDensity d(w,
                         w.alphaStrings[syma].begin(),
                         w.alphaStrings[syma].end(),
                         w.betaStrings[symb].begin(),
                         w.betaStrings[symb].end(),
                         1,true, !h.spinUnrestricted);
-    xout <<"Transition density: "<<d<<std::endl;
+//    xout <<"Transition density: "<<d<<std::endl;
     for (size_t iab=0; iab<nsa*nsb; iab++)
       for (size_t ij=0; ij<w.orbitalSpace->total(0,1); ij++)
         buffer[offset+iab]+=d[ij*nsa*nsb+iab] * (*h.integrals_a)[ij];
+//        buffer.at(offset+iab)+=d.at(ij*nsa*nsb+iab) * (*h.integrals_a).at(ij);
     if (h.spinUnrestricted) {
-    TransitionDensity d(w,
-                        w.alphaStrings[syma].begin(),
-                        w.alphaStrings[syma].end(),
-                        w.betaStrings[symb].begin(),
-                        w.betaStrings[symb].end(),
-                        1,false, true);
-    xout <<"Transition density: "<<d<<std::endl;
-    for (size_t iab=0; iab<nsa*nsb; iab++)
-      for (size_t ij=0; ij<w.orbitalSpace->total(0,1); ij++)
-        buffer[offset+iab]+=d[ij*nsa*nsb+iab] * (*h.integrals_b)[ij];
+      TransitionDensity d(w,
+                          w.alphaStrings[syma].begin(),
+                          w.alphaStrings[syma].end(),
+                          w.betaStrings[symb].begin(),
+                          w.betaStrings[symb].end(),
+                          1,false, true);
+//      xout <<"Transition density: "<<d<<std::endl;
+      for (size_t iab=0; iab<nsa*nsb; iab++)
+        for (size_t ij=0; ij<w.orbitalSpace->total(0,1); ij++)
+          buffer[offset+iab]+=d[ij*nsa*nsb+iab] * (*h.integrals_b)[ij];
     }
-//    size_t offa = offset;
-//    for (StringSet::iterator s = alphaStrings[syma].begin(); s != alphaStrings[syma].end(); s++) {
-//      //            xout << "alpha string "<<*s<<std::endl;
-//      ExcitationSet ee(*s,alphaStrings[syma],1,1);
-//      //            xout << "alpha excitations " << ee.str() <<std::endl;
-//      for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
-//        //                xout << "alpha excitation " << e->orbitalAddress <<"="<<(*h.integrals_a)[e->orbitalAddress]<<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
-//        for (size_t ib=0; ib<nsb; ib++)
-//          buffer[offa+ib] += (*h.integrals_a)[e->orbitalAddress] * e->phase * w.buffer[offset+e->stringIndex*nsb+ib];
-//      }
-//      offa += nsb;
-//    }
-//    size_t offb = offset;
-//    for (StringSet::iterator s = betaStrings[symb].begin(); s != betaStrings[symb].end(); s++) {
-//      ExcitationSet ee(*s,betaStrings[symb],1,1);
-//      for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
-//        //                xout << "beta excitation " << e->orbitalAddress <<"="<<(*h.integrals_b)[e->orbitalAddress]<<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
-//        for (size_t ia=0; ia<nsa; ia++)
-//          buffer[offb+ia*nsb] += (*h.integrals_b)[e->orbitalAddress] * e->phase * w.buffer[offset+e->stringIndex+ia*nsb];
-//      }
-//      offb ++;
-//    }
+    //    size_t offa = offset;
+    //    for (StringSet::iterator s = alphaStrings[syma].begin(); s != alphaStrings[syma].end(); s++) {
+    //      //            xout << "alpha string "<<*s<<std::endl;
+    //      ExcitationSet ee(*s,alphaStrings[syma],1,1);
+    //      //            xout << "alpha excitations " << ee.str() <<std::endl;
+    //      for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
+    //        //                xout << "alpha excitation " << e->orbitalAddress <<"="<<(*h.integrals_a)[e->orbitalAddress]<<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
+    //        for (size_t ib=0; ib<nsb; ib++)
+    //          buffer[offa+ib] += (*h.integrals_a)[e->orbitalAddress] * e->phase * w.buffer[offset+e->stringIndex*nsb+ib];
+    //      }
+    //      offa += nsb;
+    //    }
+    //    size_t offb = offset;
+    //    for (StringSet::iterator s = betaStrings[symb].begin(); s != betaStrings[symb].end(); s++) {
+    //      ExcitationSet ee(*s,betaStrings[symb],1,1);
+    //      for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
+    //        //                xout << "beta excitation " << e->orbitalAddress <<"="<<(*h.integrals_b)[e->orbitalAddress]<<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
+    //        for (size_t ia=0; ia<nsa; ia++)
+    //          buffer[offb+ia*nsb] += (*h.integrals_b)[e->orbitalAddress] * e->phase * w.buffer[offset+e->stringIndex+ia*nsb];
+    //      }
+    //      offb ++;
+    //    }
     offset += nsa*nsb;
   }
 
-  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
+//  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
 
   if (h.bracket_integrals_aa != NULL) { // two-electron contribution, alpha-alpha
     size_t nsbbMax = 64; // temporary static
     for (unsigned int syma=0; syma<8; syma++) {
       StringSet aa(w.alphaStrings,2,0,syma);
       if (aa.size()==0) continue;
-      xout <<"StringSet aa: " <<aa.str(2)<<std::endl;
+//      xout <<"StringSet aa: " <<aa.str(2)<<std::endl;
       for (unsigned int symb=0; symb<8; symb++) {
         unsigned int symexc = syma^symb^w.symmetry;
         size_t nexc = h.pairSpace[-1][symexc];
         size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
         for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsbbMax > aa.end() ? aa.end() : aa0+nsbbMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
           size_t nsa = aa1-aa0;
-          xout <<"nsa= "<<nsa<<std::endl;
+//          xout <<"nsa= "<<nsa<<std::endl;
           TransitionDensity d(w,aa0,aa1,w.betaStrings[symb].begin(),w.betaStrings[symb].end(),-1,false,false);
-          xout <<"Transition density aa: "<<d<<std::endl;
+//          xout <<"Transition density aa: "<<d<<std::endl;
           TransitionDensity e(d); e.assign(d.size(),(double)0);
-          xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsa="<<nsa<<", nsb="<<nsb<<std::endl;
-          xout << "h.pairSpace[-1].at(symexc)"<<h.pairSpace[-1][symexc]<<std::endl;
+//          xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsa="<<nsa<<", nsb="<<nsb<<std::endl;
+//          xout << "h.pairSpace[-1].at(symexc)"<<h.pairSpace[-1][symexc]<<std::endl;
           if (nexc * nsa * nsb != d.size()) throw "nexc";
           for (size_t excd=0; excd<nexc; excd++)
             for (size_t exce=0; exce<nexc; exce++)
@@ -394,7 +413,7 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
                 e[ab+exce*nsa*nsb] += d[ab+excd*nsa*nsb]
                     * (*h.bracket_integrals_aa)[h.pairSpace[-1].offset(0,symexc,0)+excd*nexc+exce];
           e.action(*this);
-          xout <<"residual after aa:"<<std::endl<<str(2)<<std::endl;
+//          xout <<"residual after aa:"<<std::endl<<str(2)<<std::endl;
         }
       }
     }
@@ -405,19 +424,19 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
     for (unsigned int symb=0; symb<8; symb++) {
       StringSet bb(w.betaStrings,2,0,symb);
       if (bb.size()==0) continue;
-      xout <<"StringSet bb: " <<bb.str(2)<<std::endl;
+//      xout <<"StringSet bb: " <<bb.str(2)<<std::endl;
       for (unsigned int syma=0; syma<8; syma++) {
         unsigned int symexc = symb^syma^w.symmetry;
         size_t nexc = h.pairSpace[-1][symexc];
         size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
         for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
           size_t nsb = bb1-bb0;
-          xout <<"nsb= "<<nsb<<std::endl;
+//          xout <<"nsb= "<<nsb<<std::endl;
           TransitionDensity d(w,w.alphaStrings[syma].begin(),w.alphaStrings[syma].end(),bb0,bb1,-1,false,false);
-          xout <<"Transition density bb: "<<d<<std::endl;
+//          xout <<"Transition density bb: "<<d<<std::endl;
           TransitionDensity e(d); e.assign(d.size(),(double)0);
-          xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsb="<<nsb<<", nsa="<<nsa<<std::endl;
-          xout << "h.pairSpace[-1].at(symexc)"<<h.pairSpace[-1][symexc]<<std::endl;
+//          xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsb="<<nsb<<", nsa="<<nsa<<std::endl;
+//          xout << "h.pairSpace[-1].at(symexc)"<<h.pairSpace[-1][symexc]<<std::endl;
           if (nexc * nsb * nsa != d.size()) throw "nexc";
           for (size_t excd=0; excd<nexc; excd++)
             for (size_t exce=0; exce<nexc; exce++)
@@ -425,7 +444,7 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
                 e[ab+exce*nsb*nsa] += d[ab+excd*nsb*nsa]
                     * (*h.bracket_integrals_bb)[h.pairSpace[-1].offset(0,symexc,0)+excd*nexc+exce];
           e.action(*this);
-          xout <<"residual after bb:"<<std::endl<<str(2)<<std::endl;
+//          xout <<"residual after bb:"<<std::endl<<str(2)<<std::endl;
         }
       }
     }
@@ -437,10 +456,10 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
     for (unsigned int symb=0; symb<8; symb++) {
       StringSet bb(w.betaStrings,1,0,symb);
       if (bb.size()==0) continue;
-      xout <<"StringSet bb: " <<bb.str(2)<<std::endl;
+//      xout <<"StringSet bb: " <<bb.str(2)<<std::endl;
       for (unsigned int syma=0; syma<8; syma++) {
-      StringSet aa(w.alphaStrings,1,0,syma);
-      if (aa.size()==0) continue;
+        StringSet aa(w.alphaStrings,1,0,syma);
+        if (aa.size()==0) continue;
         unsigned int symexc = symb^syma^w.symmetry;
         size_t nexc = h.pairSpace[0][symexc];
         size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
@@ -448,25 +467,36 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
           size_t nsa = aa1-aa0;
           for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
             size_t nsb = bb1-bb0;
-            xout <<"nsb= "<<nsb<<std::endl;
+//            xout <<"nsb= "<<nsb<<std::endl;
             TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
-            xout <<"Transition density ab: "<<d<<std::endl;
+//            xout <<"Transition density ab: "<<d<<std::endl;
             TransitionDensity e(d); e.assign(d.size(),(double)0);
-            xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsb="<<nsb<<", nsa="<<nsa<<std::endl;
-            xout << "h.pairSpace[-1].at(symexc)"<<h.pairSpace[-1][symexc]<<std::endl;
+//            xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsb="<<nsb<<", nsa="<<nsa<<std::endl;
+//            xout << "h.pairSpace[-1].at(symexc)"<<h.pairSpace[-1][symexc]<<std::endl;
             if (nexc * nsb * nsa != d.size()) throw "nexc";
             for (size_t excd=0; excd<nexc; excd++)
               for (size_t exce=0; exce<nexc; exce++)
                 for (size_t ab=0; ab < nsb*nsa; ab++)
                   e[ab+exce*nsb*nsa] += d[ab+excd*nsb*nsa]
                       * (*h.bracket_integrals_ab)[h.pairSpace[0].offset(0,symexc,0)+excd*nexc+exce];
-            xout <<"E matrix ab: "<<e<<std::endl;
+//            xout <<"E matrix ab: "<<e<<std::endl;
             e.action(*this);
-          xout <<"residual after ab:"<<std::endl<<str(2)<<std::endl;
+//            xout <<"residual after ab:"<<std::endl<<str(2)<<std::endl;
           }
         }
       }
     }
   }
 
+}
+
+void Wavefunction::put(File& f, int index)
+{
+  f.write(buffer,index*buffer.size());
+}
+
+
+void Wavefunction::get(File& f, int index)
+{
+  f.read(buffer,index*buffer.size());
 }

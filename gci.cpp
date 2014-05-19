@@ -9,6 +9,72 @@
 #include "FCIdump.h"
 #include <iostream>
 using namespace gci;
+
+std::vector<double> gci::RSPT(std::vector<gci::Hamiltonian*>& hamiltonians , State &prototype, int maxOrder)
+{
+  std::vector<double> e(maxOrder+1);
+  if (hamiltonians.size() < 1) throw "not enough hamiltonians";
+  xout << "H0: " << hamiltonians[0]->str(2) << std::endl;
+  xout << "H1: " << hamiltonians[1]->str(2) << std::endl;
+  Wavefunction w(hamiltonians[0],prototype.nelec,prototype.symmetry,prototype.ms2);
+  Wavefunction g(w);
+  g.diagonalHamiltonian(*hamiltonians[0]);
+  size_t reference = g.minloc();
+  e[0]=g.at(reference);
+  g-=e[0];g.set(reference,(double)1);
+  xout << "Møller-Plesset denominators: " << g.str(2) << std::endl;
+  gci::File h0file; g.put(h0file);
+  w.set((double)0); w.set(reference, (double) 1);
+  gci::File wfile; w.put(wfile,0);
+  gci::File gfile;
+  for (int k=0; k < (int) hamiltonians.size(); k++) {
+    g.set((double)0);
+    g.hamiltonianOnWavefunction(*hamiltonians[k],w);
+    g.put(gfile,k);
+  }
+  for (int n=1; n < maxOrder; n++) {
+    // construct  |n> = -(H0-E0)^{-1} ( -sum_k^{n-1} E_{n-k} |k> + sum_{k=n-h}^{n-1} H|k>) where h is the maximum order of hamiltonian
+    g.set((double)0);
+    for (int k=0; k<n; k++) {
+      w.get(wfile,k);
+      if (n-k < (int) hamiltonians.size())
+        g.hamiltonianOnWavefunction(*hamiltonians[n-k], w);
+      if (n == 1) e[1]=g.at(reference);
+      g -= e[n-k] * w;
+    }
+    w = -g;
+    g.get(h0file);
+    xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
+    w.set(reference,(double)0);
+    w /= g;
+    xout <<std::endl<< "Perturbed wavefunction: " << w.str(2) <<std::endl;
+    w.put(wfile,n);
+    e[n+1]=(double)0;
+    for (int k=0; k < (int) hamiltonians.size(); k++) {
+      g.get(gfile,k);
+      e[n+1]+=g*w; // not right for second order yet
+    }
+  }
+  return e;
+}
+
+void gci::HamiltonianPrint(Hamiltonian &hamiltonian, State &prototype, int verbosity)
+{
+  Wavefunction w(&hamiltonian,prototype.nelec,prototype.symmetry,prototype.ms2);
+  Wavefunction g(w);
+  xout << std::endl << "Full Hamiltonian matrix"<<std::endl;
+  for (size_t i=0; i < w.size(); i++)
+  {
+    w.set((double)0); w.set(i,(double)1);
+    g.set((double)0);
+    g.hamiltonianOnWavefunction(hamiltonian,w);
+    for (size_t j=0; j < w.size(); j++)
+      xout <<g.at(j)<< " ";
+    xout <<std::endl;
+  }
+}
+
+
 #ifndef MOLPRO
 //int main(int argc, char *argv[])
 int main()
@@ -138,6 +204,23 @@ int main()
 //    ff.read(v2,0);
 //    xout <<"vector read " <<v2[0]<<" "<<v2[1]<<" "<<v2[2]<<std::endl;
 
+    State prototype(&dump);
+    std::vector<gci::Hamiltonian*> hamiltonians;
+    hamiltonians.push_back(&fh);
+    Hamiltonian h1(hh); h1-=fh;
+    hamiltonians.push_back(&h1);
+    std::vector<double> emp = gci::RSPT(hamiltonians, prototype);
+    xout <<"MP energies" ;
+    for (int i=0; i<(int)emp.size(); i++)
+      xout <<" "<<emp[i];
+    xout <<std::endl;
+    xout <<"MP total energies" ;
+    double totalEnergy=0;
+    for (int i=0; i<(int)emp.size(); i++)
+      xout <<" "<<(totalEnergy+=emp[i]);
+    xout <<std::endl;
+
+    gci::HamiltonianPrint(hh,prototype);
     return 0;
   }
   catch (const std::string& ex) {
@@ -154,4 +237,3 @@ int main()
   //    }
 }
 #endif
-

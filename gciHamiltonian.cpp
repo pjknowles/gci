@@ -262,7 +262,7 @@ void Hamiltonian::unload() {
 std::string Hamiltonian::str(int verbosity) const
 {
   std::ostringstream o;
-  o << OrbitalSpace::str(verbosity);
+  o << OrbitalSpace::str(verbosity-1);
   if (verbosity>=2) {
     int precision=6;
     o<<std::setprecision(precision);
@@ -436,12 +436,12 @@ Hamiltonian& Hamiltonian::operator-=(const Hamiltonian &other)
     for (size_t i=0; i<integrals_a->size(); i++) (*integrals_a)[i] -= (*other.integrals_a)[i];
   if (integrals_b != NULL && integrals_a != integrals_b)
     for (size_t i=0; i<integrals_b->size(); i++)  (*integrals_b)[i] -= (*other.integrals_b)[i];
-  if (integrals_aa != NULL) {
+  if (other.integrals_aa != NULL && integrals_aa != NULL) {
     for (size_t i=0; i<integrals_aa->size(); i++)  (*integrals_aa)[i] -= (*other.integrals_aa)[i];
     for (size_t i=0; i<bracket_integrals_aa->size(); i++)  (*bracket_integrals_aa)[i] -= (*other.bracket_integrals_aa)[i];
     for (size_t i=0; i<bracket_integrals_ab->size(); i++)  (*bracket_integrals_ab)[i] -= (*other.bracket_integrals_ab)[i];
   }
-  if (integrals_ab != NULL && integrals_ab != integrals_aa) {
+  if (other.integrals_ab != NULL && integrals_ab != NULL && integrals_ab != integrals_aa) {
     for (size_t i=0; i<integrals_ab->size(); i++)  (*integrals_ab)[i] -= (*other.integrals_ab)[i];
     for (size_t i=0; i<integrals_bb->size(); i++)  (*integrals_bb)[i] -= (*other.integrals_bb)[i];
     for (size_t i=0; i<bracket_integrals_bb->size(); i++)  (*bracket_integrals_bb)[i] -= (*other.bracket_integrals_bb)[i];

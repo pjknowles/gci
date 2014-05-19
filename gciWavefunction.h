@@ -6,6 +6,7 @@
 #include "gciState.h"
 #include "gciStringSet.h"
 #include "gciPrintable.h"
+#include "gciFile.h"
 #include "gciDeterminant.h"
 
 namespace gci {
@@ -91,6 +92,20 @@ public:
 
   std::string str(int verbosity=0) const;
 
+  /*!
+   * \brief push the object's buffer to a file
+   * \param f the file
+   * \param index where on the file, in units of the size of the object
+   */
+  void put(File& f, int index=0);
+
+  /*!
+   * \brief pull the object's buffer from a file
+   * \param f the file
+   * \param index where on the file, in units of the size of the object
+   */
+  void get(File& f, int index=0);
+
   //    Wavefunction& operator=(const double &value);
   void set(size_t offset, const double val);///< set one element to a scalar
   void set(const double val);///< set all elements to a scalar
@@ -98,6 +113,8 @@ public:
   Wavefunction& operator*=(const double &value); ///< multiply by a scalar
   Wavefunction& operator+=(const Wavefunction &other); ///< add another wavefunction
   Wavefunction& operator-=(const Wavefunction &other); ///< subtract another wavefunction
+  Wavefunction& operator-=(const double); ///< subtract a scalar from every element
+  Wavefunction& operator-(); ///< unary minus
   Wavefunction& operator/=(const Wavefunction &other); ///< element-by-element division by another wavefunction
 
   friend class TransitionDensity;
