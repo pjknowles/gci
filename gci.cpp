@@ -1,4 +1,5 @@
 #include "gci.h"
+#include "gciFile.h"
 #include "gciHamiltonian.h"
 #include "gciDeterminant.h"
 #include "gciWavefunction.h"
@@ -130,6 +131,12 @@ int main()
     //    }
     //    xout << "Hamiltonian: " <<hh.str(3)<<std::endl;
 
+//    File ff;
+//    std::vector<double> v(3,99.0);
+//    ff.write(v,0);
+//    std::vector<double> v2(3);
+//    ff.read(v2,0);
+//    xout <<"vector read " <<v2[0]<<" "<<v2[1]<<" "<<v2[2]<<std::endl;
 
     return 0;
   }
