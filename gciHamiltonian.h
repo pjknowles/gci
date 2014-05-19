@@ -18,7 +18,6 @@ class Hamiltonian : public OrbitalSpace
 {
 public:
 
-
   /*!
  \brief construct Hamiltonian object
 
@@ -96,10 +95,14 @@ public:
      * \return  the Fock hamiltonian
      */
   Hamiltonian FockHamiltonian(Determinant& reference);
+  Hamiltonian& operator-=(const Hamiltonian &other); ///< subtract another Hamiltonian
+
 private:
   unsigned int ijSize;
   unsigned int ijklSize;
 };
+Hamiltonian operator-(const Hamiltonian &h1, const Hamiltonian &h2); ///< subtract two Hamiltonian objects
+
 }
 
 using namespace gci;

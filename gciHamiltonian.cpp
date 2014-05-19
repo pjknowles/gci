@@ -207,7 +207,6 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
                              (offset(symij,symk,1)+l*at(symk)+k)
                            : (offset(symij,syml,1)+k*at(syml)+l))
                          )) ;
-                  size_t okj=(offset(symil,symk,1)+((k>j) ? (k*(k+1))/2+j : (j*(j+1))/2+k));
                   size_t ilkj =
                       pairSpace[1].offset(0,symil) +
                       ((symil==0) ?
@@ -429,3 +428,30 @@ Hamiltonian Hamiltonian::FockHamiltonian(Determinant &reference)
   f.loaded = true;
   return f;
 }
+
+Hamiltonian& Hamiltonian::operator-=(const Hamiltonian &other)
+{
+//  if (! compatible(other)) throw "attempt to add incompatible Hamiltonian objects";
+  if (integrals_a != NULL)
+    for (size_t i=0; i<integrals_a->size(); i++) (*integrals_a)[i] -= (*other.integrals_a)[i];
+  if (integrals_b != NULL && integrals_a != integrals_b)
+    for (size_t i=0; i<integrals_b->size(); i++)  (*integrals_b)[i] -= (*other.integrals_b)[i];
+  if (integrals_aa != NULL) {
+    for (size_t i=0; i<integrals_aa->size(); i++)  (*integrals_aa)[i] -= (*other.integrals_aa)[i];
+    for (size_t i=0; i<bracket_integrals_aa->size(); i++)  (*bracket_integrals_aa)[i] -= (*other.bracket_integrals_aa)[i];
+    for (size_t i=0; i<bracket_integrals_ab->size(); i++)  (*bracket_integrals_ab)[i] -= (*other.bracket_integrals_ab)[i];
+  }
+  if (integrals_ab != NULL && integrals_ab != integrals_aa) {
+    for (size_t i=0; i<integrals_ab->size(); i++)  (*integrals_ab)[i] -= (*other.integrals_ab)[i];
+    for (size_t i=0; i<integrals_bb->size(); i++)  (*integrals_bb)[i] -= (*other.integrals_bb)[i];
+    for (size_t i=0; i<bracket_integrals_bb->size(); i++)  (*bracket_integrals_bb)[i] -= (*other.bracket_integrals_bb)[i];
+  }
+  return *this;
+}
+
+Hamiltonian gci::operator-(const Hamiltonian &h1, const Hamiltonian &h2)
+{
+  Hamiltonian result = h1;
+  return result -= h2;
+}
+
