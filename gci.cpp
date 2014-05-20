@@ -12,7 +12,7 @@ using namespace gci;
 
 std::vector<double> gci::RSPT(std::vector<gci::Hamiltonian*>& hamiltonians , State &prototype, int maxOrder)
 {
-  std::vector<double> e(maxOrder+1);
+  std::vector<double> e(maxOrder+1,(double)0);
   if (hamiltonians.size() < 1) throw "not enough hamiltonians";
   xout << "H0: " << *hamiltonians[0] << std::endl;
   xout << "H1: " << *hamiltonians[1] << std::endl;
@@ -34,6 +34,7 @@ std::vector<double> gci::RSPT(std::vector<gci::Hamiltonian*>& hamiltonians , Sta
   }
   for (int n=1; n < maxOrder; n++) {
     // construct  |n> = -(H0-E0)^{-1} ( -sum_k^{n-1} E_{n-k} |k> + sum_{k=n-h}^{n-1} H|k>) where h is the maximum order of hamiltonian
+    xout <<std::endl<<std::endl<<"MAIN ITERATION n="<<n<<std::endl;
     g.set((double)0);
     for (int k=0; k<n; k++) {
       w.get(wfile,k);
@@ -42,6 +43,8 @@ std::vector<double> gci::RSPT(std::vector<gci::Hamiltonian*>& hamiltonians , Sta
       if (n-k < (int) hamiltonians.size())
         xout << "g after H.w: " << g.str(2) <<std::endl;
       if (n == 1) e[1]=g.at(reference);
+        xout << "k, E:"<<k<<" "<<e[n-k]<<", g before -E.w: " << g.str(2) <<std::endl;
+        xout <<"w="<<w.str(2)<<std::endl;
       g -= e[n-k] * w;
         xout << "k, E:"<<k<<" "<<e[n-k]<<", g after -E.w: " << g.str(2) <<std::endl;
     }
@@ -52,10 +55,12 @@ std::vector<double> gci::RSPT(std::vector<gci::Hamiltonian*>& hamiltonians , Sta
     w /= g;
     xout <<std::endl<< "Perturbed wavefunction, order="<<n<<": " << w.str(2) <<std::endl;
     w.put(wfile,n);
-    e[n+1]=(double)0;
-    for (int k=0; k < (int) hamiltonians.size(); k++) {
+    for (int k=1; k < (int) hamiltonians.size(); k++) {
+      if (n+k > maxOrder) break;
       g.get(gfile,k);
-      e[n+1]+=g*w; // not right for second order yet
+      xout <<"gfile "<<g.str(2)<<std::endl;
+      xout <<"contribution from n="<<n<<", k="<<k<<" to E("<<n+k<<")="<<g*w<<std::endl;
+      e[n+k]+=g*w;
     }
   }
   return e;
