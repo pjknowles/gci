@@ -29,6 +29,11 @@ public:
 
      \param dump : if present, call load
     */   Hamiltonian(FCIdump* dump);
+  /*!
+   * \brief copy constructor
+   * \param source
+   */
+  Hamiltonian(const Hamiltonian &source);
   ~Hamiltonian();
   void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load integrals from FCIDUMP */
   void load(FCIdump* dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */

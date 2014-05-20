@@ -21,6 +21,35 @@ Hamiltonian::Hamiltonian(FCIdump* dump) : OrbitalSpace(dump)
   load(dump,0);
 }
 
+Hamiltonian::Hamiltonian(const Hamiltonian &source)
+  : OrbitalSpace(source)
+  ,loaded(source.loaded)
+  , coreEnergy(source.coreEnergy)
+  , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
+{
+  if (loaded) {
+     integrals_a = new std::vector<double>(*source.integrals_a);
+     if (source.integrals_aa != NULL) {
+       integrals_aa = new std::vector<double>(*source.integrals_aa);
+       bracket_integrals_aa = new std::vector<double>(*source.bracket_integrals_aa);
+       bracket_integrals_ab = new std::vector<double>(*source.bracket_integrals_ab);
+     }
+     if (spinUnrestricted) {
+       integrals_b = new std::vector<double>(*source.integrals_b);
+       if (source.integrals_ab != NULL) {
+         integrals_ab = new std::vector<double>(*source.integrals_ab);
+         integrals_bb = new std::vector<double>(*source.integrals_bb);
+         bracket_integrals_bb = new std::vector<double>(*source.bracket_integrals_bb);
+       }
+     } else {
+       integrals_b = integrals_a;
+       integrals_ab = integrals_aa;
+       integrals_bb = integrals_aa;
+       bracket_integrals_bb = bracket_integrals_aa;
+     }
+  }
+}
+
 Hamiltonian::~Hamiltonian() {
 
 }
