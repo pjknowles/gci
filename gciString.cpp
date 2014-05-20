@@ -82,7 +82,7 @@ void String::nullify()
   //    xout <<"nullify"<<std::endl;
 }
 
-std::vector<unsigned int> String::orbitals() {
+std::vector<unsigned int> String::orbitals() const {
   return orbitals_;
 }
 

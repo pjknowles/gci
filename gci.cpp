@@ -14,8 +14,8 @@ std::vector<double> gci::RSPT(std::vector<gci::Hamiltonian*>& hamiltonians , Sta
 {
   std::vector<double> e(maxOrder+1);
   if (hamiltonians.size() < 1) throw "not enough hamiltonians";
-  xout << "H0: " << hamiltonians[0]->str(2) << std::endl;
-  xout << "H1: " << hamiltonians[1]->str(2) << std::endl;
+  xout << "H0: " << *hamiltonians[0] << std::endl;
+  xout << "H1: " << *hamiltonians[1] << std::endl;
   Wavefunction w(hamiltonians[0],prototype.nelec,prototype.symmetry,prototype.ms2);
   Wavefunction g(w);
   g.diagonalHamiltonian(*hamiltonians[0]);
@@ -44,10 +44,10 @@ std::vector<double> gci::RSPT(std::vector<gci::Hamiltonian*>& hamiltonians , Sta
     }
     w = -g;
     g.get(h0file);
-    xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
+    //    xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
     w.set(reference,(double)0);
     w /= g;
-    xout <<std::endl<< "Perturbed wavefunction: " << w.str(2) <<std::endl;
+    xout <<std::endl<< "Perturbed wavefunction, order="<<n<<": " << w.str(2) <<std::endl;
     w.put(wfile,n);
     e[n+1]=(double)0;
     for (int k=0; k < (int) hamiltonians.size(); k++) {
@@ -63,14 +63,16 @@ void gci::HamiltonianPrint(Hamiltonian &hamiltonian, State &prototype, int verbo
   Wavefunction w(&hamiltonian,prototype.nelec,prototype.symmetry,prototype.ms2);
   Wavefunction g(w);
   xout << std::endl << "Full Hamiltonian matrix"<<std::endl;
-  for (size_t i=0; i < w.size(); i++)
-  {
-    w.set((double)0); w.set(i,(double)1);
-    g.set((double)0);
-    g.hamiltonianOnWavefunction(hamiltonian,w);
-    for (size_t j=0; j < w.size(); j++)
-      xout <<g.at(j)<< " ";
-    xout <<std::endl;
+  if (verbosity >= 0) {
+    for (size_t i=0; i < w.size(); i++)
+    {
+      w.set((double)0); w.set(i,(double)1);
+      g.set((double)0);
+      g.hamiltonianOnWavefunction(hamiltonian,w);
+      for (size_t j=0; j < w.size(); j++)
+        xout <<g.at(j)<< " ";
+      xout <<std::endl;
+    }
   }
 }
 
@@ -83,14 +85,14 @@ int main()
     FCIdump dump("FCIDUMP");
     //        OrbitalSpace os("FCIDUMP");
     //        xout <<"Orbital space:" << os << std::endl;
-    //       xout << "before Hamiltonian constructore"<<std::endl;
     Hamiltonian hh(&dump);
     xout << "Hamiltonian: " <<hh.str()<<std::endl;
-    OrbitalSpace os = hh;
-    xout << "Orbital space: " << os.str(1) <<std::endl;
+    Wavefunction w(&dump);
+    //    OrbitalSpace os = hh;
+    //    xout << "Orbital space: " << os.str(1) <<std::endl;
     //    exit(0);
-    State ss(&dump);
-    ss.orbitalSpace=&os;
+    //    State ss(&dump);
+    //    ss.orbitalSpace=&os;
 
     //    Determinant d1(&ss);
 
@@ -118,76 +120,75 @@ int main()
     //    }
     //    xout <<"done scanning through determinants"<<std::endl;
 
-    Wavefunction w(&dump);
-    xout << "Wavefunction after constructor:"<<w.str(2)<<std::endl
-         <<"...end of Wavefunction after constructor."<<std::endl<<std::endl;
-    w.set((double)0.12345);
-    xout << "Wavefunction after assign:"<<w.str(2)<<std::endl
-         <<"...end of Wavefunction after assign."<<std::endl<<std::endl;
-    //    w.buildStrings();
-    //    xout << "Wavefunction after buildStrings:"<<w.str(1)<<std::endl;
-    Wavefunction w2=w;
-    xout << "Copied wavefunction:"<<w2.str(2)<<std::endl
-         <<"...end of copied wavefunction."<<std::endl<<std::endl;
-    xout << "Original wavefunction after copy:"<<w.str(2)<<std::endl
-         <<"...end of original wavefunction."<<std::endl<<std::endl;
-    w.set((double)1);
-    xout << "Original wavefunction after original changed:"<<w.str(2)<<std::endl
-         <<"...end of original wavefunction."<<std::endl<<std::endl;
-    xout << "Copied wavefunction after original changed:"<<w2.str(2)<<std::endl
-         <<"...end of copied wavefunction."<<std::endl<<std::endl;
+    //    xout << "Wavefunction after constructor:"<<w.str(2)<<std::endl
+    //         <<"...end of Wavefunction after constructor."<<std::endl<<std::endl;
+    //    w.set((double)0.12345);
+    //    xout << "Wavefunction after assign:"<<w.str(2)<<std::endl
+    //         <<"...end of Wavefunction after assign."<<std::endl<<std::endl;
+    //    //    w.buildStrings();
+    //    //    xout << "Wavefunction after buildStrings:"<<w.str(1)<<std::endl;
+    //    Wavefunction w2=w;
+    //    xout << "Copied wavefunction:"<<w2.str(2)<<std::endl
+    //         <<"...end of copied wavefunction."<<std::endl<<std::endl;
+    //    xout << "Original wavefunction after copy:"<<w.str(2)<<std::endl
+    //         <<"...end of original wavefunction."<<std::endl<<std::endl;
+    //    w.set((double)1);
+    //    xout << "Original wavefunction after original changed:"<<w.str(2)<<std::endl
+    //         <<"...end of original wavefunction."<<std::endl<<std::endl;
+    //    xout << "Copied wavefunction after original changed:"<<w2.str(2)<<std::endl
+    //         <<"...end of copied wavefunction."<<std::endl<<std::endl;
 
-    xout << "w.w=" << w*w << std::endl;
-    xout << "w2.w2=" << w2*w2 << std::endl;
-    xout << "Original wavefunction after w2.w2:"<<w.str(2)<<std::endl
-         <<"...end of original wavefunction."<<std::endl<<std::endl;
+    //    xout << "w.w=" << w*w << std::endl;
+    //    xout << "w2.w2=" << w2*w2 << std::endl;
+    //    xout << "Original wavefunction after w2.w2:"<<w.str(2)<<std::endl
+    //         <<"...end of original wavefunction."<<std::endl<<std::endl;
 
-    //Wavefunction w3;
-    xout << "w:"<<w.str(2)<<std::endl <<"...end w."<<std::endl<<std::endl;
-    w2 = w;
-    xout << "after w2=w, w:"<<w.str(2)<<std::endl <<"...end w."<<std::endl<<std::endl;
-    xout << "after w2=w, w2:"<<w2.str(2)<<std::endl <<"...end w2."<<std::endl<<std::endl;
-    Wavefunction w3 = w2+(double)98*w-(w*((double)99));
-    xout << "back from w3=..." <<std::endl;
-    xout << "w:"<<w.str(2)<<std::endl <<"...end w."<<std::endl<<std::endl;
-    xout << "w2:"<<w2.str(2)<<std::endl <<"...end w2."<<std::endl<<std::endl;
-    xout << "w3:"<<w3.str(2)<<std::endl <<"...end w3."<<std::endl<<std::endl;
+    //    //Wavefunction w3;
+    //    xout << "w:"<<w.str(2)<<std::endl <<"...end w."<<std::endl<<std::endl;
+    //    w2 = w;
+    //    xout << "after w2=w, w:"<<w.str(2)<<std::endl <<"...end w."<<std::endl<<std::endl;
+    //    xout << "after w2=w, w2:"<<w2.str(2)<<std::endl <<"...end w2."<<std::endl<<std::endl;
+    //    Wavefunction w3 = w2+(double)98*w-(w*((double)99));
+    //    xout << "back from w3=..." <<std::endl;
+    //    xout << "w:"<<w.str(2)<<std::endl <<"...end w."<<std::endl<<std::endl;
+    //    xout << "w2:"<<w2.str(2)<<std::endl <<"...end w2."<<std::endl<<std::endl;
+    //    xout << "w3:"<<w3.str(2)<<std::endl <<"...end w3."<<std::endl<<std::endl;
 
-    for (unsigned int syma=0; syma<8; syma++) {
-      //        unsigned int symb = syma ^ w.symmetry;
-      std::vector<ExcitationSet> seta;
-      seta = w.alphaStrings[syma].allExcitations(w.alphaStrings[syma],1,1);
-      xout << "Excitations from alpha strings of symmetry " << syma+1 <<std::endl;
-      for (std::vector<ExcitationSet>::iterator a=seta.begin(); a!=seta.end(); a++)
-        xout <<"ExcitationSet: " <<a->str()<<std::endl;
-      xout << "Alpha occupation numbers"<<std::endl;
-      std::vector<double> on = w.alphaStrings[syma].occupationNumbers();
-      for (size_t i=0; i < w.alphaStrings[syma].size(); i++) {
-        for (size_t j=0; j < w.orbitalSpace->total(); j++)
-          xout << " " << on[i+j*w.alphaStrings[syma].size()];
-        xout << std::endl;
-      }
-    }
+    //    for (unsigned int syma=0; syma<8; syma++) {
+    //      //        unsigned int symb = syma ^ w.symmetry;
+    //      std::vector<ExcitationSet> seta;
+    //      seta = w.alphaStrings[syma].allExcitations(w.alphaStrings[syma],1,1);
+    //      xout << "Excitations from alpha strings of symmetry " << syma+1 <<std::endl;
+    //      for (std::vector<ExcitationSet>::iterator a=seta.begin(); a!=seta.end(); a++)
+    //        xout <<"ExcitationSet: " <<a->str()<<std::endl;
+    //      xout << "Alpha occupation numbers"<<std::endl;
+    //      std::vector<double> on = w.alphaStrings[syma].occupationNumbers();
+    //      for (size_t i=0; i < w.alphaStrings[syma].size(); i++) {
+    //        for (size_t j=0; j < w.orbitalSpace->total(); j++)
+    //          xout << " " << on[i+j*w.alphaStrings[syma].size()];
+    //        xout << std::endl;
+    //      }
+    //    }
 
 
-    w.diagonalHamiltonian(hh);
-    xout << "Diagonal elements: " << w.str(2) << std::endl;
-    size_t i = w.minloc();
-    Determinant d = w.determinantAt(i);
-    xout << "Lowest determinant " << d <<" with energy "<<w.at(i)<<std::endl;
+    //    w.diagonalHamiltonian(hh);
+    //    xout << "Diagonal elements: " << w.str(2) << std::endl;
+    //    size_t i = w.minloc();
+    //    Determinant d = w.determinantAt(i);
+    //    xout << "Lowest determinant " << d <<" with energy "<<w.at(i)<<std::endl;
 
-    Hamiltonian fh = hh.FockHamiltonian(d);
-    xout << "Fock hamiltonian: " << fh.str(3) << std::endl;
+    //    Hamiltonian fh = hh.FockHamiltonian(d);
+    //    xout << "Fock hamiltonian: " << fh.str(3) << std::endl;
 
-    w2.set((double)0); w2.set(w.minloc(), (double) 1);
+    //    w2.set((double)0); w2.set(w.minloc(), (double) 1);
 
-    xout << "trial wavefunction: " << w2.str(2) <<std::endl;
+    //    xout << "trial wavefunction: " << w2.str(2) <<std::endl;
 
-    w3.hamiltonianOnWavefunction(fh, w2);
-    xout << "action of Fock hamiltonian on trial wavefunction: " << w3.str(2) <<std::endl;
+    //    w3.hamiltonianOnWavefunction(fh, w2);
+    //    xout << "action of Fock hamiltonian on trial wavefunction: " << w3.str(2) <<std::endl;
 
-    w3.hamiltonianOnWavefunction(hh, w2);
-    xout << "action of hamiltonian on trial wavefunction: " << w3.str(2) <<std::endl;
+    //    w3.hamiltonianOnWavefunction(hh, w2);
+    //    xout << "action of hamiltonian on trial wavefunction: " << w3.str(2) <<std::endl;
 
     //    xout << "Start looking for annihilation spaces using w=" << w.str(5) << std::endl;
     //    for (unsigned int syma=0; syma<8; syma++) {
@@ -197,15 +198,17 @@ int main()
     //    }
     //    xout << "Hamiltonian: " <<hh.str(3)<<std::endl;
 
-//    File ff;
-//    std::vector<double> v(3,99.0);
-//    ff.write(v,0);
-//    std::vector<double> v2(3);
-//    ff.read(v2,0);
-//    xout <<"vector read " <<v2[0]<<" "<<v2[1]<<" "<<v2[2]<<std::endl;
+    //    File ff;
+    //    std::vector<double> v(3,99.0);
+    //    ff.write(v,0);
+    //    std::vector<double> v2(3);
+    //    ff.read(v2,0);
+    //    xout <<"vector read " <<v2[0]<<" "<<v2[1]<<" "<<v2[2]<<std::endl;
 
     State prototype(&dump);
     std::vector<gci::Hamiltonian*> hamiltonians;
+    w.diagonalHamiltonian(hh);
+    Hamiltonian fh = hh.FockHamiltonian(w.determinantAt(w.minloc()));
     hamiltonians.push_back(&fh);
     Hamiltonian h1(hh); h1-=fh;
     hamiltonians.push_back(&h1);

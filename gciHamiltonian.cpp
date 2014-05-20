@@ -68,7 +68,7 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
 
   ijSize = total(0,1);
   ijklSize = pairSpace[1].total(0);
-  xout << "ijklSize=" << ijklSize <<std::endl;
+//  xout << "ijklSize=" << ijklSize <<std::endl;
   integrals_a = new std::vector<double>(ijSize,0.0);
   if (spinUnrestricted)
     integrals_b = new std::vector<double>(ijSize,0.0);
@@ -252,13 +252,13 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
                       ));
                   size_t ik = offset(symik,symi,-1) +  ((symi == symk) ? ((i*(i-1))/2+k) : (i+k*at(symi))) ;
                   size_t jl = offset(symjl,symj,-1) +  ((symj == syml) ? ((j*(j-1))/2+l) : (j+l*at(symj))) ;
-                  xout << "i,j,k,l,ijkl,ilkj,ik,jl: "<<i<<" "<<j<<" "<<k<<" "<<l<<" "
-                          <<ijkl<<" "
-                          <<ilkj<<" "
-                          <<ik<<" "
-                          <<jl<<" destination: "
-                                                       <<pairSpace[-1].offset(0,symik,0) + ik*total(symik,-1) + jl  << " value: "
-                                                       <<integrals_aa->at(ijkl) -integrals_aa->at(ilkj)<<std::endl;
+//                  xout << "i,j,k,l,ijkl,ilkj,ik,jl: "<<i<<" "<<j<<" "<<k<<" "<<l<<" "
+//                          <<ijkl<<" "
+//                          <<ilkj<<" "
+//                          <<ik<<" "
+//                          <<jl<<" destination: "
+//                                                       <<pairSpace[-1].offset(0,symik,0) + ik*total(symik,-1) + jl  << " value: "
+//                                                       <<integrals_aa->at(ijkl) -integrals_aa->at(ilkj)<<std::endl;
                   bracket_integrals_aa->at(pairSpace[-1].offset(0,symik,0) + ik*total(symik,-1) + jl ) = integrals_aa->at(ijkl) -integrals_aa->at(ilkj);
                   bracket_integrals_bb->at(pairSpace[-1].offset(0,symik,0) + ik*total(symik,-1) + jl ) = integrals_bb->at(ijkl) -integrals_bb->at(ilkj);
                 }
@@ -291,8 +291,8 @@ void Hamiltonian::unload() {
 std::string Hamiltonian::str(int verbosity) const
 {
   std::ostringstream o;
-  o << OrbitalSpace::str(verbosity-1);
-  if (verbosity>=2) {
+  o << OrbitalSpace::str(verbosity);
+  if (verbosity>=0) {
     int precision=6;
     o<<std::setprecision(precision);
     o << std::endl << "Core energy " << coreEnergy;
@@ -400,7 +400,7 @@ std::vector<double> Hamiltonian::intK(int spin)
   return result;
 }
 
-Hamiltonian Hamiltonian::FockHamiltonian(Determinant &reference)
+Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference)
 {
   Hamiltonian f;
   for (int i=0; i<8; i++)
