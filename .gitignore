@@ -7,3 +7,6 @@ latex/
 .qmake.stash
 FCIDUMP
 Makefile
+molpro.d
+molpro.xml
+RSPT

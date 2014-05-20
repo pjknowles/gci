@@ -39,12 +39,15 @@ std::vector<double> gci::RSPT(std::vector<gci::Hamiltonian*>& hamiltonians , Sta
       w.get(wfile,k);
       if (n-k < (int) hamiltonians.size())
         g.hamiltonianOnWavefunction(*hamiltonians[n-k], w);
+      if (n-k < (int) hamiltonians.size())
+        xout << "g after H.w: " << g.str(2) <<std::endl;
       if (n == 1) e[1]=g.at(reference);
       g -= e[n-k] * w;
+        xout << "k, E:"<<k<<" "<<e[n-k]<<", g after -E.w: " << g.str(2) <<std::endl;
     }
     w = -g;
     g.get(h0file);
-    //    xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
+        xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
     w.set(reference,(double)0);
     w /= g;
     xout <<std::endl<< "Perturbed wavefunction, order="<<n<<": " << w.str(2) <<std::endl;
