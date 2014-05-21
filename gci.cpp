@@ -93,7 +93,7 @@ std::vector<double> gci::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
       e[n+k]+=g*w;
     }
 //    xout << "n="<<n<<", E(n+1)="<<e[n+1]<<std::endl;
-    if ((e[n+1] < 0 ? -e[n+1] : e[n+1]) < energyThreshold) {e.resize(n+2);break;}
+    if ((e[n+1] < 0 ? -e[n+1] : e[n+1]) < energyThreshold && e[n+1] != (double)0) {e.resize(n+2);break;}
   }
   return e;
 }
@@ -253,13 +253,14 @@ int main()
     Hamiltonian h1(hh); h1-=fh;
     hamiltonians.push_back(&h1);
     {
-    std::vector<double> emp = gci::RSPT(hamiltonians, prototype,(double)0,10);
+    std::vector<double> emp = gci::RSPT(hamiltonians, prototype,(double)1e-8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(totalEnergy+=emp[i]); xout <<std::endl;
     }
     {
     Hamiltonian h2(hh); h2-=fh;h1-=h1; hamiltonians.push_back(&h2);
-    std::vector<double> emp = gci::RSPT(hamiltonians, prototype,(double)0,10);
+    Hamiltonian h3(hh); h3-=fh;h2-=h2; hamiltonians.push_back(&h3);
+    std::vector<double> emp = gci::RSPT(hamiltonians, prototype,(double)1e-8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(totalEnergy+=emp[i]); xout <<std::endl;
     }
