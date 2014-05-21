@@ -8,6 +8,7 @@
 #include "gciOrbitalSpace.h"
 #include "FCIdump.h"
 #include <iostream>
+#include <iomanip>
 using namespace gci;
 
 std::vector<double> gci::Davidson(const Hamiltonian& hamiltonian,
@@ -44,8 +45,9 @@ std::vector<double> gci::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
 {
   std::vector<double> e(maxOrder+1,(double)0);
   if (hamiltonians.size() < 1) throw "not enough hamiltonians";
-//  for (int k=0; k<hamiltonians.size(); k++) xout << "H("<<k<<"): " << *hamiltonians[k] << std::endl;
+//  for (int k=0; k<(int)hamiltonians.size(); k++) xout << "H("<<k<<"): " << *hamiltonians[k] << std::endl;
   Wavefunction w(prototype);
+  xout <<"RSPT wavefunction size="<<w.size()<<std::endl;
   Wavefunction g(w);
   g.diagonalHamiltonian(*hamiltonians[0]);
   size_t reference = g.minloc();
@@ -59,6 +61,7 @@ std::vector<double> gci::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
   for (int k=0; k < (int) hamiltonians.size(); k++) {
     g.set((double)0);
     g.hamiltonianOnWavefunction(*hamiltonians[k],w);
+//    xout << "hamiltonian on reference: " << g.str(2) << std::endl;
     g.put(gfile,k);
   }
   for (int n=1; n < maxOrder; n++) {
@@ -247,6 +250,7 @@ int main()
 
     State prototype(&dump);
     std::vector<gci::Hamiltonian*> hamiltonians;
+//    xout << "hamiltonian: " <<hh<<std::endl;
     w.diagonalHamiltonian(hh);
     Hamiltonian fh = hh.FockHamiltonian(w.determinantAt(w.minloc()));
     hamiltonians.push_back(&fh);
@@ -254,13 +258,15 @@ int main()
     hamiltonians.push_back(&h1);
     {
     std::vector<double> emp = gci::RSPT(hamiltonians, prototype,(double)1e-8);
+    xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(totalEnergy+=emp[i]); xout <<std::endl;
     }
-    {
+    if (false){
     Hamiltonian h2(hh); h2-=fh;h1-=h1; hamiltonians.push_back(&h2);
     Hamiltonian h3(hh); h3-=fh;h2-=h2; hamiltonians.push_back(&h3);
     std::vector<double> emp = gci::RSPT(hamiltonians, prototype,(double)1e-8);
+    xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(totalEnergy+=emp[i]); xout <<std::endl;
     }
