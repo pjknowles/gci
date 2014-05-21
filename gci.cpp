@@ -44,9 +44,7 @@ std::vector<double> gci::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
 {
   std::vector<double> e(maxOrder+1,(double)0);
   if (hamiltonians.size() < 1) throw "not enough hamiltonians";
-//  xout << "H0: " << *hamiltonians[0] << std::endl;
-//  xout << "H1: " << *hamiltonians[1] << std::endl;
-//  Wavefunction w(hamiltonians[0],prototype.nelec,prototype.symmetry,prototype.ms2);
+//  for (int k=0; k<hamiltonians.size(); k++) xout << "H("<<k<<"): " << *hamiltonians[k] << std::endl;
   Wavefunction w(prototype);
   Wavefunction g(w);
   g.diagonalHamiltonian(*hamiltonians[0]);
@@ -67,17 +65,18 @@ std::vector<double> gci::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
     // construct  |n> = -(H0-E0)^{-1} ( -sum_k^{n-1} E_{n-k} |k> + sum_{k=n-h}^{n-1} H|k>) where h is the maximum order of hamiltonian
 //    xout <<std::endl<<std::endl<<"MAIN ITERATION n="<<n<<std::endl;
     g.set((double)0);
-    for (int k=0; k<n; k++) {
-      w.get(wfile,k);
-      if (n-k < (int) hamiltonians.size())
-        g.hamiltonianOnWavefunction(*hamiltonians[n-k], w);
-//      if (n-k < (int) hamiltonians.size())
+    for (int k=n; k>0; k--) {
+      w.get(wfile,n-k);
+      if (k < (int) hamiltonians.size()) {
+        g.hamiltonianOnWavefunction(*hamiltonians[k], w);
 //        xout << "g after H.w: " << g.str(2) <<std::endl;
-      if (n == 1) e[1]=g.at(reference);
-//        xout << "k, E:"<<k<<" "<<e[n-k]<<", g before -E.w: " << g.str(2) <<std::endl;
+        if (n == k) e[n]=g.at(reference);
+//        if (n == k) xout << "k, E:"<<k<<" "<<e[k]<<std::endl;
+      }
+//        xout << "k, E:"<<k<<" "<<e[k]<<", g before -E.w: " << g.str(2) <<std::endl;
 //        xout <<"w="<<w.str(2)<<std::endl;
-      g -= e[n-k] * w;
-//        xout << "k, E:"<<k<<" "<<e[n-k]<<", g after -E.w: " << g.str(2) <<std::endl;
+      g -= e[k] * w;
+//        xout << "k, E:"<<k<<" "<<e[k]<<", g after -E.w: " << g.str(2) <<std::endl;
     }
     w = -g;
     g.get(h0file);
@@ -93,7 +92,7 @@ std::vector<double> gci::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
 //      xout <<"contribution from n="<<n<<", k="<<k<<" to E("<<n+k<<")="<<g*w<<std::endl;
       e[n+k]+=g*w;
     }
-    xout << "n="<<n<<", E(n+1)="<<e[n+1]<<std::endl;
+//    xout << "n="<<n<<", E(n+1)="<<e[n+1]<<std::endl;
     if ((e[n+1] < 0 ? -e[n+1] : e[n+1]) < energyThreshold) {e.resize(n+2);break;}
   }
   return e;
@@ -253,16 +252,17 @@ int main()
     hamiltonians.push_back(&fh);
     Hamiltonian h1(hh); h1-=fh;
     hamiltonians.push_back(&h1);
-    std::vector<double> emp = gci::RSPT(hamiltonians, prototype);//,(double)1e-19,38);
-    xout <<"MP energies" ;
-    for (int i=0; i<(int)emp.size(); i++)
-      xout <<" "<<emp[i];
-    xout <<std::endl;
-    xout <<"MP total energies" ;
-    double totalEnergy=0;
-    for (int i=0; i<(int)emp.size(); i++)
-      xout <<" "<<(totalEnergy+=emp[i]);
-    xout <<std::endl;
+    {
+    std::vector<double> emp = gci::RSPT(hamiltonians, prototype,(double)0,10);
+    xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
+    xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(totalEnergy+=emp[i]); xout <<std::endl;
+    }
+    {
+    Hamiltonian h2(hh); h2-=fh;h1-=h1; hamiltonians.push_back(&h2);
+    std::vector<double> emp = gci::RSPT(hamiltonians, prototype,(double)0,10);
+    xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
+    xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(totalEnergy+=emp[i]); xout <<std::endl;
+    }
 
     gci::HamiltonianPrint(hh,prototype);
     return 0;
