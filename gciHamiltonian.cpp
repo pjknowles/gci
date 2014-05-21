@@ -461,6 +461,7 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference)
 Hamiltonian& Hamiltonian::operator-=(const Hamiltonian &other)
 {
 //  if (! compatible(other)) throw "attempt to add incompatible Hamiltonian objects";
+  coreEnergy -= other.coreEnergy;
   if (integrals_a != NULL)
     for (size_t i=0; i<integrals_a->size(); i++) (*integrals_a)[i] -= (*other.integrals_a)[i];
   if (integrals_b != NULL && integrals_a != integrals_b)
