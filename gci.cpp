@@ -98,7 +98,7 @@ std::vector<double> gci::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
   return e;
 }
 
-void gci::HamiltonianPrint(Hamiltonian &hamiltonian, State &prototype, int verbosity)
+void gci::HamiltonianMatrixPrint(Hamiltonian &hamiltonian, State &prototype, int verbosity)
 {
   Wavefunction w(&hamiltonian,prototype.nelec,prototype.symmetry,prototype.ms2);
   Wavefunction g(w);
@@ -265,7 +265,7 @@ int main()
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(totalEnergy+=emp[i]); xout <<std::endl;
     }
 
-    gci::HamiltonianPrint(hh,prototype);
+//    gci::HamiltonianMatrixPrint(hh,prototype);
     return 0;
   }
   catch (const std::string& ex) {
