@@ -89,7 +89,7 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
   std::string ss;
   double value;
   int i,j,k,l,ij,kl,ijkl;
-  while (s >> ss && ss != "&END") ;
+  while (s >> ss && ss != "&END" && ss != "/") ;
   while (s >> value) {
     s >> i; s >> j; s >> k; s >> l;
     ij = i > j ? (i*(i-1))/2+j : (j*(j-1))/2+i;
