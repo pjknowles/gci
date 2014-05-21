@@ -10,13 +10,44 @@
 #include <iostream>
 using namespace gci;
 
-std::vector<double> gci::RSPT(std::vector<gci::Hamiltonian*>& hamiltonians , State &prototype, int maxOrder)
+std::vector<double> gci::Davidson(const Hamiltonian& hamiltonian,
+                                  const State &prototype,
+                                  double energyThreshold, int nState, int maxIterations)
+{
+  Wavefunction w(prototype);
+  Wavefunction g(w);
+  g.diagonalHamiltonian(hamiltonian);
+  size_t reference = g.minloc();
+  double e0=g.at(reference);
+  std::vector<double> e;
+  //  xout << "Denominators: " << g.str(2) << std::endl;
+  gci::File h0file; g.put(h0file);
+  gci::File wfile;
+  gci::File gfile;
+  w.set((double)0); w.set(reference, (double) 1);
+  for (int n=0; n < maxIterations; n++) {
+    w.put(wfile,n);
+    g.set((double)0);
+    g.hamiltonianOnWavefunction(hamiltonian, w);
+    g.put(gfile,n);
+    g.get(h0file);
+    w /= g;
+  }
+  //    xout << "n="<<n<<", E(n+1)="<<e[n+1]<<std::endl;
+  //    if ((e[n+1] < 0 ? -e[n+1] : e[n+1]) < energyThreshold) {e.resize(n+2);break;}
+  return e;
+}
+
+std::vector<double> gci::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians,
+                              const State &prototype,
+                              double energyThreshold, int maxOrder)
 {
   std::vector<double> e(maxOrder+1,(double)0);
   if (hamiltonians.size() < 1) throw "not enough hamiltonians";
 //  xout << "H0: " << *hamiltonians[0] << std::endl;
 //  xout << "H1: " << *hamiltonians[1] << std::endl;
-  Wavefunction w(hamiltonians[0],prototype.nelec,prototype.symmetry,prototype.ms2);
+//  Wavefunction w(hamiltonians[0],prototype.nelec,prototype.symmetry,prototype.ms2);
+  Wavefunction w(prototype);
   Wavefunction g(w);
   g.diagonalHamiltonian(*hamiltonians[0]);
   size_t reference = g.minloc();
@@ -62,6 +93,8 @@ std::vector<double> gci::RSPT(std::vector<gci::Hamiltonian*>& hamiltonians , Sta
 //      xout <<"contribution from n="<<n<<", k="<<k<<" to E("<<n+k<<")="<<g*w<<std::endl;
       e[n+k]+=g*w;
     }
+    xout << "n="<<n<<", E(n+1)="<<e[n+1]<<std::endl;
+    if ((e[n+1] < 0 ? -e[n+1] : e[n+1]) < energyThreshold) {e.resize(n+2);break;}
   }
   return e;
 }
@@ -220,7 +253,7 @@ int main()
     hamiltonians.push_back(&fh);
     Hamiltonian h1(hh); h1-=fh;
     hamiltonians.push_back(&h1);
-    std::vector<double> emp = gci::RSPT(hamiltonians, prototype,6);
+    std::vector<double> emp = gci::RSPT(hamiltonians, prototype);//,(double)1e-19,38);
     xout <<"MP energies" ;
     for (int i=0; i<(int)emp.size(); i++)
       xout <<" "<<emp[i];

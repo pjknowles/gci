@@ -364,7 +364,7 @@ unsigned int Hamiltonian::int2Index(unsigned int i, unsigned int j, unsigned int
   return quadIndex(i,j,k,l,1,0);
 }
 
-std::vector<double> Hamiltonian::int1(int spin)
+std::vector<double> Hamiltonian::int1(int spin) const
 {
   std::vector<double> result(basisSize,(double)0);
   std::vector<double> * integrals = spin < 0 ? integrals_b : integrals_a;
@@ -375,7 +375,7 @@ std::vector<double> Hamiltonian::int1(int spin)
 }
 
 
-std::vector<double> Hamiltonian::intJ(int spini, int spinj)
+std::vector<double> Hamiltonian::intJ(int spini, int spinj) const
 {
   std::vector<double> result(basisSize*basisSize,(double)0);
   std::vector<double> * integrals = spini < 0 ? (spinj < 0 ? integrals_bb : integrals_ab) : integrals_aa;
@@ -388,7 +388,7 @@ std::vector<double> Hamiltonian::intJ(int spini, int spinj)
   return result;
 }
 
-std::vector<double> Hamiltonian::intK(int spin)
+std::vector<double> Hamiltonian::intK(int spin) const
 {
   std::vector<double> result(basisSize*basisSize,(double)0);
   std::vector<double> * integrals = spin < 0 ? integrals_bb : integrals_aa;

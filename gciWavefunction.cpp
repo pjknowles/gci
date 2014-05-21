@@ -16,6 +16,10 @@ Wavefunction::Wavefunction(OrbitalSpace* h, int n, int s, int m2) : State(h,n,s,
   buildStrings();
 }
 
+Wavefunction::Wavefunction(const State& state) : State(state) {
+  buildStrings();
+}
+
 Wavefunction::Wavefunction(const Wavefunction &other) : State(other)
 {
   alphaStrings.resize(8); betaStrings.resize(8);
@@ -68,7 +72,7 @@ void Wavefunction::set(const double value)
   for (std::vector<double>::iterator b=buffer.begin(); b != buffer.end(); b++) *b=value;
 }
 
-void Wavefunction::diagonalHamiltonian(Hamiltonian &hamiltonian)
+void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
 {
   std::vector<double> ha=hamiltonian.int1(1);
   std::vector<double> hbb=hamiltonian.int1(-1);
@@ -326,7 +330,7 @@ size_t Wavefunction::blockOffset(const unsigned int syma) const
   return _blockOffset.at(syma);
 }
 
-void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction &w)
+void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefunction &w)
 {
   for (size_t i=0; i<buffer.size(); i++)
     buffer[i] += h.coreEnergy * w.buffer[i];
@@ -396,7 +400,7 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
 //      xout <<"StringSet aa: " <<aa.str(2)<<std::endl;
       for (unsigned int symb=0; symb<8; symb++) {
         unsigned int symexc = syma^symb^w.symmetry;
-        size_t nexc = h.pairSpace[-1][symexc];
+        size_t nexc = h.pairSpace.at(-1)[symexc];
         size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
         for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsbbMax > aa.end() ? aa.end() : aa0+nsbbMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
           size_t nsa = aa1-aa0;
@@ -405,13 +409,13 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
 //          xout <<"Transition density aa: "<<d<<std::endl;
           TransitionDensity e(d); e.assign(d.size(),(double)0);
 //          xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsa="<<nsa<<", nsb="<<nsb<<std::endl;
-//          xout << "h.pairSpace[-1].at(symexc)"<<h.pairSpace[-1][symexc]<<std::endl;
+//          xout << "h.pairSpace.at(-1).at(symexc)"<<h.pairSpace.at(-1)[symexc]<<std::endl;
           if (nexc * nsa * nsb != d.size()) throw "nexc";
           for (size_t excd=0; excd<nexc; excd++)
             for (size_t exce=0; exce<nexc; exce++)
               for (size_t ab=0; ab < nsa*nsb; ab++)
                 e[ab+exce*nsa*nsb] += d[ab+excd*nsa*nsb]
-                    * (*h.bracket_integrals_aa)[h.pairSpace[-1].offset(0,symexc,0)+excd*nexc+exce];
+                    * (*h.bracket_integrals_aa)[h.pairSpace.at(-1).offset(0,symexc,0)+excd*nexc+exce];
           e.action(*this);
 //          xout <<"residual after aa:"<<std::endl<<str(2)<<std::endl;
         }
@@ -427,7 +431,7 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
 //      xout <<"StringSet bb: " <<bb.str(2)<<std::endl;
       for (unsigned int syma=0; syma<8; syma++) {
         unsigned int symexc = symb^syma^w.symmetry;
-        size_t nexc = h.pairSpace[-1][symexc];
+        size_t nexc = h.pairSpace.at(-1)[symexc];
         size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
         for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
           size_t nsb = bb1-bb0;
@@ -436,13 +440,13 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
 //          xout <<"Transition density bb: "<<d<<std::endl;
           TransitionDensity e(d); e.assign(d.size(),(double)0);
 //          xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsb="<<nsb<<", nsa="<<nsa<<std::endl;
-//          xout << "h.pairSpace[-1].at(symexc)"<<h.pairSpace[-1][symexc]<<std::endl;
+//          xout << "h.pairSpace.at(-1).at(symexc)"<<h.pairSpace.at(-1)[symexc]<<std::endl;
           if (nexc * nsb * nsa != d.size()) throw "nexc";
           for (size_t excd=0; excd<nexc; excd++)
             for (size_t exce=0; exce<nexc; exce++)
               for (size_t ab=0; ab < nsb*nsa; ab++)
                 e[ab+exce*nsb*nsa] += d[ab+excd*nsb*nsa]
-                    * (*h.bracket_integrals_bb)[h.pairSpace[-1].offset(0,symexc,0)+excd*nexc+exce];
+                    * (*h.bracket_integrals_bb)[h.pairSpace.at(-1).offset(0,symexc,0)+excd*nexc+exce];
           e.action(*this);
 //          xout <<"residual after bb:"<<std::endl<<str(2)<<std::endl;
         }
@@ -461,7 +465,7 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
         StringSet aa(w.alphaStrings,1,0,syma);
         if (aa.size()==0) continue;
         unsigned int symexc = symb^syma^w.symmetry;
-        size_t nexc = h.pairSpace[0][symexc];
+        size_t nexc = h.pairSpace.at(0)[symexc];
         size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
         for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
           size_t nsa = aa1-aa0;
@@ -472,13 +476,13 @@ void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction 
 //            xout <<"Transition density ab: "<<d<<std::endl;
             TransitionDensity e(d); e.assign(d.size(),(double)0);
 //            xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsb="<<nsb<<", nsa="<<nsa<<std::endl;
-//            xout << "h.pairSpace[-1].at(symexc)"<<h.pairSpace[-1][symexc]<<std::endl;
+//            xout << "h.pairSpace.at(-1).at(symexc)"<<h.pairSpace.at(-1)[symexc]<<std::endl;
             if (nexc * nsb * nsa != d.size()) throw "nexc";
             for (size_t excd=0; excd<nexc; excd++)
               for (size_t exce=0; exce<nexc; exce++)
                 for (size_t ab=0; ab < nsb*nsa; ab++)
                   e[ab+exce*nsb*nsa] += d[ab+excd*nsb*nsa]
-                      * (*h.bracket_integrals_ab)[h.pairSpace[0].offset(0,symexc,0)+excd*nexc+exce];
+                      * (*h.bracket_integrals_ab)[h.pairSpace.at(0).offset(0,symexc,0)+excd*nexc+exce];
 //            xout <<"E matrix ab: "<<e<<std::endl;
             e.action(*this);
 //            xout <<"residual after ab:"<<std::endl<<str(2)<<std::endl;

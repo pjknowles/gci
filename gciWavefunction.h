@@ -39,6 +39,12 @@ public:
   Wavefunction(OrbitalSpace *h, int nelec, int symmetry, int ms2);
 
   /*!
+     * \brief Construct a Wavefunction object from a State prototype
+     * \param state the State prototype
+     */
+  Wavefunction(const State& state);
+
+  /*!
      * \brief Wavefunction copy constructor
      * \param other The object to be copied
      */
@@ -50,7 +56,7 @@ public:
   void allocate_buffer(); ///< allocate buffer to full size
   size_t size(); ///< the size of the space
 
-  void diagonalHamiltonian(Hamiltonian& hamiltonian); ///< set this object to the diagonal elements of the hamiltonian
+  void diagonalHamiltonian(const Hamiltonian& hamiltonian); ///< set this object to the diagonal elements of the hamiltonian
 
   /*!
      * \brief find the index of the smallest component
@@ -81,7 +87,7 @@ public:
      * \param h the hamiltonian
      * \param w the wavefunction
      */
-  void hamiltonianOnWavefunction(Hamiltonian& h, const Wavefunction &w);
+  void hamiltonianOnWavefunction(const Hamiltonian& h, const Wavefunction &w);
 
   /*!
    * \brief blockOffset gives the address of the start of a symmetry block of the Wavefunction object

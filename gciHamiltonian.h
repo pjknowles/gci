@@ -77,7 +77,7 @@ public:
      * \param spin positive for alpha, negative for beta
      * \return one-dimensional array with h(i,i) at i-1
      */
-  std::vector<double> int1(int spin);
+  std::vector<double> int1(int spin) const;
 
 
   /*!
@@ -86,13 +86,13 @@ public:
      * \param spinj positive for alpha, negative for beta, second index
      * \return one-dimensional array with (ii|jj) at i-1 + (j-1)*basisSize
      */
-  std::vector<double> intJ(int spini, int spinj);
+  std::vector<double> intJ(int spini, int spinj) const;
   /*!
      * \brief intK Generate array of two-electron Coulomb integrals
      * \param spin positive for alpha, negative for beta
      * \return one-dimensional array with (ij|ji) at i-1 + (j-1)*basisSize
      */
-  std::vector<double> intK(int spin);
+  std::vector<double> intK(int spin) const;
 
   /*!
      * \brief Generate a new object containing the Fock hamiltonian corresponding to a given reference determinant
