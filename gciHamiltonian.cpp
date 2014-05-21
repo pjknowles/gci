@@ -355,11 +355,11 @@ std::string Hamiltonian::str(int verbosity) const
   return o.str();
 }
 
-unsigned int Hamiltonian::int1Index(unsigned int i, unsigned int j) const {
+size_t Hamiltonian::int1Index(unsigned int i, unsigned int j) const {
   return pairIndex(i,j,1);
 }
 
-unsigned int Hamiltonian::int2Index(unsigned int i, unsigned int j, unsigned int k, unsigned int l) const
+size_t Hamiltonian::int2Index(unsigned int i, unsigned int j, unsigned int k, unsigned int l) const
 {
   return quadIndex(i,j,k,l,1,0);
 }

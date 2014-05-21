@@ -54,14 +54,14 @@ public:
   std::vector<double> *bracket_integrals_aa; /**< \brief point to aaaa integrals in bra-ket form, antisymmetrised */
   std::vector<double> *bracket_integrals_ab; /**< \brief point to abab integrals in bra-ket form */
   std::vector<double> *bracket_integrals_bb; /**< \brief point to bbbb integrals in bra-ket form, antisymmetrised */
-  unsigned int basisSize;///< \brief size of orbital basis set
+  size_t basisSize;///< \brief size of orbital basis set
   /*!
      * \brief calculate canonical index of a pair of orbitals.
      * \param i Absolute number (starting with 1) of first orbital.
      * \param j Absolute number (starting with 1) of second orbital.
      * \return Number of orbital pairs of the same symmetry canonically before ij.
      */
-  unsigned int int1Index (unsigned int i, unsigned int j) const;
+  size_t int1Index(unsigned int i, unsigned int j) const;
   /*!
      * \brief calculate canonical address of a 2-electron integral
      * \param i Absolute number (starting with 1) of first orbital.
@@ -70,7 +70,7 @@ public:
      * \param l Absolute number (starting with 1) of fourth orbital.
      * \return
      */
-  unsigned int int2Index (unsigned int i, unsigned int j, unsigned int k, unsigned int l) const;
+  size_t int2Index (unsigned int i, unsigned int j, unsigned int k, unsigned int l) const;
 
   /*!
      * \brief int1 Generate array of diagonal one-electron integrals
@@ -103,8 +103,8 @@ public:
   Hamiltonian& operator-=(const Hamiltonian &other); ///< subtract another Hamiltonian
 
 private:
-  unsigned int ijSize;
-  unsigned int ijklSize;
+  size_t ijSize;
+  size_t ijklSize;
 };
 Hamiltonian operator-(const Hamiltonian &h1, const Hamiltonian &h2); ///< subtract two Hamiltonian objects
 
