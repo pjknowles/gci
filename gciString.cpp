@@ -54,7 +54,7 @@ int String::create(unsigned int orbital) {
 
 int String::destroy(unsigned int orbital) {
   if (orbitalSpace==NULL || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total() ) throw "invalid orbital";
-  if (orbitals_.size() <= 0) throw "too few electrons in String";
+  if (orbitals_.size() <= 0) return (int) 0; //throw "too few electrons in String";
   //    xout << "String::destroy before="<<str()<<", orbital="<<orbital<<std::endl;
 //  int phase=1;
   int phase=((orbitals_.size()/2)*2 == orbitals_.size()) ? -1 : 1;

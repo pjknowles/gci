@@ -36,7 +36,7 @@ int Determinant::destroy(int orbital) {
   if (orbitalSpace==NULL || orbital==(int)0 || orbital > (int) orbitalSpace->total() || orbital < -(int)orbitalSpace->total()) throw "invalid orbital";
   unsigned int orbabs = orbital > 0 ? orbital : -orbital;
   String* string = orbital > 0 ? &stringAlpha : &stringBeta;
-  if (string->orbitals().size() <= 0) throw "too few electrons in determinant";
+//  if (string->orbitals().size() <= 0) throw "too few electrons in determinant";
   return string->destroy(orbabs);
 
 }
