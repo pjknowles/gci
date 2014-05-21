@@ -14,15 +14,15 @@ std::vector<double> gci::RSPT(std::vector<gci::Hamiltonian*>& hamiltonians , Sta
 {
   std::vector<double> e(maxOrder+1,(double)0);
   if (hamiltonians.size() < 1) throw "not enough hamiltonians";
-  xout << "H0: " << *hamiltonians[0] << std::endl;
-  xout << "H1: " << *hamiltonians[1] << std::endl;
+//  xout << "H0: " << *hamiltonians[0] << std::endl;
+//  xout << "H1: " << *hamiltonians[1] << std::endl;
   Wavefunction w(hamiltonians[0],prototype.nelec,prototype.symmetry,prototype.ms2);
   Wavefunction g(w);
   g.diagonalHamiltonian(*hamiltonians[0]);
   size_t reference = g.minloc();
   e[0]=g.at(reference);
   g-=e[0];g.set(reference,(double)1);
-  xout << "Møller-Plesset denominators: " << g.str(2) << std::endl;
+//  xout << "Møller-Plesset denominators: " << g.str(2) << std::endl;
   gci::File h0file; g.put(h0file);
   w.set((double)0); w.set(reference, (double) 1);
   gci::File wfile; w.put(wfile,0);
@@ -34,32 +34,32 @@ std::vector<double> gci::RSPT(std::vector<gci::Hamiltonian*>& hamiltonians , Sta
   }
   for (int n=1; n < maxOrder; n++) {
     // construct  |n> = -(H0-E0)^{-1} ( -sum_k^{n-1} E_{n-k} |k> + sum_{k=n-h}^{n-1} H|k>) where h is the maximum order of hamiltonian
-    xout <<std::endl<<std::endl<<"MAIN ITERATION n="<<n<<std::endl;
+//    xout <<std::endl<<std::endl<<"MAIN ITERATION n="<<n<<std::endl;
     g.set((double)0);
     for (int k=0; k<n; k++) {
       w.get(wfile,k);
       if (n-k < (int) hamiltonians.size())
         g.hamiltonianOnWavefunction(*hamiltonians[n-k], w);
-      if (n-k < (int) hamiltonians.size())
-        xout << "g after H.w: " << g.str(2) <<std::endl;
+//      if (n-k < (int) hamiltonians.size())
+//        xout << "g after H.w: " << g.str(2) <<std::endl;
       if (n == 1) e[1]=g.at(reference);
-        xout << "k, E:"<<k<<" "<<e[n-k]<<", g before -E.w: " << g.str(2) <<std::endl;
-        xout <<"w="<<w.str(2)<<std::endl;
+//        xout << "k, E:"<<k<<" "<<e[n-k]<<", g before -E.w: " << g.str(2) <<std::endl;
+//        xout <<"w="<<w.str(2)<<std::endl;
       g -= e[n-k] * w;
-        xout << "k, E:"<<k<<" "<<e[n-k]<<", g after -E.w: " << g.str(2) <<std::endl;
+//        xout << "k, E:"<<k<<" "<<e[n-k]<<", g after -E.w: " << g.str(2) <<std::endl;
     }
     w = -g;
     g.get(h0file);
-        xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
+//        xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
     w.set(reference,(double)0);
     w /= g;
-    xout <<std::endl<< "Perturbed wavefunction, order="<<n<<": " << w.str(2) <<std::endl;
+//    xout <<std::endl<< "Perturbed wavefunction, order="<<n<<": " << w.str(2) <<std::endl;
     w.put(wfile,n);
     for (int k=1; k < (int) hamiltonians.size(); k++) {
       if (n+k > maxOrder) break;
       g.get(gfile,k);
-      xout <<"gfile "<<g.str(2)<<std::endl;
-      xout <<"contribution from n="<<n<<", k="<<k<<" to E("<<n+k<<")="<<g*w<<std::endl;
+//      xout <<"gfile "<<g.str(2)<<std::endl;
+//      xout <<"contribution from n="<<n<<", k="<<k<<" to E("<<n+k<<")="<<g*w<<std::endl;
       e[n+k]+=g*w;
     }
   }
@@ -94,7 +94,7 @@ int main()
     //        OrbitalSpace os("FCIDUMP");
     //        xout <<"Orbital space:" << os << std::endl;
     Hamiltonian hh(&dump);
-    xout << "Hamiltonian: " <<hh.str()<<std::endl;
+//    xout << "Hamiltonian: " <<hh.str()<<std::endl;
     Wavefunction w(&dump);
     //    OrbitalSpace os = hh;
     //    xout << "Orbital space: " << os.str(1) <<std::endl;
@@ -220,7 +220,7 @@ int main()
     hamiltonians.push_back(&fh);
     Hamiltonian h1(hh); h1-=fh;
     hamiltonians.push_back(&h1);
-    std::vector<double> emp = gci::RSPT(hamiltonians, prototype);
+    std::vector<double> emp = gci::RSPT(hamiltonians, prototype,6);
     xout <<"MP energies" ;
     for (int i=0; i<(int)emp.size(); i++)
       xout <<" "<<emp[i];

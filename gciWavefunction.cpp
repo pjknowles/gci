@@ -329,7 +329,7 @@ size_t Wavefunction::blockOffset(const unsigned int syma) const
 void Wavefunction::hamiltonianOnWavefunction(Hamiltonian &h, const Wavefunction &w)
 {
   for (size_t i=0; i<buffer.size(); i++)
-    buffer[i] = h.coreEnergy * w.buffer[i];
+    buffer[i] += h.coreEnergy * w.buffer[i];
 
 
   size_t offset=0;
