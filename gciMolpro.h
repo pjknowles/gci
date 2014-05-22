@@ -15,7 +15,7 @@ void MxmDrvTN( double *Out, double *A,
     double *B, uint nRows, uint nLink, uint nStrideLink, uint nCols, bool AddToDest = false);
 // as above, but for C = A B
 void MxmDrvNN( double *Out, double *A,
-    double *B, uint nRows, uint nLink, uint nStrideLink, uint nCols, bool AddToDest = false);
+    double *B, uint nRows, uint nLink, uint nCols, bool AddToDest = false);
 
 // as MOLPRO's mxma/mxmb, except for 'Out' occuring before A/B.
 void MxmDrvGen( double *Out, uint nRowStOut, uint nColStOut,

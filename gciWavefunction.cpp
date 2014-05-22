@@ -412,14 +412,17 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
 //          xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsa="<<nsa<<", nsb="<<nsb<<std::endl;
 //          xout << "h.pairSpace.at(-1).at(symexc)"<<h.pairSpace.at(-1)[symexc]<<std::endl;
           if (nexc * nsa * nsb != d.size()) throw "nexc";
-          MxmDrvGen(&e[0],1,nsa*nsb, &d[0],1,nsa*nsb,
-                    &(*h.bracket_integrals_aa)[h.pairSpace.at(-1).offset(0,symexc,0)],1, nexc,
-              nsa*nsb, nexc, nexc, true);
+//          MxmDrvGen(&e[0],1,nsa*nsb, &d[0],1,nsa*nsb,
+//                    &(*h.bracket_integrals_aa)[h.pairSpace.at(-1).offset(0,symexc,0)],1, nexc,
+//              nsa*nsb, nexc, nexc, true);
 //          for (size_t excd=0; excd<nexc; excd++)
 //            for (size_t exce=0; exce<nexc; exce++)
 //              for (size_t ab=0; ab < nsa*nsb; ab++)
 //                e[ab+exce*nsa*nsb] += d[ab+excd*nsa*nsb]
 //                    * (*h.bracket_integrals_aa)[h.pairSpace.at(-1).offset(0,symexc,0)+excd*nexc+exce];
+          MxmDrvNN(&e[0],&d[0],
+                   &(*h.bracket_integrals_aa)[h.pairSpace.at(-1).offset(0,symexc,0)],
+              nsa*nsb,nexc,nexc,true);
           e.action(*this);
 //          xout <<"residual after aa:"<<std::endl<<str(2)<<std::endl;
         }
@@ -446,11 +449,14 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
 //          xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsb="<<nsb<<", nsa="<<nsa<<std::endl;
 //          xout << "h.pairSpace.at(-1).at(symexc)"<<h.pairSpace.at(-1)[symexc]<<std::endl;
           if (nexc * nsb * nsa != d.size()) throw "nexc";
-          for (size_t excd=0; excd<nexc; excd++)
-            for (size_t exce=0; exce<nexc; exce++)
-              for (size_t ab=0; ab < nsb*nsa; ab++)
-                e[ab+exce*nsb*nsa] += d[ab+excd*nsb*nsa]
-                    * (*h.bracket_integrals_bb)[h.pairSpace.at(-1).offset(0,symexc,0)+excd*nexc+exce];
+//          for (size_t excd=0; excd<nexc; excd++)
+//            for (size_t exce=0; exce<nexc; exce++)
+//              for (size_t ab=0; ab < nsb*nsa; ab++)
+//                e[ab+exce*nsb*nsa] += d[ab+excd*nsb*nsa]
+//                    * (*h.bracket_integrals_bb)[h.pairSpace.at(-1).offset(0,symexc,0)+excd*nexc+exce];
+          MxmDrvNN(&e[0],&d[0],
+                   &(*h.bracket_integrals_bb)[h.pairSpace.at(-1).offset(0,symexc,0)],
+              nsa*nsb,nexc,nexc,true);
           e.action(*this);
 //          xout <<"residual after bb:"<<std::endl<<str(2)<<std::endl;
         }
@@ -459,8 +465,8 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
   }
 
   if (h.bracket_integrals_ab != NULL) { // two-electron contribution, alpha-beta
-    size_t nsaaMax = 16; // temporary static
-    size_t nsbbMax = 16; // temporary static
+    size_t nsaaMax = 640; // temporary static
+    size_t nsbbMax = 640; // temporary static
     for (unsigned int symb=0; symb<8; symb++) {
       StringSet bb(w.betaStrings,1,0,symb);
       if (bb.size()==0) continue;
@@ -481,12 +487,15 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
             TransitionDensity e(d); e.assign(d.size(),(double)0);
 //            xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsb="<<nsb<<", nsa="<<nsa<<std::endl;
 //            xout << "h.pairSpace.at(-1).at(symexc)"<<h.pairSpace.at(-1)[symexc]<<std::endl;
-            if (nexc * nsb * nsa != d.size()) throw "nexc";
-            for (size_t excd=0; excd<nexc; excd++)
-              for (size_t exce=0; exce<nexc; exce++)
-                for (size_t ab=0; ab < nsb*nsa; ab++)
-                  e[ab+exce*nsb*nsa] += d[ab+excd*nsb*nsa]
-                      * (*h.bracket_integrals_ab)[h.pairSpace.at(0).offset(0,symexc,0)+excd*nexc+exce];
+//            if (nexc * nsb * nsa != d.size()) throw "nexc";
+//            for (size_t excd=0; excd<nexc; excd++)
+//              for (size_t exce=0; exce<nexc; exce++)
+//                for (size_t ab=0; ab < nsb*nsa; ab++)
+//                  e[ab+exce*nsb*nsa] += d[ab+excd*nsb*nsa]
+//                      * (*h.bracket_integrals_ab)[h.pairSpace.at(0).offset(0,symexc,0)+excd*nexc+exce];
+            MxmDrvNN(&e[0],&d[0],
+                     &(*h.bracket_integrals_ab)[h.pairSpace.at(0).offset(0,symexc,0)],
+                nsa*nsb,nexc,nexc,true);
 //            xout <<"E matrix ab: "<<e<<std::endl;
             e.action(*this);
 //            xout <<"residual after ab:"<<std::endl<<str(2)<<std::endl;
