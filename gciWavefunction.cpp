@@ -405,26 +405,12 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
         size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
         for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsbbMax > aa.end() ? aa.end() : aa0+nsbbMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
           size_t nsa = aa1-aa0;
-//          xout <<"nsa= "<<nsa<<std::endl;
           TransitionDensity d(w,aa0,aa1,w.betaStrings[symb].begin(),w.betaStrings[symb].end(),-1,false,false);
-//          xout <<"Transition density aa: "<<d<<std::endl;
           TransitionDensity e(d); e.assign(d.size(),(double)0);
-//          xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsa="<<nsa<<", nsb="<<nsb<<std::endl;
-//          xout << "h.pairSpace.at(-1).at(symexc)"<<h.pairSpace.at(-1)[symexc]<<std::endl;
-          if (nexc * nsa * nsb != d.size()) throw "nexc";
-//          MxmDrvGen(&e[0],1,nsa*nsb, &d[0],1,nsa*nsb,
-//                    &(*h.bracket_integrals_aa)[h.pairSpace.at(-1).offset(0,symexc,0)],1, nexc,
-//              nsa*nsb, nexc, nexc, true);
-//          for (size_t excd=0; excd<nexc; excd++)
-//            for (size_t exce=0; exce<nexc; exce++)
-//              for (size_t ab=0; ab < nsa*nsb; ab++)
-//                e[ab+exce*nsa*nsb] += d[ab+excd*nsa*nsb]
-//                    * (*h.bracket_integrals_aa)[h.pairSpace.at(-1).offset(0,symexc,0)+excd*nexc+exce];
           MxmDrvNN(&e[0],&d[0],
                    &(*h.bracket_integrals_aa)[h.pairSpace.at(-1).offset(0,symexc,0)],
               nsa*nsb,nexc,nexc,true);
           e.action(*this);
-//          xout <<"residual after aa:"<<std::endl<<str(2)<<std::endl;
         }
       }
     }
@@ -442,23 +428,12 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
         size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
         for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
           size_t nsb = bb1-bb0;
-//          xout <<"nsb= "<<nsb<<std::endl;
           TransitionDensity d(w,w.alphaStrings[syma].begin(),w.alphaStrings[syma].end(),bb0,bb1,-1,false,false);
-//          xout <<"Transition density bb: "<<d<<std::endl;
           TransitionDensity e(d); e.assign(d.size(),(double)0);
-//          xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsb="<<nsb<<", nsa="<<nsa<<std::endl;
-//          xout << "h.pairSpace.at(-1).at(symexc)"<<h.pairSpace.at(-1)[symexc]<<std::endl;
-          if (nexc * nsb * nsa != d.size()) throw "nexc";
-//          for (size_t excd=0; excd<nexc; excd++)
-//            for (size_t exce=0; exce<nexc; exce++)
-//              for (size_t ab=0; ab < nsb*nsa; ab++)
-//                e[ab+exce*nsb*nsa] += d[ab+excd*nsb*nsa]
-//                    * (*h.bracket_integrals_bb)[h.pairSpace.at(-1).offset(0,symexc,0)+excd*nexc+exce];
           MxmDrvNN(&e[0],&d[0],
                    &(*h.bracket_integrals_bb)[h.pairSpace.at(-1).offset(0,symexc,0)],
               nsa*nsb,nexc,nexc,true);
           e.action(*this);
-//          xout <<"residual after bb:"<<std::endl<<str(2)<<std::endl;
         }
       }
     }
@@ -481,24 +456,12 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
           size_t nsa = aa1-aa0;
           for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
             size_t nsb = bb1-bb0;
-//            xout <<"nsb= "<<nsb<<std::endl;
             TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
-//            xout <<"Transition density ab: "<<d<<std::endl;
             TransitionDensity e(d); e.assign(d.size(),(double)0);
-//            xout << "nexc="<<nexc<<", d.size()="<<d.size()<<", nsb="<<nsb<<", nsa="<<nsa<<std::endl;
-//            xout << "h.pairSpace.at(-1).at(symexc)"<<h.pairSpace.at(-1)[symexc]<<std::endl;
-//            if (nexc * nsb * nsa != d.size()) throw "nexc";
-//            for (size_t excd=0; excd<nexc; excd++)
-//              for (size_t exce=0; exce<nexc; exce++)
-//                for (size_t ab=0; ab < nsb*nsa; ab++)
-//                  e[ab+exce*nsb*nsa] += d[ab+excd*nsb*nsa]
-//                      * (*h.bracket_integrals_ab)[h.pairSpace.at(0).offset(0,symexc,0)+excd*nexc+exce];
             MxmDrvNN(&e[0],&d[0],
                      &(*h.bracket_integrals_ab)[h.pairSpace.at(0).offset(0,symexc,0)],
                 nsa*nsb,nexc,nexc,true);
-//            xout <<"E matrix ab: "<<e<<std::endl;
             e.action(*this);
-//            xout <<"residual after ab:"<<std::endl<<str(2)<<std::endl;
           }
         }
       }
