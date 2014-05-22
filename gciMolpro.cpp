@@ -1,4 +1,5 @@
 #include "gciMolpro.h"
+#ifndef MOLPRO
 
 void MxmDrvGen( double *Out, uint nRowStOut, uint nColStOut,
     double *A, uint nRowStA, uint nColStA,
@@ -16,3 +17,5 @@ void MxmDrvGen( double *Out, uint nRowStOut, uint nColStOut,
             A[r*nRowStA+t*nColStA] * B[t*nRowStB+s*nColStB];
 }
 
+
+#endif
