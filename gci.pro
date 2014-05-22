@@ -33,7 +33,8 @@ SOURCES += gci.cpp \
     gciSymmetrySpace.cpp \
     gciOrbitalSpace.cpp \
     gciTransitionDensity.cpp \
-    gciFile.cpp
+    gciFile.cpp \
+    gciMolpro.cpp
 
 HEADERS += gci.h \
     gciHamiltonian.h \
@@ -51,7 +52,8 @@ HEADERS += gci.h \
     gciSymmetrySpace.h \
     gciOrbitalSpace.h \
     gciTransitionDensity.h \
-    gciFile.h
+    gciFile.h \
+    gciMolpro.h
 
 html.target = $$PWD/html
 html.commands = (cd $$PWD ; doxygen $$PWD/Doxyfile;)
