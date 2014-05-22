@@ -156,12 +156,16 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       size_t wnsb = w.betaStrings[wsymb].size();
       size_t woffset = w.blockOffset(wsyma);
       size_t offb = 0;
+      std::vector<ExcitationSet> eebs;
+      for (StringSet::const_iterator sb = betaStringsBegin; sb != betaStringsEnd; sb++)
+        eebs.push_back(ExcitationSet(*sb,w.betaStrings[wsymb],0,1));
       for (StringSet::const_iterator sa = alphaStringsBegin; sa != alphaStringsEnd; sa++) {
         ExcitationSet eea(*sa,w.alphaStrings[wsyma],0,1);
-        for (StringSet::const_iterator sb = betaStringsBegin; sb != betaStringsEnd; sb++) {
-          ExcitationSet eeb(*sb,w.betaStrings[wsymb],0,1);
+//        for (StringSet::const_iterator sb = betaStringsBegin; sb != betaStringsEnd; sb++) {
+//          ExcitationSet eeb(*sb,w.betaStrings[wsymb],0,1);
+        for (std::vector<ExcitationSet>::const_iterator eebp=eebs.begin(); eebp!=eebs.end(); eebp++) {
           for (ExcitationSet::const_iterator ea=eea.begin(); ea!=eea.end(); ea++) {
-            for (ExcitationSet::const_iterator eb=eeb.begin(); eb!=eeb.end(); eb++) {
+            for (ExcitationSet::const_iterator eb=eebp->begin(); eb!=eebp->end(); eb++) {
               (*this)[offb + nsa*nsb*(intoff +
                                       ea->orbitalAddress +
                                       eb->orbitalAddress*(*w.orbitalSpace)[symexca]) ]
@@ -316,12 +320,16 @@ void TransitionDensity::action(Wavefunction &w)
 //             <<", wsymb="<<wsymb
 //             <<", symexca="<<symexca
 //            <<std::endl;
+      std::vector<ExcitationSet> eebs;
+      for (StringSet::const_iterator sb = betaStringsBegin; sb != betaStringsEnd; sb++)
+        eebs.push_back(ExcitationSet(*sb,w.betaStrings[wsymb],0,1));
      for (StringSet::const_iterator sa = alphaStringsBegin; sa != alphaStringsEnd; sa++) {
         ExcitationSet eea(*sa,w.alphaStrings[wsyma],0,1);
-        for (StringSet::const_iterator sb = betaStringsBegin; sb != betaStringsEnd; sb++) {
-          ExcitationSet eeb(*sb,w.betaStrings[wsymb],0,1);
+//        for (StringSet::const_iterator sb = betaStringsBegin; sb != betaStringsEnd; sb++) {
+//          ExcitationSet eeb(*sb,w.betaStrings[wsymb],0,1);
+        for (std::vector<ExcitationSet>::const_iterator eebp=eebs.begin(); eebp != eebs.end(); eebp++) {
           for (ExcitationSet::const_iterator ea=eea.begin(); ea!=eea.end(); ea++) {
-            for (ExcitationSet::const_iterator eb=eeb.begin(); eb!=eeb.end(); eb++) {
+            for (ExcitationSet::const_iterator eb=eebp->begin(); eb!=eebp->end(); eb++) {
 //              xout <<"ab action E: " <<
 //                     "nsa="<<nsa<<", "<<
 //                     "nsb="<<nsb<<", "<<
