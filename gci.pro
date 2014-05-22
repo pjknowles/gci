@@ -16,6 +16,7 @@ TEMPLATE = app
 
 #INCLUDEPATH += /opt/intel/composerxe/mkl/include
 #LIBS += -L/opt/intel/composerxe/mkl/lib -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm
+#LIBS += -L/usr/local/Cellar/google-perftools/2.1/lib -lprofiler
 
 SOURCES += gci.cpp \
     gciHamiltonian.cpp \
