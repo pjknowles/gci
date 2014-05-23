@@ -88,14 +88,13 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
   s.open(dump->fileName.c_str());
   std::string ss;
   double value;
-  int i,j,k,l,ij,kl,ijkl;
+  int i,j,k,l,ij,kl;
   while (s >> ss && ss != "&END" && ss != "/") ;
   while (s >> value) {
     s >> i; s >> j; s >> k; s >> l;
     ij = i > j ? (i*(i-1))/2+j : (j*(j-1))/2+i;
     kl = k > l ? (k*(k-1))/2+l : (l*(l-1))/2+k;
     if (kl) {
-      ijkl = (ij-1)*ijSize+kl-1;
       if (verbosity>2) xout << "("<< i << j <<"|"<< k << l <<") [" << int2Index(i,j,k,l) << "]= " << value <<std::endl;
       if (verbosity>2) xout << "("<< k << l <<"|"<< i << j <<") [" << int2Index(k,l,i,j) << "]= " << value <<std::endl;
       integrals_aa->at(int2Index(i,j,k,l))=value;

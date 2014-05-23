@@ -7,7 +7,8 @@ File::File()
   mkstemp(tmpname);
   f.open(tmpname,std::fstream::binary | std::fstream::in| std::fstream::out);
   remove(tmpname);
-}
+  free(tmpname);
+  }
 
 File::~File()
 {

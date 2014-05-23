@@ -19,7 +19,7 @@ std::vector<double> gci::Davidson(const Hamiltonian& hamiltonian,
   Wavefunction g(w);
   g.diagonalHamiltonian(hamiltonian);
   size_t reference = g.minloc();
-  double e0=g.at(reference);
+//  double e0=g.at(reference);
   std::vector<double> e;
   //  xout << "Denominators: " << g.str(2) << std::endl;
   gci::File h0file; g.put(h0file);
