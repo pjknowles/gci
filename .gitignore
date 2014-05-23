@@ -10,3 +10,6 @@ Makefile
 molpro.d
 molpro.xml
 RSPT
+*.dSYM
+*.trace
+callgrind.out*
