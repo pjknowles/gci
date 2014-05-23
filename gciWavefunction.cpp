@@ -445,7 +445,6 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     for (unsigned int symb=0; symb<8; symb++) {
       StringSet bb(w.betaStrings,1,0,symb);
       if (bb.size()==0) continue;
-//      xout <<"StringSet bb: " <<bb.str(2)<<std::endl;
       for (unsigned int syma=0; syma<8; syma++) {
         StringSet aa(w.alphaStrings,1,0,syma);
         if (aa.size()==0) continue;
