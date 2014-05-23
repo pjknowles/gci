@@ -1,10 +1,10 @@
 #ifndef GCITRANSITIONDENSITY_H
 #define GCITRANSITIONDENSITY_H
 #include <vector>
-#include <gciStringSet.h>
-#include <gciOrbitalSpace.h>
-#include <gciWavefunction.h>
-#include <gciPrintable.h>
+#include "gciStringSet.h"
+#include "gciOrbitalSpace.h"
+#include "gciWavefunction.h"
+#include "gciPrintable.h"
 
 namespace gci {
 
