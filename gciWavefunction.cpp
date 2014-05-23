@@ -377,10 +377,10 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
         for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsbbMax > aa.end() ? aa.end() : aa0+nsbbMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
           size_t nsa = aa1-aa0;
           TransitionDensity d(w,aa0,aa1,w.betaStrings[symb].begin(),w.betaStrings[symb].end(),-1,false,false);
-          TransitionDensity e(d); e.assign(d.size(),(double)0);
+          TransitionDensity e(d);
           MxmDrvNN(&e[0],&d[0],
                    &(*h.bracket_integrals_aa)[h.pairSpace.at(-1).offset(0,symexc,0)],
-              nsa*nsb,nexc,nexc,true);
+              nsa*nsb,nexc,nexc,false);
           e.action(*this);
         }
       }
@@ -399,10 +399,16 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
         for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
           size_t nsb = bb1-bb0;
           TransitionDensity d(w,w.alphaStrings[syma].begin(),w.alphaStrings[syma].end(),bb0,bb1,-1,false,false);
-          TransitionDensity e(d); e.assign(d.size(),(double)0);
+//            for (unsigned int i=0; i<99; i++) {
+//              TransitionDensity e(d);
+//          MxmDrvNN(&e[0],&d[0],
+//                   &(*h.bracket_integrals_bb)[h.pairSpace.at(-1).offset(0,symexc,0)],
+//              nsa*nsb,nexc,nexc,false);
+//            }
+          TransitionDensity e(d);
           MxmDrvNN(&e[0],&d[0],
                    &(*h.bracket_integrals_bb)[h.pairSpace.at(-1).offset(0,symexc,0)],
-              nsa*nsb,nexc,nexc,true);
+              nsa*nsb,nexc,nexc,false);
           e.action(*this);
         }
       }
@@ -425,11 +431,13 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
           size_t nsa = aa1-aa0;
           for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
             size_t nsb = bb1-bb0;
+//            for (unsigned int i=0; i<99; i++)
+//              TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
             TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
-            TransitionDensity e(d); e.assign(d.size(),(double)0);
+            TransitionDensity e(d);
             MxmDrvNN(&e[0],&d[0],
                      &(*h.bracket_integrals_ab)[h.pairSpace.at(0).offset(0,symexc,0)],
-                nsa*nsb,nexc,nexc,true);
+                nsa*nsb,nexc,nexc,false);
             e.action(*this);
           }
         }
