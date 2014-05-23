@@ -342,18 +342,14 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     unsigned int symb = w.symmetry^syma;
     size_t nsa = alphaStrings[syma].size();
     size_t nsb = betaStrings[symb].size();
-//    xout << "syma="<<syma<<", symb="<<symb<<std::endl;
     TransitionDensity d(w,
                         w.alphaStrings[syma].begin(),
                         w.alphaStrings[syma].end(),
                         w.betaStrings[symb].begin(),
                         w.betaStrings[symb].end(),
                         1,true, !h.spinUnrestricted);
-//    xout <<"Transition density: "<<d<<std::endl;
-    for (size_t iab=0; iab<nsa*nsb; iab++)
-      for (size_t ij=0; ij<w.orbitalSpace->total(0,1); ij++)
-        buffer[offset+iab]+=d[ij*nsa*nsb+iab] * (*h.integrals_a)[ij];
-//        buffer.at(offset+iab)+=d.at(ij*nsa*nsb+iab) * (*h.integrals_a).at(ij);
+    MxmDrvNN(&buffer[offset],&d[0], &(*h.integrals_a)[0],
+        nsa*nsb,w.orbitalSpace->total(0,1),1,true);
     if (h.spinUnrestricted) {
       TransitionDensity d(w,
                           w.alphaStrings[syma].begin(),
@@ -361,33 +357,9 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
                           w.betaStrings[symb].begin(),
                           w.betaStrings[symb].end(),
                           1,false, true);
-//      xout <<"Transition density: "<<d<<std::endl;
-      for (size_t iab=0; iab<nsa*nsb; iab++)
-        for (size_t ij=0; ij<w.orbitalSpace->total(0,1); ij++)
-          buffer[offset+iab]+=d[ij*nsa*nsb+iab] * (*h.integrals_b)[ij];
+      MxmDrvNN(&buffer[offset],&d[0], &(*h.integrals_b)[0],
+          nsa*nsb,w.orbitalSpace->total(0,1),1,true);
     }
-    //    size_t offa = offset;
-    //    for (StringSet::iterator s = alphaStrings[syma].begin(); s != alphaStrings[syma].end(); s++) {
-    //      //            xout << "alpha string "<<*s<<std::endl;
-    //      ExcitationSet ee(*s,alphaStrings[syma],1,1);
-    //      //            xout << "alpha excitations " << ee.str() <<std::endl;
-    //      for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
-    //        //                xout << "alpha excitation " << e->orbitalAddress <<"="<<(*h.integrals_a)[e->orbitalAddress]<<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
-    //        for (size_t ib=0; ib<nsb; ib++)
-    //          buffer[offa+ib] += (*h.integrals_a)[e->orbitalAddress] * e->phase * w.buffer[offset+e->stringIndex*nsb+ib];
-    //      }
-    //      offa += nsb;
-    //    }
-    //    size_t offb = offset;
-    //    for (StringSet::iterator s = betaStrings[symb].begin(); s != betaStrings[symb].end(); s++) {
-    //      ExcitationSet ee(*s,betaStrings[symb],1,1);
-    //      for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
-    //        //                xout << "beta excitation " << e->orbitalAddress <<"="<<(*h.integrals_b)[e->orbitalAddress]<<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
-    //        for (size_t ia=0; ia<nsa; ia++)
-    //          buffer[offb+ia*nsb] += (*h.integrals_b)[e->orbitalAddress] * e->phase * w.buffer[offset+e->stringIndex+ia*nsb];
-    //      }
-    //      offb ++;
-    //    }
     offset += nsa*nsb;
   }
 
@@ -398,7 +370,6 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     for (unsigned int syma=0; syma<8; syma++) {
       StringSet aa(w.alphaStrings,2,0,syma);
       if (aa.size()==0) continue;
-//      xout <<"StringSet aa: " <<aa.str(2)<<std::endl;
       for (unsigned int symb=0; symb<8; symb++) {
         unsigned int symexc = syma^symb^w.symmetry;
         size_t nexc = h.pairSpace.at(-1)[symexc];
@@ -421,7 +392,6 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     for (unsigned int symb=0; symb<8; symb++) {
       StringSet bb(w.betaStrings,2,0,symb);
       if (bb.size()==0) continue;
-//      xout <<"StringSet bb: " <<bb.str(2)<<std::endl;
       for (unsigned int syma=0; syma<8; syma++) {
         unsigned int symexc = symb^syma^w.symmetry;
         size_t nexc = h.pairSpace.at(-1)[symexc];
