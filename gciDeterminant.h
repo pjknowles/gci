@@ -54,10 +54,10 @@ public:
   std::string str(int verbosity=0) const;
 
 
+  String stringAlpha, stringBeta; /*!< The orbitals that make up the determinant */
 
 private:
   friend class Hamiltonian;
-  String stringAlpha, stringBeta; /*!< The orbitals that make up the determinant */
 };
 }
 

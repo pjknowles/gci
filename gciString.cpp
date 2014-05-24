@@ -13,7 +13,6 @@ String::String(State* State, int Spin)
   }
   nullify();
   spin=Spin;
-  key=keyUnassigned;
 }
 
 int String::create(unsigned int orbital) {
@@ -79,7 +78,7 @@ void String::nullify()
   ms2=0;
   nelec=0;
   symmetry=0;
-  //    xout <<"nullify"<<std::endl;
+  key=keyUnassigned;
 }
 
 std::vector<unsigned int> String::orbitals() const {

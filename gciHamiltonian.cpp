@@ -405,7 +405,12 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference)
   for (int i=0; i<8; i++)
     f[i]=at(i);
   f.calculateOffsets();
-  f.spinUnrestricted = spinUnrestricted;
+  xout << "Reference alpha: "<<reference.stringAlpha<<std::endl;
+  xout << "Reference beta: "<<reference.stringBeta<<std::endl;
+  bool closed = reference.stringAlpha==reference.stringBeta;
+  xout << "Reference alpha=beta: "<<closed<<std::endl;
+  f.spinUnrestricted = spinUnrestricted || ! closed;
+  xout << "spinUnrestricted="<<spinUnrestricted<<std::endl;
   f.coreEnergy = coreEnergy;
   f.basisSize = basisSize;
   f.ijklSize = ijklSize;
@@ -439,7 +444,7 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference)
       for (unsigned int i=1; i<=basisSize; i++)
         for (unsigned int j=1; j<=i; j++) {
           if (orbital_symmetries[i-1]!=orbital_symmetries[j-1]) continue;
-          (*f.integrals_a)[int1Index(i,j)] += (*integrals_bb)[int2Index(i,j,*o,*o)] - (*integrals_bb)[int2Index(i,*o,*o,j)];
+          (*f.integrals_b)[int1Index(i,j)] += (*integrals_bb)[int2Index(i,j,*o,*o)] - (*integrals_bb)[int2Index(i,*o,*o,j)];
         }
     }
     for (std::vector<unsigned int>::const_iterator o=reference.stringAlpha.orbitals().begin(); o != reference.stringAlpha.orbitals().end(); o++)
@@ -447,7 +452,7 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference)
       for (unsigned int i=1; i<=basisSize; i++)
         for (unsigned int j=1; j<=i; j++) {
           if (orbital_symmetries[i-1]!=orbital_symmetries[j-1]) continue;
-          (*f.integrals_a)[int1Index(i,j)] += (*integrals_ab)[int2Index(*o,*o,i,j)];
+          (*f.integrals_b)[int1Index(i,j)] += (*integrals_ab)[int2Index(*o,*o,i,j)];
         }
     }
   } else {

@@ -214,20 +214,21 @@ int main()
     //    }
 
 
-    //    w.diagonalHamiltonian(hh);
+        w.diagonalHamiltonian(hh);
     //    xout << "Diagonal elements: " << w.str(2) << std::endl;
-    //    size_t i = w.minloc();
-    //    Determinant d = w.determinantAt(i);
-    //    xout << "Lowest determinant " << d <<" with energy "<<w.at(i)<<std::endl;
+        size_t i = w.minloc();
+        Determinant d = w.determinantAt(i);
+        xout << "Lowest determinant " << d <<" with energy "<<w.at(i)<<std::endl;
 
-    //    Hamiltonian fh = hh.FockHamiltonian(d);
-    //    xout << "Fock hamiltonian: " << fh.str(3) << std::endl;
+        d.stringBeta.nullify();
+        Hamiltonian fockh = hh.FockHamiltonian(d);
+        xout << "Fock hamiltonian: " << fockh.str(3) << std::endl;
 
     //    w2.set((double)0); w2.set(w.minloc(), (double) 1);
 
     //    xout << "trial wavefunction: " << w2.str(2) <<std::endl;
 
-    //    w3.hamiltonianOnWavefunction(fh, w2);
+    //    w3.hamiltonianOnWavefunction(fockh, w2);
     //    xout << "action of Fock hamiltonian on trial wavefunction: " << w3.str(2) <<std::endl;
 
     //    w3.hamiltonianOnWavefunction(hh, w2);
