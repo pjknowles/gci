@@ -161,8 +161,6 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
         eebs.push_back(ExcitationSet(*sb,w.betaStrings[wsymb],0,1));
       for (StringSet::const_iterator sa = alphaStringsBegin; sa != alphaStringsEnd; sa++) {
         ExcitationSet eea(*sa,w.alphaStrings[wsyma],0,1);
-//        for (StringSet::const_iterator sb = betaStringsBegin; sb != betaStringsEnd; sb++) {
-//          ExcitationSet eeb(*sb,w.betaStrings[wsymb],0,1);
         for (std::vector<ExcitationSet>::const_iterator eebp=eebs.begin(); eebp!=eebs.end(); eebp++) {
           for (ExcitationSet::const_iterator ea=eea.begin(); ea!=eea.end(); ea++) {
             for (ExcitationSet::const_iterator eb=eebp->begin(); eb!=eebp->end(); eb++) {
@@ -311,9 +309,9 @@ void TransitionDensity::action(Wavefunction &w)
       std::vector<ExcitationSet> eebs;
       for (StringSet::const_iterator sb = betaStringsBegin; sb != betaStringsEnd; sb++)
         eebs.push_back(ExcitationSet(*sb,w.betaStrings[wsymb],0,1));
-     for (StringSet::const_iterator sa = alphaStringsBegin; sa != alphaStringsEnd; sa++) {
+      for (StringSet::const_iterator sa = alphaStringsBegin; sa != alphaStringsEnd; sa++) {
         ExcitationSet eea(*sa,w.alphaStrings[wsyma],0,1);
-        for (std::vector<ExcitationSet>::const_iterator eebp=eebs.begin(); eebp != eebs.end(); eebp++) {
+        for (std::vector<ExcitationSet>::const_iterator eebp=eebs.begin(); eebp!=eebs.end(); eebp++) {
           for (ExcitationSet::const_iterator ea=eea.begin(); ea!=eea.end(); ea++) {
             for (ExcitationSet::const_iterator eb=eebp->begin(); eb!=eebp->end(); eb++) {
               w.buffer[woffset + eb->stringIndex + wnsb * ea->stringIndex]
