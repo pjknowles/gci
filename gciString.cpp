@@ -173,3 +173,8 @@ size_t String::index(const StringSet& set) const
   i = set.addressMap.find(key);
   return (i == set.addressMap.end()) ? String::StringNotFound : i->second;
 }
+
+bool String::operator ==(const String& other) const
+{
+  return key == other.key;
+}

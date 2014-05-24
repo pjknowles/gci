@@ -77,6 +77,13 @@ public:
      * \return the offset in set or StringNotFound if not in set
      */
   size_t index(const StringSet& set) const;
+
+  /*!
+   * \brief operator == test whether two String objects are identical
+   * \param other
+   * \return
+   */
+  bool operator==(const String& other) const;
 private:
 };
 }
