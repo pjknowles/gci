@@ -221,8 +221,12 @@ int main()
         xout << "Lowest determinant " << d <<" with energy "<<w.at(i)<<std::endl;
 
         d.stringBeta.nullify();
-        Hamiltonian fockh = hh.FockHamiltonian(d);
+        Hamiltonian h2=hh;
+        Hamiltonian fockh = h2.FockHamiltonian(d);
+        xout << "hamiltonian: " << h2.str(3) << std::endl;
         xout << "Fock hamiltonian: " << fockh.str(3) << std::endl;
+        xout << "hamiltonian: " << h2.str(3) << std::endl;
+        d = w.determinantAt(i);
 
     //    w2.set((double)0); w2.set(w.minloc(), (double) 1);
 

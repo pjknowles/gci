@@ -99,7 +99,7 @@ public:
      * \param reference the reference Slater determinant
      * \return  the Fock hamiltonian
      */
-  Hamiltonian FockHamiltonian(const Determinant& reference);
+  Hamiltonian FockHamiltonian(const Determinant& reference) const;
   Hamiltonian& operator-=(const Hamiltonian &other); ///< subtract another Hamiltonian
 
 private:

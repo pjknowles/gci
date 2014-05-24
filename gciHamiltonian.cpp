@@ -399,7 +399,7 @@ std::vector<double> Hamiltonian::intK(int spin) const
   return result;
 }
 
-Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference)
+Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
 {
   Hamiltonian f;
   for (int i=0; i<8; i++)
@@ -420,6 +420,7 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference)
   *f.integrals_a = *integrals_a;
   for (std::vector<unsigned int>::const_iterator o=reference.stringAlpha.orbitals().begin(); o != reference.stringAlpha.orbitals().end(); o++)
   {
+//    xout<< "f alpha, alpha occ: " <<*o << std::endl;
     for (unsigned int i=1; i<=basisSize; i++)
       for (unsigned int j=1; j<=i; j++) {
         if (orbital_symmetries[i-1]!=orbital_symmetries[j-1]) continue;
@@ -428,6 +429,7 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference)
   }
   for (std::vector<unsigned int>::const_iterator o=reference.stringBeta.orbitals().begin(); o != reference.stringBeta.orbitals().end(); o++)
   {
+//    xout<< "f alpha, beta occ: " <<*o << std::endl;
     for (unsigned int i=1; i<=basisSize; i++)
       for (unsigned int j=1; j<=i; j++) {
         if (orbital_symmetries[i-1]!=orbital_symmetries[j-1]) continue;
@@ -437,10 +439,11 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference)
   f.integrals_aa = NULL;
   f.integrals_ab = NULL;
   f.integrals_bb = NULL;
-  if (spinUnrestricted) {
+  if (f.spinUnrestricted) {
     f.integrals_b = integrals_b;
     for (std::vector<unsigned int>::const_iterator o=reference.stringBeta.orbitals().begin(); o != reference.stringBeta.orbitals().end(); o++)
     {
+//    xout<< "f beta, beta occ: " <<*o << std::endl;
       for (unsigned int i=1; i<=basisSize; i++)
         for (unsigned int j=1; j<=i; j++) {
           if (orbital_symmetries[i-1]!=orbital_symmetries[j-1]) continue;
@@ -449,6 +452,7 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference)
     }
     for (std::vector<unsigned int>::const_iterator o=reference.stringAlpha.orbitals().begin(); o != reference.stringAlpha.orbitals().end(); o++)
     {
+//    xout<< "f beta, alpha occ: " <<*o << std::endl;
       for (unsigned int i=1; i<=basisSize; i++)
         for (unsigned int j=1; j<=i; j++) {
           if (orbital_symmetries[i-1]!=orbital_symmetries[j-1]) continue;
