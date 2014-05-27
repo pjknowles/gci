@@ -229,6 +229,8 @@ int main()
         d = w.determinantAt(i);
         Hamiltonian ssh = hh.sameSpinHamiltonian(d);
         xout << "same-spin hamiltonian: " << ssh.str(3) << std::endl;
+        Hamiltonian osh = hh-ssh-fockh;
+        xout << "opposite-spin hamiltonian: " << osh.str(3) << std::endl;
 
 
     //    w2.set((double)0); w2.set(w.minloc(), (double) 1);
