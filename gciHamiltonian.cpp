@@ -407,12 +407,12 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
   for (int i=0; i<8; i++)
     f[i]=at(i);
   f.calculateOffsets();
-  xout << "FockHamiltonian Reference alpha: "<<reference.stringAlpha<<std::endl;
-  xout << "FockHamiltonian Reference beta: "<<reference.stringBeta<<std::endl;
+//  xout << "FockHamiltonian Reference alpha: "<<reference.stringAlpha<<std::endl;
+//  xout << "FockHamiltonian Reference beta: "<<reference.stringBeta<<std::endl;
   bool closed = reference.stringAlpha==reference.stringBeta;
-  xout << "FockHamiltonian Reference alpha=beta: "<<closed<<std::endl;
+//  xout << "FockHamiltonian Reference alpha=beta: "<<closed<<std::endl;
   f.spinUnrestricted = spinUnrestricted || ! closed;
-  xout << "FockHamiltonian spinUnrestricted="<<f.spinUnrestricted<<std::endl;
+//  xout << "FockHamiltonian spinUnrestricted="<<f.spinUnrestricted<<std::endl;
   f.coreEnergy = coreEnergy;
   f.basisSize = basisSize;
   f.ijklSize = ijklSize;
@@ -473,33 +473,33 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
 Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
 {
   Hamiltonian result = *this;
-  xout << "result when initialized: "<<result.str(2)<<std::endl;
+//  xout << "result when initialized: "<<result.str(2)<<std::endl;
   result.spinUnrestricted = true;
   if (!spinUnrestricted) *(result.integrals_b = new std::vector<double>(integrals_a->size())) = *result.integrals_a;
-  xout << "sameSpinHamiltonian, old integrals_a="<<&integrals_a[0]<<", new integrals_a ="<<&result.integrals_a[0]<<std::endl;
-  xout << "sameSpinHamiltonian, old integrals_b="<<&integrals_b[0]<<", new integrals_b ="<<&result.integrals_b[0]<<std::endl;
+//  xout << "sameSpinHamiltonian, old integrals_a="<<&integrals_a[0]<<", new integrals_a ="<<&result.integrals_a[0]<<std::endl;
+//  xout << "sameSpinHamiltonian, old integrals_b="<<&integrals_b[0]<<", new integrals_b ="<<&result.integrals_b[0]<<std::endl;
   Determinant ra = reference; ra.stringBeta.nullify();
-  xout << "this before alpha fock: "<<str(2)<<std::endl;
-  xout << "result before alpha fock: "<<result.str(2)<<std::endl;
+//  xout << "this before alpha fock: "<<str(2)<<std::endl;
+//  xout << "result before alpha fock: "<<result.str(2)<<std::endl;
   Hamiltonian f = this->FockHamiltonian(ra);
-  xout << "this after alpha fock: "<<str(2)<<std::endl;
-  xout << "result before alpha: "<<result.str(2)<<std::endl;
+//  xout << "this after alpha fock: "<<str(2)<<std::endl;
+//  xout << "result before alpha: "<<result.str(2)<<std::endl;
   for (size_t i=0; i<integrals_a->size(); i++) {
     result.integrals_a->at(i) = this->integrals_a->at(i) - f.integrals_a->at(i);
-    xout << " result a = " << result.integrals_a->at(i) <<"=" << this->integrals_a->at(i) <<"-"<< f.integrals_a->at(i)<<std::endl;
+//    xout << " result a = " << result.integrals_a->at(i) <<"=" << this->integrals_a->at(i) <<"-"<< f.integrals_a->at(i)<<std::endl;
   }
-  xout << "this after alpha: "<<str(2)<<std::endl;
-  xout << "result after alpha: "<<result.str(2)<<std::endl;
+//  xout << "this after alpha: "<<str(2)<<std::endl;
+//  xout << "result after alpha: "<<result.str(2)<<std::endl;
   ra = reference; ra.stringAlpha.nullify();
   f = this->FockHamiltonian(ra);
-  xout << "sameSpinHamiltonian, fock integrals_a="<<&f.integrals_a[0]<<", fock integrals_b ="<<&f.integrals_b[0]<<std::endl;
+//  xout << "sameSpinHamiltonian, fock integrals_a="<<&f.integrals_a[0]<<", fock integrals_b ="<<&f.integrals_b[0]<<std::endl;
   for (size_t i=0; i<integrals_a->size(); i++) {
     result.integrals_b->at(i) = this->integrals_b->at(i) - f.integrals_b->at(i);
-    xout << " result b = " << result.integrals_b->at(i) <<"=" << this->integrals_b->at(i) <<"-"<< f.integrals_b->at(i)<<std::endl;
+//    xout << " result b = " << result.integrals_b->at(i) <<"=" << this->integrals_b->at(i) <<"-"<< f.integrals_b->at(i)<<std::endl;
 }
   delete result.bracket_integrals_ab; result.bracket_integrals_ab = NULL;
   if (spinUnrestricted) delete result.integrals_ab; result.integrals_ab = NULL;
-  xout << "result on return: "<<result.str(2)<<std::endl;
+//  xout << "result on return: "<<result.str(2)<<std::endl;
   return result;
 }
 
