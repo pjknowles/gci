@@ -100,7 +100,14 @@ public:
      * \return  the Fock hamiltonian
      */
   Hamiltonian FockHamiltonian(const Determinant& reference) const;
+
   Hamiltonian& operator-=(const Hamiltonian &other); ///< subtract another Hamiltonian
+  /*!
+   * \brief Construct the same-spin perturbed Hamiltonian
+   * \param reference the zero-order Slater determinant
+   * \return  the same-spin Hamiltonian
+   */
+  Hamiltonian sameSpinHamiltonian(const Determinant &reference) const;
 
 private:
   size_t ijSize;

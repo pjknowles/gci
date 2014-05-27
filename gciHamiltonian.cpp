@@ -48,6 +48,8 @@ Hamiltonian::Hamiltonian(const Hamiltonian &source)
        bracket_integrals_bb = bracket_integrals_aa;
      }
   }
+//  xout << "Hamiltonian copy constructor, old integrals_a="<<&source.integrals_a[0]<<", new integrals_a ="<<&integrals_a[0]<<std::endl;
+//  xout << "Hamiltonian copy constructor, old integrals_b="<<&source.integrals_b[0]<<", new integrals_b ="<<&integrals_b[0]<<std::endl;
 }
 
 Hamiltonian::~Hamiltonian() {
@@ -273,15 +275,15 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
 
 void Hamiltonian::unload() {
   if (loaded) {
-    delete [] integrals_a;
-    delete [] integrals_aa;
-    delete [] bracket_integrals_aa;
-    delete [] bracket_integrals_ab;
+    delete integrals_a;
+    delete integrals_aa;
+    delete bracket_integrals_aa;
+    delete bracket_integrals_ab;
     if (spinUnrestricted) {
-      delete [] integrals_b;
-      delete [] integrals_ab;
-      delete [] integrals_bb;
-      delete [] bracket_integrals_bb;
+      delete integrals_b;
+      delete integrals_ab;
+      delete integrals_bb;
+      delete bracket_integrals_bb;
     }
   }
   loaded=false;
@@ -290,7 +292,7 @@ void Hamiltonian::unload() {
 std::string Hamiltonian::str(int verbosity) const
 {
   std::ostringstream o;
-  o << OrbitalSpace::str(verbosity);
+  o << OrbitalSpace::str(verbosity>3 ? verbosity : 0);
   if (verbosity>=0) {
     int precision=6;
     o<<std::setprecision(precision);
@@ -405,12 +407,12 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
   for (int i=0; i<8; i++)
     f[i]=at(i);
   f.calculateOffsets();
-  xout << "Reference alpha: "<<reference.stringAlpha<<std::endl;
-  xout << "Reference beta: "<<reference.stringBeta<<std::endl;
+  xout << "FockHamiltonian Reference alpha: "<<reference.stringAlpha<<std::endl;
+  xout << "FockHamiltonian Reference beta: "<<reference.stringBeta<<std::endl;
   bool closed = reference.stringAlpha==reference.stringBeta;
-  xout << "Reference alpha=beta: "<<closed<<std::endl;
+  xout << "FockHamiltonian Reference alpha=beta: "<<closed<<std::endl;
   f.spinUnrestricted = spinUnrestricted || ! closed;
-  xout << "spinUnrestricted="<<spinUnrestricted<<std::endl;
+  xout << "FockHamiltonian spinUnrestricted="<<f.spinUnrestricted<<std::endl;
   f.coreEnergy = coreEnergy;
   f.basisSize = basisSize;
   f.ijklSize = ijklSize;
@@ -439,8 +441,10 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
   f.integrals_aa = NULL;
   f.integrals_ab = NULL;
   f.integrals_bb = NULL;
+//  xout << "in FockHamiltonian, after alpha f="; for (size_t ij=0; ij< f.integrals_a->size(); ij++) xout <<" "<<(*f.integrals_a)[ij]; xout <<std::endl;
   if (f.spinUnrestricted) {
-    f.integrals_b = integrals_b;
+    f.integrals_b = new std::vector<double>(ijSize,0.0);
+    *f.integrals_b = *integrals_b;
     for (std::vector<unsigned int>::const_iterator o=reference.stringBeta.orbitals().begin(); o != reference.stringBeta.orbitals().end(); o++)
     {
 //    xout<< "f beta, beta occ: " <<*o << std::endl;
@@ -464,6 +468,39 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
   }
   f.loaded = true;
   return f;
+}
+
+Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
+{
+  Hamiltonian result = *this;
+  xout << "result when initialized: "<<result.str(2)<<std::endl;
+  result.spinUnrestricted = true;
+  if (!spinUnrestricted) *(result.integrals_b = new std::vector<double>(integrals_a->size())) = *result.integrals_a;
+  xout << "sameSpinHamiltonian, old integrals_a="<<&integrals_a[0]<<", new integrals_a ="<<&result.integrals_a[0]<<std::endl;
+  xout << "sameSpinHamiltonian, old integrals_b="<<&integrals_b[0]<<", new integrals_b ="<<&result.integrals_b[0]<<std::endl;
+  Determinant ra = reference; ra.stringBeta.nullify();
+  xout << "this before alpha fock: "<<str(2)<<std::endl;
+  xout << "result before alpha fock: "<<result.str(2)<<std::endl;
+  Hamiltonian f = this->FockHamiltonian(ra);
+  xout << "this after alpha fock: "<<str(2)<<std::endl;
+  xout << "result before alpha: "<<result.str(2)<<std::endl;
+  for (size_t i=0; i<integrals_a->size(); i++) {
+    result.integrals_a->at(i) = this->integrals_a->at(i) - f.integrals_a->at(i);
+    xout << " result a = " << result.integrals_a->at(i) <<"=" << this->integrals_a->at(i) <<"-"<< f.integrals_a->at(i)<<std::endl;
+  }
+  xout << "this after alpha: "<<str(2)<<std::endl;
+  xout << "result after alpha: "<<result.str(2)<<std::endl;
+  ra = reference; ra.stringAlpha.nullify();
+  f = this->FockHamiltonian(ra);
+  xout << "sameSpinHamiltonian, fock integrals_a="<<&f.integrals_a[0]<<", fock integrals_b ="<<&f.integrals_b[0]<<std::endl;
+  for (size_t i=0; i<integrals_a->size(); i++) {
+    result.integrals_b->at(i) = this->integrals_b->at(i) - f.integrals_b->at(i);
+    xout << " result b = " << result.integrals_b->at(i) <<"=" << this->integrals_b->at(i) <<"-"<< f.integrals_b->at(i)<<std::endl;
+}
+  delete result.bracket_integrals_ab; result.bracket_integrals_ab = NULL;
+  if (spinUnrestricted) delete result.integrals_ab; result.integrals_ab = NULL;
+  xout << "result on return: "<<result.str(2)<<std::endl;
+  return result;
 }
 
 Hamiltonian& Hamiltonian::operator-=(const Hamiltonian &other)
