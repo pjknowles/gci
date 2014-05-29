@@ -220,16 +220,18 @@ int main()
         Determinant d = w.determinantAt(i);
         xout << "Lowest determinant " << d <<" with energy "<<w.at(i)<<std::endl;
 
-        d.stringBeta.nullify();
-        Hamiltonian h2=hh;
-        xout << "hamiltonian: " << h2.str(3) << std::endl;
-        Hamiltonian fockh = h2.FockHamiltonian(d);
+//        d.stringBeta.nullify();
+        xout << "hamiltonian: " << hh.str(3) << std::endl;
+        Hamiltonian fockh = hh.FockHamiltonian(d);
         xout << "Fock hamiltonian: " << fockh.str(3) << std::endl;
-        xout << "hamiltonian: " << h2.str(3) << std::endl;
         d = w.determinantAt(i);
         Hamiltonian ssh = hh.sameSpinHamiltonian(d);
         xout << "same-spin hamiltonian: " << ssh.str(3) << std::endl;
-        Hamiltonian osh = hh-ssh-fockh;
+        Hamiltonian osh(hh,true);
+        xout << "opposite-spin hamiltonian after construction from full H: " << osh.str(3) << std::endl;
+        osh -= ssh;
+        xout << "opposite-spin hamiltonian after subracting same-spin: " << osh.str(3) << std::endl;
+        osh-=fockh;
         xout << "opposite-spin hamiltonian: " << osh.str(3) << std::endl;
 
 
@@ -272,9 +274,11 @@ int main()
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(totalEnergy+=emp[i]); xout <<std::endl;
     }
-    if (false){
-    Hamiltonian h2(hh); h2-=fh;h1-=h1; hamiltonians.push_back(&h2);
-    Hamiltonian h3(hh); h3-=fh;h2-=h2; hamiltonians.push_back(&h3);
+    if (true){
+      hamiltonians.clear();
+      hamiltonians.push_back(&fh);
+      hamiltonians.push_back(&osh);
+      hamiltonians.push_back(&ssh);
     std::vector<double> emp = gci::RSPT(hamiltonians, prototype,(double)1e-8);
     xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;

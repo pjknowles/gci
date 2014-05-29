@@ -33,7 +33,7 @@ public:
    * \brief copy constructor
    * \param source
    */
-  Hamiltonian(const Hamiltonian &source);
+  Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestricted=false);
   ~Hamiltonian();
   void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load integrals from FCIDUMP */
   void load(FCIdump* dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */
@@ -112,6 +112,7 @@ public:
 private:
   size_t ijSize;
   size_t ijklSize;
+  void minusEqualsHelper(std::vector<double>*& me, std::vector<double> * const &other);
 };
 Hamiltonian operator-(const Hamiltonian &h1, const Hamiltonian &h2); ///< subtract two Hamiltonian objects
 

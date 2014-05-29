@@ -21,22 +21,23 @@ Hamiltonian::Hamiltonian(FCIdump* dump) : OrbitalSpace(dump)
   load(dump,0);
 }
 
-Hamiltonian::Hamiltonian(const Hamiltonian &source)
+Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestricted)
   : OrbitalSpace(source)
   ,loaded(source.loaded)
   , coreEnergy(source.coreEnergy)
   , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
 {
+  if (forceSpinUnrestricted) spinUnrestricted = true;
   if (loaded) {
      integrals_a = new std::vector<double>(*source.integrals_a);
-     if (source.integrals_aa != NULL) {
+     if (source.integrals_aa != NULL || spinUnrestricted) {
        integrals_aa = new std::vector<double>(*source.integrals_aa);
        bracket_integrals_aa = new std::vector<double>(*source.bracket_integrals_aa);
        bracket_integrals_ab = new std::vector<double>(*source.bracket_integrals_ab);
      }
      if (spinUnrestricted) {
        integrals_b = new std::vector<double>(*source.integrals_b);
-       if (source.integrals_ab != NULL) {
+       if (source.integrals_ab != NULL || spinUnrestricted) {
          integrals_ab = new std::vector<double>(*source.integrals_ab);
          integrals_bb = new std::vector<double>(*source.integrals_bb);
          bracket_integrals_bb = new std::vector<double>(*source.bracket_integrals_bb);
@@ -307,7 +308,11 @@ std::string Hamiltonian::str(int verbosity) const
         }
       }
     }
-    if (integrals_aa!=NULL && integrals_ab != NULL && integrals_bb != NULL) {
+    if (integrals_aa!=NULL || integrals_ab != NULL || integrals_bb != NULL) {
+      std::vector<double>* zero =  new std::vector<double>(ijklSize,(double)0);
+      std::vector<double>* iaa = integrals_aa==NULL ? zero : integrals_aa;
+      std::vector<double>* iab = integrals_ab==NULL ? zero : integrals_ab;
+      std::vector<double>* ibb = integrals_bb==NULL ? zero : integrals_bb;
       o<<std::endl << "2-electron integrals:";
       for (unsigned int i=1; i<=basisSize; i++) {
         for (unsigned int j=1; j<=i; j++) {
@@ -318,7 +323,7 @@ std::string Hamiltonian::str(int verbosity) const
               unsigned int kl = k > l ? (k*(k-1))/2+l-1 : (l*(l-1))/2+k-1;
               if (kl>ij) break;
               unsigned int ijkl = int2Index(i,j,k,l);
-              if (integrals_aa->at(ijkl) != (double)0 || integrals_ab->at(ijkl) != (double)0 || integrals_bb->at(ijkl) != (double)0) o<<std::endl<<std::setw(4)<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<std::setw(precision+7)<<integrals_aa->at(ijkl)<<" "<<integrals_ab->at(ijkl)<<" "<<integrals_bb->at(ijkl);
+              if (iaa->at(ijkl) != (double)0 || iab->at(ijkl) != (double)0 || ibb->at(ijkl) != (double)0) o<<std::endl<<std::setw(4)<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<std::setw(precision+7)<<iaa->at(ijkl)<<" "<<iab->at(ijkl)<<" "<<ibb->at(ijkl);
             }
           }
         }
@@ -441,6 +446,9 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
   f.integrals_aa = NULL;
   f.integrals_ab = NULL;
   f.integrals_bb = NULL;
+  f.bracket_integrals_aa = NULL;
+  f.bracket_integrals_ab = NULL;
+  f.bracket_integrals_bb = NULL;
 //  xout << "in FockHamiltonian, after alpha f="; for (size_t ij=0; ij< f.integrals_a->size(); ij++) xout <<" "<<(*f.integrals_a)[ij]; xout <<std::endl;
   if (f.spinUnrestricted) {
     f.integrals_b = new std::vector<double>(ijSize,0.0);
@@ -503,25 +511,39 @@ Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
   return result;
 }
 
+#include <assert.h>
 Hamiltonian& Hamiltonian::operator-=(const Hamiltonian &other)
 {
 //  if (! compatible(other)) throw "attempt to add incompatible Hamiltonian objects";
+  assert(this->spinUnrestricted || ! other.spinUnrestricted);
   coreEnergy -= other.coreEnergy;
-  if (integrals_a != NULL)
-    for (size_t i=0; i<integrals_a->size(); i++) (*integrals_a)[i] -= (*other.integrals_a)[i];
-  if (integrals_b != NULL && integrals_a != integrals_b)
-    for (size_t i=0; i<integrals_b->size(); i++)  (*integrals_b)[i] -= (*other.integrals_b)[i];
-  if (other.integrals_aa != NULL && integrals_aa != NULL) {
-    for (size_t i=0; i<integrals_aa->size(); i++)  (*integrals_aa)[i] -= (*other.integrals_aa)[i];
-    for (size_t i=0; i<bracket_integrals_aa->size(); i++)  (*bracket_integrals_aa)[i] -= (*other.bracket_integrals_aa)[i];
-    for (size_t i=0; i<bracket_integrals_ab->size(); i++)  (*bracket_integrals_ab)[i] -= (*other.bracket_integrals_ab)[i];
-  }
-  if (other.integrals_ab != NULL && integrals_ab != NULL && integrals_ab != integrals_aa) {
-    for (size_t i=0; i<integrals_ab->size(); i++)  (*integrals_ab)[i] -= (*other.integrals_ab)[i];
-    for (size_t i=0; i<integrals_bb->size(); i++)  (*integrals_bb)[i] -= (*other.integrals_bb)[i];
-    for (size_t i=0; i<bracket_integrals_bb->size(); i++)  (*bracket_integrals_bb)[i] -= (*other.bracket_integrals_bb)[i];
-  }
+  minusEqualsHelper(this->integrals_a, other.integrals_a);
+  if (integrals_a != integrals_b)
+    minusEqualsHelper(this->integrals_b, other.integrals_b);
+  minusEqualsHelper(this->integrals_aa, other.integrals_aa);
+  if (integrals_aa != integrals_ab)
+    minusEqualsHelper(this->integrals_ab, other.integrals_ab);
+  if (integrals_aa != integrals_bb)
+    minusEqualsHelper(this->integrals_bb, other.integrals_bb);
+  minusEqualsHelper(this->bracket_integrals_aa, other.bracket_integrals_aa);
+  minusEqualsHelper(this->bracket_integrals_ab, other.bracket_integrals_ab);
+  if (bracket_integrals_aa != bracket_integrals_bb)
+    minusEqualsHelper(this->bracket_integrals_bb, other.bracket_integrals_bb);
   return *this;
+}
+
+#include <cmath>
+void Hamiltonian::minusEqualsHelper(std::vector<double> *&me, std::vector<double> * const &other)
+{
+  if (other == NULL) return;
+  size_t n = other->size();
+  double valmax=(double)0;
+  for (size_t i=0; i<n; i++)
+    if (valmax < std::abs(other->at(i))) valmax = std::abs(other->at(i));
+  if (valmax == (double)0) return;
+  if (me == NULL) me = new vector<double>(n,(double)0);
+  for (size_t i=0; i<n; i++)
+    me->at(i) -= other->at(i);
 }
 
 Hamiltonian gci::operator-(const Hamiltonian &h1, const Hamiltonian &h2)
