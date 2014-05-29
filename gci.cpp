@@ -73,7 +73,7 @@ std::vector<double> gci::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
       if (k < (int) hamiltonians.size()) {
         g.hamiltonianOnWavefunction(*hamiltonians[k], w);
 //        xout << "g after H.w: " << g.str(2) <<std::endl;
-        if (n == k) e[n]=g.at(reference);
+        if (n == k) e[n]+=g.at(reference);
 //        if (n == k) xout << "k, E:"<<k<<" "<<e[k]<<std::endl;
       }
 //        xout << "k, E:"<<k<<" "<<e[k]<<", g before -E.w: " << g.str(2) <<std::endl;
@@ -270,6 +270,16 @@ int main()
     hamiltonians.push_back(&h1);
     {
     std::vector<double> emp = gci::RSPT(hamiltonians, prototype,(double)5e-5);
+    xout <<std::fixed << std::setprecision(8);
+    xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
+    xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(totalEnergy+=emp[i]); xout <<std::endl;
+    }
+    if (true){
+      hamiltonians.clear();
+      hamiltonians.push_back(&fh);
+      Hamiltonian ossh=osh+ssh;
+      hamiltonians.push_back(&ossh);
+    std::vector<double> emp = gci::RSPT(hamiltonians, prototype,(double)1e-8);
     xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(totalEnergy+=emp[i]); xout <<std::endl;
