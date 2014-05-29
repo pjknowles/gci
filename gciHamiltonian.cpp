@@ -512,28 +512,41 @@ Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
 }
 
 #include <assert.h>
-Hamiltonian& Hamiltonian::operator-=(const Hamiltonian &other)
+Hamiltonian& Hamiltonian::plusminusOperator(const Hamiltonian &other, const char operation)
 {
 //  if (! compatible(other)) throw "attempt to add incompatible Hamiltonian objects";
   assert(this->spinUnrestricted || ! other.spinUnrestricted);
-  coreEnergy -= other.coreEnergy;
-  minusEqualsHelper(this->integrals_a, other.integrals_a);
+  if (operation == '+')
+    coreEnergy += other.coreEnergy;
+  else if (operation == '-')
+    coreEnergy -= other.coreEnergy;
+  plusminusEqualsHelper(this->integrals_a, other.integrals_a,operation);
   if (integrals_a != integrals_b)
-    minusEqualsHelper(this->integrals_b, other.integrals_b);
-  minusEqualsHelper(this->integrals_aa, other.integrals_aa);
+    plusminusEqualsHelper(this->integrals_b, other.integrals_b,operation);
+  plusminusEqualsHelper(this->integrals_aa, other.integrals_aa,operation);
   if (integrals_aa != integrals_ab)
-    minusEqualsHelper(this->integrals_ab, other.integrals_ab);
+    plusminusEqualsHelper(this->integrals_ab, other.integrals_ab,operation);
   if (integrals_aa != integrals_bb)
-    minusEqualsHelper(this->integrals_bb, other.integrals_bb);
-  minusEqualsHelper(this->bracket_integrals_aa, other.bracket_integrals_aa);
-  minusEqualsHelper(this->bracket_integrals_ab, other.bracket_integrals_ab);
+    plusminusEqualsHelper(this->integrals_bb, other.integrals_bb,operation);
+  plusminusEqualsHelper(this->bracket_integrals_aa, other.bracket_integrals_aa,operation);
+  plusminusEqualsHelper(this->bracket_integrals_ab, other.bracket_integrals_ab,operation);
   if (bracket_integrals_aa != bracket_integrals_bb)
-    minusEqualsHelper(this->bracket_integrals_bb, other.bracket_integrals_bb);
+    plusminusEqualsHelper(this->bracket_integrals_bb, other.bracket_integrals_bb,operation);
   return *this;
+}
+Hamiltonian& Hamiltonian::operator+=(const Hamiltonian &other)
+{
+  return plusminusOperator(other,'+');
+}
+Hamiltonian& Hamiltonian::operator-=(const Hamiltonian &other)
+{
+  return plusminusOperator(other,'-');
 }
 
 #include <cmath>
-void Hamiltonian::minusEqualsHelper(std::vector<double> *&me, std::vector<double> * const &other)
+void Hamiltonian::plusminusEqualsHelper(std::vector<double> *&me,
+                                    std::vector<double> * const &other,
+                                        const char operation)
 {
   if (other == NULL) return;
   size_t n = other->size();
@@ -542,13 +555,56 @@ void Hamiltonian::minusEqualsHelper(std::vector<double> *&me, std::vector<double
     if (valmax < std::abs(other->at(i))) valmax = std::abs(other->at(i));
   if (valmax == (double)0) return;
   if (me == NULL) me = new vector<double>(n,(double)0);
+  if (operation == '+')
+    for (size_t i=0; i<n; i++)
+      me->at(i) += other->at(i);
+  else if (operation == '-')
+    for (size_t i=0; i<n; i++)
+      me->at(i) -= other->at(i);
+}
+void Hamiltonian::starEqualsHelper(std::vector<double> *&me,
+                                    const double factor)
+{
+  if (factor == (double)1) return;
+  size_t n = me->size();
+  if (me == NULL) return;
   for (size_t i=0; i<n; i++)
-    me->at(i) -= other->at(i);
+    me->at(i) *= factor ;
 }
 
+Hamiltonian& Hamiltonian::operator*=(const double factor)
+{
+  coreEnergy *= factor;
+  starEqualsHelper(this->integrals_a, factor);
+  if (integrals_a != integrals_b)
+    starEqualsHelper(this->integrals_b, factor);
+  starEqualsHelper(this->integrals_aa, factor);
+  if (integrals_aa != integrals_ab)
+    starEqualsHelper(this->integrals_ab, factor);
+  if (integrals_aa != integrals_bb)
+    starEqualsHelper(this->integrals_bb, factor);
+  starEqualsHelper(this->bracket_integrals_aa, factor);
+  starEqualsHelper(this->bracket_integrals_ab, factor);
+  if (bracket_integrals_aa != bracket_integrals_bb)
+    starEqualsHelper(this->bracket_integrals_bb, factor);
+  return *this;
+
+}
+
+Hamiltonian gci::operator+(const Hamiltonian &h1, const Hamiltonian &h2)
+{
+  Hamiltonian result = h1;
+  return result += h2;
+}
 Hamiltonian gci::operator-(const Hamiltonian &h1, const Hamiltonian &h2)
 {
   Hamiltonian result = h1;
   return result -= h2;
 }
+Hamiltonian gci::operator*(const Hamiltonian &h1, const double factor)
+{
+  Hamiltonian result = h1;
+  return result *= factor;
+}
+
 

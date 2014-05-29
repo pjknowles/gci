@@ -32,6 +32,7 @@ public:
   /*!
    * \brief copy constructor
    * \param source
+   * \param forceSpinUnrestricted whether to force converstion to a UHF object
    */
   Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestricted=false);
   ~Hamiltonian();
@@ -101,7 +102,9 @@ public:
      */
   Hamiltonian FockHamiltonian(const Determinant& reference) const;
 
+  Hamiltonian& operator+=(const Hamiltonian &other); ///< add another Hamiltonian
   Hamiltonian& operator-=(const Hamiltonian &other); ///< subtract another Hamiltonian
+  Hamiltonian& operator*=(const double factor); ///< scale by a factor
   /*!
    * \brief Construct the same-spin perturbed Hamiltonian
    * \param reference the zero-order Slater determinant
@@ -112,9 +115,13 @@ public:
 private:
   size_t ijSize;
   size_t ijklSize;
-  void minusEqualsHelper(std::vector<double>*& me, std::vector<double> * const &other);
+  Hamiltonian& plusminusOperator(const Hamiltonian &other, const char operation='+');
+  void plusminusEqualsHelper(std::vector<double>*& me, std::vector<double> * const &other, const char operation='+');
+  void starEqualsHelper(std::vector<double> *&me, const double factor);
 };
+Hamiltonian operator+(const Hamiltonian &h1, const Hamiltonian &h2); ///< add two Hamiltonian objects
 Hamiltonian operator-(const Hamiltonian &h1, const Hamiltonian &h2); ///< subtract two Hamiltonian objects
+Hamiltonian operator*(const Hamiltonian &h1, const double factor); ///< return a factor times the Hamiltonian object
 
 }
 

@@ -54,7 +54,8 @@ public:
   std::string str(int verbosity=0) const;
 
 
-  String stringAlpha, stringBeta; /*!< The orbitals that make up the determinant */
+  String stringAlpha; /*!< The String of alpha-spin orbitals that make up the determinant */
+  String stringBeta; /*!< The String of beta-spin orbitals that make up the determinant */
 
 private:
   friend class Hamiltonian;
