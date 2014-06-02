@@ -33,12 +33,16 @@ Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestri
      if (source.integrals_aa != NULL || spinUnrestricted) {
        integrals_aa = twoElectron ? new std::vector<double>(*source.integrals_aa) : NULL;
        bracket_integrals_aa = twoElectron ? new std::vector<double>(*source.bracket_integrals_aa) : NULL;
-       bracket_integrals_ab = twoElectron ? new std::vector<double>(*source.bracket_integrals_ab) : NULL;
+       bracket_integrals_ab = (twoElectron && source.bracket_integrals_ab != NULL)
+           ?  new std::vector<double>(*source.bracket_integrals_ab)
+           : NULL;
      }
      if (spinUnrestricted) {
        integrals_b = oneElectron ? new std::vector<double>(*source.integrals_b): NULL;
        if (source.integrals_ab != NULL || spinUnrestricted) {
-         integrals_ab = twoElectron ? new std::vector<double>(*source.integrals_ab) : NULL;
+         integrals_ab = (twoElectron && source.integrals_ab != NULL)
+             ? new std::vector<double>(*source.integrals_ab)
+             : NULL;
          integrals_bb = twoElectron ? new std::vector<double>(*source.integrals_bb) : NULL;
          bracket_integrals_bb = twoElectron ? new std::vector<double>(*source.bracket_integrals_bb) : NULL;
        }

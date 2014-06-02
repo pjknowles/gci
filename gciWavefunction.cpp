@@ -342,15 +342,17 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     unsigned int symb = w.symmetry^syma;
     size_t nsa = alphaStrings[syma].size();
     size_t nsb = betaStrings[symb].size();
-    TransitionDensity d(w,
-                        w.alphaStrings[syma].begin(),
-                        w.alphaStrings[syma].end(),
-                        w.betaStrings[symb].begin(),
-                        w.betaStrings[symb].end(),
-                        1,true, !h.spinUnrestricted);
-    MxmDrvNN(&buffer[offset],&d[0], &(*h.integrals_a)[0],
-        nsa*nsb,w.orbitalSpace->total(0,1),1,true);
-    if (h.spinUnrestricted) {
+    if (h.integrals_a != NULL ) {
+      TransitionDensity d(w,
+                          w.alphaStrings[syma].begin(),
+                          w.alphaStrings[syma].end(),
+                          w.betaStrings[symb].begin(),
+                          w.betaStrings[symb].end(),
+                          1,true, !h.spinUnrestricted);
+      MxmDrvNN(&buffer[offset],&d[0], &(*h.integrals_a)[0],
+          nsa*nsb,w.orbitalSpace->total(0,1),1,true);
+    }
+    if (h.spinUnrestricted && h.integrals_b != NULL) {
       TransitionDensity d(w,
                           w.alphaStrings[syma].begin(),
                           w.alphaStrings[syma].end(),
