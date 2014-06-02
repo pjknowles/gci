@@ -21,7 +21,7 @@ Hamiltonian::Hamiltonian(FCIdump* dump) : OrbitalSpace(dump)
   load(dump,0);
 }
 
-Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestricted)
+Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestricted, const bool oneElectron, const bool twoElectron)
   : OrbitalSpace(source)
   ,loaded(source.loaded)
   , coreEnergy(source.coreEnergy)
@@ -29,18 +29,18 @@ Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestri
 {
   if (forceSpinUnrestricted) spinUnrestricted = true;
   if (loaded) {
-     integrals_a = new std::vector<double>(*source.integrals_a);
+       integrals_a = oneElectron ? new std::vector<double>(*source.integrals_a) : NULL;
      if (source.integrals_aa != NULL || spinUnrestricted) {
-       integrals_aa = new std::vector<double>(*source.integrals_aa);
-       bracket_integrals_aa = new std::vector<double>(*source.bracket_integrals_aa);
-       bracket_integrals_ab = new std::vector<double>(*source.bracket_integrals_ab);
+       integrals_aa = twoElectron ? new std::vector<double>(*source.integrals_aa) : NULL;
+       bracket_integrals_aa = twoElectron ? new std::vector<double>(*source.bracket_integrals_aa) : NULL;
+       bracket_integrals_ab = twoElectron ? new std::vector<double>(*source.bracket_integrals_ab) : NULL;
      }
      if (spinUnrestricted) {
-       integrals_b = new std::vector<double>(*source.integrals_b);
+       integrals_b = oneElectron ? new std::vector<double>(*source.integrals_b): NULL;
        if (source.integrals_ab != NULL || spinUnrestricted) {
-         integrals_ab = new std::vector<double>(*source.integrals_ab);
-         integrals_bb = new std::vector<double>(*source.integrals_bb);
-         bracket_integrals_bb = new std::vector<double>(*source.bracket_integrals_bb);
+         integrals_ab = twoElectron ? new std::vector<double>(*source.integrals_ab) : NULL;
+         integrals_bb = twoElectron ? new std::vector<double>(*source.integrals_bb) : NULL;
+         bracket_integrals_bb = twoElectron ? new std::vector<double>(*source.bracket_integrals_bb) : NULL;
        }
      } else {
        integrals_b = integrals_a;

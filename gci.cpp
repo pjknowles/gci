@@ -225,7 +225,8 @@ int main()
         Hamiltonian fockh = hh.FockHamiltonian(d);
         xout << "Fock hamiltonian: " << fockh.str(3) << std::endl;
         d = w.determinantAt(i);
-        Hamiltonian ssh = hh.sameSpinHamiltonian(d);
+        Hamiltonian sshx = hh.sameSpinHamiltonian(d);
+        Hamiltonian ssh = Hamiltonian (sshx,true,false,true);
         xout << "same-spin hamiltonian: " << ssh.str(3) << std::endl;
         Hamiltonian osh(hh,true);
         xout << "opposite-spin hamiltonian after construction from full H: " << osh.str(3) << std::endl;
@@ -267,6 +268,7 @@ int main()
     Hamiltonian fh = hh.FockHamiltonian(w.determinantAt(w.minloc()));
     hamiltonians.push_back(&fh);
     Hamiltonian h1(hh); h1-=fh;
+    xout <<"Regular 1st order hamiltonian: " << h1.str(3) << std::endl;
     hamiltonians.push_back(&h1);
     {
     std::vector<double> emp = gci::RSPT(hamiltonians, prototype,(double)5e-5);
@@ -274,7 +276,7 @@ int main()
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(totalEnergy+=emp[i]); xout <<std::endl;
     }
-    if (true){
+    if (false){
       hamiltonians.clear();
       hamiltonians.push_back(&fh);
       Hamiltonian ossh=osh+ssh;

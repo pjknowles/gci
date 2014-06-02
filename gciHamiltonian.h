@@ -33,8 +33,10 @@ public:
    * \brief copy constructor
    * \param source
    * \param forceSpinUnrestricted whether to force converstion to a UHF object
+   * \param oneElectron whether to copy the 1-electron part of source
+   * \param twoElectron whether to copy the 2-electron part of source
    */
-  Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestricted=false);
+  Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestricted=false, const bool oneElectron=true, const bool twoElectron=true);
   ~Hamiltonian();
   void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load integrals from FCIDUMP */
   void load(FCIdump* dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */
