@@ -120,6 +120,17 @@ void gci::HamiltonianMatrixPrint(Hamiltonian &hamiltonian, State &prototype, int
 }
 
 
+#ifdef MOLPRO
+#include "machines.h"
+#define GCI FORT_Extern(gci,GCI)
+#ifdef __cplusplus
+extern "C" {
+#endif
+void GCI() {
+  xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
+}
+#endif
+
 #ifndef MOLPRO
 //int main(int argc, char *argv[])
 int main()
