@@ -5,7 +5,8 @@
 #ifndef MOLPRO
 #define xout std::cout
 #else
-#define xout std::cout
+#include <cic/ItfCommon.h>
+//#define xout std::cout
 #endif
 
 namespace gci {

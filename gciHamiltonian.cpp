@@ -610,5 +610,3 @@ Hamiltonian gci::operator*(const Hamiltonian &h1, const double factor)
   Hamiltonian result = h1;
   return result *= factor;
 }
-
-
