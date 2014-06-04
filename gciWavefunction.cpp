@@ -428,7 +428,6 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
         if (aa.size()==0) continue;
         unsigned int symexc = symb^syma^w.symmetry;
         size_t nexc = h.pairSpace.at(0)[symexc];
-        size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
         for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
           size_t nsa = aa1-aa0;
           for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
@@ -437,6 +436,16 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
 //              TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
             TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
             TransitionDensity e(d);
+	    // if (false) {
+	    //   xout << "AB integral block" <<std::endl;
+	    //   for (size_t j=0; j<nexc; j++) {
+	    // 	for (size_t i=0; i<nexc; i++)
+	    // 	  xout <<
+	    // 	    (*h.bracket_integrals_ab)[h.pairSpace.at(0).offset(0,symexc,0)+i+j*nexc]
+	    // 	       << " ";
+	    // 	xout <<std::endl;
+	    //   }
+	    //}
             MxmDrvNN(&e[0],&d[0],
                      &(*h.bracket_integrals_ab)[h.pairSpace.at(0).offset(0,symexc,0)],
                 nsa*nsb,nexc,nexc,false);

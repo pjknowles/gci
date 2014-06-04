@@ -38,7 +38,7 @@ std::vector<double> Davidson(const Hamiltonian &hamiltonian,
                              const State& prototype,
                              double energyThreshold=1e-8, int nState=1, int maxIterations=100);
 
-void HamiltonianMatrixPrint (Hamiltonian& hamiltonian, State& prototype, int verbosity=0);
+void HamiltonianMatrixPrint (Hamiltonian& hamiltonian, const State &prototype, int verbosity=0);
 
 
 }

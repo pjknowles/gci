@@ -44,6 +44,9 @@ std::vector<double> gci::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
                               double energyThreshold, int maxOrder)
 {
   std::vector<double> e(maxOrder+1,(double)0);
+//  for (int k=0; k<(int)hamiltonians.size(); k++)
+//    HamiltonianMatrixPrint(*hamiltonians[k],prototype);
+//  return e;
   if (hamiltonians.size() < 1) throw "not enough hamiltonians";
 //  for (int k=0; k<(int)hamiltonians.size(); k++) xout << "H("<<k<<"): " << *hamiltonians[k] << std::endl;
   Wavefunction w(prototype);
@@ -68,11 +71,13 @@ std::vector<double> gci::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
     // construct  |n> = -(H0-E0)^{-1} ( -sum_k^{n-1} E_{n-k} |k> + sum_{k=n-h}^{n-1} H|k>) where h is the maximum order of hamiltonian
 //    xout <<std::endl<<std::endl<<"MAIN ITERATION n="<<n<<std::endl;
     g.set((double)0);
+    //        xout <<std::endl<< "g after set 0: " << g.str(2) <<std::endl;
     for (int k=n; k>0; k--) {
       w.get(wfile,n-k);
       if (k < (int) hamiltonians.size()) {
+         //   xout <<"k="<<k<< " g before H.w: " << g.str(2) <<std::endl;
         g.hamiltonianOnWavefunction(*hamiltonians[k], w);
-//        xout << "g after H.w: " << g.str(2) <<std::endl;
+         //   xout << "g after H.w: " << g.str(2) <<std::endl;
         if (n == k) e[n]+=g.at(reference);
 //        if (n == k) xout << "k, E:"<<k<<" "<<e[k]<<std::endl;
       }
@@ -83,10 +88,10 @@ std::vector<double> gci::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
     }
     w = -g;
     g.get(h0file);
-//        xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
+    //        xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
     w.set(reference,(double)0);
     w /= g;
-//    xout <<std::endl<< "Perturbed wavefunction, order="<<n<<": " << w.str(2) <<std::endl;
+    // xout <<std::endl<< "Perturbed wavefunction, order="<<n<<": " << w.str(2) <<std::endl;
     w.put(wfile,n);
     for (int k=1; k < (int) hamiltonians.size(); k++) {
       if (n+k > maxOrder) break;
@@ -101,7 +106,8 @@ std::vector<double> gci::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
   return e;
 }
 
-void gci::HamiltonianMatrixPrint(Hamiltonian &hamiltonian, State &prototype, int verbosity)
+#include <cmath>
+void gci::HamiltonianMatrixPrint(Hamiltonian &hamiltonian, const State &prototype, int verbosity)
 {
   Wavefunction w(&hamiltonian,prototype.nelec,prototype.symmetry,prototype.ms2);
   Wavefunction g(w);
@@ -113,7 +119,7 @@ void gci::HamiltonianMatrixPrint(Hamiltonian &hamiltonian, State &prototype, int
       g.set((double)0);
       g.hamiltonianOnWavefunction(hamiltonian,w);
       for (size_t j=0; j < w.size(); j++)
-        xout <<g.at(j)<< " ";
+        xout << (std::abs(g.at(j))> 1e-7 ? g.at(j) : 0) << " ";
       xout <<std::endl;
     }
   }
@@ -149,8 +155,12 @@ void gcirun() {
   //xout << "opposite-spin hamiltonian: " << osh.str(3) << std::endl;
 
     State prototype(&dump);
+    // HamiltonianMatrixPrint(hh,prototype);
     std::vector<gci::Hamiltonian*> hamiltonians;
     w.diagonalHamiltonian(hh);
+    // xout << "hamiltonian: " << hh.str(3) <<std::endl;
+    // xout << "diagonal hamiltonian: " << w.str(2) <<std::endl;
+    // return;
     Hamiltonian fh = hh.FockHamiltonian(w.determinantAt(w.minloc()));
     hamiltonians.push_back(&fh);
     Hamiltonian h1(hh); h1-=fh;
