@@ -132,7 +132,7 @@ void gci::HamiltonianMatrixPrint(Hamiltonian &hamiltonian, const State &prototyp
 #ifdef __cplusplus
 extern "C" {
 #endif
-void gcirun() {
+  void gcirun(double* energies, int nenergies) {
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
   FCIdump dump("FCIDUMP");
   Hamiltonian hh(&dump);
@@ -191,6 +191,7 @@ void gcirun() {
     xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(totalEnergy+=emp[i]); xout <<std::endl;
+    energies[0] = totalEnergy;
     }
 }
 #ifdef __cplusplus
