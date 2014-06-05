@@ -9,6 +9,9 @@
 #include "FCIdump.h"
 #include <iostream>
 #include <iomanip>
+#ifdef MOLPRO
+#include "cic/ItfFortranInt.h"
+#endif
 using namespace gci;
 
 std::vector<double> gci::Davidson(const Hamiltonian& hamiltonian,
@@ -136,6 +139,10 @@ extern "C" {
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
   FCIdump dump("FCIDUMP");
   gci::globalFCIdump = &dump;
+  double doubletest = gci::parameter("TOL",std::vector<double>(1,(double)99)).at(0);
+  xout << "parameter TOL="<<doubletest<<std::endl;
+  std::string stringtest = gci::parameter("METHOD",std::vector<std::string>(1,"")).at(0);
+  xout << "parameter METHOD="<<stringtest<<std::endl;
   Hamiltonian hh(&dump);
   Wavefunction w(&dump);
   w.diagonalHamiltonian(hh);
@@ -202,12 +209,22 @@ extern "C" {
 
 std::vector<std::string> gci::parameter(std::string key, std::vector<std::string> def)
 {
+#ifdef MOLPRO
+  std::string r = GetOptionS(key.c_str(),"GCI");
+  // xout <<"parameter="<<r<<std::endl;
+  if (r != std::string("")) return std::vector<std::string>(1,r);
+#endif
   if (gci::globalFCIdump != NULL) return gci::globalFCIdump->parameter(key,def);
   return def;
 }
 
 std::vector<int> gci::parameter(std::string key, std::vector<int> def)
 {
+#ifdef MOLPRO
+  FORTINT r = GetOptionI(key.c_str(),"GCI");
+  // xout <<"parameter="<<r<<std::endl;
+  if (r != (FORTINT) -1) return std::vector<int>(1,(int) r);
+#endif
   if (gci::globalFCIdump != NULL) return gci::globalFCIdump->parameter(key,def);
 //  xout <<"gci::parameter key="<<key<<"; globalFCIdump="<<globalFCIdump<<std::endl;
   return def;
@@ -215,6 +232,11 @@ std::vector<int> gci::parameter(std::string key, std::vector<int> def)
 
 std::vector<double> gci::parameter(std::string key, std::vector<double> def)
 {
+#ifdef MOLPRO
+  FORTDBL r = GetOptionF(key.c_str(),"GCI");
+  // xout <<"F parameter="<<r<<std::endl;
+  if (r != (FORTDBL) -1) return std::vector<double>(1,(double) r);
+#endif
   if (gci::globalFCIdump != NULL) return gci::globalFCIdump->parameter(key,def);
 //  xout <<"gci::parameter key="<<key<<"; globalFCIdump="<<globalFCIdump<<std::endl;
   return def;

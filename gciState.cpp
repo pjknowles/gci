@@ -47,7 +47,7 @@ void State::load(FCIdump* dump)
   nelec = parameter("NELEC").at(0);
   ms2 = parameter("MS2").at(0);
   symmetry = parameter("ISYM",std::vector<int>(1,1)).at(0)-1; // D2h symmetries are 0-7 internally, 1-8 externally
-  //    xout <<"nelec="<<nelec<<endl;
+  // xout <<"nelec="<<nelec<<std::endl;
   //    xout <<"ms2="<<ms2<<endl;
   orbitalSpace = new OrbitalSpace(dump);
   //    xout << "State::load orbitalSpace=" << (orbitalSpace != NULL) << std::endl;
