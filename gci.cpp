@@ -135,20 +135,26 @@ void gci::HamiltonianMatrixPrint(Hamiltonian &hamiltonian, const State &prototyp
 #ifdef __cplusplus
 extern "C" {
 #endif
-  void gcirun(double* energies, int nenergies) {
+  void gcirun(double* energies, int nenergies, char* fcidump) {
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
-  FCIdump dump("FCIDUMP");
-  gci::globalFCIdump = &dump;
+  gci::globalFCIdump = new FCIdump(fcidump); // an evil global variable that is found by gci::parameter
   std::string method = gci::parameter("METHOD",std::vector<std::string>(1,"")).at(0);
   if (method == "MBPT" || method == "MOLLER") method="RSPT";
   xout << "METHOD="<<method<<std::endl;
-  Hamiltonian hh(&dump);
-  Wavefunction w(&dump);
-  w.diagonalHamiltonian(hh);
-  size_t referenceLocation = w.minloc();
-  Determinant referenceDeterminant = w.determinantAt(referenceLocation);
-  State prototype(&dump);
-  xout << "Lowest determinant " << referenceDeterminant <<" with energy "<<w.at(referenceLocation)<<std::endl;
+
+  Hamiltonian hh(gci::globalFCIdump);
+  size_t referenceLocation;
+  Determinant referenceDeterminant;
+  State prototype;
+  { // so that w goes out of scope
+    Wavefunction w(gci::globalFCIdump);
+    w.diagonalHamiltonian(hh);
+    referenceLocation = w.minloc();
+    referenceDeterminant = w.determinantAt(referenceLocation);
+    xout << "Lowest energy determinant " << referenceDeterminant <<" with energy "<<w.at(referenceLocation)<<std::endl;
+    prototype = State(&hh,w.nelec,w.symmetry,w.ms2);
+  }
+
   if (method == "RSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
     double ethresh = gci::parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
@@ -165,13 +171,13 @@ extern "C" {
     std::vector<gci::Hamiltonian*> hamiltonians;
     hamiltonians.push_back(&h0);
     hamiltonians.push_back(&h1);
-    if (scs_opposite != (double) 1 && scs_same != (double) 1) hamiltonians.push_back(&h2);
+    if (scs_opposite != (double) 1 || scs_same != (double) 1) hamiltonians.push_back(&h2);
     std::vector<double> emp = gci::RSPT(hamiltonians, prototype,ethresh);
     xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(emp[i]=totalEnergy+=emp[i]); xout <<std::endl;
     energies[0] = totalEnergy;
-    SetVariables( "ENERGY_MP", &(emp.at(0)), (uint) emp.size(), (uint) 0, "" );
+    SetVariables( "ENERGY_MP", &(emp.at(1)), (uint) emp.size()-1, (uint) 0, "" );
   } else if (method == "DAVIDSON") {
     xout << "Not yet implemented in GCI, " << method << std::endl;
   } else if (method=="HAMILTONIAN")
@@ -220,17 +226,16 @@ std::vector<double> gci::parameter(std::string key, std::vector<double> def)
 int main()
 {
   try {
-    FCIdump dump("FCIDUMP");
-    gci::globalFCIdump = &dump;
+    gci::globalFCIdump = new FCIdump("FCIDUMP");
     //        OrbitalSpace os("FCIDUMP");
     //        xout <<"Orbital space:" << os << std::endl;
-    Hamiltonian hh(&dump);
+    Hamiltonian hh(gci::globalFCIdump);
 //    xout << "Hamiltonian: " <<hh.str()<<std::endl;
-    Wavefunction w(&dump);
+    Wavefunction w(gci::globalFCIdump);
     //    OrbitalSpace os = hh;
     //    xout << "Orbital space: " << os.str(1) <<std::endl;
     //    exit(0);
-    //    State ss(&dump);
+    //    State ss(gci::globalFCIdump);
     //    ss.orbitalSpace=&os;
 
     //    Determinant d1(&ss);
@@ -357,7 +362,7 @@ int main()
     //    ff.read(v2,0);
     //    xout <<"vector read " <<v2[0]<<" "<<v2[1]<<" "<<v2[2]<<std::endl;
 
-    State prototype(&dump);
+    State prototype(gci::globalFCIdump);
     std::vector<gci::Hamiltonian*> hamiltonians;
 //    xout << "hamiltonian: " <<hh<<std::endl;
     w.diagonalHamiltonian(hh);
