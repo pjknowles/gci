@@ -135,7 +135,7 @@ extern "C" {
   void gcirun(double* energies, int nenergies) {
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
   FCIdump dump("FCIDUMP");
-  FCIdump* gci::globalFCIdump = &dump;
+  gci::globalFCIdump = &dump;
   Hamiltonian hh(&dump);
   Wavefunction w(&dump);
   w.diagonalHamiltonian(hh);
