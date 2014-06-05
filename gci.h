@@ -9,6 +9,9 @@
 //#define xout std::cout
 #endif
 
+#include "FCIdump.h"
+
+
 namespace gci {
 class Hamiltonian;
 class State;
@@ -40,6 +43,31 @@ std::vector<double> Davidson(const Hamiltonian &hamiltonian,
 
 void HamiltonianMatrixPrint (Hamiltonian& hamiltonian, const State &prototype, int verbosity=0);
 
+/*!
+   * \brief parameter Obtain an integer namelist parameter from Molpro input (if available) or the FCIDUMP data.
+   * \param key The name of the parameter
+   * \param def Default value if the parameter is not found.
+   * \return  The result as a vector of integers.
+   */
+std::vector<int> parameter(std::string key, std::vector<int> def=std::vector<int>(1,0));
+
+/*!
+   * \brief parameter Obtain a real namelist parameter from Molpro input (if available) or the FCIDUMP data.
+   * \param key The name of the parameter
+   * \param def Default value if the parameter is not found.
+   * \return  The result as a vector of integers.
+   */
+std::vector<double> parameter(std::string key, std::vector<double> def);
+
+/*!
+   * \brief parameter Obtain a string namelist parameter from Molpro input (if available) or the FCIDUMP data.
+   * \param key The name of the parameter
+   * \param def Default value if the parameter is not found.
+   * \return  The result as a vector of integers.
+   */
+std::vector<std::string> parameter(std::string key, std::vector<std::string> def);
+
+static FCIdump* globalFCIdump; // the global default FCIdump
 
 }
 

@@ -135,6 +135,7 @@ extern "C" {
   void gcirun(double* energies, int nenergies) {
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
   FCIdump dump("FCIDUMP");
+  FCIdump* gci::globalFCIdump = &dump;
   Hamiltonian hh(&dump);
   Wavefunction w(&dump);
   w.diagonalHamiltonian(hh);
@@ -199,12 +200,33 @@ extern "C" {
 #endif
 #endif
 
+std::vector<std::string> gci::parameter(std::string key, std::vector<std::string> def)
+{
+  if (gci::globalFCIdump != NULL) return gci::globalFCIdump->parameter(key,def);
+  return def;
+}
+
+std::vector<int> gci::parameter(std::string key, std::vector<int> def)
+{
+  if (gci::globalFCIdump != NULL) return gci::globalFCIdump->parameter(key,def);
+//  xout <<"gci::parameter key="<<key<<"; globalFCIdump="<<globalFCIdump<<std::endl;
+  return def;
+}
+
+std::vector<double> gci::parameter(std::string key, std::vector<double> def)
+{
+  if (gci::globalFCIdump != NULL) return gci::globalFCIdump->parameter(key,def);
+//  xout <<"gci::parameter key="<<key<<"; globalFCIdump="<<globalFCIdump<<std::endl;
+  return def;
+}
+
 #ifndef MOLPRO
 //int main(int argc, char *argv[])
 int main()
 {
   try {
     FCIdump dump("FCIDUMP");
+    gci::globalFCIdump = &dump;
     //        OrbitalSpace os("FCIDUMP");
     //        xout <<"Orbital space:" << os << std::endl;
     Hamiltonian hh(&dump);

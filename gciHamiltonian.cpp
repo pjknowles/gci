@@ -71,7 +71,7 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
   if (verbosity) xout <<"Load hamiltonian from " << dump->fileName <<std::endl;
   //    State::load(filename);
 
-  basisSize = dump->parameter("NORB").at(0);
+  basisSize = parameter("NORB").at(0);
 
   ijSize = total(0,1);
   ijklSize = pairSpace[1].total(0);
