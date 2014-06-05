@@ -139,68 +139,46 @@ extern "C" {
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
   FCIdump dump("FCIDUMP");
   gci::globalFCIdump = &dump;
-  double doubletest = gci::parameter("TOL",std::vector<double>(1,(double)99)).at(0);
-  xout << "parameter TOL="<<doubletest<<std::endl;
-  std::string stringtest = gci::parameter("METHOD",std::vector<std::string>(1,"")).at(0);
-  xout << "parameter METHOD="<<stringtest<<std::endl;
+  std::string method = gci::parameter("METHOD",std::vector<std::string>(1,"")).at(0);
+  if (method == "MBPT" || method == "MOLLER") method="RSPT";
+  xout << "METHOD="<<method<<std::endl;
   Hamiltonian hh(&dump);
   Wavefunction w(&dump);
   w.diagonalHamiltonian(hh);
-  size_t i = w.minloc();
-  Determinant d = w.determinantAt(i);
-  xout << "Lowest determinant " << d <<" with energy "<<w.at(i)<<std::endl;
-  //xout << "hamiltonian: " << hh.str(3) << std::endl;
-  Hamiltonian fockh = hh.FockHamiltonian(d);
-  //xout << "Fock hamiltonian: " << fockh.str(3) << std::endl;
-  Hamiltonian sshx = hh.sameSpinHamiltonian(d);
-  Hamiltonian ssh = Hamiltonian (sshx,true,true,true);
-  //xout << "same-spin hamiltonian: " << ssh.str(3) << std::endl;
-  Hamiltonian osh(hh,true);
-  //xout << "opposite-spin hamiltonian after construction from full H: " << osh.str(3) << std::endl;
-  osh -= ssh;
-  //xout << "opposite-spin hamiltonian after subracting same-spin: " << osh.str(3) << std::endl;
-  osh-=fockh;
-  //xout << "opposite-spin hamiltonian: " << osh.str(3) << std::endl;
-
-    State prototype(&dump);
-    // HamiltonianMatrixPrint(hh,prototype);
+  size_t referenceLocation = w.minloc();
+  Determinant referenceDeterminant = w.determinantAt(referenceLocation);
+  State prototype(&dump);
+  xout << "Lowest determinant " << referenceDeterminant <<" with energy "<<w.at(referenceLocation)<<std::endl;
+  if (method == "RSPT") {
+    xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
+    double ethresh = gci::parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
+    xout << "Energy threshold ="<<ethresh<<std::endl;
+    double scs_opposite = gci::parameter("SCS_OPPOSITE",std::vector<double>(1,(double)1)).at(0);
+    double scs_same = gci::parameter("SCS_SAME",std::vector<double>(1,(double)1)).at(0);
+    xout << "First-order hamiltonian contains " << scs_opposite<<" of opposite-spin and "<< scs_same <<" of same spin"<<std::endl;
+    xout << "Second-order hamiltonian contains " << 1-scs_opposite<<" of opposite-spin and "<< 1-scs_same <<" of same spin"<<std::endl;
+    Hamiltonian h0 = hh.FockHamiltonian(referenceDeterminant);
+    Hamiltonian ssh = hh.sameSpinHamiltonian(referenceDeterminant);
+    Hamiltonian osh(hh,true); osh -= ssh; osh-=h0;
+    Hamiltonian h1 = osh*scs_opposite + ssh*scs_same;
+    Hamiltonian h2(hh); h2-=h1; h2-=h0;
     std::vector<gci::Hamiltonian*> hamiltonians;
-    w.diagonalHamiltonian(hh);
-    // xout << "hamiltonian: " << hh.str(3) <<std::endl;
-    // xout << "diagonal hamiltonian: " << w.str(2) <<std::endl;
-    // return;
-    Hamiltonian fh = hh.FockHamiltonian(w.determinantAt(w.minloc()));
-    hamiltonians.push_back(&fh);
-    Hamiltonian h1(hh); h1-=fh;
-    //    xout <<"Regular 1st order hamiltonian: " << h1.str(3) << std::endl;
+    hamiltonians.push_back(&h0);
     hamiltonians.push_back(&h1);
-    {
-    std::vector<double> emp = gci::RSPT(hamiltonians, prototype,(double)1e-8);
+    if (scs_opposite != (double) 1 && scs_same != (double) 1) hamiltonians.push_back(&h2);
+    std::vector<double> emp = gci::RSPT(hamiltonians, prototype,ethresh);
     xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
-    xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(totalEnergy+=emp[i]); xout <<std::endl;
-    }
-    if (false){
-      hamiltonians.clear();
-      hamiltonians.push_back(&fh);
-      Hamiltonian ossh=osh+ssh;
-      hamiltonians.push_back(&ossh);
-    std::vector<double> emp = gci::RSPT(hamiltonians, prototype,(double)1e-8);
-    xout <<std::fixed << std::setprecision(8);
-    xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
-    xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(totalEnergy+=emp[i]); xout <<std::endl;
-    }
-    if (true){
-      hamiltonians.clear();
-      hamiltonians.push_back(&fh);
-      hamiltonians.push_back(&osh);
-      hamiltonians.push_back(&ssh);
-    std::vector<double> emp = gci::RSPT(hamiltonians, prototype,(double)1e-8);
-    xout <<std::fixed << std::setprecision(8);
-    xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
-    xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(totalEnergy+=emp[i]); xout <<std::endl;
+    xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(emp[i]=totalEnergy+=emp[i]); xout <<std::endl;
     energies[0] = totalEnergy;
-    }
+    SetVariables( "ENERGY_MP", &(emp.at(0)), (uint) emp.size(), (uint) 0, "" );
+  } else if (method == "DAVIDSON") {
+    xout << "Not yet implemented in GCI, " << method << std::endl;
+  } else if (method=="HAMILTONIAN")
+     HamiltonianMatrixPrint(hh,prototype);
+  else {
+    xout << "Unknown method in GCI, " << method << std::endl;
+  }
 }
 #ifdef __cplusplus
 }
@@ -211,7 +189,6 @@ std::vector<std::string> gci::parameter(std::string key, std::vector<std::string
 {
 #ifdef MOLPRO
   std::string r = GetOptionS(key.c_str(),"GCI");
-  // xout <<"parameter="<<r<<std::endl;
   if (r != std::string("")) return std::vector<std::string>(1,r);
 #endif
   if (gci::globalFCIdump != NULL) return gci::globalFCIdump->parameter(key,def);
@@ -222,11 +199,9 @@ std::vector<int> gci::parameter(std::string key, std::vector<int> def)
 {
 #ifdef MOLPRO
   FORTINT r = GetOptionI(key.c_str(),"GCI");
-  // xout <<"parameter="<<r<<std::endl;
   if (r != (FORTINT) -1) return std::vector<int>(1,(int) r);
 #endif
   if (gci::globalFCIdump != NULL) return gci::globalFCIdump->parameter(key,def);
-//  xout <<"gci::parameter key="<<key<<"; globalFCIdump="<<globalFCIdump<<std::endl;
   return def;
 }
 
@@ -234,11 +209,9 @@ std::vector<double> gci::parameter(std::string key, std::vector<double> def)
 {
 #ifdef MOLPRO
   FORTDBL r = GetOptionF(key.c_str(),"GCI");
-  // xout <<"F parameter="<<r<<std::endl;
   if (r != (FORTDBL) -1) return std::vector<double>(1,(double) r);
 #endif
   if (gci::globalFCIdump != NULL) return gci::globalFCIdump->parameter(key,def);
-//  xout <<"gci::parameter key="<<key<<"; globalFCIdump="<<globalFCIdump<<std::endl;
   return def;
 }
 
