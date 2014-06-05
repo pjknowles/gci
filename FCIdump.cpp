@@ -44,6 +44,24 @@ std::vector<int> FCIdump::parameter(std::string key, std::vector<int> def) { // 
   return answer;
 }
 
+
+std::vector<double> FCIdump::parameter(std::string key, std::vector<double> def) { // dirty sucking in from FCIDUMP namelist
+  std::vector<double> answer;
+  std::vector<std::string> strings = parameter(key,std::vector<std::string>(1," "));
+//  xout <<"parameter "<<key<<std::endl;
+//  xout << "parameter "<<key<<"="; for (std::vector<std::string>::iterator s=strings.begin(); s < strings.end(); s++) xout <<*s ; xout <<std::endl;
+  if (strings == std::vector<std::string>(1," ")) return def;
+  for (std::vector<std::string>::const_iterator s1=strings.begin(); s1!= strings.end(); s1++) {
+    double i;
+    std::istringstream b(*s1);
+    b >>i;
+//    xout <<"s1="<<*s1<<"; i="<<i<<std::endl;
+    answer.push_back(i);
+  }
+//  xout << "parameter "<<key<<"="; for (std::vector<double>::iterator s=answer.begin(); s < answer.end(); s++) xout <<*s ; xout <<std::endl;
+  return answer;
+}
+
 std::vector<std::string> FCIdump::parameter(std::string key, std::vector<std::string> def) { // dirty sucking in from FCIDUMP namelist
   std::vector<std::string> answer;
 //  xout <<"search for "<<","<<key<<"="<<std::endl;
