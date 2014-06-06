@@ -6,6 +6,7 @@
 #include "gciStringSet.h"
 #include "gciExcitationSet.h"
 #include "gciOrbitalSpace.h"
+#include "gciMolpro.h"
 #include "FCIdump.h"
 #include <iostream>
 #include <iomanip>
