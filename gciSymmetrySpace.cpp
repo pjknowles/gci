@@ -2,9 +2,9 @@
 #include <iostream>
 #include <sstream>
 
-SymmetrySpace::SymmetrySpace(std::string title, int maxrank) : std::vector<size_t>(8,0)
+SymmetrySpace::SymmetrySpace(std::string title, int maxrank_) : std::vector<size_t>(8,0)
 {
-  this->maxrank = maxrank;
+  this->maxrank = maxrank_;
   Title=title;
 }
 

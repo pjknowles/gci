@@ -6,7 +6,7 @@
 #define xout std::cout
 #else
 #include <cic/ItfCommon.h>
-//#define xout std::cout
+#include <cic/ItfFortranInt.h>
 #endif
 
 #include "FCIdump.h"
@@ -25,8 +25,10 @@ class State;
  * \return the energies order by order
  */
 std::vector<double> RSPT(const std::vector<Hamiltonian *> &hamiltonians,
-                         const State& prototype,
-                         double energyThreshold=1e-8, int maxOrder=20);
+			 const State &prototype,
+			 int maxOrder=-1,
+			 double energyThreshold=-1,
+			 int maxIterations=-1);
 
 /*!
  * \brief Perform a variational calculation

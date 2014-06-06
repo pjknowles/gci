@@ -9,15 +9,19 @@
 #include "FCIdump.h"
 #include <iostream>
 #include <iomanip>
-#ifdef MOLPRO
-#include "cic/ItfFortranInt.h"
-#endif
 using namespace gci;
 
+#include <cmath>
 std::vector<double> gci::Davidson(const Hamiltonian& hamiltonian,
                                   const State &prototype,
                                   double energyThreshold, int nState, int maxIterations)
 {
+  if (nState < 0)
+    nState = gci::parameter("NSTATE",std::vector<int>(1,1)).at(0);
+  if (maxIterations < 0)
+    maxIterations = gci::parameter("MAXIT",std::vector<int>(1,1000)).at(0);
+  if (energyThreshold < (double)0)
+    energyThreshold = gci::parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
   Wavefunction w(prototype);
   Wavefunction g(w);
   g.diagonalHamiltonian(hamiltonian);
@@ -29,13 +33,43 @@ std::vector<double> gci::Davidson(const Hamiltonian& hamiltonian,
   gci::File wfile;
   gci::File gfile;
   w.set((double)0); w.set(reference, (double) 1);
+  std::vector<double> reducedHamiltonian;
   for (int n=0; n < maxIterations; n++) {
     w.put(wfile,n);
     g.set((double)0);
     g.hamiltonianOnWavefunction(hamiltonian, w);
     g.put(gfile,n);
+    reducedHamiltonian.resize((size_t)(n+1)*(n+1));
+    for (int i=1; i<n-1; i++)
+      for (int j=0; j<n-1; j++)
+	reducedHamiltonian[j+i*(n+1)] = reducedHamiltonian[j+i*n];
+    for (int i=0; i<n+1; i++) {
+      g.get(gfile,i);
+      reducedHamiltonian[i+n*(n+1)] = reducedHamiltonian[n+i*(n+1)] = g * w;
+    }
+    std::vector<double> eigenvectors(reducedHamiltonian);
+    std::vector<double> eigenvalues(n+1);
+    Diagonalize(&eigenvectors[0], &eigenvalues[0], (unsigned int)(n+1), (unsigned int)1);
+    xout << "Energies:";
+    for (int i=0; i < nState; i++) xout <<" "<<eigenvalues[i];
+    xout << std::endl;
+    w.set((double)0);
+    for (int i=0; i <= n; i++) {
+      g.get(wfile,i);
+      w += eigenvalues[0]*eigenvectors[i] * g;
+      g.get(gfile,i);
+      w -= eigenvectors[i] * g;
+    }
     g.get(h0file);
     w /= g;
+    for (int i=0; i <= n; i++) {
+      g.get(wfile,i);
+      double factor = -(g*w)/(w*w);
+      w += factor*g;
+    }
+    double norm=w*w;
+    if (norm == (double) 0) break;
+    w *= ((double)1/std::sqrt(norm));
   }
   //    xout << "n="<<n<<", E(n+1)="<<e[n+1]<<std::endl;
   //    if ((e[n+1] < 0 ? -e[n+1] : e[n+1]) < energyThreshold) {e.resize(n+2);break;}
@@ -44,8 +78,16 @@ std::vector<double> gci::Davidson(const Hamiltonian& hamiltonian,
 
 std::vector<double> gci::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians,
                               const State &prototype,
-                              double energyThreshold, int maxOrder)
+			      int maxOrder,
+                              double energyThreshold,
+			      int maxIterations)
 {
+  if (maxOrder < 0)
+    maxOrder = gci::parameter("MAXORDER",std::vector<int>(1,1000)).at(0);
+  if (maxIterations < 0)
+    maxIterations = gci::parameter("MAXIT",std::vector<int>(1,1000)).at(0);
+  if (energyThreshold < (double)0)
+    energyThreshold = gci::parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
   std::vector<double> e(maxOrder+1,(double)0);
 //  for (int k=0; k<(int)hamiltonians.size(); k++)
 //    HamiltonianMatrixPrint(*hamiltonians[k],prototype);
@@ -70,7 +112,7 @@ std::vector<double> gci::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
 //    xout << "hamiltonian on reference: " << g.str(2) << std::endl;
     g.put(gfile,k);
   }
-  for (int n=1; n < maxOrder; n++) {
+  for (int n=1; n < maxOrder && n <= maxIterations; n++) {
     // construct  |n> = -(H0-E0)^{-1} ( -sum_k^{n-1} E_{n-k} |k> + sum_{k=n-h}^{n-1} H|k>) where h is the maximum order of hamiltonian
 //    xout <<std::endl<<std::endl<<"MAIN ITERATION n="<<n<<std::endl;
     g.set((double)0);
@@ -157,8 +199,6 @@ extern "C" {
 
   if (method == "RSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
-    double ethresh = gci::parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
-    xout << "Energy threshold ="<<ethresh<<std::endl;
     double scs_opposite = gci::parameter("SCS_OPPOSITE",std::vector<double>(1,(double)1)).at(0);
     double scs_same = gci::parameter("SCS_SAME",std::vector<double>(1,(double)1)).at(0);
     xout << "First-order hamiltonian contains " << scs_opposite<<" of opposite-spin and "<< scs_same <<" of same spin"<<std::endl;
@@ -172,12 +212,12 @@ extern "C" {
     hamiltonians.push_back(&h0);
     hamiltonians.push_back(&h1);
     if (scs_opposite != (double) 1 || scs_same != (double) 1) hamiltonians.push_back(&h2);
-    std::vector<double> emp = gci::RSPT(hamiltonians, prototype,ethresh);
+    std::vector<double> emp = gci::RSPT(hamiltonians, prototype);
     xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(emp[i]=totalEnergy+=emp[i]); xout <<std::endl;
     energies[0] = totalEnergy;
-    SetVariables( "ENERGY_MP", &(emp.at(1)), (uint) emp.size()-1, (uint) 0, "" );
+    SetVariables( "ENERGY_MP", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
   } else if (method == "DAVIDSON") {
     xout << "Not yet implemented in GCI, " << method << std::endl;
   } else if (method=="HAMILTONIAN")

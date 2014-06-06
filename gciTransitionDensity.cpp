@@ -3,17 +3,17 @@
 #include <sstream>
 
 TransitionDensity::TransitionDensity(const Wavefunction &w,
-                                     const StringSet::const_iterator &alphaStringsBegin,
-                                     const StringSet::const_iterator &alphaStringsEnd,
-                                     const StringSet::const_iterator &betaStringsBegin,
-                                     const StringSet::const_iterator &betaStringsEnd,
-                                     const int parity, const bool doAlpha, const bool doBeta)
+                                     const StringSet::const_iterator &alphaStringsBegin_,
+                                     const StringSet::const_iterator &alphaStringsEnd_,
+                                     const StringSet::const_iterator &betaStringsBegin_,
+                                     const StringSet::const_iterator &betaStringsEnd_,
+                                     const int parity_, const bool doAlpha, const bool doBeta)
 {
-  this->parity = parity;
-  this->alphaStringsBegin = alphaStringsBegin;
-  this->alphaStringsEnd = alphaStringsEnd;
-  this->betaStringsBegin = betaStringsBegin;
-  this->betaStringsEnd = betaStringsEnd;
+  this->parity = parity_;
+  this->alphaStringsBegin = alphaStringsBegin_;
+  this->alphaStringsEnd = alphaStringsEnd_;
+  this->betaStringsBegin = betaStringsBegin_;
+  this->betaStringsEnd = betaStringsEnd_;
   // first parse the type of transition
   nsa = std::distance(alphaStringsBegin,alphaStringsEnd);
   nsb = std::distance(betaStringsBegin,betaStringsEnd);

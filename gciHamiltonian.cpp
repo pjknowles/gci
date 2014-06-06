@@ -91,6 +91,7 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
   }
 
 
+  {
   std::ifstream s;
   s.open(dump->fileName.c_str());
   std::string ss;
@@ -113,6 +114,7 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
       coreEnergy = value;
   }
   s.close();
+  }
   loaded=true;
   if (verbosity>3) {
     xout << "integrals_a: ";copy(integrals_a->begin(), integrals_a->end(), std::ostream_iterator<double>(xout, ", "));xout <<std::endl;
