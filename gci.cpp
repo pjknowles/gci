@@ -21,6 +21,7 @@ std::vector<double> gci::Davidson(const Hamiltonian& hamiltonian,
     nState = gci::parameter("NSTATE",std::vector<int>(1,1)).at(0);
   if (maxIterations < 0)
     maxIterations = gci::parameter("MAXIT",std::vector<int>(1,1000)).at(0);
+//  xout << "MAXIT="<<maxIterations<<std::endl;
   if (energyThreshold < (double)0)
     energyThreshold = gci::parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
   Wavefunction w(prototype);
@@ -35,25 +36,33 @@ std::vector<double> gci::Davidson(const Hamiltonian& hamiltonian,
   gci::File gfile;
   w.set((double)0); w.set(reference, (double) 1);
   std::vector<double> reducedHamiltonian;
+  std::vector<double> elast(nState,(double)1e50);
   for (int n=0; n < maxIterations; n++) {
     w.put(wfile,n);
     g.set((double)0);
     g.hamiltonianOnWavefunction(hamiltonian, w);
     g.put(gfile,n);
     reducedHamiltonian.resize((size_t)(n+1)*(n+1));
-    for (int i=1; i<n-1; i++)
-      for (int j=0; j<n-1; j++)
+    for (int i=n-1; i>-1; i--)
+      for (int j=n-1; j>-1; j--)
 	reducedHamiltonian[j+i*(n+1)] = reducedHamiltonian[j+i*n];
     for (int i=0; i<n+1; i++) {
       g.get(gfile,i);
       reducedHamiltonian[i+n*(n+1)] = reducedHamiltonian[n+i*(n+1)] = g * w;
     }
+//    { xout << "Reduced hamiltonian:"<<std::endl; for (int i=0; i < n+1; i++) { for (int j=0; j < n+1; j++) xout <<" "<<reducedHamiltonian[j+(n+1)*i]; xout << std::endl; } }
     std::vector<double> eigenvectors(reducedHamiltonian);
     std::vector<double> eigenvalues(n+1);
-    Diagonalize(&eigenvectors[0], &eigenvalues[0], (unsigned int)(n+1), (unsigned int)1);
+    Diagonalize(&eigenvectors[0], &eigenvalues[0], (unsigned int)(n+1), (unsigned int)(n+1));
+    e.assign(eigenvectors.begin(),eigenvectors.begin()+nState);
     xout << "Energies:";
     for (int i=0; i < nState; i++) xout <<" "<<eigenvalues[i];
     xout << std::endl;
+    xout << "Eigenvectors:"<<std::endl;
+    for (int i=0; i < nState; i++) {
+      for (int j=0; j < n+1; j++) xout <<" "<<eigenvectors[j+(n+1)*i];
+      xout << std::endl;
+    }
     w.set((double)0);
     for (int i=0; i <= n; i++) {
       g.get(wfile,i);
@@ -65,15 +74,16 @@ std::vector<double> gci::Davidson(const Hamiltonian& hamiltonian,
     w /= g;
     for (int i=0; i <= n; i++) {
       g.get(wfile,i);
-      double factor = -(g*w)/(w*w);
+      double factor = -(g*w)/(g*g);
       w += factor*g;
     }
-    double norm=w*w;
-    if (norm == (double) 0) break;
-    w *= ((double)1/std::sqrt(norm));
+    double norm2=w*w;
+    double econv=0;for (int i=0; i<nState; i++) econv+=std::fabs(e[i]-elast[i]);
+//    xout <<"norm2="<<norm2<<std::endl;
+    if (norm2 <(double) 1e-30 || econv < energyThreshold) break;
+    elast=e;
+    w *= ((double)1/std::sqrt(norm2));
   }
-  //    xout << "n="<<n<<", E(n+1)="<<e[n+1]<<std::endl;
-  //    if ((e[n+1] < 0 ? -e[n+1] : e[n+1]) < energyThreshold) {e.resize(n+2);break;}
   return e;
 }
 
@@ -234,6 +244,7 @@ extern "C" {
 
 std::vector<std::string> gci::parameter(std::string key, std::vector<std::string> def)
 {
+//  xout <<"string parameter request "<<key<<std::endl;
 #ifdef MOLPRO
   std::string r = GetOptionS(key.c_str(),"GCI");
   if (r != std::string("")) return std::vector<std::string>(1,r);
@@ -244,11 +255,13 @@ std::vector<std::string> gci::parameter(std::string key, std::vector<std::string
 
 std::vector<int> gci::parameter(std::string key, std::vector<int> def)
 {
+//  xout <<"integer parameter request "<<key<<std::endl;
 #ifdef MOLPRO
   FORTINT r = GetOptionI(key.c_str(),"GCI");
   if (r != (FORTINT) -1) return std::vector<int>(1,(int) r);
 #endif
   if (gci::globalFCIdump != NULL) return gci::globalFCIdump->parameter(key,def);
+//  xout <<"dropped through"<<std::endl;
   return def;
 }
 
@@ -363,19 +376,19 @@ int main()
         xout << "Lowest determinant " << d <<" with energy "<<w.at(i)<<std::endl;
 
 //        d.stringBeta.nullify();
-        xout << "hamiltonian: " << hh.str(3) << std::endl;
+//        xout << "hamiltonian: " << hh.str(3) << std::endl;
         Hamiltonian fockh = hh.FockHamiltonian(d);
-        xout << "Fock hamiltonian: " << fockh.str(3) << std::endl;
+//        xout << "Fock hamiltonian: " << fockh.str(3) << std::endl;
         d = w.determinantAt(i);
         Hamiltonian sshx = hh.sameSpinHamiltonian(d);
         Hamiltonian ssh = Hamiltonian (sshx,true,true,true);
-        xout << "same-spin hamiltonian: " << ssh.str(3) << std::endl;
+//        xout << "same-spin hamiltonian: " << ssh.str(3) << std::endl;
         Hamiltonian osh(hh,true);
-        xout << "opposite-spin hamiltonian after construction from full H: " << osh.str(3) << std::endl;
+//        xout << "opposite-spin hamiltonian after construction from full H: " << osh.str(3) << std::endl;
         osh -= ssh;
-        xout << "opposite-spin hamiltonian after subracting same-spin: " << osh.str(3) << std::endl;
+//        xout << "opposite-spin hamiltonian after subracting same-spin: " << osh.str(3) << std::endl;
         osh-=fockh;
-        xout << "opposite-spin hamiltonian: " << osh.str(3) << std::endl;
+//        xout << "opposite-spin hamiltonian: " << osh.str(3) << std::endl;
 
 
     //    w2.set((double)0); w2.set(w.minloc(), (double) 1);
@@ -406,6 +419,9 @@ int main()
     State prototype(gci::globalFCIdump);
     std::vector<gci::Hamiltonian*> hamiltonians;
 //    xout << "hamiltonian: " <<hh<<std::endl;
+    std::vector<double> emp = gci::Davidson(hh, prototype,(double)1e-8);
+
+    hamiltonians.clear();
     w.diagonalHamiltonian(hh);
     Hamiltonian fh = hh.FockHamiltonian(w.determinantAt(w.minloc()));
     hamiltonians.push_back(&fh);

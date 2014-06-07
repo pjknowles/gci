@@ -77,7 +77,7 @@ void Diagonalize( double *x, double *d, unsigned int m, unsigned int nColStride 
 // c
 // c      leibniz-rechenzentrum, munich 1965
 // c
-  const unsigned int maxdim=500;
+  const int maxdim=500;
   const double eps=2.5e-16,dinf=2.3e-308,tol=dinf/eps;
   assert (m <= maxdim);
   double e[maxdim];
@@ -87,25 +87,25 @@ void Diagonalize( double *x, double *d, unsigned int m, unsigned int nColStride 
     x[0]=(double) 1;
     return;
   }
-  for (unsigned int i=0; i<n; i++) {
+  for (int i=0; i<n; i++) {
     d[i]=(double) 0;
     e[i]=(double) 0;
   }
 
   //     householder's reduction
 
-  for (unsigned int i=n-1;i>0;i--) {
-    unsigned int l=i-1;
+  for (int i=n-1;i>0;i--) {
+    int l=i-1;
     double h=(double)0;
-    double g=x[i + i*m];
+    double g=x[i + (i-1)*m];
     if (l>0) {
-      for (unsigned int k=0; k<l; k++)
-	h+=x[i+k*m]*x[i+k*m];
+      for (int k=0; k<l; k++)
+  h+=x[i+k*m]*x[i+k*m];
       double s=h+g*g;
       if(s < tol)
         h=(double)0;
       else if(h > 0){
-	l++;
+  l++;
         double f=g;
         g=std::sqrt(s);
         if(f >0) g=-g;
@@ -113,30 +113,30 @@ void Diagonalize( double *x, double *d, unsigned int m, unsigned int nColStride 
         x[i+(i-1)*m]=f-g;
         f=(double)0;
 
-	for (unsigned int j=0; j<l; j++) {
-	  x[j+m*i]=x[i+m*j]/h;
-	  s=(double)0;
-	  for (unsigned int k=0; k<=j; k++)
-	    s+=x[j+m*k]*x[i+m*k];
-	  //        j1=j+1
-	  //if(j1.gt.l) go to 100
-	  for (unsigned int k=j+1; k<l; k++)
-	    s+=x[k+m*j]*x[i+m*k];
-	  e[j]=s/h;
-	  f+=s*x[j+m*i];
-	}
+  for (int j=0; j<l; j++) {
+    x[j+m*i]=x[i+m*j]/h;
+    s=(double)0;
+    for (int k=0; k<=j; k++)
+      s+=x[j+m*k]*x[i+m*k];
+    //        j1=j+1
+    //if(j1.gt.l) go to 100
+    for (int k=j+1; k<l; k++)
+      s+=x[k+m*j]*x[i+m*k];
+    e[j]=s/h;
+    f+=s*x[j+m*i];
+  }
 
-	f=f/(2*h);
+  f=f/(2*h);
 
-	for (unsigned int j=0; j<l; j++)
-	  e[j]-=f*x[i+m*j];
+  for (int j=0; j<l; j++)
+    e[j]-=f*x[i+m*j];
 
-	for (unsigned int j=0; j<l; j++) {
-	  f=x[i+m*j];
-	  s=e[j];
-	  for (unsigned int k=0; k<=j; k++)
-	    x[j+m*k]-=(f*e[k]+x[i+m*k]*s);
-	}
+  for (int j=0; j<l; j++) {
+    f=x[i+m*j];
+    s=e[j];
+    for (int k=0; k<=j; k++)
+      x[j+m*k]-=(f*e[k]+x[i+m*k]*s);
+  }
 
       }
     }
@@ -148,21 +148,21 @@ void Diagonalize( double *x, double *d, unsigned int m, unsigned int nColStride 
 
   d[0]=x[0];
   x[0]=(double)1;
-  for (unsigned int i=1; i<n; i++) {
+  for (int i=1; i<n; i++) {
     if (d[i] > (double)0) {
-      for (unsigned int j=0; j<i; j++) {
-	double s=(double)0;
-	for (unsigned int k=0; k<i; k++)
-	  s+=x[i+m*k]*x[k+m*j];
-	for (unsigned int k=0; k<i; k++)
-	  x[k+m*j]-=s*x[k+m*i];
+      for (int j=0; j<i; j++) {
+  double s=(double)0;
+  for (int k=0; k<i; k++)
+    s+=x[i+m*k]*x[k+m*j];
+  for (int k=0; k<i; k++)
+    x[k+m*j]-=s*x[k+m*i];
       }
     }
     d[i]=x[i+m*i];
     x[i+m*i]=(double)1;
-      for (unsigned int j=0; j<i; j++) {
-	x[i+m*j]=(double)0;
-	x[j+m*i]=(double)0;
+      for (int j=0; j<i; j++) {
+  x[i+m*j]=(double)0;
+  x[j+m*i]=(double)0;
       }
   }
 
@@ -172,70 +172,72 @@ void Diagonalize( double *x, double *d, unsigned int m, unsigned int nColStride 
   double f=(double)0;
   e[n-1]=(double)0;
 
-  for (unsigned int l=0; l<n; l++) {
-    double h=eps*(std::abs(d[l])+std::abs(e[l]));
+  for (int l=0; l<n; l++) {
+    double h=eps*(std::fabs(d[l])+std::fabs(e[l]));
     if (h > b) b=h;
 
     //     test for splitting
 
-    unsigned int j;
-    for (j=l; j<n; j++)
-      if (std::abs(e[j]) <= b) break;
+    int j;
+    for (int jj=l; jj<n; jj++) {
+      j=jj;
+      if (std::fabs(e[j]) <= b) break;
+    }
 
     //     test for convergence
 
     if(j != l) {
-      while (std::abs(e[l]) > b) {
+      while (std::fabs(e[l]) > b) {
 
-	//     shift from upper 2*2 minor
+  //     shift from upper 2*2 minor
 
-	double p=(d[l+1]-d[l])*(double)0.5;
-	double r=std::sqrt(p*p+e[l]*e[l]);
-	if (p<0)
-	  p+=r;
-	else
-	  p-=r;
-	h=d[l]+p;
-	for (unsigned int i=l;i<n;i++)
-	  d[i]-=h;
-	f+=h;
+  double p=(d[l+1]-d[l])*(double)0.5;
+  double r=std::sqrt(p*p+e[l]*e[l]);
+  if (p<0)
+    p+=r;
+  else
+    p-=r;
+  h=d[l]+p;
+  for (int i=l;i<n;i++)
+    d[i]-=h;
+  f+=h;
 
-	//     qr transformation
+  //     qr transformation
 
-	p=d[j];
-	double c=(double)1;
-	double s=(double)0;
+  p=d[j];
+  double c=(double)1;
+  double s=(double)0;
 
-	for (unsigned int i=j-1; i>=l; i--) {
-	  double g=c*e[i];
-	  h=c*p;
+  for (int i=j-1; i>=l; i--) {
+    double g=c*e[i];
+    h=c*p;
 
-	  //     protection against underflow of exponents
+    //     protection against underflow of exponents
 
-	  if (std::abs(p)>=std::abs(e[i])) {
-	    c=e[i]/p;
-	    r=std::sqrt(c*c+(double)1);
-	    e[i+1]=s*p*r;
-	    s=c/r;
-	    c=(double)1/r;
-	} else {
-	    c=p/e[i];
-	    r=std::sqrt(c*c+(double)1);
-	    e[i+1]=s*e[i]*r;
-	    s=(double)1/r;
-	    c=c/r;
-	}
-	  p=c*d[i]-s*g;
-	  d[i+1]=h+s*(c*g+s*d[i]);
-	  for (unsigned int k=0; k<n; k++) {
-	    h=x[k+m*(i+1)];
-	    x[k+m*(i+1)]=x[k+m*i]*s+h*c;
-	    x[k+m*i]=x[k+m*i]*c-h*s;
-	  }
-	}
+    if (std::fabs(p)>=std::fabs(e[i])) {
+      c=e[i]/p;
+      r=std::sqrt(c*c+(double)1);
+      e[i+1]=s*p*r;
+      s=c/r;
+      c=(double)1/r;
+  } else {
+      c=p/e[i];
+      r=std::sqrt(c*c+(double)1);
+      e[i+1]=s*e[i]*r;
+      s=(double)1/r;
+      c=c/r;
+  }
+    p=c*d[i]-s*g;
+    d[i+1]=h+s*(c*g+s*d[i]);
+    for (int k=0; k<n; k++) {
+      h=x[k+m*(i+1)];
+      x[k+m*(i+1)]=x[k+m*i]*s+h*c;
+      x[k+m*i]=x[k+m*i]*c-h*s;
+    }
+  }
 
-	e[l]=s*p;
-	d[l]=c*p;
+  e[l]=s*p;
+  d[l]=c*p;
       }
     }
 
@@ -246,40 +248,40 @@ void Diagonalize( double *x, double *d, unsigned int m, unsigned int nColStride 
 
   //     ordering of eigenvalues
 
-  for (unsigned int i=0; i<n-1; i++) {
-    unsigned int k=i;
+  for (int i=0; i<n-1; i++) {
+    int k=i;
     double p=d[i];
-    for (unsigned int j=i+1; j<n; j++) {
+    for (int j=i+1; j<n; j++) {
       if(d[j] <p) {
-	k=j;
-	p=d[j];
+  k=j;
+  p=d[j];
       }
     }
     if (k != i) {
       d[k] =d[i];
       d[i]=p;
-      for (unsigned int j=0; j<n; j++) {
-	p=x[j+m*i];
-	x[j+m*i]=x[j+m*k];
-	x[j+m*k]=p;
+      for (int j=0; j<n; j++) {
+  p=x[j+m*i];
+  x[j+m*i]=x[j+m*k];
+  x[j+m*k]=p;
       }
     }
   }
 
   //     fixing of sign
 
-  for (unsigned int i=0; i<n-1; i++) {
+  for (int i=0; i<n-1; i++) {
     double pm=(double)0;
-    unsigned int k;
-    for (unsigned int j=0; j<n-1; j++) {
-      if(pm <= std::abs(x[j+m*i]))  {
-	pm =std::abs(x[j+m*i]);
-	k=j;
+    int k;
+    for (int j=0; j<n-1; j++) {
+      if(pm <= std::fabs(x[j+m*i]))  {
+  pm =std::fabs(x[j+m*i]);
+  k=j;
       }
     }
     if(x[k+m*i] < (double)0) {
-    for (unsigned int j=0; j<n-1; j++)
-	   x[j+m*i]=-x[j+m*i];
+    for (int j=0; j<n-1; j++)
+     x[j+m*i]=-x[j+m*i];
     }
   }
 }
