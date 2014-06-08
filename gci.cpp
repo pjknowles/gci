@@ -60,15 +60,21 @@ std::vector<double> gci::Davidson(const Hamiltonian& hamiltonian,
     e.assign(eigenvalues.begin(),eigenvalues.begin()+e.size());
     xout << "Iteration "<<n<<", energies:";
     xout << std::fixed; xout.precision(8);
-    for (int i=0; i < e.size(); i++) xout <<" "<<eigenvalues[i];
+    for (int i=0; i < (int)e.size(); i++) xout <<" "<<eigenvalues[i];
     xout <<"; ";
     // xout << std::endl << "Eigenvectors:"<<std::endl; for (int i=0; i < nState; i++) { for (int j=0; j < n+1; j++) xout <<" "<<eigenvectors[j+(n+1)*i]; xout << std::endl; }
+    int track=0; double tracktest=0;
+    for (int i=0; i < (int)e.size(); i++) {
+      if (std::fabs(eigenvectors[n+1+i*(n+1)]) > tracktest) {
+        track=i; tracktest=std::fabs(eigenvectors[n+1+i*(n+1)]);
+      }
+    }
     w.set((double)0);
     for (int i=0; i <= n; i++) {
       g.get(wfile,i);
-      w += eigenvalues[0]*eigenvectors[i] * g;
+      w += eigenvalues[track]*eigenvectors[i+track*(n+1)] * g;
       g.get(gfile,i);
-      w -= eigenvectors[i] * g;
+      w -= eigenvectors[i+track*(n+1)] * g;
     }
     g.get(h0file);
     w /= g;
@@ -78,7 +84,7 @@ std::vector<double> gci::Davidson(const Hamiltonian& hamiltonian,
       w += factor*g;
     }
     double norm2=w*w;
-    double econv=0;for (int i=0; i<nState; i++) econv+=std::fabs(e[i]-elast[i]);
+    double econv=0;for (int i=0; i<(int)e.size(); i++) econv+=std::fabs(e[i]-elast[i]);
     xout <<"econv="<<econv<<std::endl;
     if (norm2 <(double) 1e-30 || econv < energyThreshold) break;
     elast=e;
