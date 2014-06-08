@@ -20,8 +20,8 @@ void OrbitalSpace::load(std::string filename, int verbosity) {
 void OrbitalSpace::load(FCIdump* dump, int verbosity) {
   if (verbosity) xout <<"Load OrbitalSpace from " << dump->fileName <<std::endl;
 
-  std::vector<int> syms = parameter("ORBSYM");
-  orbital_symmetries = std::vector<unsigned int>(parameter("NORB").at(0),0);
+  std::vector<int> syms = dump->parameter("ORBSYM");
+  orbital_symmetries = std::vector<unsigned int>(dump->parameter("NORB").at(0),0);
   for (std::vector<int>::iterator s=syms.begin(); s!=syms.end(); s++) {
     orbital_symmetries[s-syms.begin()]=(*s)-1; // convert 1-8 to 0-7
     at((*s)-1)++;
@@ -42,7 +42,7 @@ void OrbitalSpace::load(FCIdump* dump, int verbosity) {
   pairSpace[1].calculateOffsets();
   //    xout << "symmetricPairSpace constructed: " << pairSpace[1];
 
-  spinUnrestricted=parameter("IUHF").at(0)!=0;
+  spinUnrestricted=dump->parameter("IUHF").at(0)!=0;
 
 }
 
