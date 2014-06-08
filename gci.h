@@ -41,7 +41,7 @@ std::vector<double> RSPT(const std::vector<Hamiltonian *> &hamiltonians,
  */
 std::vector<double> Davidson(const Hamiltonian &hamiltonian,
                              const State& prototype,
-                             double energyThreshold=1e-8, int nState=1, int maxIterations=-1);
+                             double energyThreshold=(double)-1, int nState=-1, int maxIterations=-1);
 
 void HamiltonianMatrixPrint (Hamiltonian& hamiltonian, const State &prototype, int verbosity=0);
 
