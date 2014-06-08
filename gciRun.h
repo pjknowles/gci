@@ -21,6 +21,18 @@ public:
    * \brief Start the run
    */
   std::vector<double> run();
+  /*!
+   * \brief addParameter add a parameter
+   * \param key key
+   * \param values values
+   */
+  void addParameter(const std::string& key, const std::vector<std::string>& values);
+  /*!
+   * \brief addParameter add a parameter
+   * \param key key
+   * \param value single value
+   */
+  void addParameter(const std::string& key, const std::string& value);
 private:
   /*!
    * \brief Perform a Rayleigh-Schroedinger perturbation theory calculation

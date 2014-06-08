@@ -38,6 +38,12 @@ public:
      * \return  The result as a vector of integers.
      */
   std::vector<std::string> parameter(std::string key, std::vector<std::string> def);
+  /*!
+   * \brief addParameter add a parameter
+   * \param key key
+   * \param values values
+   */
+  void addParameter(const std::string& key, const std::vector<std::string>& values);
 
    /*!
      * \brief fileName The file containing the FCIDUMP data

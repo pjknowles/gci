@@ -82,3 +82,15 @@ std::vector<std::string> FCIdump::parameter(std::string key, std::vector<std::st
 //  xout <<std::endl;
   return answer;
 }
+
+void FCIdump::addParameter(const std::string& key, const std::vector<std::string>& values)
+{
+//  xout << "FCIdump::addParameter namelistData originally "<<namelistData<<std::endl;
+//  for (std::string::const_reverse_iterator s=values.rbegin();
+//       s != values.rend(); s++)
+  namelistData.erase(0,1);
+  for (int i=values.size()-1; i>-1; i--)
+    namelistData.insert(0,values[i]+",");
+  namelistData.insert(0,","+key+"=");
+//  xout << "FCIdump::addParameter namelistData set to "<<namelistData<<std::endl;
+}
