@@ -198,7 +198,7 @@ extern "C" {
   void gcirun(double* energies, int nenergies, char* fcidump) {
     Run run(fcidump);
     std::vector<double>e = run.run();
-    for (int i=0; i < nenergies > (int)e.size() ? (int)e.size() : nenergies); i++)
+    for (int i=0; i < (nenergies > (int)e.size() ? (int)e.size() : nenergies); i++)
         energies[i]=e[i];
     return;
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
@@ -296,7 +296,8 @@ int main(int argc, char *argv[])
 //int main()
 {
   Run run("FCIDUMP");
-  run.addParameter("METHOD","DAVIDSON");
+  run.addParameter("METHOD","RSPT");
+  run.addParameter("SCS_SAME","0");
   std::vector<double> energies=run.run();
   return 0;
 }

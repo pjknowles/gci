@@ -572,8 +572,8 @@ void Hamiltonian::starEqualsHelper(std::vector<double> *&me,
                                     const double factor)
 {
   if (factor == (double)1) return;
-  size_t n = me->size();
   if (me == NULL) return;
+  size_t n = me->size();
   for (size_t i=0; i<n; i++)
     me->at(i) *= factor ;
 }

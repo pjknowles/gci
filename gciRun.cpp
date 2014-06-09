@@ -41,10 +41,16 @@ std::vector<double> Run::run()
     xout << "First-order hamiltonian contains " << scs_opposite<<" of opposite-spin and "<< scs_same <<" of same spin"<<std::endl;
     xout << "Second-order hamiltonian contains " << 1-scs_opposite<<" of opposite-spin and "<< 1-scs_same <<" of same spin"<<std::endl;
     Hamiltonian h0 = hh.FockHamiltonian(referenceDeterminant);
+//    xout <<"h0.spinUnrestricted="<<h0.spinUnrestricted<<std::endl;
     Hamiltonian ssh = hh.sameSpinHamiltonian(referenceDeterminant);
+//    xout <<"ssh.spinUnrestricted="<<ssh.spinUnrestricted<<std::endl;
     Hamiltonian osh(hh,true); osh -= ssh; osh-=h0;
+//    xout <<"osh.spinUnrestricted="<<osh.spinUnrestricted<<std::endl;
     Hamiltonian h1 = osh*scs_opposite + ssh*scs_same;
-    Hamiltonian h2(hh); h2-=h1; h2-=h0;
+//    xout <<"h1.spinUnrestricted="<<h1.spinUnrestricted<<std::endl;
+    Hamiltonian h2(hh,true); // spinUnrestricted not yet optimised
+    h2-=h1; h2-=h0;
+//    xout <<"h2.spinUnrestricted="<<h2.spinUnrestricted<<std::endl;
     std::vector<gci::Hamiltonian*> hamiltonians;
     hamiltonians.push_back(&h0);
     hamiltonians.push_back(&h1);
