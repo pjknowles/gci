@@ -24,6 +24,7 @@ extern "C" {
   void gcirun(double* energies, int nenergies, char* fcidump) {
     Run run(fcidump);
     std::vector<double>e = run.run();
+//    xout << "e after run:"; for (int i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;
     for (int i=0; i < (nenergies > (int)e.size() ? (int)e.size() : nenergies); i++)
         energies[i]=e[i];
     return;
@@ -39,9 +40,11 @@ int main(int argc, char *argv[])
 //int main()
 {
   Run run("FCIDUMP");
-  run.addParameter("METHOD","RSPT");
-  run.addParameter("SCS_SAME","0.9");
-  std::vector<double> energies=run.run();
+//  run.addParameter("METHOD","RSPT");
+//  run.addParameter("SCS_SAME","0.9")
+  run.addParameter("METHOD","DAVIDSON");
+  std::vector<double> e=run.run();
+    xout << "e after run:"; for (int i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;
   return 0;
 }
 #endif

@@ -64,8 +64,7 @@ std::vector<double> Run::run()
     SetVariables( "ENERGY_MP", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
   } else if (method == "DAVIDSON") {
-    std::vector<double> emp = Davidson(hh, prototype);
-    energies.resize(1); energies[0] = emp[0];
+    energies = Davidson(hh, prototype);
   } else if (method=="HAMILTONIAN")
      HamiltonianMatrixPrint(hh,prototype);
   else {
