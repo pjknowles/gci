@@ -211,6 +211,8 @@ std::vector<double> Run::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
 //    xout << "hamiltonian on reference: " << g.str(2) << std::endl;
     g.put(gfile,k);
   }
+  int nmax = maxOrder < maxIterations ? maxOrder : maxIterations+1;
+  e.resize(nmax+1);
   for (int n=1; n < maxOrder && n <= maxIterations; n++) {
     // construct  |n> = -(H0-E0)^{-1} ( -sum_k^{n-1} E_{n-k} |k> + sum_{k=n-h}^{n-1} H|k>) where h is the maximum order of hamiltonian
 //    xout <<std::endl<<std::endl<<"MAIN ITERATION n="<<n<<std::endl;
