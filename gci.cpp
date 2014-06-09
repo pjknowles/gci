@@ -196,6 +196,11 @@ void gci::HamiltonianMatrixPrint(Hamiltonian &hamiltonian, const State &prototyp
 extern "C" {
 #endif
   void gcirun(double* energies, int nenergies, char* fcidump) {
+    Run run(fcidump);
+    std::vector<double>e = run.run();
+    for (int i=0; i < nenergies > (int)e.size() ? (int)e.size() : nenergies); i++)
+        energies[i]=e[i];
+    return;
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
   gci::globalFCIdump = new FCIdump(fcidump); // an evil global variable that is found by gci::parameter
   std::string method = gci::parameter("METHOD",std::vector<std::string>(1,"")).at(0);
