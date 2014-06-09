@@ -1,7 +1,9 @@
 #include "gciWavefunction.h"
 #include <sstream>
 #include <iostream>
+#ifndef MOLPRO
 #include "gciMolpro.h"
+#endif
 #include "gciStringSet.h"
 #include "gciTransitionDensity.h"
 //#include "mkl.h"

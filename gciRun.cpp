@@ -1,6 +1,8 @@
 #include "gciRun.h"
 #include "gciWavefunction.h"
+#ifndef MOLPRO
 #include "gciMolpro.h"
+#endif
 #include "FCIdump.h"
 #include <iostream>
 #include <iomanip>
