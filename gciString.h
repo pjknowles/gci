@@ -4,6 +4,7 @@
 
 #include "gciState.h"
 #include <vector>
+#include <limits.h>
 
 namespace gci {
 class StringSet;

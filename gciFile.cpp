@@ -1,5 +1,8 @@
 #include "gciFile.h"
 #include <iostream>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 File::File()
 {
