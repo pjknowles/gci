@@ -39,11 +39,17 @@ int main(int argc, char *argv[])
 //int main()
 {
   Run run("FCIDUMP");
-//  run.addParameter("METHOD","RSPT");
-//  run.addParameter("SCS_SAME","0.9")
-  run.addParameter("METHOD","DAVIDSON");
+  if (argc<2)
+    run.addParameter("METHOD","DAVIDSON");
+  else
+    for (int i=1; i<argc; i++) {
+      std::string s(argv[i]);
+      size_t equals = s.find("=");
+      if (equals != std::string::npos)
+        run.addParameter(s.substr(0,equals),s.substr(equals+1),true);
+  }
   std::vector<double> e=run.run();
-    xout << "e after run:"; for (int i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;
+  xout << "e after run:"; for (size_t i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;
   return 0;
 }
 #endif

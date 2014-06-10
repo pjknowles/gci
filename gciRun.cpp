@@ -75,15 +75,21 @@ std::vector<double> Run::run()
   return energies;
 }
 
-void Run::addParameter(const std::string& key, const std::vector<std::string>& values)
+void Run::addParameter(const std::string& key, const std::vector<std::string>& values, const bool echo)
 {
   globalFCIdump->addParameter(key,values);
+  if (echo) {
+    xout << "Run::addParameter "<<key<<" = ";
+    for (std::vector<std::string>::const_iterator v =values.begin(); v!=values.end(); v++)
+      xout <<*v<<",";
+    xout <<std::endl;
+  }
 }
 
-void Run::addParameter(const std::string& key, const std::string& value)
+void Run::addParameter(const std::string& key, const std::string& value, const bool echo)
 {
   std::vector<std::string> values(1,value);
-  globalFCIdump->addParameter(key,values);
+  addParameter(key,values,echo);
 }
 
 #include <cmath>
