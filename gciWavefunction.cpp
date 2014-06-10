@@ -7,6 +7,7 @@
 #include "gciStringSet.h"
 #include "gciTransitionDensity.h"
 //#include "mkl.h"
+#include "Profiler.h"
 
 Wavefunction::Wavefunction(FCIdump *dump) : State(dump) {
   buildStrings();
@@ -335,11 +336,13 @@ size_t Wavefunction::blockOffset(const unsigned int syma) const
 
 void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefunction &w)
 {
+  Profiler profiler;
   for (size_t i=0; i<buffer.size(); i++)
     buffer[i] += h.coreEnergy * w.buffer[i];
 
 
   size_t offset=0;
+  profiler.start("1-electron");
   for (unsigned int syma=0; syma<8; syma++) {
     unsigned int symb = w.symmetry^syma;
     size_t nsa = alphaStrings[syma].size();
@@ -366,6 +369,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     }
     offset += nsa*nsb;
   }
+  profiler.stop("1-electron");
 
 //  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
 
@@ -380,12 +384,18 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
         size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
         for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsbbMax > aa.end() ? aa.end() : aa0+nsbbMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
           size_t nsa = aa1-aa0;
+          profiler.start("TransitionDensity aa");
           TransitionDensity d(w,aa0,aa1,w.betaStrings[symb].begin(),w.betaStrings[symb].end(),-1,false,false);
+          profiler.stop("TransitionDensity aa");
           TransitionDensity e(d);
+          profiler.start("MXM aa");
           MxmDrvNN(&e[0],&d[0],
                    &(*h.bracket_integrals_aa)[h.pairSpace.at(-1).offset(0,symexc,0)],
               nsa*nsb,nexc,nexc,false);
+          profiler.stop("MXM aa");
+          profiler.start("action aa");
           e.action(*this);
+          profiler.stop("action aa");
         }
       }
     }
@@ -436,7 +446,9 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
             size_t nsb = bb1-bb0;
 //            for (unsigned int i=0; i<99; i++)
 //              TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
+          profiler.start("TransitionDensity ab");
             TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
+          profiler.stop("TransitionDensity ab");
             TransitionDensity e(d);
 	    // if (false) {
 	    //   xout << "AB integral block" <<std::endl;
@@ -448,15 +460,21 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
 	    // 	xout <<std::endl;
 	    //   }
 	    //}
+          profiler.start("MXM ab");
             MxmDrvNN(&e[0],&d[0],
                      &(*h.bracket_integrals_ab)[h.pairSpace.at(0).offset(0,symexc,0)],
                 nsa*nsb,nexc,nexc,false);
+          profiler.stop("MXM ab");
+          profiler.start("action ab");
             e.action(*this);
+          profiler.stop("action ab");
           }
         }
       }
     }
   }
+
+  xout <<profiler.str() <<std::endl;
 
 }
 
