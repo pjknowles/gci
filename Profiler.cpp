@@ -88,9 +88,9 @@ struct Profiler::times Profiler::getTimes()
   return result;
 }
 
-bool operator<(const struct Profiler::times & a, const struct Profiler::times & b) const
+bool Profiler::times::operator<(const struct Profiler::times & b) const
 {
-  return a.wall < b.wall;
+  return this->wall < b.wall;
 }
 
 bool operator<( const Profiler::resultMap::value_type& a, const Profiler::resultMap::value_type& b) const

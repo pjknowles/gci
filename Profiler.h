@@ -40,6 +40,7 @@ public:
   struct times {double cpu; double wall;
                 struct Profiler::times& operator+=(const struct Profiler::times &other);
                             struct Profiler::times& operator-=(const struct Profiler::times &other);
+                            bool operator<(const struct times & b);
                };
   typedef std::map<std::string,struct times> resultMap;
 private:
@@ -50,7 +51,6 @@ private:
   resultMap results;
 };
   std::ostream& operator<<(std::ostream& os, Profiler const& obj);
-  bool operator<(const struct times & a, const struct times & b);
   bool operator<(const Profiler::resultMap::value_type& a, const Profiler::resultMap::value_type& b);
 
 #endif // PROFILER_H
