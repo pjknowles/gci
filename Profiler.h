@@ -42,6 +42,7 @@ public:
                             struct Profiler::times& operator-=(const struct Profiler::times &other);
                };
 private:
+//  const static std::string other="OTHER";
   std::string Name;
   std::string current;
   struct times startTimes;

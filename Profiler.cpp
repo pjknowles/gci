@@ -14,6 +14,7 @@ Profiler::Profiler(std::string name)
 void Profiler::reset(std::string name)
 {
   Name=name;
+  results.clear();
 }
 
 struct Profiler::times& Profiler::times::operator+=( const struct Profiler::times &w2)
