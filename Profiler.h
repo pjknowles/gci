@@ -19,7 +19,7 @@ public:
    * \brief reset the object
    * \param name the title of this object
    */
-  void reset(std::string name);
+  void reset(const std::string name);
   /*!
    * \brief start begin timing a code segment
    * \param name name of the code segment
@@ -42,7 +42,6 @@ public:
                             struct Profiler::times& operator-=(const struct Profiler::times &other);
                };
 private:
-//  const static std::string other="OTHER";
   std::string Name;
   std::string current;
   struct times startTimes;

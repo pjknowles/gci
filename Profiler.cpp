@@ -11,10 +11,11 @@ Profiler::Profiler(std::string name)
   reset(name);
 }
 
-void Profiler::reset(std::string name)
+void Profiler::reset(const std::string name)
 {
   Name=name;
   results.clear();
+  stop("");
 }
 
 struct Profiler::times& Profiler::times::operator+=( const struct Profiler::times &w2)
@@ -44,18 +45,18 @@ struct Profiler::times operator-(const struct Profiler::times &w1, const struct 
 }
 
 
-void Profiler::start(std::string name)
+void Profiler::start(const std::string name)
 {
+  if (current!="") this->results[current] += getTimes()-startTimes;
   current=name;
   startTimes=getTimes();
 }
 
 #include <assert.h>
-void Profiler::stop(std::string name)
+void Profiler::stop(const std::string name)
 {
   assert(name=="" || name == current);
-  this->results[current] += getTimes()-startTimes;
-  startTimes=getTimes();
+  start("* Other");
 }
 
 std::string Profiler::str(const int verbosity) const
