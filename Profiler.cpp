@@ -43,8 +43,12 @@ std::string Profiler::str(const int verbosity) const
   std::priority_queue<data_t, std::deque<data_t>, compareTimes<data_t>  > q(results.begin(),results.end());
   std::stringstream ss;
   size_t maxWidth=0;
-  for (resultMap::const_iterator s=results.begin(); s!=results.end(); ++s)
+  Profiler::times totalTimes;
+  for (resultMap::const_iterator s=results.begin(); s!=results.end(); ++s) {
       if ((*s).first.size() > maxWidth) maxWidth=(*s).first.size();
+      totalTimes += (*s).second;
+  }
+  q.push(data_t("* TOTAL",totalTimes));
   ss << "Profiler "<<Name<<std::endl;
   while (! q.empty()) {
     ss.precision(2);
