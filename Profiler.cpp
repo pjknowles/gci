@@ -8,6 +8,11 @@ Profiler::Profiler()
 
 Profiler::Profiler(std::string name)
 {
+  reset(name);
+}
+
+void Profiler::reset(std::string name)
+{
   Name=name;
 }
 
@@ -52,7 +57,7 @@ void Profiler::stop(std::string name)
   startTimes=getTimes();
 }
 
-std::string Profiler::str(const int verbosity)
+std::string Profiler::str(const int verbosity) const
 {
   if (verbosity<0) return "";
   std::stringstream ss;
@@ -61,6 +66,11 @@ std::string Profiler::str(const int verbosity)
     ss << (*result).first <<" "<<(*result).second.cpu<<" "<<(*result).second.wall<<std::endl;
   return ss.str();
 }
+std::ostream& operator<<(std::ostream& os, Profiler const& obj)
+{
+  return os << obj.str();
+}
+
 
 #include <sys/time.h>
 struct Profiler::times Profiler::getTimes()

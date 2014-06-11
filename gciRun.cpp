@@ -13,6 +13,7 @@ Run::Run(std::string fcidump)
   globalFCIdump = new FCIdump(fcidump);
 }
 
+  Profiler gci::profiler("GCI");
 std::vector<double> Run::run()
 {
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
@@ -72,6 +73,7 @@ std::vector<double> Run::run()
   else {
     xout << "Unknown method in GCI, " << method << std::endl;
   }
+  xout <<profiler <<std::endl;
   return energies;
 }
 

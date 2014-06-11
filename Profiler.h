@@ -16,6 +16,11 @@ public:
    */
   Profiler(std::string name);
   /*!
+   * \brief reset the object
+   * \param name the title of this object
+   */
+  void reset(std::string name);
+  /*!
    * \brief start begin timing a code segment
    * \param name name of the code segment
    */
@@ -30,7 +35,7 @@ public:
    * \param verbosity how much to print
    * \return
    */
-  std::string str(const int verbosity=0);
+  std::string str(const int verbosity=0) const;
 
   struct times {double cpu; double wall;
                 struct Profiler::times& operator+=(const struct Profiler::times &other);

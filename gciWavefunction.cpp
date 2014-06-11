@@ -336,7 +336,6 @@ size_t Wavefunction::blockOffset(const unsigned int syma) const
 
 void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefunction &w)
 {
-  Profiler profiler;
   for (size_t i=0; i<buffer.size(); i++)
     buffer[i] += h.coreEnergy * w.buffer[i];
 
@@ -474,7 +473,6 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     }
   }
 
-  xout <<profiler.str() <<std::endl;
 
 }
 
