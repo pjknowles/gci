@@ -19,21 +19,30 @@ void Profiler::reset(const std::string name)
 {
   Name=name;
   results.clear();
-  stop();
+  start("* Other");
 }
 
 void Profiler::start(const std::string name)
 {
-  if (current!="") this->results[current] += getTimes()-startTimes;
-  current=name;
-  startTimes=getTimes();
+  std::cout << "Profiler::start "<<name<<std::endl;
+  struct times now=getTimes();
+  if (! stack.empty())
+    stack.top()+=now;
+  struct times minusNow; minusNow -= now;minusNow.name=name;
+  stack.push(minusNow);
 }
 
 #include <assert.h>
 void Profiler::stop(const std::string name)
 {
-  assert(name=="" || name == current);
-  start("* Other");
+  std::cout << "Profiler::stop "<<name<<std::endl;
+  assert(name=="" || name == stack.top().name);
+  struct times now=getTimes();
+  stack.top()+=now;
+  results[stack.top().name] += stack.top();
+  results[stack.top().name].calls++;
+  stack.pop();
+  if (! stack.empty()) stack.top()-=now;
 }
 
 std::string Profiler::str(const int verbosity) const
@@ -48,11 +57,12 @@ std::string Profiler::str(const int verbosity) const
       if ((*s).first.size() > maxWidth) maxWidth=(*s).first.size();
       totalTimes += (*s).second;
   }
+  totalTimes.calls=1;
   q.push(data_t("* TOTAL",totalTimes));
   ss << "Profiler "<<Name<<std::endl;
   while (! q.empty()) {
     ss.precision(2);
-    ss <<std::right <<std::setw(maxWidth) << q.top().first <<": cpu="<<std::fixed<<q.top().second.cpu<<", wall="<<q.top().second.wall<<std::endl;
+    ss <<std::right <<std::setw(maxWidth) << q.top().first <<": calls="<<q.top().second.calls<<", cpu="<<std::fixed<<q.top().second.cpu<<", wall="<<q.top().second.wall<<std::endl;
     q.pop();
   }
   return ss.str();

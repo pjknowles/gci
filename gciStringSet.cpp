@@ -132,6 +132,7 @@ long StringSet::binomial_coefficient(unsigned long n, unsigned long k) {
 
 void StringSet::complete(int sym)
 {
+  profiler.start("StringSet::complete");
   //    xout <<"StringSet::complete prototype"<<proto.printable(1)<<std::endl;
   String string(&proto);
   this->erase(this->begin(),this->end());
@@ -145,6 +146,7 @@ void StringSet::complete(int sym)
   //    xout << "in StringSet::complete final list: " <<std::endl ;
   //    for (iterator s=this->begin(); s!=this->end(); s++) xout << s->printable()<<std::endl;
 
+  profiler.stop("StringSet::complete");
 }
 
 void StringSet::insert(String& s)

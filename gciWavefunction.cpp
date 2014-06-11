@@ -39,6 +39,7 @@ Wavefunction::Wavefunction(const Wavefunction &other) : State(other)
 
 void Wavefunction::buildStrings()
 {
+  profiler.start("buildStrings");
   alphaStrings.resize(8); betaStrings.resize(8);
   dimension = 0;
   _blockOffset.resize(8);
@@ -53,6 +54,7 @@ void Wavefunction::buildStrings()
     _blockOffset[syma]=dimension;
     dimension += alphaStrings[syma].size()*betaStrings[symb].size();
   }
+  profiler.stop("buildStrings");
 }
 
 size_t Wavefunction::size()
@@ -78,6 +80,7 @@ void Wavefunction::set(const double value)
 
 void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
 {
+  profiler.start("diagonalHamiltonian");
   std::vector<double> ha=hamiltonian.int1(1);
   std::vector<double> hbb=hamiltonian.int1(-1);
   std::vector<double> Jaa, Jab, Jbb, Kaa, Kbb;
@@ -165,6 +168,7 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
       }
     }
   }
+  profiler.start("diagonalHamiltonian");
 }
 
 Wavefunction& Wavefunction::operator*=(const double &value)
@@ -411,6 +415,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
         size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
         for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
           size_t nsb = bb1-bb0;
+          profiler.start("TransitionDensity bb");
           TransitionDensity d(w,w.alphaStrings[syma].begin(),w.alphaStrings[syma].end(),bb0,bb1,-1,false,false);
 //            for (unsigned int i=0; i<99; i++) {
 //              TransitionDensity e(d);
@@ -418,11 +423,16 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
 //                   &(*h.bracket_integrals_bb)[h.pairSpace.at(-1).offset(0,symexc,0)],
 //              nsa*nsb,nexc,nexc,false);
 //            }
+          profiler.stop("TransitionDensity bb");
           TransitionDensity e(d);
+          profiler.start("MXM bb");
           MxmDrvNN(&e[0],&d[0],
                    &(*h.bracket_integrals_bb)[h.pairSpace.at(-1).offset(0,symexc,0)],
               nsa*nsb,nexc,nexc,false);
+          profiler.stop("MXM bb");
+          profiler.start("action bb");
           e.action(*this);
+          profiler.stop("action bb");
         }
       }
     }

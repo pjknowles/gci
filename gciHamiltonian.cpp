@@ -67,6 +67,7 @@ void Hamiltonian::load(std::string filename, int verbosity) {
 }
 
 void Hamiltonian::load(FCIdump* dump, int verbosity) {
+  profiler.start("Hamiltonian::load");
   if (loaded) unload();
   if (verbosity) xout <<"Load hamiltonian from " << dump->fileName <<std::endl;
   //    State::load(filename);
@@ -278,6 +279,7 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
     }
   }
   //    xout <<str(3) <<std::endl;exit(0);
+  profiler.stop("Hamiltonian::load");
 }
 
 void Hamiltonian::unload() {

@@ -2,6 +2,7 @@
 #define PROFILER_H
 #include <string>
 #include <map>
+#include <stack>
 
 /*!
  * \brief The Profiler class: framework for timing code sections
@@ -37,7 +38,7 @@ public:
    */
   std::string str(const int verbosity=0) const;
 
-  struct times {double cpu; double wall;
+  struct times {double cpu; double wall; int calls; std::string name;
                 struct Profiler::times& operator+=(const struct Profiler::times &other);
                 struct Profiler::times& operator-=(const struct Profiler::times &other);
                };
@@ -51,7 +52,7 @@ private:
   };
 
   std::string Name;
-  std::string current;
+  std::stack<struct times> stack;
   struct times startTimes;
   struct times getTimes();
   resultMap results;
