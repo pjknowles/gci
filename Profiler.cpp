@@ -1,6 +1,7 @@
-#include "Profiler.h"
+#include <algorithm>
 #include <sstream>
 #include <iostream>
+#include "Profiler.h"
 
 Profiler::Profiler()
 {
@@ -15,7 +16,7 @@ void Profiler::reset(const std::string name)
 {
   Name=name;
   results.clear();
-  stop("");
+  stop();
 }
 
 struct Profiler::times& Profiler::times::operator+=( const struct Profiler::times &w2)
@@ -61,6 +62,7 @@ void Profiler::stop(const std::string name)
 
 std::string Profiler::str(const int verbosity) const
 {
+  std::sort(results.begin(),results.end());
   if (verbosity<0) return "";
   std::stringstream ss;
   ss << "Profiler "<<Name<<std::endl;
@@ -84,4 +86,14 @@ struct Profiler::times Profiler::getTimes()
   if (!gettimeofday(&time,NULL))
     result.wall = (double)time.tv_sec + (double)time.tv_usec * .000001;
   return result;
+}
+
+bool operator<(const struct Profiler::times & a, const struct Profiler::times & b) const
+{
+  return a.wall < b.wall;
+}
+
+bool operator<( const Profiler::resultMap::value_type& a, const Profiler::resultMap::value_type& b) const
+{
+  return a.second < b.second;
 }
