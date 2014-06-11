@@ -39,11 +39,17 @@ public:
 
   struct times {double cpu; double wall;
                 struct Profiler::times& operator+=(const struct Profiler::times &other);
-                            struct Profiler::times& operator-=(const struct Profiler::times &other);
-                            bool operator<(const struct times & b);
+                struct Profiler::times& operator-=(const struct Profiler::times &other);
                };
-  typedef std::map<std::string,struct times> resultMap;
 private:
+  typedef std::map<std::string,struct Profiler::times> resultMap;
+  template<class T> struct compareTimes : std::binary_function<T,T,bool>
+  { inline bool operator () (const T& _left, const T& _right)
+    {
+      return _left.second.wall < _right.second.wall;
+    }
+  };
+
   std::string Name;
   std::string current;
   struct times startTimes;
@@ -51,6 +57,8 @@ private:
   resultMap results;
 };
   std::ostream& operator<<(std::ostream& os, Profiler const& obj);
-  bool operator<(const Profiler::resultMap::value_type& a, const Profiler::resultMap::value_type& b);
+  struct Profiler::times operator+(const struct Profiler::times &w1, const struct Profiler::times &w2);
+  struct Profiler::times operator-(const struct Profiler::times &w1, const struct Profiler::times &w2);
+
 
 #endif // PROFILER_H
