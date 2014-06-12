@@ -100,6 +100,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
                                   double energyThreshold, int nState, int maxIterations)
 {
   profiler.start("Davidson");
+  profiler.start("Davidson preamble");
   if (nState < 0)
     nState = parameter("NSTATE",std::vector<int>(1,1)).at(0);
   xout << "nState "<<nState<<std::endl;
@@ -122,12 +123,16 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
   w.set((double)0); w.set(reference, (double) 1);
   std::vector<double> reducedHamiltonian;
   std::vector<double> elast(nState,e0+1);
+  profiler.stop("Davidson preamble");
   for (int n=0; n < maxIterations; n++) {
     w.put(wfile,n);
     g.set((double)0);
+    profiler.start("Davidson Hc");
     g.hamiltonianOnWavefunction(hamiltonian, w);
+    profiler.stop("Davidson Hc");
     g.put(gfile,n);
     reducedHamiltonian.resize((size_t)(n+1)*(n+1));
+    profiler.start("Davidson build rH");
     for (int i=n-1; i>-1; i--)
       for (int j=n-1; j>-1; j--)
   reducedHamiltonian[j+i*(n+1)] = reducedHamiltonian[j+i*n];
@@ -135,6 +140,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
       g.get(gfile,i);
       reducedHamiltonian[i+n*(n+1)] = reducedHamiltonian[n+i*(n+1)] = g * w;
     }
+    profiler.stop("Davidson build rH");
     // { xout << "Reduced hamiltonian:"<<std::endl; for (int i=0; i < n+1; i++) { for (int j=0; j < n+1; j++) xout <<" "<<reducedHamiltonian[j+(n+1)*i]; xout << std::endl; } }
     std::vector<double> eigenvectors(reducedHamiltonian);
     std::vector<double> eigenvalues(n+1);
@@ -152,6 +158,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
         track=i; tracktest=std::fabs(eigenvectors[n+1+i*(n+1)]);
       }
     }
+    profiler.start("Davidson residual");
     w.set((double)0);
     for (int i=0; i <= n; i++) {
       g.get(wfile,i);
@@ -166,6 +173,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
       double factor = -(g*w)/(g*g);
       w += factor*g;
     }
+    profiler.stop("Davidson residual");
     double norm2=w*w;
     double econv=0;for (int i=0; i<(int)e.size(); i++) econv+=std::fabs(e[i]-elast[i]);
     xout <<"econv="<<econv<<std::endl;

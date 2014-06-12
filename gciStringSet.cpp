@@ -9,16 +9,12 @@ StringSet::StringSet() : std::vector<String>()
 
 StringSet::StringSet(String prototype, bool all, int sym) : std::vector<String>()
 {
-  profiler.start("StringSet");
   //    xout <<"StringSet prototype constructor "<<all<<std::endl;
   // copy prototype
   proto = prototype;
   symmetry = sym;
-  profiler.start("partialWeightArray");
   setupPartialWeightArray();
-  profiler.stop("partialWeightArray");
   if (all) complete(sym);
-  profiler.stop("StringSet");
 }
 
 void StringSet::makekey(String &s)
@@ -35,8 +31,10 @@ StringSet::StringSet(const StringSet &referenceSpace, int annihilations, int cre
 
 StringSet::StringSet(const std::vector<StringSet>& referenceSpaces, int annihilations, int creations, int sym)
 {
+  profiler.start("StringSet::addByOperators[]");
   for (std::vector<StringSet>::const_iterator referenceSpace=referenceSpaces.begin(); referenceSpace != referenceSpaces.end(); referenceSpace++)
     addByOperators(*referenceSpace, annihilations, creations, sym);
+  profiler.stop("StringSet::addByOperators[]");
 }
 
 void StringSet::addByOperators(const StringSet &referenceSpace, int annihilations, int creations, int sym)

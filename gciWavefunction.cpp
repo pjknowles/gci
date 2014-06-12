@@ -502,11 +502,15 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
 
 void Wavefunction::put(File& f, int index)
 {
+  profiler.start("Wavefunction::put");
   f.write(buffer,index*buffer.size());
+  profiler.stop("Wavefunction::put");
 }
 
 
 void Wavefunction::get(File& f, int index)
 {
+  profiler.start("Wavefunction::get");
   f.read(buffer,index*buffer.size());
+  profiler.stop("Wavefunction::get");
 }
