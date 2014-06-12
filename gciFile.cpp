@@ -8,13 +8,26 @@
 #include <unistd.h>
 #endif
 #ifdef GCIMOLPROFILE
-int File::baseRecord=13000; // dangerous, to be fixed
+int File::baseRecord=13000;
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void unused_record(int*, int*);
+
+#ifdef __cplusplus
+}
+#endif
 #endif
 
 File::File()
 {
 #ifdef GCIMOLPROFILE
-  f = new FMolproStorageBlock(7,++baseRecord,0);
+
+  int file=7;
+  unused_record(&file,&baseRecord);
+//  xout << "baseRecord="<<baseRecord<<std::endl;
+  f = new FMolproStorageBlock(file,baseRecord++,0);
 //  xout << "new file"<<std::endl;
 #else
   char *tmpname = strdup("tmpfileXXXXXX");
