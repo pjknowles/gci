@@ -99,6 +99,13 @@ public:
   std::string str(int verbosity=0) const;
 
   /*!
+   * \brief axpy Add a multiple of another Wavefunction object to this one
+   * \param a the factor defining the multiple
+   * \param x the other wavefunction
+   */
+  void axpy(double a, Wavefunction& x);
+
+  /*!
    * \brief push the object's buffer to a file
    * \param f the file
    * \param index where on the file, in units of the size of the object

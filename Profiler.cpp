@@ -18,8 +18,8 @@ Profiler::Profiler(std::string name)
 void Profiler::reset(const std::string name)
 {
   Name=name;
-  results.clear();
   stopall();
+  results.clear();
   start("* Other");
 }
 
@@ -29,8 +29,10 @@ void Profiler::start(const std::string name)
   struct times now=getTimes();
   if (! stack.empty())
     stack.top()+=now;
+//  if (stack.size()==1) std::cout<<"adjusted top of stack " << stack.top().name << " " <<stack.top().wall <<std::endl;
   struct times minusNow; minusNow.cpu=-now.cpu; minusNow.wall=-now.wall; minusNow.name=name;
   stack.push(minusNow);
+//  if (stack.size()==1) std::cout<<"starting stack " << stack.top().name << " " <<stack.top().wall <<std::endl;
 }
 
 #include <assert.h>
@@ -42,8 +44,13 @@ void Profiler::stop(const std::string name)
   stack.top()+=now;
   results[stack.top().name] += stack.top();
   results[stack.top().name].calls++;
+//  if (stack.size()==1) {
+//    std::cout<<"stop added to top of stack " << stack.top().name << " " <<stack.top().wall <<std::endl;
+//    std::cout<<"results now "<<results[stack.top().name].wall <<std::endl;
+//  }
   stack.pop();
   if (! stack.empty()) stack.top()-=now;
+//  if (stack.size()==1) std::cout<<"stop subtracted from top of stack " << stack.top().name << " " <<stack.top().wall <<std::endl;
 }
 
 void Profiler::stopall()
@@ -51,7 +58,7 @@ void Profiler::stopall()
   while (! stack.empty()) stop();
 }
 
-std::string Profiler::str(const int verbosity)
+std::string Profiler::str(const int verbosity, const int precision)
 {
   if (verbosity<0) return "";
   stopall();
@@ -68,7 +75,7 @@ std::string Profiler::str(const int verbosity)
   q.push(data_t("* TOTAL",totalTimes));
   ss << "Profiler "<<Name<<std::endl;
   while (! q.empty()) {
-    ss.precision(2);
+    ss.precision(precision);
     ss <<std::right <<std::setw(maxWidth) << q.top().first <<": calls="<<q.top().second.calls<<", cpu="<<std::fixed<<q.top().second.cpu<<", wall="<<q.top().second.wall<<std::endl;
     q.pop();
   }

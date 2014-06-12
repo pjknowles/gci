@@ -171,6 +171,11 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
   profiler.stop("diagonalHamiltonian");
 }
 
+void Wavefunction::axpy(double a, Wavefunction &x)
+{
+  for (size_t i=0; i<buffer.size(); i++) buffer[i] += x.buffer[i]*a;
+}
+
 Wavefunction& Wavefunction::operator*=(const double &value)
 {
   for (std::vector<double>::iterator b=buffer.begin(); b != buffer.end(); b++) *b*=value;

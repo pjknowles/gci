@@ -34,9 +34,10 @@ public:
   /*!
    * \brief Generate a printable representation of the object
    * \param verbosity how much to print
+   * \param precision how many decimal places for seconds
    * \return
    */
-  std::string str(const int verbosity=0);
+  std::string str(const int verbosity=0, const int precision=3);
 
   struct times {double cpu; double wall; int calls; std::string name;
                 struct Profiler::times& operator+=(const struct Profiler::times &other);

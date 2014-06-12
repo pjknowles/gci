@@ -6,6 +6,7 @@
 #include "FCIdump.h"
 #include <iostream>
 #include <iomanip>
+#include <cmath>
 using namespace gci;
 
 Run::Run(std::string fcidump)
@@ -16,16 +17,20 @@ Run::Run(std::string fcidump)
   Profiler gci::profiler("GCI");
 std::vector<double> Run::run()
 {
+  profiler.reset("GCI");
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
   std::vector<double>energies;
   std::string method = parameter("METHOD",std::vector<std::string>(1,"")).at(0);
   if (method == "MBPT" || method == "MOLLER") method="RSPT";
   xout << "METHOD="<<method<<std::endl;
 
+  profiler.start("load Hamiltonian");
   Hamiltonian hh(globalFCIdump);
+  profiler.stop("load Hamiltonian");
   size_t referenceLocation;
   Determinant referenceDeterminant;
   State prototype;
+  profiler.start("find reference");
   { // so that w goes out of scope
     Wavefunction w(globalFCIdump);
     w.diagonalHamiltonian(hh);
@@ -36,7 +41,9 @@ std::vector<double> Run::run()
     xout << "Lowest energy determinant " << referenceDeterminant <<" with energy "<<w.at(referenceLocation)<<std::endl;
     prototype = State(&hh,w.nelec,w.symmetry,w.ms2);
   }
+  profiler.stop("find reference");
 
+  profiler.start("method");
   if (method == "RSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
     double scs_opposite = parameter("SCS_OPPOSITE",std::vector<double>(1,(double)1)).at(0);
@@ -70,9 +77,15 @@ std::vector<double> Run::run()
     energies = Davidson(hh, prototype);
   } else if (method=="HAMILTONIAN")
      HamiltonianMatrixPrint(hh,prototype);
+  else if (method=="PROFILETEST") {
+    double a=1.234;
+    for (int i=0; i<100000000; i++) a=(a+1/std::sqrt(a));
+    energies.resize(1);energies[0]=a;
+  }
   else {
     xout << "Unknown method in GCI, " << method << std::endl;
   }
+  profiler.stop("method");
   xout <<profiler <<std::endl;
   return energies;
 }
@@ -162,16 +175,19 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     w.set((double)0);
     for (int i=0; i <= n; i++) {
       g.get(wfile,i);
-      w += eigenvalues[track]*eigenvectors[i+track*(n+1)] * g;
+//      w += eigenvalues[track]*eigenvectors[i+track*(n+1)] * g;
+      w.axpy(eigenvalues[track]*eigenvectors[i+track*(n+1)] , g);
       g.get(gfile,i);
-      w -= eigenvectors[i+track*(n+1)] * g;
+//      w -= eigenvectors[i+track*(n+1)] * g;
+      w.axpy( -eigenvectors[i+track*(n+1)] , g);
     }
     g.get(h0file);
     w /= g;
     for (int i=0; i <= n; i++) {
       g.get(wfile,i);
       double factor = -(g*w)/(g*g);
-      w += factor*g;
+//      w += factor*g;
+      w.axpy(factor,g);
     }
     profiler.stop("Davidson residual");
     double norm2=w*w;
