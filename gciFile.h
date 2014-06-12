@@ -38,6 +38,7 @@ public:
   void read(std::vector<double>& buf, size_t address=0);
 private:
 #ifdef GCIMOLPROFILE
+  static int baseRecord;
   FMolproStorageBlock* f;
 #else
   std::fstream f;
