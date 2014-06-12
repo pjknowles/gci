@@ -6,6 +6,7 @@
 #include "FCIdump.h"
 #include <iostream>
 #include <iomanip>
+#include <vector>
 #include <cmath>
 using namespace gci;
 
@@ -43,7 +44,6 @@ std::vector<double> Run::run()
   }
   profiler.stop("find reference");
 
-  profiler.start("method");
   if (method == "RSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
     double scs_opposite = parameter("SCS_OPPOSITE",std::vector<double>(1,(double)1)).at(0);
@@ -85,8 +85,7 @@ std::vector<double> Run::run()
   else {
     xout << "Unknown method in GCI, " << method << std::endl;
   }
-  profiler.stop("method");
-  xout <<profiler <<std::endl;
+  xout <<profiler.str(parameter("PROFILER",std::vector<int>(1,-1)).at(0)) <<std::endl;
   return energies;
 }
 

@@ -1,7 +1,14 @@
 #ifndef GCIFILE_H
 #define GCIFILE_H
+#ifdef MOLPRO
+#define GCIMOLPROFILE
+#endif
 #include <vector>
+#ifdef GCIMOLPROFILE
+#include "cic/ItfFortranInt.h"
+#else
 #include <fstream>
+#endif
 
 namespace gci {
 
@@ -30,7 +37,11 @@ public:
    */
   void read(std::vector<double>& buf, size_t address=0);
 private:
+#ifdef GCIMOLPROFILE
+  FMolproStorageBlock* f;
+#else
   std::fstream f;
+#endif
 };
 
 }

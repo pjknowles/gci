@@ -39,8 +39,10 @@ int main(int argc, char *argv[])
 //int main()
 {
   Run run("FCIDUMP");
-  if (argc<2)
+  if (argc<2) {
     run.addParameter("METHOD","DAVIDSON");
+    run.addParameter("PROFILER","0");
+  }
   else
     for (int i=1; i<argc; i++) {
       std::string s(argv[i]);
