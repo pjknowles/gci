@@ -168,7 +168,7 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
       }
     }
   }
-  profiler.start("diagonalHamiltonian");
+  profiler.stop("diagonalHamiltonian");
 }
 
 Wavefunction& Wavefunction::operator*=(const double &value)
@@ -340,6 +340,7 @@ size_t Wavefunction::blockOffset(const unsigned int syma) const
 
 void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefunction &w)
 {
+  profiler.start("hamiltonianOnWavefunction");
   for (size_t i=0; i<buffer.size(); i++)
     buffer[i] += h.coreEnergy * w.buffer[i];
 
@@ -377,14 +378,18 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
 //  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
 
   if (h.bracket_integrals_aa != NULL) { // two-electron contribution, alpha-alpha
+    profiler.start("aa integrals");
     size_t nsbbMax = 64; // temporary static
     for (unsigned int syma=0; syma<8; syma++) {
+      profiler.start("StringSet aa");
       StringSet aa(w.alphaStrings,2,0,syma);
+      profiler.stop("StringSet aa");
       if (aa.size()==0) continue;
       for (unsigned int symb=0; symb<8; symb++) {
         unsigned int symexc = syma^symb^w.symmetry;
         size_t nexc = h.pairSpace.at(-1)[symexc];
         size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
+        profiler.start("aa1 loop");
         for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsbbMax > aa.end() ? aa.end() : aa0+nsbbMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
           size_t nsa = aa1-aa0;
           profiler.start("TransitionDensity aa");
@@ -400,11 +405,14 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
           e.action(*this);
           profiler.stop("action aa");
         }
+        profiler.stop("aa1 loop");
       }
     }
+    profiler.stop("aa integrals");
   }
 
   if (h.bracket_integrals_bb != NULL) { // two-electron contribution, beta-beta
+    profiler.start("bb integrals");
     size_t nsbbMax = 64; // temporary static
     for (unsigned int symb=0; symb<8; symb++) {
       StringSet bb(w.betaStrings,2,0,symb);
@@ -436,9 +444,11 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
         }
       }
     }
+    profiler.stop("bb integrals");
   }
 
   if (h.bracket_integrals_ab != NULL) { // two-electron contribution, alpha-beta
+    profiler.start("ab integrals");
     size_t nsaaMax = 640; // temporary static
     size_t nsbbMax = 640; // temporary static
     for (unsigned int symb=0; symb<8; symb++) {
@@ -449,6 +459,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
         if (aa.size()==0) continue;
         unsigned int symexc = symb^syma^w.symmetry;
         size_t nexc = h.pairSpace.at(0)[symexc];
+        profiler.start("StringSet iterator loops");
         for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
           size_t nsa = aa1-aa0;
           for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
@@ -479,11 +490,14 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
           profiler.stop("action ab");
           }
         }
+        profiler.stop("StringSet iterator loops");
       }
     }
+    profiler.stop("ab integrals");
   }
 
 
+  profiler.stop("hamiltonianOnWavefunction");
 }
 
 void Wavefunction::put(File& f, int index)

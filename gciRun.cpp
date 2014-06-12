@@ -99,6 +99,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
                                   const State &prototype,
                                   double energyThreshold, int nState, int maxIterations)
 {
+  profiler.start("Davidson");
   if (nState < 0)
     nState = parameter("NSTATE",std::vector<int>(1,1)).at(0);
   xout << "nState "<<nState<<std::endl;
@@ -172,6 +173,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     elast=e;
     w *= ((double)1/std::sqrt(norm2));
   }
+  profiler.stop("Davidson");
   return e;
 }
 

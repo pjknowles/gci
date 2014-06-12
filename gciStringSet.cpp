@@ -9,12 +9,16 @@ StringSet::StringSet() : std::vector<String>()
 
 StringSet::StringSet(String prototype, bool all, int sym) : std::vector<String>()
 {
+  profiler.start("StringSet");
   //    xout <<"StringSet prototype constructor "<<all<<std::endl;
   // copy prototype
   proto = prototype;
   symmetry = sym;
+  profiler.start("partialWeightArray");
   setupPartialWeightArray();
+  profiler.stop("partialWeightArray");
   if (all) complete(sym);
+  profiler.stop("StringSet");
 }
 
 void StringSet::makekey(String &s)

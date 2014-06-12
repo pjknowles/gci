@@ -36,7 +36,7 @@ public:
    * \param verbosity how much to print
    * \return
    */
-  std::string str(const int verbosity=0) const;
+  std::string str(const int verbosity=0);
 
   struct times {double cpu; double wall; int calls; std::string name;
                 struct Profiler::times& operator+=(const struct Profiler::times &other);
@@ -56,8 +56,9 @@ private:
   struct times startTimes;
   struct times getTimes();
   resultMap results;
+  void stopall();
 };
-  std::ostream& operator<<(std::ostream& os, Profiler const& obj);
+  std::ostream& operator<<(std::ostream& os, Profiler & obj);
   struct Profiler::times operator+(const struct Profiler::times &w1, const struct Profiler::times &w2);
   struct Profiler::times operator-(const struct Profiler::times &w1, const struct Profiler::times &w2);
 

@@ -19,24 +19,25 @@ void Profiler::reset(const std::string name)
 {
   Name=name;
   results.clear();
+  stopall();
   start("* Other");
 }
 
 void Profiler::start(const std::string name)
 {
-  std::cout << "Profiler::start "<<name<<std::endl;
+//  std::cout << "Profiler::start "<<name<<std::endl;
   struct times now=getTimes();
   if (! stack.empty())
     stack.top()+=now;
-  struct times minusNow; minusNow -= now;minusNow.name=name;
+  struct times minusNow; minusNow.cpu=-now.cpu; minusNow.wall=-now.wall; minusNow.name=name;
   stack.push(minusNow);
 }
 
 #include <assert.h>
 void Profiler::stop(const std::string name)
 {
-  std::cout << "Profiler::stop "<<name<<std::endl;
   assert(name=="" || name == stack.top().name);
+//  std::cout << "Profiler::stop "<<stack.top().name<<std::endl;
   struct times now=getTimes();
   stack.top()+=now;
   results[stack.top().name] += stack.top();
@@ -45,9 +46,15 @@ void Profiler::stop(const std::string name)
   if (! stack.empty()) stack.top()-=now;
 }
 
-std::string Profiler::str(const int verbosity) const
+void Profiler::stopall()
+{
+  while (! stack.empty()) stop();
+}
+
+std::string Profiler::str(const int verbosity)
 {
   if (verbosity<0) return "";
+  stopall();
   typedef std::pair<std::string,Profiler::times> data_t;
   std::priority_queue<data_t, std::deque<data_t>, compareTimes<data_t>  > q(results.begin(),results.end());
   std::stringstream ss;
@@ -68,7 +75,7 @@ std::string Profiler::str(const int verbosity) const
   return ss.str();
 }
 
-std::ostream& operator<<(std::ostream& os, Profiler const& obj)
+std::ostream& operator<<(std::ostream& os, Profiler & obj)
 {
   return os << obj.str();
 }
