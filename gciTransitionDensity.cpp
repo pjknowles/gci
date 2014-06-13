@@ -34,6 +34,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
   if (deltaAlpha==0 && deltaBeta==0) { // number of electrons preserved, so one-electron excitation
 
     if (doAlpha) {
+      profiler.start("1-electron alpha excitations");
       // alpha excitations
       unsigned int wsymb = symb;
       unsigned int wsyma = w.symmetry^wsymb;
@@ -68,9 +69,11 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       //      xout << (*this)[ab+ij*nsa*nsb] <<" ";
       //    xout <<std::endl;
       //  }
+      profiler.stop("1-electron alpha excitations");
     }
 
     if (doBeta) {
+      profiler.start("1-electron beta excitations");
       // beta excitations
       unsigned int wsyma = syma;
       unsigned int wsymb = w.symmetry^wsyma;
@@ -94,6 +97,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
         }
         offb ++;
       }
+      profiler.stop("1-electron beta excitations");
     }
 
   } else if (deltaAlpha==2) { // wavefunction has 2 more alpha electrons than interacting states
