@@ -36,11 +36,11 @@ void Profiler::start(const std::string name)
 }
 
 #include <assert.h>
-void Profiler::stop(const std::string name)
+void Profiler::stop(const std::string name, size_t operations)
 {
 //  std::cout << "Profiler::stop "<<stack.top().name<<":"<<name<<std::endl;
   assert(name=="" || name == stack.top().name);
-  struct times now=getTimes();
+  struct times now=getTimes();now.operations=operations;
   stack.top()+=now;
   results[stack.top().name] += stack.top();
   results[stack.top().name].calls++;
@@ -103,12 +103,14 @@ struct Profiler::times& Profiler::times::operator+=( const struct Profiler::time
 {
   cpu += w2.cpu;
   wall += w2.wall;
+  operations += w2.operations;
   return *this;
 }
 struct Profiler::times& Profiler::times::operator-=( const struct Profiler::times &w2)
 {
   cpu -= w2.cpu;
   wall -= w2.wall;
+  operations -= w2.operations;
   return *this;
 }
 
