@@ -125,11 +125,6 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
           for (size_t ib=0; ib < nsb; ib++)
             on[ib+i*nsb] += ona[ia+i*nsa];
         }
-        //                const double one=(double) 1;
-        //                const MKL_INT ione = 1;
-        //                const MKL_INT m = betaStrings[symb].size();
-        //                const MKL_INT n = hamiltonian->basisSize;
-        //                DGEMV("N",&m,&n, &one, &on[0], &m, &ha[0], &ione, &one, &buffer[offset+ia*m], &ione);
         for (size_t i=0; i<nact; i++)
           for (size_t ib=0; ib < nsb; ib++)
             buffer[offset+ib] += on[ib+i*nsb] * ha[i];

@@ -38,8 +38,8 @@ void Profiler::start(const std::string name)
 #include <assert.h>
 void Profiler::stop(const std::string name)
 {
+//  std::cout << "Profiler::stop "<<stack.top().name<<":"<<name<<std::endl;
   assert(name=="" || name == stack.top().name);
-//  std::cout << "Profiler::stop "<<stack.top().name<<std::endl;
   struct times now=getTimes();
   stack.top()+=now;
   results[stack.top().name] += stack.top();
