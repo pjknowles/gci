@@ -30,7 +30,7 @@ void Profiler::start(const std::string name)
   if (! stack.empty())
     stack.top()+=now;
 //  if (stack.size()==1) std::cout<<"adjusted top of stack " << stack.top().name << " " <<stack.top().wall <<std::endl;
-  struct times minusNow; minusNow.cpu=-now.cpu; minusNow.wall=-now.wall; minusNow.name=name;
+  struct times minusNow; minusNow.cpu=-now.cpu; minusNow.wall=-now.wall; minusNow.name=name; minusNow.operations=0;
   stack.push(minusNow);
 //  if (stack.size()==1) std::cout<<"starting stack " << stack.top().name << " " <<stack.top().wall <<std::endl;
 }
@@ -38,10 +38,11 @@ void Profiler::start(const std::string name)
 #include <assert.h>
 void Profiler::stop(const std::string name, size_t operations)
 {
-//  std::cout << "Profiler::stop "<<stack.top().name<<":"<<name<<std::endl;
+//  std::cout << "Profiler::stop "<<stack.top().name<<":"<<name<<" operations="<<operations<<std::endl;
   assert(name=="" || name == stack.top().name);
   struct times now=getTimes();now.operations=operations;
   stack.top()+=now;
+//  std::cout << "stack.top().operations="<<stack.top().operations<<std::endl;
   results[stack.top().name] += stack.top();
   results[stack.top().name].calls++;
 //  if (stack.size()==1) {

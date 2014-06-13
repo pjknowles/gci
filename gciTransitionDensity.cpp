@@ -30,7 +30,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
 
   //  xout <<"TransitionDensity "<<symexc<<" "<<nsa*nsb*excitations<<std::endl;
   resize(nsa*nsb*excitations,(double)0);
-  profiler.stop("TransitionDensity preamble");
+  profiler.stop("TransitionDensity preamble",nsa*nsb*excitations);
   if (nsa*nsb*excitations == 0) return;
 
   if (deltaAlpha==0 && deltaBeta==0) { // number of electrons preserved, so one-electron excitation
