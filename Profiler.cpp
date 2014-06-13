@@ -66,8 +66,10 @@ std::string Profiler::str(const int verbosity, const int precision)
   std::priority_queue<data_t, std::deque<data_t>, compareTimes<data_t>  > q(results.begin(),results.end());
   std::stringstream ss;
   size_t maxWidth=0;
+  size_t maxOperations;
   Profiler::times totalTimes;
   for (resultMap::const_iterator s=results.begin(); s!=results.end(); ++s) {
+      if ((*s).second.operations > maxOperations) maxOperations=(*s).second.operations;
       if ((*s).first.size() > maxWidth) maxWidth=(*s).first.size();
       totalTimes += (*s).second;
   }
@@ -76,7 +78,10 @@ std::string Profiler::str(const int verbosity, const int precision)
   ss << "Profiler "<<Name<<std::endl;
   while (! q.empty()) {
     ss.precision(precision);
-    ss <<std::right <<std::setw(maxWidth) << q.top().first <<": calls="<<q.top().second.calls<<", cpu="<<std::fixed<<q.top().second.cpu<<", wall="<<q.top().second.wall<<std::endl;
+    ss <<std::right <<std::setw(maxWidth) << q.top().first <<": calls="<<q.top().second.calls<<", cpu="<<std::fixed<<q.top().second.cpu<<", wall="<<q.top().second.wall;
+    if (q.top().second.operations>0)
+      ss<<", operations="<<q.top().second.operations;
+      ss <<std::endl;
     q.pop();
   }
   return ss.str();
@@ -91,6 +96,7 @@ std::ostream& operator<<(std::ostream& os, Profiler & obj)
 struct Profiler::times Profiler::getTimes()
 {
   struct Profiler::times result;
+  result.operations=0;
   result.cpu=(double)clock()/CLOCKS_PER_SEC;
   struct timeval time;
   result.wall=(double)0;
