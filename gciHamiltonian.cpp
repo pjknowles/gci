@@ -562,7 +562,7 @@ void Hamiltonian::plusminusEqualsHelper(std::vector<double> *&me,
   for (size_t i=0; i<n; i++)
     if (valmax < std::abs(other->at(i))) valmax = std::abs(other->at(i));
   if (valmax == (double)0) return;
-  if (me == NULL) me = new vector<double>(n,(double)0);
+  if (me == NULL) me = new std::vector<double>(n,(double)0);
   if (operation == '+')
     for (size_t i=0; i<n; i++)
       me->at(i) += other->at(i);
