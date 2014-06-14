@@ -4,6 +4,7 @@
 #include <deque>
 #include <queue>
 #include <iomanip>
+
 #include "Profiler.h"
 
 Profiler::Profiler()
