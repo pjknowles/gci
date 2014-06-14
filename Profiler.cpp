@@ -105,6 +105,7 @@ std::ostream& operator<<(std::ostream& os, Profiler & obj)
   return os << obj.str();
 }
 
+#include <time.h>
 #include <sys/time.h>
 struct Profiler::times Profiler::getTimes()
 {
