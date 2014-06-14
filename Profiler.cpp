@@ -84,7 +84,7 @@ std::string Profiler::str(const int verbosity, const int precision)
     ss.precision(precision);
     ss <<std::right <<std::setw(maxWidth) << q.top().first <<": calls="<<q.top().second.calls<<", cpu="<<std::fixed<<q.top().second.cpu<<", wall="<<q.top().second.wall;
     if (q.top().second.operations>0) {
-      ss<<", operations="<<q.top().second.operations;
+//      ss<<", operations="<<q.top().second.operations;
       ss<<", Gop/s="<<q.top().second.operations/((double)q.top().second.wall*1e9);
     }
       ss <<std::endl;
@@ -118,27 +118,25 @@ struct Profiler::times& Profiler::times::operator+=( const struct Profiler::time
   operations += w2.operations;
   return *this;
 }
+
+struct Profiler::times Profiler::times::operator+(const struct Profiler::times &w2)
+{
+  struct Profiler::times result=*this;
+  result += w2;
+  return result;
+}
+
 struct Profiler::times& Profiler::times::operator-=( const struct Profiler::times &w2)
 {
   cpu -= w2.cpu;
   wall -= w2.wall;
-//  std::cout <<"subtract original="<<operations<<", decrement="<<w2.operations;
   operations -= w2.operations;
-//  std::cout <<", new="<<operations<<std::endl;
   return *this;
 }
 
-struct Profiler::times operator+(const struct Profiler::times &w1, const struct Profiler::times &w2)
+struct Profiler::times Profiler::times::operator-(const struct Profiler::times &w2)
 {
-  struct Profiler::times result=w1;
-  result += w2;
-  return result;
-}
-struct Profiler::times operator-(const struct Profiler::times &w1, const struct Profiler::times &w2)
-{
-  struct Profiler::times result=w1;
-//  std::cout <<"binary subtract w1="<<w1.operations<<", first result="<<result.operations<<std::endl;
+  struct Profiler::times result=*this;
   result -= w2;
-//  std::cout <<"binary subtract result="<<result.operations<<std::endl;
   return result;
 }
