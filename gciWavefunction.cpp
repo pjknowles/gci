@@ -363,7 +363,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
       profiler.start("1-electron MXM");
       MxmDrvNN(&buffer[offset],&d[0], &(*h.integrals_a)[0],
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
-      profiler.stop("1-electron MXM");
+      profiler.stop("1-electron MXM",2*nsa*nsb*w.orbitalSpace->total(0,1));
     }
     if (h.spinUnrestricted && h.integrals_b != NULL) {
       profiler.start("1-electron TransitionDensity");
@@ -377,7 +377,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
       profiler.start("1-electron MXM");
       MxmDrvNN(&buffer[offset],&d[0], &(*h.integrals_b)[0],
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
-      profiler.stop("1-electron MXM");
+      profiler.stop("1-electron MXM",2*nsa*nsb*w.orbitalSpace->total(0,1));
     }
     offset += nsa*nsb;
   }
@@ -408,7 +408,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
           MxmDrvNN(&e[0],&d[0],
                    &(*h.bracket_integrals_aa)[h.pairSpace.at(-1).offset(0,symexc,0)],
               nsa*nsb,nexc,nexc,false);
-          profiler.stop("MXM aa");
+          profiler.stop("MXM aa",2*nsa*nsb*nexc*nexc);
           profiler.start("action aa");
           e.action(*this);
           profiler.stop("action aa");
@@ -445,7 +445,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
           MxmDrvNN(&e[0],&d[0],
                    &(*h.bracket_integrals_bb)[h.pairSpace.at(-1).offset(0,symexc,0)],
               nsa*nsb,nexc,nexc,false);
-          profiler.stop("MXM bb");
+          profiler.stop("MXM bb",2*nsa*nsb*nexc*nexc);
           profiler.start("action bb");
           e.action(*this);
           profiler.stop("action bb");
@@ -492,7 +492,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
             MxmDrvNN(&e[0],&d[0],
                      &(*h.bracket_integrals_ab)[h.pairSpace.at(0).offset(0,symexc,0)],
                 nsa*nsb,nexc,nexc,false);
-          profiler.stop("MXM ab");
+          profiler.stop("MXM ab",2*nsa*nsb*nexc*nexc);
           profiler.start("action ab");
             e.action(*this);
           profiler.stop("action ab");
@@ -512,7 +512,7 @@ void Wavefunction::put(File& f, int index)
 {
   profiler.start("Wavefunction::put");
   f.write(buffer,index*buffer.size());
-  profiler.stop("Wavefunction::put");
+  profiler.stop("Wavefunction::put",index*buffer.size());
 }
 
 
@@ -520,5 +520,5 @@ void Wavefunction::get(File& f, int index)
 {
   profiler.start("Wavefunction::get");
   f.read(buffer,index*buffer.size());
-  profiler.stop("Wavefunction::get");
+  profiler.stop("Wavefunction::get",index*buffer.size());
 }

@@ -38,12 +38,12 @@ void Profiler::start(const std::string name)
 #include <assert.h>
 void Profiler::stop(const std::string name, long long operations)
 {
-//  std::cout << "Profiler::stop "<<stack.top().name<<":"<<name<<" operations="<<operations<<std::endl;
+//  if (operations>0) std::cout << "Profiler::stop "<<stack.top().name<<":"<<name<<" operations="<<operations<<std::endl;
   assert(name=="" || name == stack.top().name);
   struct times now=getTimes();now.operations=operations;
 //  std::cout << "stack.top().operations="<<stack.top().operations<<std::endl;
   stack.top()+=now;
-//  std::cout << "stack.top().operations="<<stack.top().operations<<std::endl;
+//  if (operations>0) std::cout << "stack.top().operations="<<stack.top().operations<<std::endl;
   results[stack.top().name] += stack.top();
   results[stack.top().name].calls++;
 //  if (stack.size()==1) {
@@ -62,6 +62,7 @@ void Profiler::stopall()
   while (! stack.empty()) stop();
 }
 
+#include <cmath>
 std::string Profiler::str(const int verbosity, const int precision)
 {
   if (verbosity<0) return "";
@@ -80,12 +81,18 @@ std::string Profiler::str(const int verbosity, const int precision)
   totalTimes.calls=1;
   q.push(data_t("* TOTAL",totalTimes));
   ss << "Profiler "<<Name<<std::endl;
+  std::vector<std::string> prefixes;
+  prefixes.push_back(""); prefixes.push_back("k"); prefixes.push_back("M"); prefixes.push_back("G");
+  prefixes.push_back("T"); prefixes.push_back("P"); prefixes.push_back("E"); prefixes.push_back("Z"); prefixes.push_back("Y");
   while (! q.empty()) {
     ss.precision(precision);
     ss <<std::right <<std::setw(maxWidth) << q.top().first <<": calls="<<q.top().second.calls<<", cpu="<<std::fixed<<q.top().second.cpu<<", wall="<<q.top().second.wall;
-    if (q.top().second.operations>0) {
+    double ops=q.top().second.operations;
+    if (ops>(double)0) {
 //      ss<<", operations="<<q.top().second.operations;
-      ss<<", Gop/s="<<q.top().second.operations/((double)q.top().second.wall*1e9);
+      ops /= q.top().second.wall;
+      int shifter = log10(ops)/3; ops *= pow((double)10, -shifter*3);
+      ss<<", "<<ops<<" "<<prefixes[shifter]<<"op/s";
     }
       ss <<std::endl;
     q.pop();
