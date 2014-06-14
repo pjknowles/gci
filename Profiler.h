@@ -40,11 +40,13 @@ public:
    */
   std::string str(const int verbosity=0, const int precision=3);
 
+private:
   struct times {double cpu; double wall; int calls; long long operations; std::string name;
                 struct Profiler::times& operator+=(const struct Profiler::times &other);
                 struct Profiler::times& operator-=(const struct Profiler::times &other);
                };
-private:
+  friend struct Profiler::times operator+(const struct Profiler::times &w1, const struct Profiler::times &w2);
+  friend struct Profiler::times operator-(const struct Profiler::times &w1, const struct Profiler::times &w2);
   typedef std::map<std::string,struct Profiler::times> resultMap;
   template<class T> struct compareTimes : std::binary_function<T,T,bool>
   { inline bool operator () (const T& _left, const T& _right)
@@ -61,8 +63,6 @@ private:
   void stopall();
 };
   std::ostream& operator<<(std::ostream& os, Profiler & obj);
-  struct Profiler::times operator+(const struct Profiler::times &w1, const struct Profiler::times &w2);
-  struct Profiler::times operator-(const struct Profiler::times &w1, const struct Profiler::times &w2);
 
 
 #endif // PROFILER_H
