@@ -83,9 +83,10 @@ std::string Profiler::str(const int verbosity, const int precision)
   while (! q.empty()) {
     ss.precision(precision);
     ss <<std::right <<std::setw(maxWidth) << q.top().first <<": calls="<<q.top().second.calls<<", cpu="<<std::fixed<<q.top().second.cpu<<", wall="<<q.top().second.wall;
-    if (q.top().second.operations>0)
+    if (q.top().second.operations>0) {
       ss<<", operations="<<q.top().second.operations;
       ss<<", Gop/s="<<q.top().second.operations/((double)q.top().second.wall*1e9);
+    }
       ss <<std::endl;
     q.pop();
   }
