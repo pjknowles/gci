@@ -5,7 +5,7 @@
 #endif
 #include <vector>
 #ifdef GCIMOLPROFILE
-#include "cic/ItfFortranInt.h"
+#include <cic/ItfFortranInt.h>
 #else
 #include <fstream>
 #endif

@@ -1,8 +1,8 @@
 #ifndef GCIMOLPRO_H
 #define GCIMOLPRO_H
 #ifdef MOLPRO
-#include "cic/ItfCommon.h"
-#include "cic/ItfFortranInt.h"
+#include <cic/ItfCommon.h>
+#include <cic/ItfFortranInt.h>
 #else
 typedef unsigned int uint;
 // matrix multiplication routines. All of them call mxma/mxmb as appropriate
