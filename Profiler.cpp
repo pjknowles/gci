@@ -10,6 +10,12 @@ Profiler::Profiler()
 {
 }
 
+extern "C" {
+void profiler(char* name) {
+
+}
+}
+
 Profiler::Profiler(std::string name)
 {
   reset(name);
@@ -91,7 +97,7 @@ std::string Profiler::str(const int verbosity, const int precision)
     if (ops>(double)0) {
 //      ss<<", operations="<<q.top().second.operations;
       ops /= q.top().second.wall;
-      int shifter = ops > 1 ? (int)(log10(ops)/3) : 0 ; ops *= pow((double)10, -shifter*3);
+      int shifter = ops > 1 ? (int)(log10(ops)/3) : 0 ; shifter = shifter >= (int) prefixes.size() ? (int) prefixes.size()-1 : shifter;  ops *= pow((double)10, -shifter*3);
       ss<<", "<<ops<<" "<<prefixes[shifter]<<"op/s";
     }
       ss <<std::endl;
