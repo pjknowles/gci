@@ -128,7 +128,7 @@ bool String::next(int sym) {
   { // generate the next string of any symmetry
     unsigned int limit=orbitalSpace->total();
     std::vector<unsigned int>::iterator k;
-    unsigned int floor;
+    unsigned int floor=0;
     for (std::vector<unsigned int>::reverse_iterator i = orbitals_.rbegin(); i!=orbitals_.rend(); ++i) {
       floor=++(*i);
       k=i.base();
