@@ -153,6 +153,7 @@ struct Profiler::times Profiler::times::operator-(const struct Profiler::times &
 extern "C" {
 #include "ProfilerC.h"
 #include <stdlib.h>
+#include <string.h>
 void* profilerNew(char* name) { return new Profiler(name); }
 void profilerReset(void* profiler, char* name) { Profiler* obj=(Profiler*)profiler; obj->reset(std::string(name)); }
 void profilerStart(void* profiler, char* name) { Profiler* obj=(Profiler*)profiler; obj->start(std::string(name)); }
