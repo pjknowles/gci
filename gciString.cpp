@@ -170,7 +170,7 @@ size_t String::index(const StringSet& set) const
 {
   std::map<size_t,size_t>::const_iterator i;
   i = set.addressMap.find(key);
-  return (i == set.addressMap.end()) ? String::StringNotFound : i->second;
+  return (i == set.addressMap.end()) ? StringNotFound : i->second;
 }
 
 bool String::operator ==(const String& other) const
