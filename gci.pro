@@ -58,7 +58,7 @@ HEADERS += gci.h \
     gciFile.h \
     gciMolpro.h \
     gciRun.h \
-    Profiler.h
+    Profiler.h ProfilerC.h
 
 html.target = $$PWD/html
 html.commands = (cd $$PWD ; doxygen $$PWD/Doxyfile;)
