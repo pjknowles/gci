@@ -35,7 +35,7 @@ void Profiler::start(const std::string name)
 }
 
 #include <assert.h>
-void Profiler::stop(const std::string name, long long operations)
+void Profiler::stop(const std::string name, long operations)
 {
 //  if (operations>0) std::cout << "Profiler::stop "<<stack.top().name<<":"<<name<<" operations="<<operations<<std::endl;
   assert(name=="" || name == stack.top().name);
@@ -70,7 +70,7 @@ std::string Profiler::str(const int verbosity, const int precision)
   std::priority_queue<data_t, std::deque<data_t>, compareTimes<data_t>  > q(results.begin(),results.end());
   std::stringstream ss;
   size_t maxWidth=0;
-  long long maxOperations;
+  long maxOperations;
   Profiler::times totalTimes;totalTimes.operations=0;
   for (resultMap::const_iterator s=results.begin(); s!=results.end(); ++s) {
       if ((*s).second.operations > maxOperations) maxOperations=(*s).second.operations;

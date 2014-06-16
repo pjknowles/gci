@@ -25,7 +25,7 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
           tt.key=0;
           for (int k=0; k<(int)tt.orbitals_.size(); k++)
             tt.key+= to.PartialWeightArray[k][tt.orbitals_[k]-1];
-          size_t ti=to.addressMap.at(tt.key);
+          size_t ti=to.addressMap.find(tt.key)->second;
           push_back(Excitation(ti,phase,ii));
         }
         ii++;
@@ -48,7 +48,7 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
               tt.key=0; for (int k=0; k<(int)tt.orbitals_.size(); k++) // can be speeded
                 tt.key+= to.PartialWeightArray[k][tt.orbitals_[k]-1];
               //                            xout<< "i="<<i+1<<", j="<<j+1<<", phase="<<phase<<", tt="<<tt<<std::endl;
-              size_t ti=to.addressMap.at(tt.key);
+              size_t ti=to.addressMap.find(tt.key)->second;
               if (tt.key == String::keyUnassigned || ti>= to.size()) {
                 xout <<"i="<<i+1<<" phase="<<phase<<" ti="<<ti<<" tt="<<tt.str()<<std::endl;
                 throw "index error in ExcitationSet";

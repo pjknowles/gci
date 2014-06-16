@@ -31,7 +31,7 @@ public:
    * \param name if given, must match the argument of the previous start call
    * \param operations if given, a count of the number of operations (or whatever you like) carried out
    */
-  void stop(const std::string name="",long long operations=0);
+  void stop(const std::string name="",long operations=0);
   /*!
    * \brief Generate a printable representation of the object
    * \param verbosity how much to print
@@ -41,7 +41,7 @@ public:
   std::string str(const int verbosity=0, const int precision=3);
 
 private:
-  struct times {double cpu; double wall; int calls; long long operations; std::string name;
+  struct times {double cpu; double wall; int calls; long operations; std::string name;
                 struct Profiler::times& operator+=(const struct Profiler::times &other);
                 struct Profiler::times& operator-=(const struct Profiler::times &other);
                 struct Profiler::times operator+(const struct Profiler::times &w2);
