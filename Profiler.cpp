@@ -3,6 +3,7 @@
 #include <iostream>
 #include <deque>
 #include <queue>
+#include <string>
 #include <iomanip>
 #include "Profiler.h"
 
@@ -70,7 +71,7 @@ std::string Profiler::str(const int verbosity, const int precision)
   std::priority_queue<data_t, std::deque<data_t>, compareTimes<data_t>  > q(results.begin(),results.end());
   std::stringstream ss;
   size_t maxWidth=0;
-  long maxOperations;
+  long maxOperations=0;
   Profiler::times totalTimes;totalTimes.operations=0;
   for (resultMap::const_iterator s=results.begin(); s!=results.end(); ++s) {
       if ((*s).second.operations > maxOperations) maxOperations=(*s).second.operations;

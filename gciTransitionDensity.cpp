@@ -1,6 +1,7 @@
 #include "gciTransitionDensity.h"
 #include <iostream>
 #include <sstream>
+#include <iterator>
 
 TransitionDensity::TransitionDensity(const Wavefunction &w,
                                      const StringSet::const_iterator &alphaStringsBegin_,
