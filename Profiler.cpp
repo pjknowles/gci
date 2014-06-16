@@ -9,13 +9,6 @@
 Profiler::Profiler()
 {
 }
-
-extern "C" {
-void profiler(char* name) {
-
-}
-}
-
 Profiler::Profiler(std::string name)
 {
   reset(name);
@@ -153,4 +146,15 @@ struct Profiler::times Profiler::times::operator-(const struct Profiler::times &
   struct Profiler::times result=*this;
   result -= w2;
   return result;
+}
+
+// C binding
+extern "C" {
+#include "ProfilerC.h"
+#include <stdlib.h>
+void* profilerNew(char* name) { return new Profiler(name); }
+void profilerReset(void* profiler, char* name) { Profiler* obj=(Profiler*)profiler; obj->reset(std::string(name)); }
+void profilerStart(void* profiler, char* name) { Profiler* obj=(Profiler*)profiler; obj->start(std::string(name)); }
+void profilerStop(void* profiler, char* name) { Profiler* obj=(Profiler*)profiler; obj->stop(std::string(name)); }
+char* profilerStr(void* profiler) { Profiler* obj=(Profiler*)profiler; char* result = (char*)malloc(obj->str().size()+1); strcpy(result, obj->str().c_str()); return result; }
 }

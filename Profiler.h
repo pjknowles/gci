@@ -64,5 +64,4 @@ private:
 };
   std::ostream& operator<<(std::ostream& os, Profiler & obj);
 
-
 #endif // PROFILER_H
