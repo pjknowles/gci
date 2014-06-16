@@ -341,11 +341,11 @@ std::string Hamiltonian::str(int verbosity) const
       o<<std::endl << "2-electron integrals (bracket form, ab):";
       for (int symij=0; symij<8; symij++) {
         if (total(symij,0))
-          o<<std::endl <<"symmetry block " << symij;//<<" " <<pairSpace.at(0).offset(0,symij,0);
+          o<<std::endl <<"symmetry block " << symij;
         for (size_t ij=0; ij< total(symij,0); ij++) {
           o<<std::endl;
           for (size_t kl=0; kl< total(symij,0); kl++) {
-            o << bracket_integrals_ab->at( pairSpace.at(0).offset(0,symij,0) + ij * total(symij,0) + kl ) <<" ";
+            o << bracket_integrals_ab->at( pairSpace.find(0)->second.offset(0,symij,0) + ij * total(symij,0) + kl ) <<" ";
           }
         }
       }
@@ -354,13 +354,13 @@ std::string Hamiltonian::str(int verbosity) const
       o<<std::endl << "2-electron integrals (bracket form, antisymmetrised, {aa,bb}):";
       for (int symij=0; symij<8; symij++) {
         if (total(symij,-1))
-          o<<std::endl <<"symmetry block " << symij;//<<" " <<pairSpace.at(0).offset(0,symij,0);
+          o<<std::endl <<"symmetry block " << symij;
         for (size_t ij=0; ij< total(symij,-1); ij++) {
           o<<std::endl;
           for (size_t kl=0; kl< total(symij,-1); kl++) {
             o <<"{"
-             << bracket_integrals_aa->at( pairSpace.at(-1).offset(0,symij,0) + ij * total(symij,-1) + kl ) <<","
-             << bracket_integrals_bb->at( pairSpace.at(-1).offset(0,symij,0) + ij * total(symij,-1) + kl ) <<"} ";
+             << bracket_integrals_aa->at( pairSpace.find(-1)->second.offset(0,symij,0) + ij * total(symij,-1) + kl ) <<","
+             << bracket_integrals_bb->at( pairSpace.find(-1)->second.offset(0,symij,0) + ij * total(symij,-1) + kl ) <<"} ";
           }
         }
       }

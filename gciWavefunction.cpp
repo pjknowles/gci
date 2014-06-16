@@ -395,7 +395,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
       if (aa.size()==0) continue;
       for (unsigned int symb=0; symb<8; symb++) {
         unsigned int symexc = syma^symb^w.symmetry;
-        size_t nexc = h.pairSpace.at(-1)[symexc];
+        size_t nexc = h.pairSpace.find(-1)->second[symexc];
         size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
         profiler.start("aa1 loop");
         for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsbbMax > aa.end() ? aa.end() : aa0+nsbbMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
@@ -406,7 +406,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
           TransitionDensity e(d);
           profiler.start("MXM aa");
           MxmDrvNN(&e[0],&d[0],
-                   &(*h.bracket_integrals_aa)[h.pairSpace.at(-1).offset(0,symexc,0)],
+                   &(*h.bracket_integrals_aa)[h.pairSpace.find(-1)->second.offset(0,symexc,0)],
               nsa*nsb,nexc,nexc,false);
           profiler.stop("MXM aa",2*nsa*nsb*nexc*nexc);
           profiler.start("action aa");
@@ -427,23 +427,17 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
       if (bb.size()==0) continue;
       for (unsigned int syma=0; syma<8; syma++) {
         unsigned int symexc = symb^syma^w.symmetry;
-        size_t nexc = h.pairSpace.at(-1)[symexc];
+        size_t nexc = h.pairSpace.find(-1)->second[symexc];
         size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
         for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
           size_t nsb = bb1-bb0;
           profiler.start("TransitionDensity bb");
           TransitionDensity d(w,w.alphaStrings[syma].begin(),w.alphaStrings[syma].end(),bb0,bb1,-1,false,false);
-//            for (unsigned int i=0; i<99; i++) {
-//              TransitionDensity e(d);
-//          MxmDrvNN(&e[0],&d[0],
-//                   &(*h.bracket_integrals_bb)[h.pairSpace.at(-1).offset(0,symexc,0)],
-//              nsa*nsb,nexc,nexc,false);
-//            }
           profiler.stop("TransitionDensity bb");
           TransitionDensity e(d);
           profiler.start("MXM bb");
           MxmDrvNN(&e[0],&d[0],
-                   &(*h.bracket_integrals_bb)[h.pairSpace.at(-1).offset(0,symexc,0)],
+                   &(*h.bracket_integrals_bb)[h.pairSpace.find(-1)->second.offset(0,symexc,0)],
               nsa*nsb,nexc,nexc,false);
           profiler.stop("MXM bb",2*nsa*nsb*nexc*nexc);
           profiler.start("action bb");
@@ -466,7 +460,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
         StringSet aa(w.alphaStrings,1,0,syma);
         if (aa.size()==0) continue;
         unsigned int symexc = symb^syma^w.symmetry;
-        size_t nexc = h.pairSpace.at(0)[symexc];
+        size_t nexc = h.pairSpace.find(0)->second[symexc];
         profiler.start("StringSet iterator loops");
         for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
           size_t nsa = aa1-aa0;
@@ -483,14 +477,14 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
 	    //   for (size_t j=0; j<nexc; j++) {
 	    // 	for (size_t i=0; i<nexc; i++)
 	    // 	  xout <<
-	    // 	    (*h.bracket_integrals_ab)[h.pairSpace.at(0).offset(0,symexc,0)+i+j*nexc]
+      // 	    (*h.bracket_integrals_ab)[h.pairSpace.find(0)->second.offset(0,symexc,0)+i+j*nexc]
 	    // 	       << " ";
 	    // 	xout <<std::endl;
 	    //   }
 	    //}
           profiler.start("MXM ab");
             MxmDrvNN(&e[0],&d[0],
-                     &(*h.bracket_integrals_ab)[h.pairSpace.at(0).offset(0,symexc,0)],
+                     &(*h.bracket_integrals_ab)[h.pairSpace.find(0)->second.offset(0,symexc,0)],
                 nsa*nsb,nexc,nexc,false);
           profiler.stop("MXM ab",2*nsa*nsb*nexc*nexc);
           profiler.start("action ab");
