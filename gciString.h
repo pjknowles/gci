@@ -69,9 +69,11 @@ public:
   static String exhausted; /*!< returned by next() when we're already on the last string */
 
   std::vector<unsigned int> orbitals_; /*!< The orbitals that make up the string */
-  const static size_t keyUnassigned=ULLONG_MAX; ///< conventional null value for key
+  //const static size_t keyUnassigned=ULLONG_MAX; ///< conventional null value for key
+  static size_t keyUnassigned; ///< conventional null value for key
 
-  const static size_t StringNotFound=ULLONG_MAX; ///< conventional null value for index
+  //const static size_t StringNotFound=ULLONG_MAX; ///< conventional null value for index
+  static size_t StringNotFound; ///< conventional null value for index
   /*!
      * \brief Find the location of this String in a given StringSet
      * \param set the StringSet that hopefully contains this String

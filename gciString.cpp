@@ -4,6 +4,9 @@
 #include <iostream>
 #include <sstream>
 
+size_t gci::String::StringNotFound=ULLONG_MAX; ///< conventional null value for index
+size_t gci::String::keyUnassigned=ULLONG_MAX; ///< conventional null value for key
+
 String::String(State* State, int Spin)
 {
   if (State == NULL) {
