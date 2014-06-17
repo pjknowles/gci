@@ -13,7 +13,7 @@ int File::baseRecord=13000;
 extern "C" {
 #endif
 
-void unused_record(int*, int*);
+void unusedRecord(int*, int*);
 
 #ifdef __cplusplus
 }
@@ -26,7 +26,7 @@ File::File()
 #ifdef GCIMOLPROFILE
 
   int file=7;
-  unused_record(&file,&baseRecord);
+  unusedRecord(&file,&baseRecord);
 //  xout << "baseRecord="<<baseRecord<<std::endl;
   f = new FMolproStorageBlock(file,baseRecord++,0);
 //  xout << "new file"<<std::endl;
