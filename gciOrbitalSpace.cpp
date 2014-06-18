@@ -18,7 +18,7 @@ void OrbitalSpace::load(std::string filename, int verbosity) {
 }
 
 void OrbitalSpace::load(FCIdump* dump, int verbosity) {
-  if (verbosity) xout <<"Load OrbitalSpace from " << dump->fileName <<std::endl;
+  if (verbosity) xout <<"Load OrbitalSpace from " << dump->fileName() <<std::endl;
 
   std::vector<int> syms = dump->parameter("ORBSYM");
   orbital_symmetries = std::vector<unsigned int>(dump->parameter("NORB").at(0),0);

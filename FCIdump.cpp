@@ -7,11 +7,11 @@
 
 FCIdump::FCIdump(std::string filename)
 {
-  fileName = filename;
+  _fileName = filename;
   std::ifstream s;
-  s.open(fileName.c_str());
+  s.open(_fileName.c_str());
   if ( (s.rdstate() & std::ifstream::failbit ) != 0 ) {
-    std::cerr << "Error opening " << fileName <<std::endl;
+    std::cerr << "Error opening " << _fileName <<std::endl;
     throw "FCIDUMP::parameter file missing";
   }
   // cache the namelist data
@@ -21,6 +21,11 @@ FCIdump::FCIdump(std::string filename)
     namelistData.append(ss);
   namelistData.append(",DUMMY_KEY=,"); // dummy entry at end to simplify parsing
 //  xout <<"namelistData=" <<namelistData <<std::endl;
+}
+
+std::string FCIdump::fileName()
+{
+  return _fileName;
 }
 
 #include "gciState.h"
@@ -94,3 +99,44 @@ void FCIdump::addParameter(const std::string& key, const std::vector<std::string
   namelistData.insert(0,","+key+"=");
 //  xout << "FCIdump::addParameter namelistData set to "<<namelistData<<std::endl;
 }
+
+void FCIdump::rewind()
+{
+  stream.open(_fileName.c_str());
+  std::string ss;
+  while (stream >> ss && ss != "&END" && ss != "/") ;
+  uhf = parameter("IUHF").at(0) != 0;
+  states.clear();
+  states.push_back(I2aa);
+  if (uhf) states.push_back(I2ab);
+  if (uhf) states.push_back(I2bb);
+  states.push_back(I1a);
+  if (uhf) states.push_back(I1b);
+  states.push_back(I0);
+  currentState = states.begin();
+}
+
+FCIdump::integralType FCIdump::nextIntegral(int &i, int &j, int &k, int &l, double &value)
+{
+  integralType result = *currentState;
+  if (stream >> value) {
+    stream >> i; stream >> j; stream >> k; stream >> l;
+  }
+  else {
+    return endOfFile;
+    stream.close();
+  }
+  // following is tricky stuff reflecting historical structure of UHF and RHF FCIdump files
+  if (i == 0) {
+    if (uhf && *currentState != I0) {
+      result = endOfRecord;
+    }
+    else {
+      result = I0;
+      currentState++;
+    }
+  }
+  if (k == 0 && *currentState == I2aa) result=*(++currentState);
+  return result;
+}
+

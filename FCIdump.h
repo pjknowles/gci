@@ -2,6 +2,7 @@
 #define FCIDUMP_H
 #include <string>
 #include <vector>
+#include <fstream>
 
 /*!
  * \brief Class that provides access to FCIdump files
@@ -48,9 +49,36 @@ public:
    /*!
      * \brief fileName The file containing the FCIDUMP data
      */
-  std::string fileName;
+  std::string fileName();
+
+  /*!
+   * \brief indicator of the type of integral record (core, 1-electron, 2-electron integrals; end of record; end of file)
+    */
+  typedef enum { I0, I1a, I1b, I2aa, I2ab, I2bb, endOfFile, endOfRecord } integralType;
+
+  /*!
+   * \brief Position the file so that the next call to nextIntegral will deliver the first integral
+   */
+  void rewind();
+
+  /*!
+   * \brief Read the next integral from the file
+   * \param i orbital label (zero indicates not 1-electron or 2-electron)
+   * \param j orbital label
+   * \param k orbital label(zero indicates not 2-electron)
+   * \param l orbital label
+   * \param value numerical value of the integral
+   * \return indicator of the type of entry (core, 1-electron, 2-electron integrals; end of record; end of file)
+   */
+  integralType nextIntegral(int& i, int& j, int& k, int& l, double& value);
+
 private:
   std::string namelistData;
+  std::string _fileName;
+  std::ifstream stream;
+  bool uhf;
+  std::vector<integralType> states;
+  std::vector<integralType>::const_iterator currentState;
 };
 
 #endif // FCIDUMP_H

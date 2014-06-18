@@ -69,7 +69,7 @@ void Hamiltonian::load(std::string filename, int verbosity) {
 void Hamiltonian::load(FCIdump* dump, int verbosity) {
   profiler.start("Hamiltonian::load");
   if (loaded) unload();
-  if (verbosity) xout <<"Load hamiltonian from " << dump->fileName <<std::endl;
+  if (verbosity) xout <<"Load hamiltonian from " << dump->fileName() <<std::endl;
   //    State::load(filename);
 
   basisSize = dump->parameter("NORB").at(0);
@@ -93,28 +93,38 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
 
 
   {
-  std::ifstream s;
-  s.open(dump->fileName.c_str());
-  std::string ss;
+    dump->rewind();
+//  std::ifstream s;
+//  s.open(dump->fileName().c_str());
+//  std::string ss;
   double value;
+  FCIdump::integralType type;
   int i,j,k,l,ij,kl;
-  while (s >> ss && ss != "&END" && ss != "/") ;
-  while (s >> value) {
-    s >> i; s >> j; s >> k; s >> l;
+  while ((type=dump->nextIntegral(i,j,k,l,value))!=FCIdump::endOfFile) {
     ij = i > j ? (i*(i-1))/2+j : (j*(j-1))/2+i;
     kl = k > l ? (k*(k-1))/2+l : (l*(l-1))/2+k;
-    if (kl) {
-      if (verbosity>2) xout << "("<< i << j <<"|"<< k << l <<") [" << int2Index(i,j,k,l) << "]= " << value <<std::endl;
-      if (verbosity>2) xout << "("<< k << l <<"|"<< i << j <<") [" << int2Index(k,l,i,j) << "]= " << value <<std::endl;
+    if (type == FCIdump::I2aa) {
+      if (verbosity>2) xout << "aa("<< i << j <<"|"<< k << l <<") [" << int2Index(i,j,k,l) << "]= " << value <<std::endl;
+      if (verbosity>2) xout << "aa("<< k << l <<"|"<< i << j <<") [" << int2Index(k,l,i,j) << "]= " << value <<std::endl;
       integrals_aa->at(int2Index(i,j,k,l))=value;
       integrals_aa->at(int2Index(k,l,i,j))=value;
-    } else if (ij) {
-      if (verbosity>1) xout << "h("<< i <<","<< j <<") = " << value <<std::endl;
+    } else if (type == FCIdump::I2ab) {
+      if (verbosity>2) xout << "ab("<< i << j <<"|"<< k << l <<") [" << int2Index(i,j,k,l) << "]= " << value <<std::endl;
+      integrals_ab->at(int2Index(i,j,k,l))=value;
+    } else if (type == FCIdump::I2bb) {
+      if (verbosity>2) xout << "bb("<< i << j <<"|"<< k << l <<") [" << int2Index(i,j,k,l) << "]= " << value <<std::endl;
+      if (verbosity>2) xout << "bb("<< k << l <<"|"<< i << j <<") [" << int2Index(k,l,i,j) << "]= " << value <<std::endl;
+      integrals_bb->at(int2Index(i,j,k,l))=value;
+      integrals_bb->at(int2Index(k,l,i,j))=value;
+    } else if (type == FCIdump::I1a) {
+      if (verbosity>1) xout << "ha("<< i <<","<< j <<") = " << value <<std::endl;
       integrals_a->at(int1Index(i,j))=value;
-    } else
+    } else if (type == FCIdump::I1b) {
+      if (verbosity>1) xout << "hb("<< i <<","<< j <<") = " << value <<std::endl;
+      integrals_b->at(int1Index(i,j))=value;
+    } else if (type == FCIdump::I0)
       coreEnergy = value;
   }
-  s.close();
   }
   loaded=true;
   if (verbosity>3) {
