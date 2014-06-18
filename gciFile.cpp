@@ -20,7 +20,6 @@ void unusedRecord(int*, int*);
 #endif
 #endif
 
-#include <assert.h>
 File::File()
 {
 #ifdef GCIMOLPROFILE
@@ -32,8 +31,7 @@ File::File()
 //  xout << "new file"<<std::endl;
 #else
   char *tmpname = strdup("tmpfileXXXXXX");
-  char * mktempresult= mktemp(tmpname);
-  assert(mktempresult != NULL);
+  mkstemp(tmpname);
   f.open(tmpname,std::fstream::binary | std::fstream::in| std::fstream::out);
   remove(tmpname);
   free(tmpname);
