@@ -43,6 +43,10 @@ std::vector<double> Run::run()
     prototype = State(&hh,w.nelec,w.symmetry,w.ms2);
   }
   profiler.stop("find reference");
+  if (parameter("EXPLICIT1").at(0)==0 && method != "RSPT") hh.constructBraKet(
+        referenceDeterminant.nelec+referenceDeterminant.ms2,
+        referenceDeterminant.nelec-referenceDeterminant.ms2
+        );
 
   if (method == "RSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;

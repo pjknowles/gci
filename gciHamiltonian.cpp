@@ -11,12 +11,16 @@
 
 Hamiltonian::Hamiltonian(std::string filename) : OrbitalSpace(filename)
 {
+  bracket_integrals_a=bracket_integrals_b=NULL;
+  bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
   loaded = false;
   if (filename != "") load(filename);
 }
 
 Hamiltonian::Hamiltonian(FCIdump* dump) : OrbitalSpace(dump)
 {
+  bracket_integrals_a=bracket_integrals_b=NULL;
+  bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
   loaded = false;
   load(dump,0);
 }
@@ -30,6 +34,7 @@ Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestri
   if (forceSpinUnrestricted) spinUnrestricted = true;
   if (loaded) {
        integrals_a = oneElectron ? new std::vector<double>(*source.integrals_a) : NULL;
+       bracket_integrals_a = (oneElectron && source.bracket_integrals_a != NULL) ? new std::vector<double>(*source.bracket_integrals_a) : NULL;
      if (source.integrals_aa != NULL || spinUnrestricted) {
        integrals_aa = twoElectron ? new std::vector<double>(*source.integrals_aa) : NULL;
        bracket_integrals_aa = twoElectron ? new std::vector<double>(*source.bracket_integrals_aa) : NULL;
@@ -45,12 +50,14 @@ Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestri
              : NULL;
          integrals_bb = twoElectron ? new std::vector<double>(*source.integrals_bb) : NULL;
          bracket_integrals_bb = twoElectron ? new std::vector<double>(*source.bracket_integrals_bb) : NULL;
+         bracket_integrals_b = (oneElectron && source.bracket_integrals_b != NULL) ? new std::vector<double>(*source.bracket_integrals_b) : NULL;
        }
      } else {
        integrals_b = integrals_a;
        integrals_ab = integrals_aa;
        integrals_bb = integrals_aa;
        bracket_integrals_bb = bracket_integrals_aa;
+       bracket_integrals_b = bracket_integrals_a;
      }
   }
 //  xout << "Hamiltonian copy constructor, old integrals_a="<<&source.integrals_a[0]<<", new integrals_a ="<<&integrals_a[0]<<std::endl;
@@ -58,7 +65,7 @@ Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestri
 }
 
 Hamiltonian::~Hamiltonian() {
-
+  deconstructBraKet();
 }
 
 void Hamiltonian::load(std::string filename, int verbosity) {
@@ -131,10 +138,19 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
     xout << "integrals_a: ";copy(integrals_a->begin(), integrals_a->end(), std::ostream_iterator<double>(xout, ", "));xout <<std::endl;
     xout << "integrals_aa: ";copy(integrals_aa->begin(), integrals_aa->end(), std::ostream_iterator<double>(xout, ", "));xout <<std::endl;
   }
+  constructBraKet();
+  //    xout <<str(3) <<std::endl;exit(0);
+  profiler.stop("Hamiltonian::load");
+}
 
+#define del(x) if (x != NULL) delete x; x=NULL;
+#define del2(x,y) if (x != y) delete x; del(y); x=NULL;
+void Hamiltonian::constructBraKet(int neleca, int nelecb)
+{
+  deconstructBraKet();
   // construct <ik||jl> = (ij|kl) - (il|kj)
   bracket_integrals_aa = new std::vector<double>(pairSpace[-1].total(0,0),0.0);
-  bracket_integrals_ab = new std::vector<double>(pairSpace[0].total(0,0),999.0);
+  bracket_integrals_ab = new std::vector<double>(pairSpace[0].total(0,0),0.0);
   if (spinUnrestricted) {
     bracket_integrals_bb = new std::vector<double>(pairSpace[-1].total(0,0),0.0);
   } else {
@@ -175,15 +191,29 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
                   //                                          + (offset(symij,symk,1)+((k>l) ? (k*(k+1))/2+l : (l*(l+1))/2+k))
                   //                                          )
                   //                                            <<std::endl;
-                  bracket_integrals_ab->at(
-                        pairSpace[0].offset(0,symik)
+                  size_t address =
+                      pairSpace[0].offset(0,symik)
                       + (offset(symik,symi,0)+i+k*at(symi))*total(symik,0)
-                      + (offset(symik,symj,0)+j+l*at(symj))
-                      ) =
+                      + (offset(symik,symj,0)+j+l*at(symj));
+                  bracket_integrals_ab->at(address) =
                       integrals_ab->at(pairSpace[1].offset(0,symij)
                       + (offset(symij,symi,1)+((i>j) ? (i*(i+1))/2+j : (j*(j+1))/2+i)) * total(symij,1)
                       + (offset(symij,symk,1)+((k>l) ? (k*(k+1))/2+l : (l*(l+1))/2+k))
                       );
+                  if (nelecb !=0 && k==l) { // absorb 1-electron integrals into two-electron for a given number of electrons
+                      bracket_integrals_ab->at(address) +=
+                          integrals_a->at(
+                            offset(0,symi,1) + (i>j ? (i*(i+1))/2+j : (j*(j+1))/2+i)
+                            ) / (.5*nelecb);
+//                      xout << "i j k l hij"<<i<<j<<k<<l<<" "<< integrals_a->at( offset(0,symi,1) + (i>j ? (i*(i+1))/2+j : (j*(j+1))/2+i) ) <<std::endl;
+                  }
+                  if (neleca !=0 && i==j) { // absorb 1-electron integrals into two-electron for a given number of electrons
+                      bracket_integrals_ab->at(address) +=
+                          integrals_a->at(
+                            offset(0,symk,1) + (k>l ? (k*(k+1))/2+l : (l*(l+1))/2+k)
+                            ) / (.5*neleca);
+//                      xout << "i j k l hkl"<<i<<j<<k<<l<<" "<< integrals_a->at( offset(0,symk,1) + (k>l ? (k*(k+1))/2+l : (l*(l+1))/2+k) )  <<std::endl;
+                  }
                 }
                 else
                 {
@@ -211,11 +241,11 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
                   //                                               : offset(symij,syml,1)+k*at(syml)+l)
                   //                                          )
                   //                                            <<std::endl;
-                  bracket_integrals_ab->at(
-                        pairSpace[0].offset(0,symik)
+                  size_t address =
+                      pairSpace[0].offset(0,symik)
                       + (offset(symik,symi,0)+i+k*at(symi))*total(symik,0)
-                      + (offset(symik,symj,0)+j+l*at(symj))
-                      ) =
+                      + (offset(symik,symj,0)+j+l*at(symj));
+                  bracket_integrals_ab->at( address ) =
                       integrals_ab->at(pairSpace[1].offset(0,symij)
                       + ((symi > symj) ?
                            offset(symij,symi,1)+j*at(symi)+i
@@ -231,6 +261,10 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
             }
           }
         }
+        del(bracket_integrals_a);
+        if (nelecb == 0) bracket_integrals_a = new std::vector<double>(*integrals_a);
+        del(bracket_integrals_b);
+        if (neleca != 0) bracket_integrals_b = new std::vector<double>(*integrals_b);
         // alpha-alpha and beta-beta
         unsigned int symil = symi^syml;
         unsigned int symjl = symj^syml;
@@ -278,8 +312,9 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
 //                          <<jl<<" destination: "
 //                                                       <<pairSpace[-1].offset(0,symik,0) + ik*total(symik,-1) + jl  << " value: "
 //                                                       <<integrals_aa->at(ijkl) -integrals_aa->at(ilkj)<<std::endl;
-                  bracket_integrals_aa->at(pairSpace[-1].offset(0,symik,0) + ik*total(symik,-1) + jl ) = integrals_aa->at(ijkl) -integrals_aa->at(ilkj);
-                  bracket_integrals_bb->at(pairSpace[-1].offset(0,symik,0) + ik*total(symik,-1) + jl ) = integrals_bb->at(ijkl) -integrals_bb->at(ilkj);
+                  size_t address = pairSpace[-1].offset(0,symik,0) + ik*total(symik,-1) + jl ;
+                  bracket_integrals_aa->at(address) = integrals_aa->at(ijkl) -integrals_aa->at(ilkj);
+                  bracket_integrals_bb->at(address) = integrals_bb->at(ijkl) -integrals_bb->at(ilkj);
                 }
               }
             }
@@ -288,8 +323,15 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
       }
     }
   }
-  //    xout <<str(3) <<std::endl;exit(0);
-  profiler.stop("Hamiltonian::load");
+
+}
+
+
+void Hamiltonian::deconstructBraKet()
+{
+  del2(bracket_integrals_b, bracket_integrals_a);
+  del2(bracket_integrals_aa, bracket_integrals_bb);
+  del(bracket_integrals_ab);
 }
 
 void Hamiltonian::unload() {

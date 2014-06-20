@@ -351,7 +351,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     unsigned int symb = w.symmetry^syma;
     size_t nsa = alphaStrings[syma].size();
     size_t nsb = betaStrings[symb].size();
-    if (h.integrals_a != NULL ) {
+    if (h.bracket_integrals_a != NULL ) {
       profiler.start("1-electron TransitionDensity");
       TransitionDensity d(w,
                           w.alphaStrings[syma].begin(),
@@ -361,11 +361,11 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
                           1,true, !h.spinUnrestricted);
       profiler.stop("1-electron TransitionDensity");
       profiler.start("1-electron MXM");
-      MxmDrvNN(&buffer[offset],&d[0], &(*h.integrals_a)[0],
+      MxmDrvNN(&buffer[offset],&d[0], &(*h.bracket_integrals_a)[0],
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
       profiler.stop("1-electron MXM",2*nsa*nsb*w.orbitalSpace->total(0,1));
     }
-    if (h.spinUnrestricted && h.integrals_b != NULL) {
+    if (h.spinUnrestricted && h.bracket_integrals_b != NULL) {
       profiler.start("1-electron TransitionDensity");
       TransitionDensity d(w,
                           w.alphaStrings[syma].begin(),
@@ -375,7 +375,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
                           1,false, true);
       profiler.stop("1-electron TransitionDensity");
       profiler.start("1-electron MXM");
-      MxmDrvNN(&buffer[offset],&d[0], &(*h.integrals_b)[0],
+      MxmDrvNN(&buffer[offset],&d[0], &(*h.bracket_integrals_b)[0],
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
       profiler.stop("1-electron MXM",2*nsa*nsb*w.orbitalSpace->total(0,1));
     }
