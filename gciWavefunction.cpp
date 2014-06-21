@@ -345,6 +345,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     buffer[i] += h.coreEnergy * w.buffer[i];
 
 
+  if (h.bracket_integrals_a!=NULL || h.bracket_integrals_b!=NULL) {
   size_t offset=0;
   profiler.start("1-electron");
   for (unsigned int syma=0; syma<8; syma++) {
@@ -384,6 +385,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
   profiler.stop("1-electron");
 
 //  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
+  }
 
   if (h.bracket_integrals_aa != NULL) { // two-electron contribution, alpha-alpha
     profiler.start("aa integrals");
