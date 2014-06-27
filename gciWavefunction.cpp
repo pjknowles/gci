@@ -345,6 +345,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     buffer[i] += h.coreEnergy * w.buffer[i];
 
 
+  xout << "h.bracket_integrals_a="<<h.bracket_integrals_a<<std::endl;
   if (h.bracket_integrals_a!=NULL || h.bracket_integrals_b!=NULL) {
   size_t offset=0;
   profiler.start("1-electron");

@@ -15,10 +15,12 @@ Hamiltonian::Hamiltonian(std::string filename) : OrbitalSpace(filename)
   bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
   loaded = false;
   if (filename != "") load(filename);
+  xout <<"Hamiltonian filename constructor this="<<this<<", filename="<<filename<<", loaded="<<loaded<<std::endl;
 }
 
 Hamiltonian::Hamiltonian(FCIdump* dump) : OrbitalSpace(dump)
 {
+  xout <<"Hamiltonian FCIdump constructor this="<<this<<std::endl;
   bracket_integrals_a=bracket_integrals_b=NULL;
   bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
   loaded = false;
@@ -31,7 +33,9 @@ Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestri
   , coreEnergy(source.coreEnergy)
   , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
 {
+  xout <<"Hamiltonian copy constructor source="<<&source<<", this="<<this<<std::endl;
   if (forceSpinUnrestricted) spinUnrestricted = true;
+  bracket_integrals_a = bracket_integrals_b = NULL;
   if (loaded) {
        integrals_a = oneElectron ? new std::vector<double>(*source.integrals_a) : NULL;
        bracket_integrals_a = (oneElectron && source.bracket_integrals_a != NULL) ? new std::vector<double>(*source.bracket_integrals_a) : NULL;
@@ -65,6 +69,7 @@ Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestri
 }
 
 Hamiltonian::~Hamiltonian() {
+  xout <<"Hamiltonian deconstructor this="<<this<<std::endl;
   deconstructBraKet();
 }
 
@@ -74,6 +79,7 @@ void Hamiltonian::load(std::string filename, int verbosity) {
 }
 
 void Hamiltonian::load(FCIdump* dump, int verbosity) {
+  xout <<"Hamiltonian::load, this="<<this<<std::endl;
   profiler.start("Hamiltonian::load");
   if (loaded) unload();
   if (verbosity) xout <<"Load hamiltonian from " << dump->fileName() <<std::endl;
@@ -134,6 +140,7 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
   }
   }
   loaded=true;
+  xout <<"load sets loaded=true this="<<this<<std::endl;
   if (verbosity>3) {
     xout << "integrals_a: ";copy(integrals_a->begin(), integrals_a->end(), std::ostream_iterator<double>(xout, ", "));xout <<std::endl;
     xout << "integrals_aa: ";copy(integrals_aa->begin(), integrals_aa->end(), std::ostream_iterator<double>(xout, ", "));xout <<std::endl;
@@ -143,8 +150,8 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
   profiler.stop("Hamiltonian::load");
 }
 
-#define del(x) if (x != NULL) delete x; x=NULL;
-#define del2(x,y) if (x != y) delete x; del(y); x=NULL;
+#define del(x) if (x != NULL && x->size()) delete x; x=NULL;
+#define del2(x,y) if (x != y) del(x); del(y); del(x);
 void Hamiltonian::constructBraKet(int neleca, int nelecb)
 {
   deconstructBraKet();
@@ -262,9 +269,10 @@ void Hamiltonian::constructBraKet(int neleca, int nelecb)
           }
         }
         del(bracket_integrals_a);
-        if (nelecb == 0) bracket_integrals_a = new std::vector<double>(*integrals_a);
+        if (nelecb == 0 && integrals_a != NULL) bracket_integrals_a = new std::vector<double>(*integrals_a);
         del(bracket_integrals_b);
-        if (neleca != 0) bracket_integrals_b = new std::vector<double>(*integrals_b);
+        if (neleca != 0 && integrals_b != NULL) bracket_integrals_b = new std::vector<double>(*integrals_b);
+        xout <<"constructBraKet bracket_integrals_{a,b}="<<bracket_integrals_a<<", "<<bracket_integrals_b<<std::endl;
         // alpha-alpha and beta-beta
         unsigned int symil = symi^syml;
         unsigned int symjl = symj^syml;
@@ -329,7 +337,15 @@ void Hamiltonian::constructBraKet(int neleca, int nelecb)
 
 void Hamiltonian::deconstructBraKet()
 {
+  xout << "deconstructBraKet for object at "<<this<<", loaded="<<loaded<<std::endl;
+  if (! loaded) return;
+  xout << "integrals_a "<<integrals_a<<std::endl;
+  xout << "bracket_integrals_a "<<bracket_integrals_a<<std::endl;
+  if (bracket_integrals_a != NULL) xout << "bracket_integrals_a->size() "<<bracket_integrals_a->size()<<std::endl;
+  xout << "bracket_integrals_b "<<bracket_integrals_b<<std::endl;
+  if (bracket_integrals_b != NULL) xout << "bracket_integrals_b->size() "<<bracket_integrals_b->size()<<std::endl;
   del2(bracket_integrals_b, bracket_integrals_a);
+  xout <<"del2 done"<<std::endl;
   del2(bracket_integrals_aa, bracket_integrals_bb);
   del(bracket_integrals_ab);
 }
@@ -514,6 +530,8 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
   f.bracket_integrals_aa = NULL;
   f.bracket_integrals_ab = NULL;
   f.bracket_integrals_bb = NULL;
+  f.bracket_integrals_a = (f.integrals_a != NULL) ? new std::vector<double>(*f.integrals_a) : NULL;
+  xout << "in FockHamiltonian f.bracket_integrals_a created at "<<&f.bracket_integrals_a <<std::endl;
   // xout << "in FockHamiltonian, after alpha f="; for (size_t ij=0; ij< f.integrals_a->size(); ij++) xout <<" "<<(*f.integrals_a)[ij]; xout <<std::endl;
   if (f.spinUnrestricted) {
     f.integrals_b = new std::vector<double>(ijSize,0.0);
@@ -536,10 +554,13 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
           (*f.integrals_b)[int1Index(i,j)] += (*integrals_ab)[int2Index(*o,*o,i,j)];
         }
     }
+    f.bracket_integrals_b = f.integrals_b != NULL ? new std::vector<double>(*f.integrals_b) : NULL;
   } else {
     f.integrals_b = f.integrals_a;
+    f.bracket_integrals_b = f.bracket_integrals_a;
   }
   f.loaded = true;
+  xout <<"FockHamiltonian at "<<&f<<" sets loaded=true"<<std::endl;
   return f;
 }
 
@@ -591,6 +612,9 @@ Hamiltonian& Hamiltonian::plusminusOperator(const Hamiltonian &other, const char
   plusminusEqualsHelper(this->integrals_aa, other.integrals_aa,operation);
   if (integrals_aa != integrals_ab)
     plusminusEqualsHelper(this->integrals_ab, other.integrals_ab,operation);
+  plusminusEqualsHelper(this->bracket_integrals_a, other.bracket_integrals_a,operation);
+  if (bracket_integrals_a != bracket_integrals_b)
+    plusminusEqualsHelper(this->bracket_integrals_b, other.bracket_integrals_b,operation);
   if (integrals_aa != integrals_bb)
     plusminusEqualsHelper(this->integrals_bb, other.integrals_bb,operation);
   plusminusEqualsHelper(this->bracket_integrals_aa, other.bracket_integrals_aa,operation);

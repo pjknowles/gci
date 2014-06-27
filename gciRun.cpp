@@ -56,19 +56,25 @@ std::vector<double> Run::run()
     xout << "Second-order hamiltonian contains " << 1-scs_opposite<<" of opposite-spin and "<< 1-scs_same <<" of same spin"<<std::endl;
     Hamiltonian h0 = hh.FockHamiltonian(referenceDeterminant);
 //    xout <<"h0.spinUnrestricted="<<h0.spinUnrestricted<<std::endl;
+//    xout <<"h0="<<h0<<std::endl;
     Hamiltonian ssh = hh.sameSpinHamiltonian(referenceDeterminant);
 //    xout <<"ssh.spinUnrestricted="<<ssh.spinUnrestricted<<std::endl;
+//    xout <<"ssh="<<ssh<<std::endl;
     Hamiltonian osh(hh,true); osh -= ssh; osh-=h0;
 //    xout <<"osh.spinUnrestricted="<<osh.spinUnrestricted<<std::endl;
+//    xout <<"osh="<<osh<<std::endl;
     Hamiltonian h1 = osh*scs_opposite + ssh*scs_same;
 //    xout <<"h1.spinUnrestricted="<<h1.spinUnrestricted<<std::endl;
+//    xout <<"h1="<<h1<<std::endl;
     Hamiltonian h2(hh,true); // spinUnrestricted not yet optimised
     h2-=h1; h2-=h0;
 //    xout <<"h2.spinUnrestricted="<<h2.spinUnrestricted<<std::endl;
+//    xout <<"h2="<<h2<<std::endl;
     std::vector<gci::Hamiltonian*> hamiltonians;
     hamiltonians.push_back(&h0);
     hamiltonians.push_back(&h1);
     if (scs_opposite != (double) 1 || scs_same != (double) 1) hamiltonians.push_back(&h2);
+//    xout << "hamiltonians.size()" << hamiltonians.size() << std::endl;
     std::vector<double> emp = RSPT(hamiltonians, prototype);
     xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
@@ -229,50 +235,51 @@ std::vector<double> Run::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
   size_t reference = g.minloc();
   e[0]=g.at(reference);
   g-=e[0];g.set(reference,(double)1);
-//  xout << "Møller-Plesset denominators: " << g.str(2) << std::endl;
+  xout << "Møller-Plesset denominators: " << g.str(2) << std::endl;
   gci::File h0file; g.put(h0file);
   w.set((double)0); w.set(reference, (double) 1);
   gci::File wfile; w.put(wfile,0);
   gci::File gfile;
   for (int k=0; k < (int) hamiltonians.size(); k++) {
     g.set((double)0);
+    xout << "hamiltonian about to be applied to reference: "<< *hamiltonians[k] <<std::endl;
     g.hamiltonianOnWavefunction(*hamiltonians[k],w);
-//    xout << "hamiltonian on reference: " << g.str(2) << std::endl;
+    xout << "hamiltonian on reference: " << g.str(2) << std::endl;
     g.put(gfile,k);
   }
   int nmax = maxOrder < maxIterations ? maxOrder : maxIterations+1;
   e.resize(nmax+1);
   for (int n=1; n < maxOrder && n <= maxIterations; n++) {
     // construct  |n> = -(H0-E0)^{-1} ( -sum_k^{n-1} E_{n-k} |k> + sum_{k=n-h}^{n-1} H|k>) where h is the maximum order of hamiltonian
-//    xout <<std::endl<<std::endl<<"MAIN ITERATION n="<<n<<std::endl;
+    xout <<std::endl<<std::endl<<"MAIN ITERATION n="<<n<<std::endl;
     g.set((double)0);
-    //        xout <<std::endl<< "g after set 0: " << g.str(2) <<std::endl;
+//            xout <<std::endl<< "g after set 0: " << g.str(2) <<std::endl;
     for (int k=n; k>0; k--) {
       w.get(wfile,n-k);
       if (k < (int) hamiltonians.size()) {
-         //   xout <<"k="<<k<< " g before H.w: " << g.str(2) <<std::endl;
+            xout <<"k="<<k<< " g before H.w: " << g.str(2) <<std::endl;
         g.hamiltonianOnWavefunction(*hamiltonians[k], w);
-         //   xout << "g after H.w: " << g.str(2) <<std::endl;
+            xout << "g after H.w: " << g.str(2) <<std::endl;
         if (n == k) e[n]+=g.at(reference);
 //        if (n == k) xout << "k, E:"<<k<<" "<<e[k]<<std::endl;
       }
-//        xout << "k, E:"<<k<<" "<<e[k]<<", g before -E.w: " << g.str(2) <<std::endl;
-//        xout <<"w="<<w.str(2)<<std::endl;
+        xout << "k, E:"<<k<<" "<<e[k]<<", g before -E.w: " << g.str(2) <<std::endl;
+        xout <<"w="<<w.str(2)<<std::endl;
       g -= e[k] * w;
-//        xout << "k, E:"<<k<<" "<<e[k]<<", g after -E.w: " << g.str(2) <<std::endl;
+        xout << "k, E:"<<k<<" "<<e[k]<<", g after -E.w: " << g.str(2) <<std::endl;
     }
     w = -g;
     g.get(h0file);
-    //        xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
+            xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
     w.set(reference,(double)0);
     w /= g;
-    // xout <<std::endl<< "Perturbed wavefunction, order="<<n<<": " << w.str(2) <<std::endl;
+     xout <<std::endl<< "Perturbed wavefunction, order="<<n<<": " << w.str(2) <<std::endl;
     w.put(wfile,n);
     for (int k=1; k < (int) hamiltonians.size(); k++) {
       if (n+k > maxOrder) break;
       g.get(gfile,k);
 //      xout <<"gfile "<<g.str(2)<<std::endl;
-//      xout <<"contribution from n="<<n<<", k="<<k<<" to E("<<n+k<<")="<<g*w<<std::endl;
+      xout <<"contribution from n="<<n<<", k="<<k<<" to E("<<n+k<<")="<<g*w<<std::endl;
       e[n+k]+=g*w;
     }
     xout << "n="<<n<<", E(n+1)="<<e[n+1]<<std::endl;
