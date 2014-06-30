@@ -576,6 +576,7 @@ Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
 //  xout << "this before alpha fock: "<<str(2)<<std::endl;
 //  xout << "result before alpha fock: "<<result.str(2)<<std::endl;
   Hamiltonian f = this->FockHamiltonian(ra);
+  xout << "sameSpinHamiltonian, after alpha Fock, f at "<<&f<<", f.bracket_integrals_a at "<<f.bracket_integrals_a<<std::endl;
 //  xout << "this after alpha fock: "<<str(2)<<std::endl;
 //  xout << "result before alpha: "<<result.str(2)<<std::endl;
   for (size_t i=0; i<integrals_a->size(); i++) {
@@ -586,15 +587,26 @@ Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
 //  xout << "result after alpha: "<<result.str(2)<<std::endl;
   ra = reference; ra.stringAlpha.nullify();
   f = this->FockHamiltonian(ra);
+  xout << "sameSpinHamiltonian, after beta Fock, f at "<<&f<<", f.bracket_integrals_a at "<<f.bracket_integrals_a<<std::endl;
+  xout << "f.bracket_integrals_a->size() "<<f.bracket_integrals_a->size()<<std::endl;
 //  xout << "sameSpinHamiltonian, fock integrals_a="<<&f.integrals_a[0]<<", fock integrals_b ="<<&f.integrals_b[0]<<std::endl;
-  for (size_t i=0; i<integrals_a->size(); i++) {
   for (size_t i=0; i<integrals_b->size(); i++) {
     result.integrals_b->at(i) = this->integrals_b->at(i) - f.integrals_b->at(i);
 //    xout << " result b = " << result.integrals_b->at(i) <<"=" << this->integrals_b->at(i) <<"-"<< f.integrals_b->at(i)<<std::endl;
 }
-  delete result.bracket_integrals_ab; result.bracket_integrals_ab = NULL;
+  xout << "f.bracket_integrals_a->size() "<<f.bracket_integrals_a->size()<<std::endl;
+  xout << "result.bracket_integrals_ab "<<result.bracket_integrals_ab<<std::endl;
+  if (result.bracket_integrals_ab != NULL) {
+//    xout << "result.bracket_integrals_ab isn't null; size="<<result.bracket_integrals_ab->size()<<std::endl;
+    // not very satisfactory
+    result.bracket_integrals_ab->assign(result.bracket_integrals_ab->size(),(double)0);
+//    delete result.bracket_integrals_ab;
+//    result.bracket_integrals_ab = NULL;
+  }
+  xout << "f.bracket_integrals_a->size() "<<f.bracket_integrals_a->size()<<std::endl;
   if (spinUnrestricted) delete result.integrals_ab; result.integrals_ab = NULL;
 //  xout << "result on return: "<<result.str(2)<<std::endl;
+  xout << "f.bracket_integrals_a->size() "<<f.bracket_integrals_a->size()<<std::endl;
   return result;
 }
 
