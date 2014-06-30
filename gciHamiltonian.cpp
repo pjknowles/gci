@@ -588,6 +588,7 @@ Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
   f = this->FockHamiltonian(ra);
 //  xout << "sameSpinHamiltonian, fock integrals_a="<<&f.integrals_a[0]<<", fock integrals_b ="<<&f.integrals_b[0]<<std::endl;
   for (size_t i=0; i<integrals_a->size(); i++) {
+  for (size_t i=0; i<integrals_b->size(); i++) {
     result.integrals_b->at(i) = this->integrals_b->at(i) - f.integrals_b->at(i);
 //    xout << " result b = " << result.integrals_b->at(i) <<"=" << this->integrals_b->at(i) <<"-"<< f.integrals_b->at(i)<<std::endl;
 }
