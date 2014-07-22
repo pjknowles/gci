@@ -11,18 +11,14 @@
 
 Hamiltonian::Hamiltonian(std::string filename) : OrbitalSpace(filename)
 {
-  xout <<"Hamiltonian filename constructor starting, this="<<this<<", filename="<<filename<<std::endl;
   bracket_integrals_a=bracket_integrals_b=NULL;
   bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
   loaded = false;
   if (filename != "") load(filename);
-  xout <<"Hamiltonian filename constructor ending, this="<<this<<", filename="<<filename<<", loaded="<<loaded<<std::endl;
-  xout <<"bracket_integrals_a="<<bracket_integrals_a<<std::endl;
 }
 
 Hamiltonian::Hamiltonian(FCIdump* dump) : OrbitalSpace(dump)
 {
-  xout <<"Hamiltonian FCIdump constructor this="<<this<<std::endl;
   bracket_integrals_a=bracket_integrals_b=NULL;
   bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
   loaded = false;
@@ -35,7 +31,6 @@ Hamiltonian::Hamiltonian(const Hamiltonian &source)
   , coreEnergy(source.coreEnergy)
   , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
 {
-  xout <<"** Hamiltonian copy constructor source="<<&source<<", this="<<this<<std::endl;
  this->_copy(source);
 }
 
@@ -45,7 +40,6 @@ Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestri
   , coreEnergy(source.coreEnergy)
   , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
 {
-  xout <<"** Hamiltonian general copy constructor source="<<&source<<", this="<<this<<std::endl;
   this->_copy(source,forceSpinUnrestricted,oneElectron,twoElectron);
 }
 
@@ -56,7 +50,6 @@ void Hamiltonian::_copy(const Hamiltonian &source, const bool forceSpinUnrestric
   if (loaded) {
        integrals_a = oneElectron ? new std::vector<double>(*source.integrals_a) : NULL;
        bracket_integrals_a = (oneElectron && source.bracket_integrals_a != NULL) ? new std::vector<double>(*source.bracket_integrals_a) : NULL;
-       xout << "copy constructure has made bracket_integrals_a="<<bracket_integrals_a<<std::endl;
      if (source.integrals_aa != NULL || spinUnrestricted) {
        integrals_aa = twoElectron ? new std::vector<double>(*source.integrals_aa) : NULL;
        bracket_integrals_aa = twoElectron ? new std::vector<double>(*source.bracket_integrals_aa) : NULL;
@@ -82,15 +75,10 @@ void Hamiltonian::_copy(const Hamiltonian &source, const bool forceSpinUnrestric
        bracket_integrals_b = bracket_integrals_a;
      }
   }
-//  xout << "Hamiltonian copy constructor, old integrals_a="<<&source.integrals_a[0]<<", new integrals_a ="<<&integrals_a[0]<<std::endl;
-//  xout << "Hamiltonian copy constructor, old integrals_b="<<&source.integrals_b[0]<<", new integrals_b ="<<&integrals_b[0]<<std::endl;
-  xout <<"** Hamiltonian copy constructor finishing, this="<<this<<std::endl;
 }
 
 Hamiltonian::~Hamiltonian() {
-  xout <<"** Hamiltonian deconstructor this="<<this<<std::endl;
   deconstructBraKet();
-  xout <<"** Hamiltonian deconstructor finishing this="<<this<<std::endl;
 }
 
 void Hamiltonian::load(std::string filename, int verbosity) {
@@ -99,7 +87,6 @@ void Hamiltonian::load(std::string filename, int verbosity) {
 }
 
 void Hamiltonian::load(FCIdump* dump, int verbosity) {
-  xout <<"Hamiltonian::load, this="<<this<<std::endl;
   profiler.start("Hamiltonian::load");
   if (loaded) unload();
   if (verbosity) xout <<"Load hamiltonian from " << dump->fileName() <<std::endl;
@@ -109,7 +96,6 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
 
   ijSize = total(0,1);
   ijklSize = pairSpace[1].total(0);
-//  xout << "ijklSize=" << ijklSize <<std::endl;
   integrals_a = new std::vector<double>(ijSize,0.0);
   if (spinUnrestricted)
     integrals_b = new std::vector<double>(ijSize,0.0);
@@ -160,7 +146,6 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
   }
   }
   loaded=true;
-  xout <<"load sets loaded=true this="<<this<<std::endl;
   if (verbosity>3) {
     xout << "integrals_a: ";copy(integrals_a->begin(), integrals_a->end(), std::ostream_iterator<double>(xout, ", "));xout <<std::endl;
     xout << "integrals_aa: ";copy(integrals_aa->begin(), integrals_aa->end(), std::ostream_iterator<double>(xout, ", "));xout <<std::endl;
@@ -292,7 +277,6 @@ void Hamiltonian::constructBraKet(int neleca, int nelecb)
         if (nelecb == 0 && integrals_a != NULL) bracket_integrals_a = new std::vector<double>(*integrals_a);
         del(bracket_integrals_b);
         if (neleca != 0 && integrals_b != NULL) bracket_integrals_b = new std::vector<double>(*integrals_b);
-        xout <<"constructBraKet bracket_integrals_{a,b}="<<bracket_integrals_a<<", "<<bracket_integrals_b<<std::endl;
         // alpha-alpha and beta-beta
         unsigned int symil = symi^syml;
         unsigned int symjl = symj^syml;
@@ -357,15 +341,8 @@ void Hamiltonian::constructBraKet(int neleca, int nelecb)
 
 void Hamiltonian::deconstructBraKet()
 {
-  xout << "deconstructBraKet for object at "<<this<<", loaded="<<loaded<<std::endl;
   if (! loaded) return;
-  xout << "integrals_a "<<integrals_a<<std::endl;
-  xout << "bracket_integrals_a "<<bracket_integrals_a<<std::endl;
-  if (bracket_integrals_a != NULL) xout << "bracket_integrals_a->size() "<<bracket_integrals_a->size()<<std::endl;
-  xout << "bracket_integrals_b "<<bracket_integrals_b<<std::endl;
-  if (bracket_integrals_b != NULL) xout << "bracket_integrals_b->size() "<<bracket_integrals_b->size()<<std::endl;
   del2(bracket_integrals_b, bracket_integrals_a);
-  xout <<"del2 done"<<std::endl;
   del2(bracket_integrals_aa, bracket_integrals_bb);
   del(bracket_integrals_ab);
 }
@@ -551,7 +528,6 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
   f.bracket_integrals_ab = NULL;
   f.bracket_integrals_bb = NULL;
   f.bracket_integrals_a = (f.integrals_a != NULL) ? new std::vector<double>(*f.integrals_a) : NULL;
-  xout << "in FockHamiltonian f.bracket_integrals_a created at "<<&f.bracket_integrals_a <<std::endl;
   // xout << "in FockHamiltonian, after alpha f="; for (size_t ij=0; ij< f.integrals_a->size(); ij++) xout <<" "<<(*f.integrals_a)[ij]; xout <<std::endl;
   if (f.spinUnrestricted) {
     f.integrals_b = new std::vector<double>(ijSize,0.0);
@@ -580,8 +556,6 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
     f.bracket_integrals_b = f.bracket_integrals_a;
   }
   f.loaded = true;
-  xout <<"FockHamiltonian at "<<&f<<" sets loaded=true"<<std::endl;
-  xout << "at end of FockHamiltonian f.bracket_integrals_a.size() "<<f.bracket_integrals_a->size()<<std::endl;
   return f;
 }
 
@@ -597,8 +571,6 @@ Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
 //  xout << "this before alpha fock: "<<str(2)<<std::endl;
 //  xout << "result before alpha fock: "<<result.str(2)<<std::endl;
   Hamiltonian f = this->FockHamiltonian(ra);
-  xout << "sameSpinHamiltonian, after alpha Fock, f at "<<&f<<", f.bracket_integrals_a at "<<f.bracket_integrals_a<<std::endl;
-  xout << "f.bracket_integrals_a.size() "<<f.bracket_integrals_a->size()<<std::endl;
 //  xout << "this after alpha fock: "<<str(2)<<std::endl;
 //  xout << "result before alpha: "<<result.str(2)<<std::endl;
   for (size_t i=0; i<integrals_a->size(); i++) {
@@ -617,8 +589,6 @@ Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
     result.integrals_b->at(i) = this->integrals_b->at(i) - f.integrals_b->at(i);
 //    xout << " result b = " << result.integrals_b->at(i) <<"=" << this->integrals_b->at(i) <<"-"<< f.integrals_b->at(i)<<std::endl;
 }
-  xout << "f.bracket_integrals_a->size() "<<f.bracket_integrals_a->size()<<std::endl;
-  xout << "result.bracket_integrals_ab "<<result.bracket_integrals_ab<<std::endl;
   if (result.bracket_integrals_ab != NULL) {
 //    xout << "result.bracket_integrals_ab isn't null; size="<<result.bracket_integrals_ab->size()<<std::endl;
     // not very satisfactory
@@ -626,10 +596,8 @@ Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
 //    delete result.bracket_integrals_ab;
 //    result.bracket_integrals_ab = NULL;
   }
-  xout << "f.bracket_integrals_a->size() "<<f.bracket_integrals_a->size()<<std::endl;
   if (spinUnrestricted) delete result.integrals_ab; result.integrals_ab = NULL;
 //  xout << "result on return: "<<result.str(2)<<std::endl;
-  xout << "f.bracket_integrals_a->size() "<<f.bracket_integrals_a->size()<<std::endl;
   return result;
 }
 
