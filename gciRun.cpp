@@ -81,7 +81,7 @@ std::vector<double> Run::run()
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(emp[i]=totalEnergy+=emp[i]); xout <<std::endl;
     energies.resize(1); energies[0] = totalEnergy;
 #ifdef MOLPRO
-    SetVariables( "ENERGY_MP", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
+    itf::SetVariables( "ENERGY_MP", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
   } else if (method == "DAVIDSON") {
     energies = Davidson(hh, prototype);
@@ -115,6 +115,12 @@ void Run::addParameter(const std::string& key, const std::string& value, const b
   std::vector<std::string> values(1,value);
   addParameter(key,values,echo);
 }
+
+#ifdef MOLPRO
+#include <cic/ItfCommon.h>
+#include <cic/ItfFortranInt.h>
+using namespace itf;
+#endif
 
 #include <cmath>
 std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,

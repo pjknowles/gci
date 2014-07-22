@@ -39,7 +39,7 @@ public:
 private:
 #ifdef GCIMOLPROFILE
   static int baseRecord;
-  FMolproStorageBlock* f;
+  itf::FMolproStorageBlock* f;
 #else
   std::fstream f;
 #endif

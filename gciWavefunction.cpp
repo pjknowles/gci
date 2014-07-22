@@ -338,6 +338,12 @@ size_t Wavefunction::blockOffset(const unsigned int syma) const
   return _blockOffset.at(syma);
 }
 
+#ifdef MOLPRO
+#include <cic/ItfCommon.h>
+#include <cic/ItfFortranInt.h>
+using namespace itf;
+#endif
+
 void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefunction &w)
 {
   profiler.start("hamiltonianOnWavefunction");

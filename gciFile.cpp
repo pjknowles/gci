@@ -1,6 +1,8 @@
 #include "gciFile.h"
 #ifdef GCIMOLPROFILE
+#include <cic/ItfCommon.h>
 #include <cic/ItfFortranInt.h>
+using namespace itf;
 #else
 #include <string.h>
 #include <iostream>
