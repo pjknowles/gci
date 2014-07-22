@@ -11,11 +11,13 @@
 
 Hamiltonian::Hamiltonian(std::string filename) : OrbitalSpace(filename)
 {
+  xout <<"Hamiltonian filename constructor starting, this="<<this<<", filename="<<filename<<std::endl;
   bracket_integrals_a=bracket_integrals_b=NULL;
   bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
   loaded = false;
   if (filename != "") load(filename);
-  xout <<"Hamiltonian filename constructor this="<<this<<", filename="<<filename<<", loaded="<<loaded<<std::endl;
+  xout <<"Hamiltonian filename constructor ending, this="<<this<<", filename="<<filename<<", loaded="<<loaded<<std::endl;
+  xout <<"bracket_integrals_a="<<bracket_integrals_a<<std::endl;
 }
 
 Hamiltonian::Hamiltonian(FCIdump* dump) : OrbitalSpace(dump)
@@ -33,12 +35,13 @@ Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestri
   , coreEnergy(source.coreEnergy)
   , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
 {
-  xout <<"Hamiltonian copy constructor source="<<&source<<", this="<<this<<std::endl;
+  xout <<"** Hamiltonian copy constructor source="<<&source<<", this="<<this<<std::endl;
   if (forceSpinUnrestricted) spinUnrestricted = true;
   bracket_integrals_a = bracket_integrals_b = NULL;
   if (loaded) {
        integrals_a = oneElectron ? new std::vector<double>(*source.integrals_a) : NULL;
        bracket_integrals_a = (oneElectron && source.bracket_integrals_a != NULL) ? new std::vector<double>(*source.bracket_integrals_a) : NULL;
+       xout << "copy constructure has made bracket_integrals_a="<<bracket_integrals_a<<std::endl;
      if (source.integrals_aa != NULL || spinUnrestricted) {
        integrals_aa = twoElectron ? new std::vector<double>(*source.integrals_aa) : NULL;
        bracket_integrals_aa = twoElectron ? new std::vector<double>(*source.bracket_integrals_aa) : NULL;
@@ -66,11 +69,13 @@ Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestri
   }
 //  xout << "Hamiltonian copy constructor, old integrals_a="<<&source.integrals_a[0]<<", new integrals_a ="<<&integrals_a[0]<<std::endl;
 //  xout << "Hamiltonian copy constructor, old integrals_b="<<&source.integrals_b[0]<<", new integrals_b ="<<&integrals_b[0]<<std::endl;
+  xout <<"** Hamiltonian copy constructor finishing, this="<<this<<std::endl;
 }
 
 Hamiltonian::~Hamiltonian() {
-  xout <<"Hamiltonian deconstructor this="<<this<<std::endl;
+  xout <<"** Hamiltonian deconstructor this="<<this<<std::endl;
   deconstructBraKet();
+  xout <<"** Hamiltonian deconstructor finishing this="<<this<<std::endl;
 }
 
 void Hamiltonian::load(std::string filename, int verbosity) {
@@ -561,6 +566,7 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
   }
   f.loaded = true;
   xout <<"FockHamiltonian at "<<&f<<" sets loaded=true"<<std::endl;
+  xout << "at end of FockHamiltonian f.bracket_integrals_a.size() "<<f.bracket_integrals_a->size()<<std::endl;
   return f;
 }
 
@@ -577,6 +583,7 @@ Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
 //  xout << "result before alpha fock: "<<result.str(2)<<std::endl;
   Hamiltonian f = this->FockHamiltonian(ra);
   xout << "sameSpinHamiltonian, after alpha Fock, f at "<<&f<<", f.bracket_integrals_a at "<<f.bracket_integrals_a<<std::endl;
+  xout << "f.bracket_integrals_a.size() "<<f.bracket_integrals_a->size()<<std::endl;
 //  xout << "this after alpha fock: "<<str(2)<<std::endl;
 //  xout << "result before alpha: "<<result.str(2)<<std::endl;
   for (size_t i=0; i<integrals_a->size(); i++) {
@@ -585,6 +592,7 @@ Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
   }
 //  xout << "this after alpha: "<<str(2)<<std::endl;
 //  xout << "result after alpha: "<<result.str(2)<<std::endl;
+  xout << "before beta Fock f.bracket_integrals_a.size() "<<f.bracket_integrals_a->size()<<std::endl;
   ra = reference; ra.stringAlpha.nullify();
   f = this->FockHamiltonian(ra);
   xout << "sameSpinHamiltonian, after beta Fock, f at "<<&f<<", f.bracket_integrals_a at "<<f.bracket_integrals_a<<std::endl;
