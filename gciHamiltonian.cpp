@@ -29,13 +29,28 @@ Hamiltonian::Hamiltonian(FCIdump* dump) : OrbitalSpace(dump)
   load(dump,0);
 }
 
-Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestricted, const bool oneElectron, const bool twoElectron)
+Hamiltonian::Hamiltonian(const Hamiltonian &source)
   : OrbitalSpace(source)
   ,loaded(source.loaded)
   , coreEnergy(source.coreEnergy)
   , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
 {
   xout <<"** Hamiltonian copy constructor source="<<&source<<", this="<<this<<std::endl;
+ this->_copy(source);
+}
+
+Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestricted, const bool oneElectron, const bool twoElectron)
+  : OrbitalSpace(source)
+  ,loaded(source.loaded)
+  , coreEnergy(source.coreEnergy)
+  , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
+{
+  xout <<"** Hamiltonian general copy constructor source="<<&source<<", this="<<this<<std::endl;
+  this->_copy(source,forceSpinUnrestricted,oneElectron,twoElectron);
+}
+
+void Hamiltonian::_copy(const Hamiltonian &source, const bool forceSpinUnrestricted, const bool oneElectron, const bool twoElectron)
+{
   if (forceSpinUnrestricted) spinUnrestricted = true;
   bracket_integrals_a = bracket_integrals_b = NULL;
   if (loaded) {

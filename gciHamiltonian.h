@@ -32,11 +32,16 @@ public:
   /*!
    * \brief copy constructor
    * \param source
+   */
+  Hamiltonian(const Hamiltonian& source);
+  /*!
+   * \brief general copy constructor
+   * \param source
    * \param forceSpinUnrestricted whether to force converstion to a UHF object
    * \param oneElectron whether to copy the 1-electron part of source
    * \param twoElectron whether to copy the 2-electron part of source
    */
-  Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestricted=false, const bool oneElectron=true, const bool twoElectron=true);
+  Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestricted, const bool oneElectron=true, const bool twoElectron=true);
   ~Hamiltonian();
   void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load integrals from FCIDUMP */
   void load(FCIdump* dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */
@@ -133,6 +138,14 @@ private:
   Hamiltonian& plusminusOperator(const Hamiltonian &other, const char operation='+');
   void plusminusEqualsHelper(std::vector<double>*& me, std::vector<double> * const &other, const char operation='+');
   void starEqualsHelper(std::vector<double> *&me, const double factor);
+  /*!
+   * \brief general copy of another object
+   * \param source
+   * \param forceSpinUnrestricted whether to force converstion to a UHF object
+   * \param oneElectron whether to copy the 1-electron part of source
+   * \param twoElectron whether to copy the 2-electron part of source
+   */
+  void _copy(const Hamiltonian &source, const bool forceSpinUnrestricted=false, const bool oneElectron=true, const bool twoElectron=true);
 };
 Hamiltonian operator+(const Hamiltonian &h1, const Hamiltonian &h2); ///< add two Hamiltonian objects
 Hamiltonian operator-(const Hamiltonian &h1, const Hamiltonian &h2); ///< subtract two Hamiltonian objects
