@@ -43,6 +43,12 @@ Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestri
   this->_copy(source,forceSpinUnrestricted,oneElectron,twoElectron);
 }
 
+Hamiltonian& Hamiltonian::operator=(const Hamiltonian &source)
+{
+ this->_copy(source);
+ return *this;
+}
+
 void Hamiltonian::_copy(const Hamiltonian &source, const bool forceSpinUnrestricted, const bool oneElectron, const bool twoElectron)
 {
   if (forceSpinUnrestricted) spinUnrestricted = true;
@@ -51,8 +57,8 @@ void Hamiltonian::_copy(const Hamiltonian &source, const bool forceSpinUnrestric
        integrals_a = oneElectron ? new std::vector<double>(*source.integrals_a) : NULL;
        bracket_integrals_a = (oneElectron && source.bracket_integrals_a != NULL) ? new std::vector<double>(*source.bracket_integrals_a) : NULL;
      if (source.integrals_aa != NULL || spinUnrestricted) {
-       integrals_aa = twoElectron ? new std::vector<double>(*source.integrals_aa) : NULL;
-       bracket_integrals_aa = twoElectron ? new std::vector<double>(*source.bracket_integrals_aa) : NULL;
+       integrals_aa = (twoElectron && source.integrals_aa != NULL) ? new std::vector<double>(*source.integrals_aa) : NULL;
+       bracket_integrals_aa = (twoElectron && source.bracket_integrals_aa != NULL) ? new std::vector<double>(*source.bracket_integrals_aa) : NULL;
        bracket_integrals_ab = (twoElectron && source.bracket_integrals_ab != NULL)
            ?  new std::vector<double>(*source.bracket_integrals_ab)
            : NULL;
@@ -63,8 +69,8 @@ void Hamiltonian::_copy(const Hamiltonian &source, const bool forceSpinUnrestric
          integrals_ab = (twoElectron && source.integrals_ab != NULL)
              ? new std::vector<double>(*source.integrals_ab)
              : NULL;
-         integrals_bb = twoElectron ? new std::vector<double>(*source.integrals_bb) : NULL;
-         bracket_integrals_bb = twoElectron ? new std::vector<double>(*source.bracket_integrals_bb) : NULL;
+         integrals_bb = (twoElectron && source.integrals_bb != NULL) ? new std::vector<double>(*source.integrals_bb) : NULL;
+         bracket_integrals_bb = (twoElectron && source.bracket_integrals_bb != NULL) ? new std::vector<double>(*source.bracket_integrals_bb) : NULL;
          bracket_integrals_b = (oneElectron && source.bracket_integrals_b != NULL) ? new std::vector<double>(*source.bracket_integrals_b) : NULL;
        }
      } else {

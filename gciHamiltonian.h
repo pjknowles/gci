@@ -114,6 +114,7 @@ public:
   Hamiltonian& operator+=(const Hamiltonian &other); ///< add another Hamiltonian
   Hamiltonian& operator-=(const Hamiltonian &other); ///< subtract another Hamiltonian
   Hamiltonian& operator*=(const double factor); ///< scale by a factor
+  Hamiltonian& operator=(const Hamiltonian &h1); ///< assignment overload
   /*!
    * \brief Construct the same-spin perturbed Hamiltonian
    * \param reference the zero-order Slater determinant
