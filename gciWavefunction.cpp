@@ -350,12 +350,9 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
   for (size_t i=0; i<buffer.size(); i++)
     buffer[i] += h.coreEnergy * w.buffer[i];
 
-  xout <<std::endl<<"w in hamiltonianOnWavefunction="<<w.str(2)<<std::endl;
+//  xout <<std::endl<<"w in hamiltonianOnWavefunction="<<w.str(2)<<std::endl;
 
-  xout << "h.bracket_integrals_a="<<h.bracket_integrals_a<<std::endl;
   if (h.bracket_integrals_a!=NULL || h.bracket_integrals_b!=NULL) {
-    xout <<"In explicit 1-electron code"<<std::endl;
-  xout <<"residual before 1-electron:"<<std::endl<<str(2)<<std::endl;
   size_t offset=0;
   profiler.start("1-electron");
   for (unsigned int syma=0; syma<8; syma++) {
@@ -363,7 +360,6 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     size_t nsa = alphaStrings[syma].size();
     size_t nsb = betaStrings[symb].size();
     if (h.bracket_integrals_a != NULL ) {
-    xout <<"In explicit 1-electron code, alpha"<<std::endl;
       profiler.start("1-electron TransitionDensity");
       TransitionDensity d(w,
                           w.alphaStrings[syma].begin(),
@@ -373,25 +369,12 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
                           1,true, !h.spinUnrestricted);
       profiler.stop("1-electron TransitionDensity");
       profiler.start("1-electron MXM");
-      xout << "d=";
-      for (size_t i=0; i<w.orbitalSpace->total(0,1)*nsa*nsb; i++)
-        xout <<" "<<d[i];
-      xout << std::endl;
-      xout << "integrals=";
-      for (size_t i=0; i<w.orbitalSpace->total(0,1); i++)
-        xout <<" "<<(*h.bracket_integrals_a)[i];
-      xout << std::endl;
       MxmDrvNN(&buffer[offset],&d[0], &(*h.bracket_integrals_a)[0],
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
-      xout << "result=";
-      for (size_t i=0; i<nsa*nsb; i++)
-        xout <<" "<<buffer[offset+i];
-      xout << std::endl;
       profiler.stop("1-electron MXM",2*nsa*nsb*w.orbitalSpace->total(0,1));
     }
     if (h.spinUnrestricted && h.bracket_integrals_b != NULL) {
       profiler.start("1-electron TransitionDensity");
-    xout <<"In explicit 1-electron code, bet"<<std::endl;
       TransitionDensity d(w,
                           w.alphaStrings[syma].begin(),
                           w.alphaStrings[syma].end(),
@@ -400,27 +383,15 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
                           1,false, true);
       profiler.stop("1-electron TransitionDensity");
       profiler.start("1-electron MXM");
-      xout << "d=";
-      for (size_t i=0; i<w.orbitalSpace->total(0,1)*nsa*nsb; i++)
-        xout <<" "<<d[i];
-      xout << std::endl;
-      xout << "integrals=";
-      for (size_t i=0; i<w.orbitalSpace->total(0,1); i++)
-        xout <<" "<<(*h.bracket_integrals_b)[i];
-      xout << std::endl;
       MxmDrvNN(&buffer[offset],&d[0], &(*h.bracket_integrals_b)[0],
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
       profiler.stop("1-electron MXM",2*nsa*nsb*w.orbitalSpace->total(0,1));
     }
-      xout << "result at end of symmetry loop=";
-      for (size_t i=0; i<nsa*nsb; i++)
-        xout <<" "<<buffer[offset+i];
-      xout << std::endl;
     offset += nsa*nsb;
   }
   profiler.stop("1-electron");
 
-  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
+//  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
   }
 
   if (h.bracket_integrals_aa != NULL) { // two-electron contribution, alpha-alpha
