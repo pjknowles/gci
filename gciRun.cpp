@@ -56,20 +56,20 @@ std::vector<double> Run::run()
     xout << "Second-order hamiltonian contains " << 1-scs_opposite<<" of opposite-spin and "<< 1-scs_same <<" of same spin"<<std::endl;
     Hamiltonian h0 = hh.FockHamiltonian(referenceDeterminant);
 //    xout <<"h0.spinUnrestricted="<<h0.spinUnrestricted<<std::endl;
-//    xout <<"h0="<<h0<<std::endl;
+    xout <<"h0="<<h0<<std::endl;
     Hamiltonian ssh = hh.sameSpinHamiltonian(referenceDeterminant);
 //    xout <<"ssh.spinUnrestricted="<<ssh.spinUnrestricted<<std::endl;
-//    xout <<"ssh="<<ssh<<std::endl;
+    xout <<"ssh="<<ssh<<std::endl;
     Hamiltonian osh(hh,true); osh -= ssh; osh-=h0;
 //    xout <<"osh.spinUnrestricted="<<osh.spinUnrestricted<<std::endl;
-//    xout <<"osh="<<osh<<std::endl;
+    xout <<"osh="<<osh<<std::endl;
     Hamiltonian h1 = osh*scs_opposite + ssh*scs_same;
 //    xout <<"h1.spinUnrestricted="<<h1.spinUnrestricted<<std::endl;
-//    xout <<"h1="<<h1<<std::endl;
+    xout <<"h1="<<h1<<std::endl;
     Hamiltonian h2(hh,true); // spinUnrestricted not yet optimised
     h2-=h1; h2-=h0;
 //    xout <<"h2.spinUnrestricted="<<h2.spinUnrestricted<<std::endl;
-//    xout <<"h2="<<h2<<std::endl;
+    xout <<"h2="<<h2<<std::endl;
     std::vector<gci::Hamiltonian*> hamiltonians;
     hamiltonians.push_back(&h0);
     hamiltonians.push_back(&h1);
