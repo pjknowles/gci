@@ -385,7 +385,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
       xout << "result=";
       for (size_t i=0; i<nsa*nsb; i++)
-        xout <<" "<<buffer[i];
+        xout <<" "<<buffer[offset+i];
       xout << std::endl;
       profiler.stop("1-electron MXM",2*nsa*nsb*w.orbitalSpace->total(0,1));
     }
@@ -400,10 +400,22 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
                           1,false, true);
       profiler.stop("1-electron TransitionDensity");
       profiler.start("1-electron MXM");
+      xout << "d=";
+      for (size_t i=0; i<w.orbitalSpace->total(0,1)*nsa*nsb; i++)
+        xout <<" "<<d[i];
+      xout << std::endl;
+      xout << "integrals=";
+      for (size_t i=0; i<w.orbitalSpace->total(0,1); i++)
+        xout <<" "<<(*h.bracket_integrals_b)[i];
+      xout << std::endl;
       MxmDrvNN(&buffer[offset],&d[0], &(*h.bracket_integrals_b)[0],
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
       profiler.stop("1-electron MXM",2*nsa*nsb*w.orbitalSpace->total(0,1));
     }
+      xout << "result at end of symmetry loop=";
+      for (size_t i=0; i<nsa*nsb; i++)
+        xout <<" "<<buffer[offset+i];
+      xout << std::endl;
     offset += nsa*nsb;
   }
   profiler.stop("1-electron");

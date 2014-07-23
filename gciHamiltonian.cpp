@@ -51,6 +51,7 @@ Hamiltonian& Hamiltonian::operator=(const Hamiltonian &source)
 
 void Hamiltonian::_copy(const Hamiltonian &source, const bool forceSpinUnrestricted, const bool oneElectron, const bool twoElectron)
 {
+  xout << "Hamiltonian::_copy"<<std::endl<<source.str(2)<<std::endl;
   if (forceSpinUnrestricted) spinUnrestricted = true;
   bracket_integrals_a = bracket_integrals_b = NULL;
   if (loaded) {
@@ -63,7 +64,20 @@ void Hamiltonian::_copy(const Hamiltonian &source, const bool forceSpinUnrestric
            ?  new std::vector<double>(*source.bracket_integrals_ab)
            : NULL;
      }
-     if (spinUnrestricted) {
+     if (spinUnrestricted && ! source.spinUnrestricted) {
+       integrals_b = oneElectron ? new std::vector<double>(*source.integrals_a): NULL;
+       if (source.integrals_ab != NULL || spinUnrestricted) {
+         integrals_ab = (twoElectron && source.integrals_aa != NULL)
+             ? new std::vector<double>(*source.integrals_aa)
+             : NULL;
+         integrals_bb = (twoElectron && source.integrals_aa != NULL) ? new std::vector<double>(*source.integrals_aa) : NULL;
+         bracket_integrals_bb = (twoElectron && source.bracket_integrals_aa != NULL) ? new std::vector<double>(*source.bracket_integrals_aa) : NULL;
+         bracket_integrals_b = (oneElectron && source.bracket_integrals_a != NULL) ? new std::vector<double>(*source.bracket_integrals_a) : NULL;
+         xout << "Hamiltonian::_copy unrestrict bracket_integrals.b "<<bracket_integrals_b<<std::endl;
+         if (bracket_integrals_b!=NULL)
+         for (size_t i=0; i<bracket_integrals_b->size();i++) xout << " " <<(*bracket_integrals_b)[i]; xout <<std::endl;
+       }
+     } else  if (spinUnrestricted) {
        integrals_b = oneElectron ? new std::vector<double>(*source.integrals_b): NULL;
        if (source.integrals_ab != NULL || spinUnrestricted) {
          integrals_ab = (twoElectron && source.integrals_ab != NULL)
@@ -72,6 +86,9 @@ void Hamiltonian::_copy(const Hamiltonian &source, const bool forceSpinUnrestric
          integrals_bb = (twoElectron && source.integrals_bb != NULL) ? new std::vector<double>(*source.integrals_bb) : NULL;
          bracket_integrals_bb = (twoElectron && source.bracket_integrals_bb != NULL) ? new std::vector<double>(*source.bracket_integrals_bb) : NULL;
          bracket_integrals_b = (oneElectron && source.bracket_integrals_b != NULL) ? new std::vector<double>(*source.bracket_integrals_b) : NULL;
+         xout << "Hamiltonian::_copy bracket_integrals.b "<<bracket_integrals_b<<std::endl;
+         if (bracket_integrals_b!=NULL)
+         for (size_t i=0; i<bracket_integrals_b->size();i++) xout << " " <<(*bracket_integrals_b)[i]; xout <<std::endl;
        }
      } else {
        integrals_b = integrals_a;
@@ -283,6 +300,10 @@ void Hamiltonian::constructBraKet(int neleca, int nelecb)
         if (nelecb == 0 && integrals_a != NULL) bracket_integrals_a = new std::vector<double>(*integrals_a);
         del(bracket_integrals_b);
         if (neleca != 0 && integrals_b != NULL) bracket_integrals_b = new std::vector<double>(*integrals_b);
+        if (neleca != 0 && integrals_b != NULL) {
+          xout << "copied into bracket_integrals_b "<<std::endl;
+          for (unsigned int i=0; i<bracket_integrals_b->size(); i++) xout << " " << (*bracket_integrals_b)[i]; xout <<std::endl;
+        }
         // alpha-alpha and beta-beta
         unsigned int symil = symi^syml;
         unsigned int symjl = symj^syml;
