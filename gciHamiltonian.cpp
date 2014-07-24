@@ -141,10 +141,8 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
 //  std::string ss;
   double value;
   FCIdump::integralType type;
-  int i,j,k,l,ij,kl;
+  int i,j,k,l;
   while ((type=dump->nextIntegral(i,j,k,l,value))!=FCIdump::endOfFile) {
-    ij = i > j ? (i*(i-1))/2+j : (j*(j-1))/2+i;
-    kl = k > l ? (k*(k-1))/2+l : (l*(l-1))/2+k;
     if (type == FCIdump::I2aa) {
       if (verbosity>2) xout << "aa("<< i << j <<"|"<< k << l <<") [" << int2Index(i,j,k,l) << "]= " << value <<std::endl;
       if (verbosity>2) xout << "aa("<< k << l <<"|"<< i << j <<") [" << int2Index(k,l,i,j) << "]= " << value <<std::endl;

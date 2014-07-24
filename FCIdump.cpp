@@ -123,8 +123,8 @@ FCIdump::integralType FCIdump::nextIntegral(int &i, int &j, int &k, int &l, doub
     stream >> i; stream >> j; stream >> k; stream >> l;
   }
   else {
-    return endOfFile;
     stream.close();
+    return endOfFile;
   }
   // following is tricky stuff reflecting historical structure of UHF and RHF FCIdump files
   if (i == 0) {
