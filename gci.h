@@ -22,7 +22,6 @@
 namespace gci {
 
 extern Profiler profiler; // global profiler
-extern int64_t parallel_rank, parallel_size;
 
 }
 

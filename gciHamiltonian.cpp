@@ -298,10 +298,10 @@ void Hamiltonian::constructBraKet(int neleca, int nelecb)
         if (nelecb == 0 && integrals_a != NULL) bracket_integrals_a = new std::vector<double>(*integrals_a);
         del(bracket_integrals_b);
         if (neleca != 0 && integrals_b != NULL) bracket_integrals_b = new std::vector<double>(*integrals_b);
-        if (neleca != 0 && integrals_b != NULL) {
-          xout << "copied into bracket_integrals_b "<<std::endl;
-          for (unsigned int i=0; i<bracket_integrals_b->size(); i++) xout << " " << (*bracket_integrals_b)[i]; xout <<std::endl;
-        }
+//        if (neleca != 0 && integrals_b != NULL) {
+//          xout << "copied into bracket_integrals_b "<<std::endl;
+//          for (unsigned int i=0; i<bracket_integrals_b->size(); i++) xout << " " << (*bracket_integrals_b)[i]; xout <<std::endl;
+//        }
         // alpha-alpha and beta-beta
         unsigned int symil = symi^syml;
         unsigned int symjl = symj^syml;
