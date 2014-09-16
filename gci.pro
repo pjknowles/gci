@@ -27,8 +27,8 @@ contains(QMAKE_CXX,mpic++) {
 message(parallel build)
 #QMAKE_CXXFLAGS=
 GA=/usr/local
-PPIDD=$(HOME)/trees/ppidd
-INCLUDEPATH+=$$PPIDD/src
+PPIDD=/usr/local
+INCLUDEPATH+=$$PPIDD/src $$PPIDD/include
 DEFINES += GCI_PARALLEL
 LIBS += -L$$PPIDD -lppidd -L$$GA/lib -lga -larmci -lblas
 }
