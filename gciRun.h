@@ -53,8 +53,8 @@ private:
          int maxIterations=-1);
 
   /*!
-   * \brief Perform a variational calculation
-   * \param hamiltonians A vector of pointers to the zero, first, second... order hamiltonians
+   * \brief Perform a variational calculation using the Davidson algorithm
+   * \param hamiltonian The Hamiltonian
    * \param prototype A State object specifying number of electrons, symmetry, spin
    * If it is a Wavefunction , then that will be used also for specifying the configuration space, otherwise the default FCI
    * \param energyThreshold Convergence threshold for energy
