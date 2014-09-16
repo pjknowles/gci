@@ -35,6 +35,13 @@ extern "C" {
 int main(int argc, char *argv[])
 //int main()
 {
+#ifdef GCI_PARALLEL
+  PPIDD_Initialize(argc,argv);
+  int64_t rank;
+  PPIDD_Rank(&rank);
+  if (rank > 0)
+    freopen("/dev/null", "w", stdout);
+#endif
   Run run("FCIDUMP");
   if (argc<2) {
     run.addParameter("METHOD","DAVIDSON");
@@ -49,6 +56,9 @@ int main(int argc, char *argv[])
   }
   std::vector<double> e=run.run();
   xout << "e after run:"; for (size_t i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;
+#ifdef GCI_PARALLEL
+  PPIDD_Finalize();
+#endif
   return 0;
 }
 #endif

@@ -4,6 +4,7 @@
 #
 #-------------------------------------------------
 
+CONFIG -= qt
 QT       -= core
 
 QT       -= gui
@@ -17,9 +18,20 @@ TEMPLATE = app
 #INCLUDEPATH += /opt/intel/composerxe/mkl/include
 #LIBS += -L/opt/intel/composerxe/mkl/lib -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm
 #LIBS += -L/usr/local/Cellar/google-perftools/2.1/lib -lprofiler
-PPIDD=~/trees/ppidd
+QMAKE_CXXFLAGS_X86_64 -= -Xarch_x86_64
+QMAKE_LFLAGS_X86_64 -= -Xarch_x86_64
+QMAKE_CFLAGS_X86_64 -= -Xarch_x86_64
+QMAKE_LINK = $$QMAKE_CXX # why would you want it different?
+
+contains(QMAKE_CXX,mpic++) {
+message(parallel build)
+#QMAKE_CXXFLAGS=
+GA=/usr/local
+PPIDD=$(HOME)/trees/ppidd
 INCLUDEPATH+=$$PPIDD/src
-LIBS += -L$$PPIDD/
+DEFINES += GCI_PARALLEL
+LIBS += -L$$PPIDD -lppidd -L$$GA/lib -lga -larmci -lblas
+}
 
 SOURCES += gci.cpp \
     gciHamiltonian.cpp \

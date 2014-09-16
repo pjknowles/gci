@@ -20,6 +20,14 @@ std::vector<double> Run::run()
 {
   profiler.reset("GCI");
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
+#ifdef GCI_PARALLEL
+  PPIDD_Rank(&parallel_rank);
+  PPIDD_Size(&parallel_size);
+  xout << "Parallel run of "<<parallel_size<<" processes"<< std::endl;
+#else
+  parallel_rank=0;
+  parallel_size=1;
+#endif
   std::vector<double>energies;
   std::string method = parameter("METHOD",std::vector<std::string>(1,"")).at(0);
   if (method == "MBPT" || method == "MOLLER") method="RSPT";
