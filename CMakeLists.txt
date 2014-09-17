@@ -17,5 +17,4 @@ endif (GA_FOUND)
 endif (${COMPILER_NAME} STREQUAL "mpic++")
 
 
-
 configure_file(FCIDUMP FCIDUMP COPYONLY)
