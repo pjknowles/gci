@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
   PPIDD_Initialize(argc,argv);
   PPIDD_Size(&parallel_size);
   PPIDD_Rank(&parallel_rank);
-//  if (parallel_rank > 0)
-//    freopen("/dev/null", "w", stdout);
+  if (parallel_rank > 0)
+    freopen("/dev/null", "w", stdout);
 #endif
   Run run("FCIDUMP");
   if (argc<2) {

@@ -28,7 +28,7 @@ extern int64_t parallel_rank, parallel_size;
 extern int64_t __nextval_counter;
   inline long nextval(int64_t option=parallel_size){
 #ifdef GCI_PARALLEL
-      int64_t value; PPIDD_Nxtval(&option,&value); xout <<std::endl<<"@nextval("<<option<<",rank="<<parallel_rank<<")="<<value<<std::endl;
+      int64_t value; PPIDD_Nxtval(&option,&value); //xout <<std::endl<<"@nextval("<<option<<",rank="<<parallel_rank<<")="<<value<<std::endl;
       return value;
 #else
       if (option < 0) __nextval_counter=-1;
@@ -52,23 +52,12 @@ extern int64_t __nextval_counter;
       __my_first_task = nextval()*__task_granularity;
 //      xout << " new __my_first_task="<<__task_granularity<<" "<<__my_first_task;
     }
-#ifdef GCI_PARALLEL
-      PPIDD_Barrier();
-    int64_t mutexNumber=1;
-  PPIDD_Lock_mutex(&mutexNumber);
-#endif
-      xout << "mytask() on rank="<<parallel_rank<<" with __task="<<__task<<"__my_first_task="<<__my_first_task;
+//      xout << "mytask() on rank="<<parallel_rank<<" with __task="<<__task<<"__my_first_task="<<__my_first_task;
     if (__task++ >= __my_first_task && __task <= __my_first_task+__task_granularity) {
-      xout << " returns true"<<std::endl;
-#ifdef GCI_PARALLEL
-  PPIDD_Unlock_mutex(&mutexNumber);
-#endif
+//      xout << " returns true"<<std::endl;
       return true;
     }
-      xout << " returns false"<<std::endl;
-#ifdef GCI_PARALLEL
-  PPIDD_Unlock_mutex(&mutexNumber);
-#endif
+//      xout << " returns false"<<std::endl;
     return false;
   }
   }

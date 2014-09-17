@@ -347,12 +347,7 @@ using namespace itf;
 void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefunction &w)
 {
   profiler.start("hamiltonianOnWavefunction");
-#ifdef GCI_PARALLEL
-  int64_t storetype=1, mutexNumber=2, ok;
-  PPIDD_Create_mutexes(&storetype,&mutexNumber,&ok);
-  mutexNumber=0;
-#endif
-  initask(2);
+  initask(1);
   for (size_t i=0; i<buffer.size(); i++)
     buffer[i] += (parallel_rank == 0) ? h.coreEnergy * w.buffer[i] : (double)0;
 
@@ -398,13 +393,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
   profiler.stop("1-electron");
 
   }
-#ifdef GCI_PARALLEL
-  PPIDD_Lock_mutex(&mutexNumber);
-#endif
-  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
-#ifdef GCI_PARALLEL
-  PPIDD_Unlock_mutex(&mutexNumber);
-#endif
+//  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
 
   if (mytask() && h.bracket_integrals_aa != NULL) { // two-electron contribution, alpha-alpha
     profiler.start("aa integrals");
@@ -439,13 +428,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     }
     profiler.stop("aa integrals");
   }
-#ifdef GCI_PARALLEL
-  PPIDD_Lock_mutex(&mutexNumber);
-#endif
-  xout <<"residual after alpha-alpha on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
-#ifdef GCI_PARALLEL
-  PPIDD_Unlock_mutex(&mutexNumber);
-#endif
+//  xout <<"residual after alpha-alpha on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
 
   if (mytask() && h.bracket_integrals_bb != NULL) { // two-electron contribution, beta-beta
     profiler.start("bb integrals");
@@ -529,14 +512,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
 
 
 #ifdef GCI_PARALLEL
-  PPIDD_Lock_mutex(&mutexNumber);
-  xout << "buffer before Gsum "<<buffer[0]<<std::endl;
-  PPIDD_Unlock_mutex(&mutexNumber);
   {int64_t type=1; int64_t size=buffer.size(); char op='+';PPIDD_Gsum(&type,&buffer[0],&size,&op);}
-  PPIDD_Lock_mutex(&mutexNumber);
-  xout << "buffer after Gsum "<<buffer[0]<<std::endl;
-  PPIDD_Unlock_mutex(&mutexNumber);
-  PPIDD_Destroy_mutexes(&ok);
 #endif
   profiler.stop("hamiltonianOnWavefunction");
 }
