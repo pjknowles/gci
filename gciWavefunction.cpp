@@ -353,10 +353,11 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
 
 //  xout <<std::endl<<"w in hamiltonianOnWavefunction="<<w.str(2)<<std::endl;
 
-  if (mytask() && (h.bracket_integrals_a!=NULL || h.bracket_integrals_b!=NULL)) {
+  if ((h.bracket_integrals_a!=NULL || h.bracket_integrals_b!=NULL)) {
   size_t offset=0;
   profiler.start("1-electron");
   for (unsigned int syma=0; syma<8; syma++) {
+    if (!mytask()) continue;
     unsigned int symb = w.symmetry^syma;
     size_t nsa = alphaStrings[syma].size();
     size_t nsb = betaStrings[symb].size();
@@ -395,7 +396,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
   }
 //  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
 
-  if (mytask() && h.bracket_integrals_aa != NULL) { // two-electron contribution, alpha-alpha
+  if (h.bracket_integrals_aa != NULL) { // two-electron contribution, alpha-alpha
     profiler.start("aa integrals");
     size_t nsbbMax = 64; // temporary static
     for (unsigned int syma=0; syma<8; syma++) {
@@ -404,6 +405,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
       profiler.stop("StringSet aa");
       if (aa.size()==0) continue;
       for (unsigned int symb=0; symb<8; symb++) {
+        if (!mytask()) continue;
         unsigned int symexc = syma^symb^w.symmetry;
         size_t nexc = h.pairSpace.find(-1)->second[symexc];
         size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
@@ -430,13 +432,14 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
   }
 //  xout <<"residual after alpha-alpha on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
 
-  if (mytask() && h.bracket_integrals_bb != NULL) { // two-electron contribution, beta-beta
+  if (h.bracket_integrals_bb != NULL) { // two-electron contribution, beta-beta
     profiler.start("bb integrals");
     size_t nsbbMax = 64; // temporary static
     for (unsigned int symb=0; symb<8; symb++) {
       StringSet bb(w.betaStrings,2,0,symb);
       if (bb.size()==0) continue;
       for (unsigned int syma=0; syma<8; syma++) {
+        if (!mytask()) continue;
         unsigned int symexc = symb^syma^w.symmetry;
         size_t nexc = h.pairSpace.find(-1)->second[symexc];
         size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
