@@ -347,12 +347,18 @@ using namespace itf;
 void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefunction &w)
 {
   profiler.start("hamiltonianOnWavefunction");
+#ifdef GCI_PARALLEL
+  int64_t storetype=1, mutexNumber=2, ok;
+  PPIDD_Create_mutexes(&storetype,&mutexNumber,&ok);
+  mutexNumber=0;
+#endif
+  initask(2);
   for (size_t i=0; i<buffer.size(); i++)
-    buffer[i] += h.coreEnergy * w.buffer[i];
+    buffer[i] += (parallel_rank == 0) ? h.coreEnergy * w.buffer[i] : (double)0;
 
 //  xout <<std::endl<<"w in hamiltonianOnWavefunction="<<w.str(2)<<std::endl;
 
-  if (h.bracket_integrals_a!=NULL || h.bracket_integrals_b!=NULL) {
+  if (mytask() && (h.bracket_integrals_a!=NULL || h.bracket_integrals_b!=NULL)) {
   size_t offset=0;
   profiler.start("1-electron");
   for (unsigned int syma=0; syma<8; syma++) {
@@ -391,10 +397,16 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
   }
   profiler.stop("1-electron");
 
-//  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
   }
+#ifdef GCI_PARALLEL
+  PPIDD_Lock_mutex(&mutexNumber);
+#endif
+  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
+#ifdef GCI_PARALLEL
+  PPIDD_Unlock_mutex(&mutexNumber);
+#endif
 
-  if (h.bracket_integrals_aa != NULL) { // two-electron contribution, alpha-alpha
+  if (mytask() && h.bracket_integrals_aa != NULL) { // two-electron contribution, alpha-alpha
     profiler.start("aa integrals");
     size_t nsbbMax = 64; // temporary static
     for (unsigned int syma=0; syma<8; syma++) {
@@ -427,8 +439,15 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     }
     profiler.stop("aa integrals");
   }
+#ifdef GCI_PARALLEL
+  PPIDD_Lock_mutex(&mutexNumber);
+#endif
+  xout <<"residual after alpha-alpha on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
+#ifdef GCI_PARALLEL
+  PPIDD_Unlock_mutex(&mutexNumber);
+#endif
 
-  if (h.bracket_integrals_bb != NULL) { // two-electron contribution, beta-beta
+  if (mytask() && h.bracket_integrals_bb != NULL) { // two-electron contribution, beta-beta
     profiler.start("bb integrals");
     size_t nsbbMax = 64; // temporary static
     for (unsigned int symb=0; symb<8; symb++) {
@@ -475,6 +494,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
           size_t nsa = aa1-aa0;
           for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
             size_t nsb = bb1-bb0;
+            if (!mytask()) continue;
 //            for (unsigned int i=0; i<99; i++)
 //              TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
           profiler.start("TransitionDensity ab");
@@ -508,6 +528,16 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
   }
 
 
+#ifdef GCI_PARALLEL
+  PPIDD_Lock_mutex(&mutexNumber);
+  xout << "buffer before Gsum "<<buffer[0]<<std::endl;
+  PPIDD_Unlock_mutex(&mutexNumber);
+  {int64_t type=1; int64_t size=buffer.size(); char op='+';PPIDD_Gsum(&type,&buffer[0],&size,&op);}
+  PPIDD_Lock_mutex(&mutexNumber);
+  xout << "buffer after Gsum "<<buffer[0]<<std::endl;
+  PPIDD_Unlock_mutex(&mutexNumber);
+  PPIDD_Destroy_mutexes(&ok);
+#endif
   profiler.stop("hamiltonianOnWavefunction");
 }
 

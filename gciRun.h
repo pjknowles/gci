@@ -93,7 +93,6 @@ private:
   std::vector<std::string> parameter(std::string key, std::vector<std::string> def);
 
   FCIdump* globalFCIdump; // the FCIdump
-  int64_t parallel_rank, parallel_size;
 };
 }
 

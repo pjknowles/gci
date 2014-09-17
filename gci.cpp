@@ -30,6 +30,12 @@ extern "C" {
 #endif
 #endif
 
+int64_t gci::parallel_size=1;
+int64_t gci::parallel_rank=0;
+int64_t gci::__nextval_counter=0;
+int64_t gci::__my_first_task=0;
+int64_t gci::__task=0;
+int64_t gci::__task_granularity=1;
 
 #ifndef MOLPRO
 int main(int argc, char *argv[])
@@ -37,10 +43,10 @@ int main(int argc, char *argv[])
 {
 #ifdef GCI_PARALLEL
   PPIDD_Initialize(argc,argv);
-  int64_t rank;
-  PPIDD_Rank(&rank);
-  if (rank > 0)
-    freopen("/dev/null", "w", stdout);
+  PPIDD_Size(&parallel_size);
+  PPIDD_Rank(&parallel_rank);
+//  if (parallel_rank > 0)
+//    freopen("/dev/null", "w", stdout);
 #endif
   Run run("FCIDUMP");
   if (argc<2) {
