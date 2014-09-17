@@ -16,7 +16,7 @@ find_path(GA_INCLUDE_DIR ga.h
 find_library(GA_LIBRARY NAMES ga
              HINTS ${PC_GA_LIBDIR} ${PC_GA_LIBRARY_DIRS} )
 
-set(GA_LIBRARIES ${GA_LIBRARY} -larmci -llapack )
+set(GA_LIBRARIES ${GA_LIBRARY} -larmci )
 set(GA_INCLUDE_DIRS ${GA_INCLUDE_DIR} )
 
 include(FindPackageHandleStandardArgs)

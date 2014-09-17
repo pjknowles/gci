@@ -16,5 +16,12 @@ add_definitions(-DGCI_PARALLEL)
 endif (GA_FOUND)
 endif (${COMPILER_NAME} STREQUAL "mpic++")
 
+find_package(MKL)
+if (MKL_FOUND)
+include_directories(${MKL_INCLUDE_DIRS})
+target_link_libraries(gci.exe ${MKL_LIBRARY})
+else (MKL_FOUND)
+target_link_libraries(gci.exe -llapack)
+endif (MKL_FOUND)
 
 configure_file(FCIDUMP FCIDUMP COPYONLY)
