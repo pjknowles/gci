@@ -4,6 +4,7 @@
 #include "gci.h"
 #include "gciHamiltonian.h"
 #include "gciState.h"
+#include <stdint.h>
 
 namespace gci {
 /*!
