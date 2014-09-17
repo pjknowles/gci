@@ -2,7 +2,7 @@
 #include <sstream>
 #include <iostream>
 #ifndef MOLPRO
-#include <gciMolpro.h>
+#include "gciMolpro.h"
 #endif
 #include "gciStringSet.h"
 #include "gciTransitionDensity.h"
