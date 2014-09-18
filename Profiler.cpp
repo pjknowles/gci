@@ -55,7 +55,7 @@ void Profiler::stopall()
 }
 
 #include <cmath>
-#if defined(GCI_PARALLEL) || defined(MOLPRO)
+#ifdef GCI_PARALLEL
 #define HAVE_PPIDD
 #endif
 #ifdef HAVE_PPIDD
@@ -63,13 +63,16 @@ extern "C" {
 #include "ppidd_c.h"
 }
 #endif
+#ifdef MOLPRO
+#include "cic/ItfMpp.h"
+#endif
 std::string Profiler::str(const int verbosity, const int precision)
 {
   if (verbosity<0) return "";
   stopall();
   resultMap results=this->results; // local copy that we can sum globally
-#ifdef HAVE_PPIDD
   for (resultMap::iterator s=results.begin(); s!=results.end(); ++s) {
+#ifdef GCI_PARALLEL
     int64_t type=1, len=1;
     char* opm=strdup("max");
     PPIDD_Gsum(&type,&((*s).second.wall),&len,opm);
@@ -81,8 +84,22 @@ std::string Profiler::str(const int verbosity, const int precision)
     value=(int64_t)(*s).second.operations; type=0;
     PPIDD_Gsum(&type,&value,&len,op);
     (*s).second.operations=(long)value;
-  }
+#else
+#ifdef MOLPRO
+    itf::FMppInt interface;
+    // only '+' works in Molpro runtime
+    //    interface.GlobalSum(&((*s).second.wall),(std::size_t)1,(uint)0,(const char*) "max");
+    interface.GlobalSum(&((*s).second.cpu),(std::size_t)1);
+    // Molpro interface presently only does doubles
+    double value=(double)(*s).second.calls;
+    interface.GlobalSum(&value,(std::size_t)1);
+    (*s).second.calls=(int)value;
+    value=(double)(*s).second.operations;
+    interface.GlobalSum(&value,(std::size_t)1);
+    (*s).second.operations=(long)value;
 #endif
+#endif
+  }
   typedef std::pair<std::string,Profiler::times> data_t;
 #if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #else
