@@ -35,33 +35,19 @@ extern int64_t __nextval_counter;
       return ++__nextval_counter;
 #endif
 }
+
   extern int64_t __task_granularity, __task, __my_first_task;
   inline void initask(int64_t granularity) {
     __task_granularity = granularity;
-#ifdef GCI_PARALLEL
-//    int64_t mmm=-parallel_size, junk;
-//    PPIDD_Nxtval(&mmm,&junk);
     nextval(-parallel_size);
     __task=0;
     __my_first_task=-granularity-1;
-#endif
   }
   inline bool mytask() {
-    {
-    if (__my_first_task+__task_granularity <= __task) {
+    if (__my_first_task+__task_granularity <= __task)
       __my_first_task = nextval()*__task_granularity;
-//      xout << " new __my_first_task="<<__task_granularity<<" "<<__my_first_task;
-    }
-//      xout << "mytask() on rank="<<parallel_rank<<" with __task="<<__task<<"__my_first_task="<<__my_first_task;
-    if (__task++ >= __my_first_task && __task <= __my_first_task+__task_granularity) {
-//      xout << " returns true"<<std::endl;
-      return true;
-    }
-//      xout << " returns false"<<std::endl;
-    return false;
+    return (__task++ >= __my_first_task && __task <= __my_first_task+__task_granularity) ;
   }
-  }
-
 
 }
 
