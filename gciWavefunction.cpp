@@ -347,6 +347,7 @@ using namespace itf;
 
 void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefunction &w)
 {
+//  xout << "hamiltonianOnWavefunction, h.bracket_integrals_a, h.bracket_integrals_b"<<h.bracket_integrals_a<< h.bracket_integrals_b<<std::endl;
   profiler.start("hamiltonianOnWavefunction");
   for (size_t i=0; i<buffer.size(); i++)
     buffer[i] += (parallel_rank == 0) ? h.coreEnergy * w.buffer[i] : (double)0;
@@ -378,11 +379,10 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
   size_t offset=0;
   profiler.start("1-electron");
   for (unsigned int syma=0; syma<8; syma++) {
-    if (!NextTask()) continue;
     unsigned int symb = w.symmetry^syma;
     size_t nsa = alphaStrings[syma].size();
     size_t nsb = betaStrings[symb].size();
-    if (h.bracket_integrals_a != NULL ) {
+    if (h.bracket_integrals_a != NULL && NextTask() ) {
       profiler.start("1-electron TransitionDensity");
       TransitionDensity d(w,
                           w.alphaStrings[syma].begin(),
@@ -396,7 +396,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
       profiler.stop("1-electron MXM",2*nsa*nsb*w.orbitalSpace->total(0,1));
     }
-    if (h.spinUnrestricted && h.bracket_integrals_b != NULL) {
+    if (h.spinUnrestricted && h.bracket_integrals_b != NULL && NextTask()) {
       profiler.start("1-electron TransitionDensity");
       TransitionDensity d(w,
                           w.alphaStrings[syma].begin(),
