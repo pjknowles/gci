@@ -363,6 +363,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     size_t nsa = alphaStrings[syma].size();
     size_t nsb = betaStrings[symb].size();
     if (h.bracket_integrals_a != NULL ) {
+//  xout << "1 electron"<<std::endl;
       profiler.start("1-electron TransitionDensity");
       TransitionDensity d(w,
                           w.alphaStrings[syma].begin(),
