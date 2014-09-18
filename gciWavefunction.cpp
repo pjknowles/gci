@@ -8,6 +8,9 @@
 #include "gciTransitionDensity.h"
 //#include "mkl.h"
 #include "Profiler.h"
+#ifdef MOLPRO
+#include "cic/ItfMpp.h"
+#endif
 
 Wavefunction::Wavefunction(FCIdump *dump) : State(dump) {
   buildStrings();
@@ -516,6 +519,8 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
 
 #ifdef GCI_PARALLEL
   {int64_t type=1; int64_t size=buffer.size(); char op='+';PPIDD_Gsum(&type,&buffer[0],&size,&op);}
+#elif MOLPRO
+  {itf::FMppInt interface; interface.GlobalSum(&buffer[0],&size);}
 #endif
   profiler.stop("hamiltonianOnWavefunction");
 }
