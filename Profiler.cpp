@@ -25,14 +25,11 @@ void Profiler::reset(const std::string name)
 
 void Profiler::start(const std::string name)
 {
-//  std::cout << "Profiler::start "<<name<<std::endl;
   struct times now=getTimes();
   if (! stack.empty())
     stack.top()+=now;
-//  if (stack.size()==1) std::cout<<"adjusted top of stack " << stack.top().name << " " <<stack.top().wall <<std::endl;
   struct times minusNow; minusNow.cpu=-now.cpu; minusNow.wall=-now.wall; minusNow.name=name; minusNow.operations=0;
   stack.push(minusNow);
-//  if (stack.size()>=1) std::cout<<"top of stack " << stack.top().name << " " <<stack.top().wall <<" operations="<<stack.top().operations <<std::endl;
 }
 
 #include <assert.h>
@@ -46,15 +43,10 @@ void Profiler::stop(const std::string name, long operations)
 //  if (operations>0) std::cout << "stack.top().operations="<<stack.top().operations<<std::endl;
   results[stack.top().name] += stack.top();
   results[stack.top().name].calls++;
-//  if (stack.size()==1) {
-//    std::cout<<"stop added to top of stack " << stack.top().name << " " <<stack.top().wall <<std::endl;
-//    std::cout<<"results now "<<results[stack.top().name].wall <<std::endl;
-//  }
   stack.pop();
 //  std::cout <<"now="<<now.operations<<std::endl;
 //  if (stack.size()>=1) std::cout<<"stop before subtracting from top of stack " << stack.top().name << " " <<stack.top().operations <<std::endl;
   if (! stack.empty()) stack.top()-=now;
-//  if (stack.size()>=1) std::cout<<"stop subtracted from top of stack " << stack.top().name << " " <<stack.top().operations <<std::endl;
 }
 
 void Profiler::stopall()
@@ -68,7 +60,10 @@ std::string Profiler::str(const int verbosity, const int precision)
   if (verbosity<0) return "";
   stopall();
   typedef std::pair<std::string,Profiler::times> data_t;
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#else
   std::priority_queue<data_t, std::deque<data_t>, compareTimes<data_t>  > q(results.begin(),results.end());
+#endif
   std::stringstream ss;
   size_t maxWidth=0;
   long maxOperations=0;
@@ -79,11 +74,16 @@ std::string Profiler::str(const int verbosity, const int precision)
       totalTimes += (*s).second;
   }
   totalTimes.calls=1;
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#else
   q.push(data_t("* TOTAL",totalTimes));
+#endif
   ss << "Profiler "<<Name<<std::endl;
   std::vector<std::string> prefixes;
   prefixes.push_back(""); prefixes.push_back("k"); prefixes.push_back("M"); prefixes.push_back("G");
   prefixes.push_back("T"); prefixes.push_back("P"); prefixes.push_back("E"); prefixes.push_back("Z"); prefixes.push_back("Y");
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#else
   while (! q.empty()) {
     ss.precision(precision);
     ss <<std::right <<std::setw(maxWidth) << q.top().first <<": calls="<<q.top().second.calls<<", cpu="<<std::fixed<<q.top().second.cpu<<", wall="<<q.top().second.wall;
@@ -97,6 +97,7 @@ std::string Profiler::str(const int verbosity, const int precision)
       ss <<std::endl;
     q.pop();
   }
+#endif
   return ss.str();
 }
 
@@ -157,6 +158,7 @@ extern "C" {
 void* profilerNew(char* name) { return new Profiler(name); }
 void profilerReset(void* profiler, char* name) { Profiler* obj=(Profiler*)profiler; obj->reset(std::string(name)); }
 void profilerStart(void* profiler, char* name) { Profiler* obj=(Profiler*)profiler; obj->start(std::string(name)); }
-void profilerStop(void* profiler, char* name) { Profiler* obj=(Profiler*)profiler; obj->stop(std::string(name)); }
+void profilerStop(void* profiler, char* name, long operations) { Profiler* obj=(Profiler*)profiler; obj->stop(std::string(name),operations); }
 char* profilerStr(void* profiler) { Profiler* obj=(Profiler*)profiler; char* result = (char*)malloc(obj->str().size()+1); strcpy(result, obj->str().c_str()); return result; }
+  void profilerStrSubroutine(void*profiler, char* result, int maxResult) { strncpy(result, profilerStr(profiler),maxResult-1);}
 }
