@@ -55,10 +55,34 @@ void Profiler::stopall()
 }
 
 #include <cmath>
+#if defined(GCI_PARALLEL) || defined(MOLPRO)
+#define HAVE_PPIDD
+#endif
+#ifdef HAVE_PPIDD
+extern "C" {
+#include "ppidd_c.h"
+}
+#endif
 std::string Profiler::str(const int verbosity, const int precision)
 {
   if (verbosity<0) return "";
   stopall();
+  resultMap results=this->results; // local copy that we can sum globally
+#ifdef HAVE_PPIDD
+  for (resultMap::iterator s=results.begin(); s!=results.end(); ++s) {
+    int64_t type=1, len=1;
+    char* opm=strdup("max");
+    PPIDD_Gsum(&type,&((*s).second.wall),&len,opm);
+    char* op=strdup("+");
+    PPIDD_Gsum(&type,&((*s).second.cpu),&len,op);
+    int64_t value=(int64_t)(*s).second.calls; type=0;
+    PPIDD_Gsum(&type,&value,&len,op);
+    (*s).second.calls=(int)value;
+    value=(int64_t)(*s).second.operations; type=0;
+    PPIDD_Gsum(&type,&value,&len,op);
+    (*s).second.operations=(long)value;
+  }
+#endif
   typedef std::pair<std::string,Profiler::times> data_t;
 #if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #else
