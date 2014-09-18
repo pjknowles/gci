@@ -1,6 +1,7 @@
+#include "gci.h"
 #include "gciFile.h"
-#ifdef GCIMOLPROFILE
 #include "gciMolpro.h"
+#ifdef GCIMOLPROFILE
 using namespace itf;
 #else
 #include <string.h>
@@ -53,6 +54,7 @@ File::~File()
 
 void File::read(std::vector<double> &buf, size_t address)
 {
+  if (parallel_rank==0) {
 #ifdef GCIMOLPROFILE
 //  xout << "read file"<<std::endl;
   f->Read(&buf[0], (FOffset)buf.size()*8,(FOffset)address*8);
@@ -60,11 +62,20 @@ void File::read(std::vector<double> &buf, size_t address)
  f.seekg(address*8,std::ios_base::beg);
  f.read((char *) &buf[0],buf.size()*8);
 #endif
+  }
+  //broadcast
+#ifdef MOLPRO
+  itf::GlobalBroadcast(&buf[0],buf.size(),0);
+#elif GCI_PARALLEL
+  int64_t type=1, root=0, size=buf.size();
+  PPIDD_BCast(&buf[0],&size,&type,&root);
+#endif
 }
 
 
 void File::write(std::vector<double> &buf, size_t address)
 {
+  if (parallel_rank==0) {
 #ifdef GCIMOLPROFILE
 //  xout << "write file"<<std::endl;
   f->Write(&buf[0], (FOffset)buf.size()*8,(FOffset)address*8);
@@ -72,4 +83,5 @@ void File::write(std::vector<double> &buf, size_t address)
  f.seekp(address*8,std::ios_base::beg);
  f.write((char *) &buf[0],buf.size()*8);
 #endif
+}
 }
