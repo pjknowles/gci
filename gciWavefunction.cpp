@@ -352,6 +352,26 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     buffer[i] += (parallel_rank == 0) ? h.coreEnergy * w.buffer[i] : (double)0;
 
 //  xout <<std::endl<<"w in hamiltonianOnWavefunction="<<w.str(2)<<std::endl;
+  profiler.declare("1-electron TransitionDensity");
+  profiler.declare("1-electron MXM");
+  profiler.declare("aa integrals");
+  profiler.declare("StringSet aa");
+  profiler.declare("aa1 loop");
+  profiler.declare("TransitionDensity aa");
+  profiler.declare("MXM aa");
+  profiler.declare("action aa");
+  profiler.declare("bb integrals");
+  profiler.declare("TransitionDensity bb");
+  profiler.declare("TransitionDensity preamble");
+  profiler.declare("MXM bb");
+  profiler.declare("action bb");
+  profiler.declare("ab integrals");
+  profiler.declare("StringSet iterator loops");
+  profiler.declare("TransitionDensity ab");
+  profiler.declare("MXM ab");
+  profiler.declare("action ab");
+  profiler.declare("1-electron alpha excitations");
+  profiler.declare("1-electron beta excitations");
   DivideTasks(99999999,1,1);
 
   if ((h.bracket_integrals_a!=NULL || h.bracket_integrals_b!=NULL)) {
@@ -363,7 +383,6 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     size_t nsa = alphaStrings[syma].size();
     size_t nsb = betaStrings[symb].size();
     if (h.bracket_integrals_a != NULL ) {
-//  xout << "1 electron"<<std::endl;
       profiler.start("1-electron TransitionDensity");
       TransitionDensity d(w,
                           w.alphaStrings[syma].begin(),
