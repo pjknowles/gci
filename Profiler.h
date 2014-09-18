@@ -34,6 +34,12 @@ public:
    */
   void stop(const std::string name="",long operations=0);
   /*!
+   * \brief declare Ensure that a code segment is entered into the result table. This must be called for
+   * any code segments for which start/stop is non-collective and therefore might not be called on some processes.
+   * \param name name of the code segment
+   */
+  void declare(const std::string name="");
+  /*!
    * \brief Generate a printable representation of the object
    * \param verbosity how much to print
    * \param precision how many decimal places for seconds

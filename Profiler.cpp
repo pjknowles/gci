@@ -49,6 +49,14 @@ void Profiler::stop(const std::string name, long operations)
   if (! stack.empty()) stack.top()-=now;
 }
 
+void Profiler::declare(const std::string name)
+{
+  if (results.count(name)==0) {
+  struct times tt; tt.cpu=0; tt.wall=0; tt.name=name; tt.operations=0; tt.calls=0;
+  results[name] = tt;
+  }
+}
+
 void Profiler::stopall()
 {
   while (! stack.empty()) stop();
@@ -65,12 +73,17 @@ extern "C" {
 #endif
 #ifdef MOLPRO
 #include "cic/ItfMpp.h"
+itf::FMppInt interface;
+extern "C" {
+int64_t get_iprocs_cxx_();
+}
 #endif
 std::string Profiler::str(const int verbosity, const int precision)
 {
   if (verbosity<0) return "";
   stopall();
   resultMap results=this->results; // local copy that we can sum globally
+  while(results.erase(""));
   for (resultMap::iterator s=results.begin(); s!=results.end(); ++s) {
 #ifdef GCI_PARALLEL
     int64_t type=1, len=1;
@@ -86,7 +99,6 @@ std::string Profiler::str(const int verbosity, const int precision)
     (*s).second.operations=(long)value;
 #else
 #ifdef MOLPRO
-    itf::FMppInt interface;
     // only '+' works in Molpro runtime
     //    interface.GlobalSum(&((*s).second.wall),(std::size_t)1,(uint)0,(const char*) "max");
     interface.GlobalSum(&((*s).second.cpu),(std::size_t)1);
@@ -129,9 +141,9 @@ std::string Profiler::str(const int verbosity, const int precision)
     ss.precision(precision);
     ss <<std::right <<std::setw(maxWidth) << q.top().first <<": calls="<<q.top().second.calls<<", cpu="<<std::fixed<<q.top().second.cpu<<", wall="<<q.top().second.wall;
     double ops=q.top().second.operations;
-    if (ops>(double)0) {
-//      ss<<", operations="<<q.top().second.operations;
-      ops /= q.top().second.wall;
+    double wall=q.top().second.wall;
+    if (ops>(double)0 && wall>(double)0) {
+      ops /= wall;
       int shifter = ops > 1 ? (int)(log10(ops)/3) : 0 ; shifter = shifter >= (int) prefixes.size() ? (int) prefixes.size()-1 : shifter;  ops *= pow((double)10, -shifter*3);
       ss<<", "<<ops<<" "<<prefixes[shifter]<<"op/s";
     }
@@ -199,6 +211,7 @@ extern "C" {
 void* profilerNew(char* name) { return new Profiler(name); }
 void profilerReset(void* profiler, char* name) { Profiler* obj=(Profiler*)profiler; obj->reset(std::string(name)); }
 void profilerStart(void* profiler, char* name) { Profiler* obj=(Profiler*)profiler; obj->start(std::string(name)); }
+void profilerDeclare(void* profiler, char* name) { Profiler* obj=(Profiler*)profiler; obj->declare(std::string(name)); }
 void profilerStop(void* profiler, char* name, long operations) { Profiler* obj=(Profiler*)profiler; obj->stop(std::string(name),operations); }
 char* profilerStr(void* profiler) { Profiler* obj=(Profiler*)profiler; char* result = (char*)malloc(obj->str().size()+1); strcpy(result, obj->str().c_str()); return result; }
   void profilerStrSubroutine(void*profiler, char* result, int maxResult) { strncpy(result, profilerStr(profiler),maxResult-1);}
