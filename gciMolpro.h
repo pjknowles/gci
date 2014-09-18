@@ -1,6 +1,9 @@
 #ifndef GCIMOLPRO_H
 #define GCIMOLPRO_H
+#include <cstdlib>
 #ifdef MOLPRO
+#include <mpp/CxMpp.h>
+#include <cic/ItfMpp.h>
 #include <cic/ItfCommon.h>
 #include <cic/ItfFortranInt.h>
 #else

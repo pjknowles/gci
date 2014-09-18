@@ -6,7 +6,6 @@
 #endif
 #include "gciStringSet.h"
 #include "gciTransitionDensity.h"
-//#include "mkl.h"
 #include "Profiler.h"
 #ifdef MOLPRO
 #include "cic/ItfMpp.h"
@@ -342,25 +341,24 @@ size_t Wavefunction::blockOffset(const unsigned int syma) const
 }
 
 #ifdef MOLPRO
-#include <cic/ItfCommon.h>
-#include <cic/ItfFortranInt.h>
+#include "gciMolpro.h"
 using namespace itf;
 #endif
 
 void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefunction &w)
 {
   profiler.start("hamiltonianOnWavefunction");
-  initask(1);
   for (size_t i=0; i<buffer.size(); i++)
     buffer[i] += (parallel_rank == 0) ? h.coreEnergy * w.buffer[i] : (double)0;
 
 //  xout <<std::endl<<"w in hamiltonianOnWavefunction="<<w.str(2)<<std::endl;
+  DivideTasks(99999999,1,1);
 
   if ((h.bracket_integrals_a!=NULL || h.bracket_integrals_b!=NULL)) {
   size_t offset=0;
   profiler.start("1-electron");
   for (unsigned int syma=0; syma<8; syma++) {
-    if (!mytask()) continue;
+    if (!NextTask()) continue;
     unsigned int symb = w.symmetry^syma;
     size_t nsa = alphaStrings[syma].size();
     size_t nsb = betaStrings[symb].size();
@@ -408,7 +406,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
       profiler.stop("StringSet aa");
       if (aa.size()==0) continue;
       for (unsigned int symb=0; symb<8; symb++) {
-        if (!mytask()) continue;
+        if (!NextTask()) continue;
         unsigned int symexc = syma^symb^w.symmetry;
         size_t nexc = h.pairSpace.find(-1)->second[symexc];
         size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
@@ -442,7 +440,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
       StringSet bb(w.betaStrings,2,0,symb);
       if (bb.size()==0) continue;
       for (unsigned int syma=0; syma<8; syma++) {
-        if (!mytask()) continue;
+        if (!NextTask()) continue;
         unsigned int symexc = symb^syma^w.symmetry;
         size_t nexc = h.pairSpace.find(-1)->second[symexc];
         size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
@@ -483,7 +481,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
           size_t nsa = aa1-aa0;
           for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
             size_t nsb = bb1-bb0;
-            if (!mytask()) continue;
+            if (!NextTask()) continue;
 //            for (unsigned int i=0; i<99; i++)
 //              TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
           profiler.start("TransitionDensity ab");
@@ -516,11 +514,12 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     profiler.stop("ab integrals");
   }
 
+  EndTasks();
 
-#ifdef GCI_PARALLEL
+#ifdef MOLPRO
+  mpp.GlobalSum(&buffer[0],buffer.size());
+#elif GCI_PARALLEL
   {int64_t type=1; int64_t size=buffer.size(); char op='+';PPIDD_Gsum(&type,&buffer[0],&size,&op);}
-#elif MOLPRO
-  {itf::FMppInt interface; interface.GlobalSum(&buffer[0],&size);}
 #endif
   profiler.stop("hamiltonianOnWavefunction");
 }

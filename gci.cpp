@@ -32,10 +32,15 @@ extern "C" {
 
 int64_t gci::parallel_size=1;
 int64_t gci::parallel_rank=0;
+#ifdef MOLPRO
+#include "cic/ItfMpp.h"
+itf::FMppInt gci::mpp=itf::FMppInt();
+#else
 int64_t gci::__nextval_counter=0;
 int64_t gci::__my_first_task=0;
 int64_t gci::__task=0;
 int64_t gci::__task_granularity=1;
+#endif
 
 #ifndef MOLPRO
 int main(int argc, char *argv[])

@@ -1,8 +1,8 @@
 #include "gciRun.h"
 #include "gciWavefunction.h"
-#ifndef MOLPRO
+//#ifndef MOLPRO
 #include "gciMolpro.h"
-#endif
+//#endif
 #include "FCIdump.h"
 #include <iostream>
 #include <iomanip>
@@ -20,7 +20,10 @@ std::vector<double> Run::run()
 {
   profiler.reset("GCI");
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
-#ifdef GCI_PARALLEL
+#ifdef MOLPRO
+   parallel_rank=(int64_t)GET_IPROCS_CXX();
+   parallel_size=(int64_t)GET_NPROCS_CXX();
+#elif defined(GCI_PARALLEL)
   PPIDD_Rank(&parallel_rank);
   PPIDD_Size(&parallel_size);
   xout << "Parallel run of "<<parallel_size<<" processes"<< std::endl;
@@ -125,8 +128,7 @@ void Run::addParameter(const std::string& key, const std::string& value, const b
 }
 
 #ifdef MOLPRO
-#include <cic/ItfCommon.h>
-#include <cic/ItfFortranInt.h>
+#include "gciMolpro.h"
 using namespace itf;
 #endif
 
