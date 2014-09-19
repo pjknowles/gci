@@ -342,7 +342,7 @@ size_t Wavefunction::blockOffset(const unsigned int syma) const
 
 #ifdef MOLPRO
 #include "gciMolpro.h"
-using naespace itf;
+using namespace itf;
 #endif
 
 void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefunction &w)
