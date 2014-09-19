@@ -111,6 +111,7 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
   //    }
   size_t offset=0;
   set(hamiltonian.coreEnergy);
+  DivideTasks(buffer.size());
   for (unsigned int syma=0; syma<8; syma++) {
     unsigned int symb = syma ^ symmetry;
     size_t nsa = alphaStrings[syma].size();
@@ -122,6 +123,7 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
     if (false && orbitalSpace->spinUnrestricted) { // UHF
     } else { // RHF
       for (size_t ia=0; ia < nsa; ia++) {
+        if (!NextTask()) continue;
         std::vector<double> on(onb);
         for (size_t i=0; i<nact; i++) {
           for (size_t ib=0; ib < nsb; ib++)
@@ -129,14 +131,14 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
         }
         for (size_t i=0; i<nact; i++)
           for (size_t ib=0; ib < nsb; ib++)
-            buffer[offset+ib] += on[ib+i*nsb] * ha[i];
+            buffer[offset+ia*nsb+ib] += on[ib+i*nsb] * ha[i];
         if (hamiltonian.integrals_aa != NULL) {
           for (size_t i=0; i<nact; i++) {
             for (size_t j=0; j<=i; j++) {
               double zz = Jaa[j+i*nact] - (double)0.5 * Kaa[j+i*nact];
               if (i == j) zz *= (double)0.5;
               for (size_t ib=0; ib < nsb; ib++)
-                buffer[offset+ib] += on[ib+i*nsb] * on[ib+j*nsb] * zz;
+                buffer[offset+ia*nsb+ib] += on[ib+i*nsb] * on[ib+j*nsb] * zz;
             }
           }
           double vv = (double) ms2*ms2;
@@ -154,17 +156,18 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
             for (size_t j=0; j<i; j++) {
               double zz = -(double)0.5 * Kaa[i*nact+j];
               for (size_t ib=0; ib < nsb; ib++)
-                buffer[offset+ib] += f[ib] * on[ib+i*nsb] * on[ib+j*nsb] * zz;
+                buffer[offset+ia*nsb+ib] += f[ib] * on[ib+i*nsb] * on[ib+j*nsb] * zz;
             }
             double zz = -(double)0.25 * Kaa[i*nact+i];
             for (size_t ib=0; ib < nsb; ib++)
-              buffer[offset+ib] += on[ib+i*nsb] * zz;
+              buffer[offset+ia*nsb+ib] += on[ib+i*nsb] * zz;
           }
         }
-        offset += nsb;
       }
     }
+    offset +=nsa*nsb;
   }
+  EndTasks();
   profiler.stop("diagonalHamiltonian");
 }
 
