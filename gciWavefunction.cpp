@@ -562,3 +562,14 @@ void Wavefunction::get(File& f, int index)
   f.read(buffer,index*buffer.size());
   profiler.stop("Wavefunction::get",index*buffer.size());
 }
+
+#include <cmath>
+std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> edges)
+{
+  std::vector<std::size_t> cumulative(edges.size(),0);
+  for (size_t i=0; i<edges.size();i++) {
+    for (size_t j=0; j<buffer.size(); j++)
+      if (std::fabs(buffer[j]) > edges[i]) cumulative[i]++;
+  }
+  return cumulative;
+}

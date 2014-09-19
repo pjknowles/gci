@@ -119,6 +119,13 @@ public:
    */
   void get(File& f, int index=0);
 
+  /*!
+   * \brief Construct a cumulative histogram of absolute values
+   * \param edges the values defining bin edges
+   * \return the numbers of coefficients whose absolute value is greater than the corresponding edge
+   */
+  std::vector<std::size_t> histogram(const std::vector<double>edges);
+
   //    Wavefunction& operator=(const double &value);
   void set(size_t offset, const double val);///< set one element to a scalar
   void set(const double val);///< set all elements to a scalar

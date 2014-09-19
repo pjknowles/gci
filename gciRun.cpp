@@ -218,12 +218,35 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     double norm2=w*w;
     double econv=0;for (int i=0; i<(int)e.size(); i++) econv+=std::fabs(e[i]-elast[i]);
     xout <<"econv="<<econv<<std::endl;
-    if (norm2 <(double) 1e-30 || econv < energyThreshold) break;
+
     elast=e;
     w *= ((double)1/std::sqrt(norm2));
+    if (norm2 >(double) 1e-30 && econv > energyThreshold) continue;
+
+    { profiler.start("Histogram");
+      w.set((double)0);
+      for (int i=0; i <= n; i++) {
+        g.get(wfile,i);
+        w.axpy(eigenvectors[i+track*(n+1)] , g);
+      }
+      double histmin=1e-14,histmax=1.1;
+      size_t nhist=25;
+      double ratio=std::pow(histmin/histmax,1/((double)nhist));
+      std::vector<double> edges(nhist);
+      edges[0]=histmax*ratio;
+      for (size_t i=1;i<nhist;i++)
+        edges[i]=edges[i-1]*ratio;
+      std::vector<double> fcumulative(nhist);
+      std::vector<std::size_t> cumulative = w.histogram(edges);
+      for (size_t i=0;i<nhist;i++) {
+        fcumulative[i]=((double)cumulative[i])/(double)w.size();
+        xout << "Histogram: "<<fcumulative[i]*100<<"% > "<<edges[i]<<std::endl;
+      }
+      profiler.stop("Histogram"); }
+    break;
   }
   profiler.stop("Davidson");
-  return e;
+    return e;
 }
 
 std::vector<double> Run::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians,
