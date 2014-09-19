@@ -72,11 +72,12 @@ extern "C" {
 }
 #endif
 #ifdef MOLPRO
+#include "mpp/CxMpp.h"
 #include "cic/ItfMpp.h"
 itf::FMppInt interface;
-extern "C" {
-int64_t get_iprocs_cxx_();
-}
+//extern "C" {
+//int64_t get_iprocs_cxx_();
+//}
 #endif
 std::string Profiler::str(const int verbosity, const int precision)
 {
