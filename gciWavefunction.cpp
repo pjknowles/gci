@@ -342,15 +342,11 @@ size_t Wavefunction::blockOffset(const unsigned int syma) const
 
 #ifdef MOLPRO
 #include "gciMolpro.h"
-using namespace itf;
+using naespace itf;
 #endif
 
 void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefunction &w)
 {
-  xout << "hamiltonianOnWavefunction, h.bracket_integrals_a=" <<(h.bracket_integrals_a!=NULL)
-       <<", h.bracket_integrals_b=" << (h.bracket_integrals_b!=NULL)
-      <<", h.spinUnrestricted="<<h.spinUnrestricted
-     <<std::endl;
   profiler.start("hamiltonianOnWavefunction");
   if (parallel_rank == 0)
     for (size_t i=0; i<buffer.size(); i++)
@@ -358,14 +354,6 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
   else
     for (size_t i=0; i<buffer.size(); i++)
       buffer[i] = (double)0;
-  double norm=0;
-  for (size_t i=0; i<buffer.size(); i++)
-    norm += w.buffer[i]*w.buffer[i];
-  xout << "norm-squared wavefunction"<<norm<<std::endl;
-  norm=0;
-  for (size_t i=0; i<buffer.size(); i++)
-    norm += buffer[i]*buffer[i];
-  xout << "norm-squared result"<<norm<<std::endl;
 
 //  xout <<std::endl<<"w in hamiltonianOnWavefunction="<<w.str(2)<<std::endl;
   profiler.declare("1-electron TransitionDensity");
@@ -399,7 +387,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     nsa = alphaStrings[syma].size();
     nsb = betaStrings[symb].size();
     if (!NextTask()) continue;
-    if (false && h.bracket_integrals_a != NULL) {
+    if (h.bracket_integrals_a != NULL) {
       profiler.start("1-electron TransitionDensity");
       TransitionDensity d(w,
                           w.alphaStrings[syma].begin(),
@@ -413,7 +401,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
       profiler.stop("1-electron MXM",2*nsa*nsb*w.orbitalSpace->total(0,1));
     }
-    if (false && h.spinUnrestricted && h.bracket_integrals_b != NULL) {
+    if (h.spinUnrestricted && h.bracket_integrals_b != NULL) {
       profiler.start("1-electron TransitionDensity");
       TransitionDensity d(w,
                           w.alphaStrings[syma].begin(),
@@ -469,7 +457,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
   }
 //  xout <<"residual after alpha-alpha on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
 
-  if (h.bracket_integrals_bb != NULL && false) { // two-electron contribution, beta-beta
+  if (h.bracket_integrals_bb != NULL) { // two-electron contribution, beta-beta
     profiler.start("bb integrals");
     size_t nsbbMax = 64; // temporary static
     for (unsigned int symb=0; symb<8; symb++) {
@@ -500,7 +488,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     profiler.stop("bb integrals");
   }
 
-  if (h.bracket_integrals_ab != NULL && false) { // two-electron contribution, alpha-beta
+  if (h.bracket_integrals_ab != NULL) { // two-electron contribution, alpha-beta
     profiler.start("ab integrals");
     size_t nsaaMax = 640; // temporary static
     size_t nsbbMax = 640; // temporary static
@@ -552,19 +540,11 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
 
   EndTasks();
 
-  norm=0;
-  for (size_t i=0; i<buffer.size(); i++)
-    norm += buffer[i]*buffer[i];
-  xout << "norm-squared result"<<norm<<std::endl;
 #ifdef MOLPRO
   mpp.GlobalSum(&buffer[0],buffer.size());
 #elif GCI_PARALLEL
   {int64_t type=1; int64_t size=buffer.size(); char op='+';PPIDD_Gsum(&type,&buffer[0],&size,&op);}
 #endif
-  norm=0;
-  for (size_t i=0; i<buffer.size(); i++)
-    norm += buffer[i]*buffer[i];
-  xout << "norm-squared result"<<norm<<std::endl;
   profiler.stop("hamiltonianOnWavefunction");
 }
 
