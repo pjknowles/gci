@@ -175,6 +175,9 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
           recvcounts[i]=chunk;
         }
         recvcounts[parallel_size-1]=nsa-chunk*(parallel_size-1);
+        xout << "recvcounts:";
+        for (int i=0; i<parallel_size; i++)
+          xout <<" "<<recvcounts[i];
         MPI_Allgatherv(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,&buffer[offset],&recvcounts[0],&displs[0],MPI_DOUBLE,MPI_COMM_WORLD);
       }
 #endif
