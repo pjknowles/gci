@@ -60,8 +60,9 @@ inline void DivideTasks(std::size_t ntasks, std::size_t nMinBatch = 0, std::size
 }}
 inline bool NextTask() {
   {
+    return (parallel_rank==0);
 #ifdef MOLPRO
-//    size_t junk=mpp.NextTask();return (parallel_rank==0);
+//    size_t junk=mpp.NextTask();
   return mpp.NextTask();
 #else
   if (__my_first_task+__task_granularity <= __task)
