@@ -10,6 +10,9 @@
 #ifdef MOLPRO
 #include "cic/ItfMpp.h"
 #endif
+#if defined(GCI_PARALLEL)
+#include <mpi.h>
+#endif
 
 Wavefunction::Wavefunction(FCIdump *dump) : State(dump) {
   buildStrings();
@@ -111,7 +114,6 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
   //    }
   size_t offset=0;
   set(hamiltonian.coreEnergy);
-  DivideTasks(buffer.size());
   for (unsigned int syma=0; syma<8; syma++) {
     unsigned int symb = syma ^ symmetry;
     size_t nsa = alphaStrings[syma].size();
@@ -122,8 +124,9 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
     std::vector<double> onb = betaStrings[symb].occupationNumbers();
     if (false && orbitalSpace->spinUnrestricted) { // UHF
     } else { // RHF
-      for (size_t ia=0; ia < nsa; ia++) {
-        if (!NextTask()) continue;
+      // static task distribution
+      size_t chunk = (nsa-1)/parallel_size+1;
+      for (size_t ia=chunk*parallel_rank; ia < chunk*(parallel_rank+1) && ia < nsa; ia++) {
         std::vector<double> on(onb);
         for (size_t i=0; i<nact; i++) {
           for (size_t ib=0; ib < nsb; ib++)
@@ -164,10 +167,20 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
           }
         }
       }
+#if defined(GCI_PARALLEL)
+      {
+        std::vector<int> recvcounts(parallel_size), displs(parallel_size);
+        for (int i=0; i<parallel_size; i++) {
+          displs[i]=(int)i*chunk;
+          recvcounts[i]=chunk;
+        }
+        recvcounts[parallel_size-1]=nsa-chunk*(parallel_size-1);
+        MPI_Allgatherv(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,&buffer[offset],&recvcounts[0],&displs[0],MPI_DOUBLE,MPI_COMM_WORLD);
+      }
+#endif
     }
     offset +=nsa*nsb;
   }
-  EndTasks();
   profiler.stop("diagonalHamiltonian");
 }
 
