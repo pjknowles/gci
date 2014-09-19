@@ -242,6 +242,9 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
         fcumulative[i]=((double)cumulative[i])/(double)w.size();
         xout << "Histogram: "<<fcumulative[i]*100<<"% > "<<edges[i]<<std::endl;
       }
+#ifdef MOLPRO
+      // put the histogram to Molpro variable space
+#endif
       profiler.stop("Histogram"); }
     break;
   }
