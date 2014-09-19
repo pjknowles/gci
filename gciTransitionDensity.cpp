@@ -1,5 +1,5 @@
 #include "gciTransitionDensity.h"
-#include <distance.h>
+#include "distance.h"
 #include <iostream>
 #include <sstream>
 #include <iterator>
