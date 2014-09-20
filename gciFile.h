@@ -49,6 +49,10 @@ public:
    * \param address offset on the file
    */
   void read(double* buf, size_t length, size_t address=0);
+  /*!
+   * \brief name An optional identifier for the file
+   */
+  std::string name;
 private:
 #ifdef GCIMOLPROFILE
   static int baseRecord;

@@ -155,9 +155,9 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
   g -= (e0-(double)1e-10);
   std::vector<double> e;
   //  xout << "Denominators: " << g.str(2) << std::endl;
-  gci::File h0file; g.put(h0file);
-  gci::File wfile;
-  gci::File gfile;
+  gci::File h0file; h0file.name="H0"; g.put(h0file);
+  gci::File wfile; wfile.name="Wavefunction vectors";
+  gci::File gfile; gfile.name="Action vectors";
   w.set((double)0); w.set(reference, (double) 1);
   std::vector<double> reducedHamiltonian;
   std::vector<double> elast(nState,e0+1);
@@ -278,10 +278,10 @@ std::vector<double> Run::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
   e[0]=g.at(reference);
   g-=e[0];g.set(reference,(double)1);
 //  xout << "Møller-Plesset denominators: " << g.str(2) << std::endl;
-  gci::File h0file; g.put(h0file);
+  gci::File h0file; h0file.name="H0"; g.put(h0file);
   w.set((double)0); w.set(reference, (double) 1);
-  gci::File wfile; w.put(wfile,0);
-  gci::File gfile;
+  gci::File wfile; wfile.name="Wavefunction vectors"; w.put(wfile,0);
+  gci::File gfile; gfile.name="Action vectors";
   for (int k=0; k < (int) hamiltonians.size(); k++) {
     g.set((double)0);
 //    xout << "hamiltonian about to be applied to reference: "<< *hamiltonians[k] <<std::endl;
