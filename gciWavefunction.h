@@ -109,6 +109,8 @@ public:
    * \brief push the object's buffer to a file
    * \param f the file
    * \param index where on the file, in units of the size of the object
+   * \param start first element of buffer to be used
+   * \param stop last+1 element of buffer to be used
    */
   void put(File& f, int index=0);
 
@@ -116,15 +118,20 @@ public:
    * \brief pull the object's buffer from a file
    * \param f the file
    * \param index where on the file, in units of the size of the object
+   * \param start first element of buffer to be used
+   * \param stop last+1 element of buffer to be used
    */
   void get(File& f, int index=0);
 
   /*!
    * \brief Construct a cumulative histogram of absolute values
    * \param edges the values defining bin edges
+   * \param parallel whether to calculate the histogram in parallel
+   * \param start first element of buffer
+   * \param stop last element of buffer plus one
    * \return the numbers of coefficients whose absolute value is greater than the corresponding edge
    */
-  std::vector<std::size_t> histogram(const std::vector<double>edges);
+  std::vector<std::size_t> histogram(const std::vector<double>edges, bool parallel=true, std::size_t start=0, std::size_t stop=(size_t)(-1));
 
   //    Wavefunction& operator=(const double &value);
   void set(size_t offset, const double val);///< set one element to a scalar

@@ -93,8 +93,7 @@ extern "C" void cmpi_allgatherv(FORTRAN_INT *nprocs,double *recvbuf,FORTRAN_INT 
 #if defined(GCI_PARALLEL)
 #include <mpi.h>
 #endif
-extern "C" 
-inline void gather_chunks(double *buffer, size_t length, size_t chunk) {
+inline void gather_chunks(double *buffer, const size_t length, const size_t chunk) {
       {
         std::vector<FORTRAN_INT> recvcounts(parallel_size), displs(parallel_size);
         displs[0]=0;

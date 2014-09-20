@@ -565,12 +565,22 @@ void Wavefunction::get(File& f, int index)
 }
 
 #include <cmath>
-std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> edges)
+std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> edges, bool parallel, std::size_t start, std::size_t stop)
 {
+  if (stop > edges.size()) stop = edges.size();
   std::vector<std::size_t> cumulative(edges.size(),0);
-  for (size_t i=0; i<edges.size();i++) {
-    for (size_t j=0; j<buffer.size(); j++)
-      if (std::fabs(buffer[j]) > edges[i]) cumulative[i]++;
+  if (parallel) DivideTasks(edges.size());
+  for (size_t i=start; i<stop;i++)
+    if (parallel && NextTask())
+      for (size_t j=0; j<buffer.size(); j++)
+        if (std::fabs(buffer[j]) > edges[i]) cumulative[i]++;
+  if (parallel) {
+  EndTasks();
+#ifdef MOLPRO
+  mpp.GlobalSum(&cumulative[0],cumulative.size());
+#elif GCI_PARALLEL
+  {int64_t type=1; int64_t size=cumulative.size(); char op='+';PPIDD_Gsum(&type,&cumulative[0],&size,&op);}
+#endif
   }
   return cumulative;
 }
