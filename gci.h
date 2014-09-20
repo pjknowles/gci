@@ -1,5 +1,6 @@
 #ifndef GCI_H
 #define GCI_H
+#include <vector>
 #include "Profiler.h"
 
 #ifndef MOLPRO
@@ -78,8 +79,42 @@ inline void EndTasks() {
 #endif
 }
 
-
+// simple task distribution assembly
+#ifdef MOLPRO
+#ifdef _I8_
+#define FORTRAN_INT int64_t
+#else
+#define FORTRAN_INT int32_t
+#endif
+extern "C" void cmpi_allgatherv(FORTRAN_INT *nprocs,double *recvbuf,FORTRAN_INT *recvcounts,FORTRAN_INT *displs) ;
+#else
+#define FORTRAN_INT int
+#endif
+#if defined(GCI_PARALLEL)
+#include <mpi.h>
+#endif
+extern "C" 
+inline void gather_chunks(double *buffer, size_t length, size_t chunk) {
+      {
+        std::vector<FORTRAN_INT> recvcounts(parallel_size), displs(parallel_size);
+        displs[0]=0;
+        for (size_t i=1; i<(size_t)parallel_size; i++) {
+          displs[i]=(FORTRAN_INT)i*chunk;
+          if (displs[i] > (FORTRAN_INT)(length)) displs[i]=(FORTRAN_INT)length;
+          recvcounts[i-1]=displs[i]-displs[i-1];
+        }
+        recvcounts[parallel_size-1]=(FORTRAN_INT)(length)-displs[parallel_size-1];
+//        xout << "nsa="<<nsa<<std::endl;
+//        xout << "displ:"; for (size_t i=0; i<(size_t)parallel_size; i++) xout <<" "<<displs[i]; xout <<std::endl;
+//        xout << "recvcounts:"; for (size_t i=0; i<(size_t)parallel_size; i++) xout <<" "<<recvcounts[i]; xout <<std::endl;
+#if defined(GCI_PARALLEL)
+        MPI_Allgatherv(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,buffer,&recvcounts[0],&displs[0],MPI_DOUBLE,MPI_COMM_WORLD);
+#elif defined(MOLPRO)
+        cmpi_allgatherv(&parallel_size,buffer,&recvcounts[0],&displs[0]) ;
+#endif
+      }
 }
 
+}
 
 #endif // GCI_H
