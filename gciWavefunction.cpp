@@ -552,16 +552,34 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
 void Wavefunction::put(File& f, int index)
 {
   profiler.start("Wavefunction::put");
-  f.write(buffer,index*buffer.size());
-  profiler.stop("Wavefunction::put",index*buffer.size());
+  size_t chunk = (buffer.size()-1)/parallel_size+1;
+  size_t offset = chunk*parallel_rank;
+  if (chunk+offset > buffer.size()) chunk = buffer.size()-offset;
+  if (offset < buffer.size())
+    f.write(&buffer[offset],chunk,index*chunk);
+  profiler.stop("Wavefunction::put",chunk);
+}
+
+
+void Wavefunction::getLocal(File& f, int index)
+{
+  profiler.start("Wavefunction::getLocal");
+  size_t chunk = (buffer.size()-1)/parallel_size+1;
+  size_t offset = chunk*parallel_rank;
+    if (chunk+offset > buffer.size()) chunk = buffer.size()-offset;
+  if (offset < buffer.size())
+    f.read(&buffer[offset],chunk,index*chunk);
+  profiler.stop("Wavefunction::getLocal",chunk);
 }
 
 
 void Wavefunction::get(File& f, int index)
 {
   profiler.start("Wavefunction::get");
-  f.read(buffer,index*buffer.size());
-  profiler.stop("Wavefunction::get",index*buffer.size());
+  getLocal(f,index);
+  size_t chunk = (buffer.size()-1)/parallel_size+1;
+  gather_chunks(&buffer[0],buffer.size(),chunk);
+  profiler.stop("Wavefunction::get",buffer.size());
 }
 
 #include <cmath>

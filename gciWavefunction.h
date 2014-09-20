@@ -109,17 +109,20 @@ public:
    * \brief push the object's buffer to a file
    * \param f the file
    * \param index where on the file, in units of the size of the object
-   * \param start first element of buffer to be used
-   * \param stop last+1 element of buffer to be used
    */
   void put(File& f, int index=0);
+
+  /*!
+   * \brief pull the local part of the object's buffer from a file
+   * \param f the file
+   * \param index where on the file, in units of the size of the object
+   */
+  void getLocal(File& f, int index=0);
 
   /*!
    * \brief pull the object's buffer from a file
    * \param f the file
    * \param index where on the file, in units of the size of the object
-   * \param start first element of buffer to be used
-   * \param stop last+1 element of buffer to be used
    */
   void get(File& f, int index=0);
 

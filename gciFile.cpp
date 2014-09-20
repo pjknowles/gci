@@ -54,34 +54,44 @@ File::~File()
 
 void File::read(std::vector<double> &buf, size_t address)
 {
+  read(&buf[0],buf.size(),address);
+}
+
+void File::read(double* buf, size_t length, size_t address)
+{
 #ifdef GCIMOLPROFILE
 //  xout << "read file"<<std::endl;
   // Molpro I/O is collective
-  f->Read(&buf[0], (FOffset)buf.size()*8,(FOffset)address*8);
+  f->Read(&buf[0], (FOffset)length*8,(FOffset)address*8);
 #else
   if (parallel_rank==0) {
  f.seekg(address*8,std::ios_base::beg);
- f.read((char *) &buf[0],buf.size()*8);
+ f.read((char *) &buf[0],length*8);
   }
-  //broadcast
-#ifdef GCI_PARALLEL
-  int64_t type=1, root=0, size=buf.size();
-  PPIDD_BCast(&buf[0],&size,&type,&root);
-#endif
+//  //broadcast
+//#ifdef GCI_PARALLEL
+//  int64_t type=1, root=0, size=buf.size();
+//  PPIDD_BCast(&buf[0],&size,&type,&root);
+//#endif
 #endif
 }
 
 
 void File::write(std::vector<double> &buf, size_t address)
 {
+  write(&buf[0],buf.size(),address);
+}
+
+void File::write(double* buf, size_t length, size_t address)
+{
 #ifdef GCIMOLPROFILE
 //  xout << "write file"<<std::endl;
   // Molpro I/O is collective
-  f->Write(&buf[0], (FOffset)buf.size()*8,(FOffset)address*8);
+  f->Write(&buf[0], (FOffset)length*8,(FOffset)address*8);
 #else
   if (parallel_rank==0) {
     f.seekp(address*8,std::ios_base::beg);
-    f.write((char *) &buf[0],buf.size()*8);
+    f.write((char *) &buf[0],length*8);
   }
 #endif
 }
