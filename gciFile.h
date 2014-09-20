@@ -1,14 +1,7 @@
 #ifndef GCIFILE_H
 #define GCIFILE_H
-//#ifdef MOLPRO
-//#define GCIMOLPROFILE
-//#endif
 #include <vector>
-#ifdef GCIMOLPROFILE
-#include "gciMolpro.h"
-#else
 #include <fstream>
-#endif
 
 namespace gci {
 
@@ -54,12 +47,7 @@ public:
    */
   std::string name;
 private:
-#ifdef GCIMOLPROFILE
-  static int baseRecord;
-  itf::FMolproStorageBlock* f;
-#else
   std::fstream f;
-#endif
 };
 
 }
