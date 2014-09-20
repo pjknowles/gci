@@ -560,25 +560,25 @@ void Wavefunction::put(File& f, int index)
 }
 
 
-void Wavefunction::getLocal(File& f, int index)
+void Wavefunction::get(File& f, int index)
 {
-  profiler.start("Wavefunction::getLocal");
+  profiler.start("Wavefunction::get");
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   size_t offset = chunk*parallel_rank;
   if (chunk+offset > buffer.size()) chunk = buffer.size()-offset;
   if (offset < buffer.size())
     f.read(&buffer[offset],chunk,index*chunk);
-  profiler.stop("Wavefunction::getLocal",chunk);
+  profiler.stop("Wavefunction::get",chunk);
 }
 
 
-void Wavefunction::get(File& f, int index)
+void Wavefunction::getAll(File& f, int index)
 {
-  profiler.start("Wavefunction::get");
-  getLocal(f,index);
+  profiler.start("Wavefunction::getAll");
+  get(f,index);
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   gather_chunks(&buffer[0],buffer.size(),chunk);
-  profiler.stop("Wavefunction::get",buffer.size());
+  profiler.stop("Wavefunction::getAll",buffer.size());
 }
 
 #include <cmath>

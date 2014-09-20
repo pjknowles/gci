@@ -117,14 +117,14 @@ public:
    * \param f the file
    * \param index where on the file, in units of the size of the object
    */
-  void getLocal(File& f, int index=0);
+  void get(File& f, int index=0);
 
   /*!
    * \brief pull the object's buffer from a file
    * \param f the file
    * \param index where on the file, in units of the size of the object
    */
-  void get(File& f, int index=0);
+  void getAll(File& f, int index=0);
 
   /*!
    * \brief Construct a cumulative histogram of absolute values

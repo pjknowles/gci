@@ -175,7 +175,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
       for (int j=n-1; j>-1; j--)
   reducedHamiltonian[j+i*(n+1)] = reducedHamiltonian[j+i*n];
     for (int i=0; i<n+1; i++) {
-      g.get(gfile,i);
+      g.getAll(gfile,i);
       reducedHamiltonian[i+n*(n+1)] = reducedHamiltonian[n+i*(n+1)] = g * w;
     }
     profiler.stop("Davidson build rH");
@@ -199,17 +199,17 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     profiler.start("Davidson residual");
     w.set((double)0);
     for (int i=0; i <= n; i++) {
-      g.get(wfile,i);
+      g.getAll(wfile,i);
 //      w += eigenvalues[track]*eigenvectors[i+track*(n+1)] * g;
       w.axpy(eigenvalues[track]*eigenvectors[i+track*(n+1)] , g);
-      g.get(gfile,i);
+      g.getAll(gfile,i);
 //      w -= eigenvectors[i+track*(n+1)] * g;
       w.axpy( -eigenvectors[i+track*(n+1)] , g);
     }
-    g.get(h0file);
+    g.getAll(h0file);
     w /= g;
     for (int i=0; i <= n; i++) {
-      g.get(wfile,i);
+      g.getAll(wfile,i);
       double factor = -(g*w)/(g*g);
 //      w += factor*g;
       w.axpy(factor,g);
@@ -226,7 +226,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     { profiler.start("Histogram");
       w.set((double)0);
       for (int i=0; i <= n; i++) {
-        g.get(wfile,i);
+        g.getAll(wfile,i);
         w.axpy(eigenvectors[i+track*(n+1)] , g);
       }
       double histmin=1e-14,histmax=1.1;
@@ -297,7 +297,7 @@ std::vector<double> Run::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
     g.set((double)0);
 //            xout <<std::endl<< "g after set 0: " << g.str(2) <<std::endl;
     for (int k=n; k>0; k--) {
-      w.get(wfile,n-k);
+      w.getAll(wfile,n-k);
       if (k < (int) hamiltonians.size()) {
 //            xout <<"k="<<k<< " g before H.w: " << g.str(2) <<std::endl;
         g.hamiltonianOnWavefunction(*hamiltonians[k], w);
@@ -311,7 +311,7 @@ std::vector<double> Run::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
 //        xout << "k, E:"<<k<<" "<<e[k]<<", g after -E.w: " << g.str(2) <<std::endl;
     }
     w = -g;
-    g.get(h0file);
+    g.getAll(h0file);
 //    xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
     w.set(reference,(double)0);
     w /= g;
@@ -319,7 +319,7 @@ std::vector<double> Run::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
     w.put(wfile,n);
     for (int k=1; k < (int) hamiltonians.size(); k++) {
       if (n+k > maxOrder) break;
-      g.get(gfile,k);
+      g.getAll(gfile,k);
 //      xout <<"gfile "<<g.str(2)<<std::endl;
 //      xout <<"contribution from n="<<n<<", k="<<k<<" to E("<<n+k<<")="<<g*w<<std::endl;
       e[n+k]+=g*w;
