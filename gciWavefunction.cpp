@@ -177,17 +177,17 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
       }
       {
         std::vector<FORTRAN_INT> recvcounts(parallel_size), displs(parallel_size);
-        recvcounts[0]=chunk*nsb; displs[0]=0;
+        displs[0]=0;
         for (size_t i=1; i<(size_t)parallel_size; i++) {
           displs[i]=(FORTRAN_INT)i*chunk*nsb;
           if (displs[i] > (FORTRAN_INT)(nsa*nsb)) displs[i]=(FORTRAN_INT)nsa*nsb;
-          recvcounts[i]=displs[i]-displs[i-1];
+          recvcounts[i-1]=displs[i]-displs[i-1];
         }
         recvcounts[parallel_size-1]=(FORTRAN_INT)(nsa*nsb)-displs[parallel_size-1];
 //        xout << "nsa="<<nsa<<std::endl;
 //        xout << "displ:"; for (size_t i=0; i<(size_t)parallel_size; i++) xout <<" "<<displs[i]; xout <<std::endl;
 //        xout << "recvcounts:"; for (size_t i=0; i<(size_t)parallel_size; i++) xout <<" "<<recvcounts[i]; xout <<std::endl;
-#if defined(GCI_PARALLEL) 
+#if defined(GCI_PARALLEL)
         MPI_Allgatherv(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,&buffer[offset],&recvcounts[0],&displs[0],MPI_DOUBLE,MPI_COMM_WORLD);
 #elif defined(MOLPRO)
         cmpi_allgatherv(&parallel_size,&buffer[offset],&recvcounts[0],&displs[0]) ;
