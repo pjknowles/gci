@@ -1,9 +1,8 @@
+#include "gci.h"
 #include "gciWavefunction.h"
 #include <sstream>
 #include <iostream>
-#ifndef MOLPRO
 #include "gciMolpro.h"
-#endif
 #include "gciStringSet.h"
 #include "gciTransitionDensity.h"
 #include "Profiler.h"
@@ -595,7 +594,10 @@ std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> edges
   if (parallel) {
   EndTasks();
 #ifdef MOLPRO
-  mpp.GlobalSum(&cumulative[0],cumulative.size());
+  std::vector<double> dcumulative(cumulative.size());
+  for (size_t i=0; i<cumulative.size(); i++) dcumulative[i]=(double)cumulative[i];
+  mpp.GlobalSum(&dcumulative[0],cumulative.size());
+  for (size_t i=0; i<cumulative.size(); i++) cumulative[i]=(std::size_t)dcumulative[i];
 #elif GCI_PARALLEL
   {int64_t type=1; int64_t size=cumulative.size(); char op='+';PPIDD_Gsum(&type,&cumulative[0],&size,&op);}
 #endif
