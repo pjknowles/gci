@@ -557,28 +557,18 @@ void Wavefunction::put(File& f, int index)
   if (offset < buffer.size())
     f.write(&buffer[offset],chunk,index*chunk);
   profiler.stop("Wavefunction::put",chunk);
-//  double gsum=0;
-//  for (size_t i=0; i<buffer.size();i++) gsum+=buffer[i];
-//  double sum=0;
-//  for (size_t i=offset; i<offset+chunk;i++) sum+=buffer[i];
-//  xout << "put '"<<f.name<<"' rank="<<parallel_rank<<", offset="<<offset<<", address="<<index*chunk<<", chunk="<<chunk<<", sum="<<sum<<", gsum="<<gsum<<std::endl;
 }
 
 
 void Wavefunction::getLocal(File& f, int index)
 {
   profiler.start("Wavefunction::getLocal");
-//  buffer.assign(buffer.size(),(double)1);
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   size_t offset = chunk*parallel_rank;
   if (chunk+offset > buffer.size()) chunk = buffer.size()-offset;
   if (offset < buffer.size())
     f.read(&buffer[offset],chunk,index*chunk);
-//  if (offset < buffer.size()) xout << "read actually done"<<std::endl;
   profiler.stop("Wavefunction::getLocal",chunk);
-//  double sum=0;
-//  for (size_t i=offset; i<offset+chunk;i++) sum+=buffer[i];
-//  xout << "getLocal '"<<f.name<<"' rank="<<parallel_rank<<", offset="<<offset<<", address="<<index*chunk<<", chunk="<<chunk<<", sum="<<sum<<std::endl;
 }
 
 
@@ -589,9 +579,6 @@ void Wavefunction::get(File& f, int index)
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   gather_chunks(&buffer[0],buffer.size(),chunk);
   profiler.stop("Wavefunction::get",buffer.size());
-//  double sum=0;
-//  for (size_t i=0; i<buffer.size();i++) sum+=buffer[i];
-//  if (parallel_rank==0)xout << "get '"<<f.name<<"' rank="<<parallel_rank<<", sum="<<sum<<", chunk="<<chunk<<std::endl;
 }
 
 #include <cmath>

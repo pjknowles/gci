@@ -28,18 +28,13 @@ File::File()
 
   int file=7;
   unusedRecord(&file,&baseRecord);
-//  xout << "baseRecord="<<baseRecord<<std::endl;
   f = new FMolproStorageBlock(file,baseRecord++,0);
-//  xout << "new file"<<std::endl;
 #else
-//  char *tmpname = strdup("tmpfileXXXXXX");
-  char tmpname[1];
-  sprintf(tmpname,"tmp%6.6dXXXXXX",parallel_rank);
+  char tmpname[16];
+  sprintf(tmpname,"tmp%6.6dXXXXXX",(int)parallel_rank);
   mkstemp(tmpname);
-//  xout << "tmpname="<<tmpname<<std::endl;
   f.open(tmpname,std::fstream::binary | std::fstream::in| std::fstream::out);
   remove(tmpname);
-//  free(tmpname);
 #endif
 }
 
