@@ -4,6 +4,7 @@
 #include <deque>
 #include <queue>
 #include <string>
+#include <string.h>
 #include <iomanip>
 #include "Profiler.h"
 
