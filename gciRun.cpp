@@ -328,8 +328,11 @@ std::vector<double> Run::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
       g -= e[k] * w;
 //        xout << "k, E:"<<k<<" "<<e[k]<<", g after -E.w: " << g.str(2) <<std::endl;
     }
+      {
+    bool olddistw=w.distributed; w.distributed=true;
+    bool olddistg=g.distributed; g.distributed=true;
     w = -g;
-    g.getAll(h0file);
+    g.get(h0file);
 //    xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
     w.set(reference,(double)0);
     w /= g;
@@ -337,11 +340,14 @@ std::vector<double> Run::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
     w.put(wfile,n);
     for (int k=1; k < (int) hamiltonians.size(); k++) {
       if (n+k > maxOrder) break;
-      g.getAll(gfile,k);
+      g.get(gfile,k);
 //      xout <<"gfile "<<g.str(2)<<std::endl;
 //      xout <<"contribution from n="<<n<<", k="<<k<<" to E("<<n+k<<")="<<g*w<<std::endl;
       e[n+k]+=g*w;
     }
+    gsum(&e[n+1],(size_t)(hamiltonians.size()-1));
+    w.distributed=olddistw; g.distributed=olddistg;
+  }
     xout << "n="<<n<<", E(n+1)="<<e[n+1]<<std::endl;
     if ((e[n+1] < 0 ? -e[n+1] : e[n+1]) < energyThreshold && e[n+1] != (double)0) {e.resize(n+2);break;}
   }
