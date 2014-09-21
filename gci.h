@@ -114,6 +114,16 @@ inline void gather_chunks(double *buffer, const size_t length, const size_t chun
       }
 }
 
+void inline gsum(double* buffer, const size_t len)
+{
+#ifdef MOLPRO
+  mpp.GlobalSum(buffer,(FORTRAN_INT)len);
+#elif GCI_PARALLEL
+  {int64_t type=1; int64_t size=(int64_t)len; char op='+';PPIDD_Gsum(&type,buffer,&size,&op);}
+#endif
+}
+
+
 }
 
 #endif // GCI_H

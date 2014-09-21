@@ -213,21 +213,13 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     for (int i=0; i <= n; i++) {
       g.get(wfile,i);
       double factor = -(g*w)/(g*g);
-#ifdef MOLPRO
-  mpp.GlobalSum(&factor,1);
-#elif GCI_PARALLEL
-  {int64_t type=1; int64_t size=1; char op='+';PPIDD_Gsum(&type,&factor,&size,&op);}
-#endif
+      gsum(&factor,1);
 //      w += factor*g;
       w.axpy(factor,g);
     }
     profiler.stop("Davidson residual");
     double norm2=w*w;
-#ifdef MOLPRO
-  mpp.GlobalSum(&norm2,1);
-#elif GCI_PARALLEL
-  {int64_t type=1; int64_t size=1; char op='+';PPIDD_Gsum(&type,&norm2,&size,&op);}
-#endif
+    gsum(&norm2,1);
     w.distributed=olddistw;
     g.distributed=olddistg;
 

@@ -586,11 +586,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
 
   EndTasks();
 
-#ifdef MOLPRO
-  mpp.GlobalSum(&buffer[0],buffer.size());
-#elif GCI_PARALLEL
-  {int64_t type=1; int64_t size=buffer.size(); char op='+';PPIDD_Gsum(&type,&buffer[0],&size,&op);}
-#endif
+  gsum(&buffer[0],buffer.size());
   profiler.stop("hamiltonianOnWavefunction");
 }
 
@@ -646,14 +642,10 @@ std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> edges
         if (std::fabs(buffer[j]) > edges[i]) cumulative[i]++;
   if (parallel) {
   EndTasks();
-#ifdef MOLPRO
   std::vector<double> dcumulative(cumulative.size());
   for (size_t i=0; i<cumulative.size(); i++) dcumulative[i]=(double)cumulative[i];
-  mpp.GlobalSum(&dcumulative[0],cumulative.size());
+  gsum(&dcumulative[0],cumulative.size());
   for (size_t i=0; i<cumulative.size(); i++) cumulative[i]=(std::size_t)dcumulative[i];
-#elif GCI_PARALLEL
-  {int64_t type=1; int64_t size=cumulative.size(); char op='+';PPIDD_Gsum(&type,&cumulative[0],&size,&op);}
-#endif
   }
   return cumulative;
 }
