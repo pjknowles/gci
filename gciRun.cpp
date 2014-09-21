@@ -225,10 +225,13 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
 
     { profiler.start("Histogram");
       w.set((double)0);
+      bool olddist=w.distributed; w.distributed=true;
       for (int i=0; i <= n; i++) {
-        g.getAll(wfile,i);
+        g.get(wfile,i);
         w.axpy(eigenvectors[i+track*(n+1)] , g);
       }
+      w.gather();
+      w.distributed=olddist;
       double histmin=1e-14,histmax=1.1;
       size_t nhist=25;
       double ratio=std::pow(histmin/histmax,1/((double)nhist));

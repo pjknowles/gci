@@ -8,17 +8,21 @@
 #include "Profiler.h"
 
 Wavefunction::Wavefunction(FCIdump *dump) : State(dump) {
+  distributed = false;
   buildStrings();
 }
 
 Wavefunction::Wavefunction(std::string filename) : State(filename) {
+  distributed = false;
   if (filename!="") buildStrings();
 }
 Wavefunction::Wavefunction(OrbitalSpace* h, int n, int s, int m2) : State(h,n,s,m2) {
+  distributed = false;
   buildStrings();
 }
 
 Wavefunction::Wavefunction(const State& state) : State(state) {
+  distributed = false;
   buildStrings();
 }
 
@@ -170,12 +174,20 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
 
 void Wavefunction::axpy(double a, Wavefunction &x)
 {
-  for (size_t i=0; i<buffer.size(); i++) buffer[i] += x.buffer[i]*a;
+  size_t chunk = (buffer.size()-1)/parallel_size+1;
+  if (distributed)
+    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++) buffer[i] += x.buffer[i]*a;
+  else
+    for (size_t i=0; i<buffer.size(); i++) buffer[i] += x.buffer[i]*a;
 }
 
 Wavefunction& Wavefunction::operator*=(const double &value)
 {
-  for (std::vector<double>::iterator b=buffer.begin(); b != buffer.end(); b++) *b*=value;
+  size_t chunk = (buffer.size()-1)/parallel_size+1;
+  if (distributed)
+    for (std::vector<double>::iterator b=buffer.begin()+parallel_rank*chunk; b != buffer.end() && b < buffer.begin()+(parallel_rank+1)*chunk; b++) *b*=value;
+  else
+    for (std::vector<double>::iterator b=buffer.begin(); b != buffer.end(); b++) *b*=value;
   return *this;
 }
 
@@ -192,7 +204,12 @@ Wavefunction& Wavefunction::operator+=(const Wavefunction &other)
 {
   if (! compatible(other)) throw "attempt to add incompatible Wavefunction objects";
 //  xout << "Wavefunction::operator += &this=" << this <<" &other="<<&other <<std::endl;
-  for (size_t i=0; i<buffer.size(); i++)  buffer[i] += other.buffer[i];
+  size_t chunk = (buffer.size()-1)/parallel_size+1;
+  if (distributed)
+    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
+      buffer[i] += other.buffer[i];
+  else
+    for (size_t i=0; i<buffer.size(); i++)  buffer[i] += other.buffer[i];
   return *this;
 }
 
@@ -200,13 +217,25 @@ Wavefunction& Wavefunction::operator+=(const Wavefunction &other)
 Wavefunction& Wavefunction::operator-=(const Wavefunction &other)
 {
   if (! compatible(other)) throw "attempt to add incompatible Wavefunction objects";
-  for (size_t i=0; i<buffer.size(); i++)  buffer[i] -= other.buffer[i];
+  size_t chunk = (buffer.size()-1)/parallel_size+1;
+  if (distributed)
+    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
+      buffer[i] -= other.buffer[i];
+  else
+    for (size_t i=0; i<buffer.size(); i++)
+      buffer[i] -= other.buffer[i];
   return *this;
 }
 
 Wavefunction& Wavefunction::operator-=(const double other)
 {
-  for (size_t i=0; i<buffer.size(); i++)  buffer[i] -= other;
+  size_t chunk = (buffer.size()-1)/parallel_size+1;
+  if (distributed)
+    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
+      buffer[i] -= other;
+  else
+    for (size_t i=0; i<buffer.size(); i++)
+      buffer[i] -= other;
   return *this;
 }
 
@@ -214,7 +243,13 @@ Wavefunction& Wavefunction::operator-=(const double other)
 Wavefunction& Wavefunction::operator/=(const Wavefunction &other)
 {
   if (! compatible(other)) throw "attempt to add incompatible Wavefunction objects";
-  for (size_t i=0; i<buffer.size(); i++)  buffer[i] /= other.buffer[i];
+  size_t chunk = (buffer.size()-1)/parallel_size+1;
+  if (distributed)
+    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
+      buffer[i] /= other.buffer[i];
+  else
+    for (size_t i=0; i<buffer.size(); i++)
+      buffer[i] /= other.buffer[i];
   return *this;
 }
 
@@ -253,14 +288,25 @@ double gci::operator *(const Wavefunction &w1, const Wavefunction &w2)
 {
   if (! w1.compatible(w2)) throw "attempt to form scalar product between incompatible Wavefunction objects";
   double result=(double)0;
-  for (size_t i=0; i<w1.buffer.size(); i++) result += w1.buffer[i]*w2.buffer[i];
+  size_t chunk = (w1.buffer.size()-1)/parallel_size+1;
+  if (w1.distributed)
+    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<w1.buffer.size(); i++)
+      result += w1.buffer[i]*w2.buffer[i];
+  else
+    for (size_t i=0; i<w1.buffer.size(); i++)
+      result += w1.buffer[i]*w2.buffer[i];
   return result;
 }
 
 Wavefunction& gci::Wavefunction::operator -()
 {
-  for (size_t i=0; i<buffer.size(); i++)
-    buffer[i]=-buffer[i];
+  size_t chunk = (buffer.size()-1)/parallel_size+1;
+  if (distributed)
+    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
+      buffer[i]=-buffer[i];
+  else
+    for (size_t i=0; i<buffer.size(); i++)
+      buffer[i]=-buffer[i];
   return *this;
 }
 
@@ -579,6 +625,13 @@ void Wavefunction::getAll(File& f, int index)
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   gather_chunks(&buffer[0],buffer.size(),chunk);
   profiler.stop("Wavefunction::getAll",buffer.size());
+}
+
+void Wavefunction::gather()
+{
+  size_t chunk = (buffer.size()-1)/parallel_size+1;
+  gather_chunks(&buffer[0],buffer.size(),chunk);
+
 }
 
 #include <cmath>
