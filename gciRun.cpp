@@ -198,24 +198,39 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     }
     profiler.start("Davidson residual");
     w.set((double)0);
+      bool olddistw=w.distributed; w.distributed=true;
+      bool olddistg=g.distributed; g.distributed=true;
     for (int i=0; i <= n; i++) {
-      g.getAll(wfile,i);
+      g.get(wfile,i);
 //      w += eigenvalues[track]*eigenvectors[i+track*(n+1)] * g;
       w.axpy(eigenvalues[track]*eigenvectors[i+track*(n+1)] , g);
-      g.getAll(gfile,i);
+      g.get(gfile,i);
 //      w -= eigenvectors[i+track*(n+1)] * g;
       w.axpy( -eigenvectors[i+track*(n+1)] , g);
     }
-    g.getAll(h0file);
+    g.get(h0file);
     w /= g;
     for (int i=0; i <= n; i++) {
-      g.getAll(wfile,i);
+      g.get(wfile,i);
       double factor = -(g*w)/(g*g);
+#ifdef MOLPRO
+  mpp.GlobalSum(&factor,1);
+#elif GCI_PARALLEL
+  {int64_t type=1; int64_t size=1; char op='+';PPIDD_Gsum(&type,&factor,&size,&op);}
+#endif
 //      w += factor*g;
       w.axpy(factor,g);
     }
     profiler.stop("Davidson residual");
     double norm2=w*w;
+#ifdef MOLPRO
+  mpp.GlobalSum(&norm2,1);
+#elif GCI_PARALLEL
+  {int64_t type=1; int64_t size=1; char op='+';PPIDD_Gsum(&type,&norm2,&size,&op);}
+#endif
+    w.distributed=olddistw;
+    g.distributed=olddistg;
+
     double econv=0;for (int i=0; i<(int)e.size(); i++) econv+=std::fabs(e[i]-elast[i]);
     xout <<"econv="<<econv<<std::endl;
 
