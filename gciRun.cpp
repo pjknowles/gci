@@ -171,12 +171,20 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     g.put(gfile,n);
     reducedHamiltonian.resize((size_t)(n+1)*(n+1));
     profiler.start("Davidson build rH");
+    {
     for (int i=n-1; i>-1; i--)
       for (int j=n-1; j>-1; j--)
-  reducedHamiltonian[j+i*(n+1)] = reducedHamiltonian[j+i*n];
+        reducedHamiltonian[j+i*(n+1)] = reducedHamiltonian[j+i*n];
+    bool olddistw=w.distributed; w.distributed=true;
+    bool olddistg=g.distributed; g.distributed=true;
     for (int i=0; i<n+1; i++) {
-      g.getAll(gfile,i);
-      reducedHamiltonian[i+n*(n+1)] = reducedHamiltonian[n+i*(n+1)] = g * w;
+      g.get(gfile,i);
+      reducedHamiltonian[i+n*(n+1)] = g * w;
+    }
+    gsum(&reducedHamiltonian[n*(n+1)],n+1);
+    for (int i=0; i<n+1; i++)
+      reducedHamiltonian[n+i*(n+1)] = reducedHamiltonian[i+n*(n+1)];
+    w.distributed=olddistw; g.distributed=olddistg;
     }
     profiler.stop("Davidson build rH");
     // { xout << "Reduced hamiltonian:"<<std::endl; for (int i=0; i < n+1; i++) { for (int j=0; j < n+1; j++) xout <<" "<<reducedHamiltonian[j+(n+1)*i]; xout << std::endl; } }
