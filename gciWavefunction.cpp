@@ -28,6 +28,7 @@ Wavefunction::Wavefunction(const State& state) : State(state) {
 
 Wavefunction::Wavefunction(const Wavefunction &other) : State(other)
 {
+  distributed = false;
   alphaStrings.resize(8); betaStrings.resize(8);
   for (int i=0;i<8;i++)
   {
