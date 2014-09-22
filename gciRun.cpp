@@ -96,6 +96,9 @@ std::vector<double> Run::run()
 #endif
   } else if (method == "DAVIDSON") {
     energies = Davidson(hh, prototype);
+#ifdef MOLPRO
+//    itf::SetVariables( "ENERGY_METHOD", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
+#endif
   } else if (method=="HAMILTONIAN")
      HamiltonianMatrixPrint(hh,prototype);
   else if (method=="PROFILETEST") {
@@ -254,8 +257,9 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
       edges[0]=histmax*ratio;
       for (size_t i=1;i<nhist;i++)
         edges[i]=edges[i-1]*ratio;
-      std::vector<double> fcumulative(nhist);
       std::vector<std::size_t> cumulative = w.histogram(edges);
+      while (cumulative.size()>0 && *cumulative.end()==*(cumulative.end()-1) ) cumulative.pop_back();
+      std::vector<double> fcumulative(cumulative.size());
       for (size_t i=0;i<nhist;i++) {
         fcumulative[i]=((double)cumulative[i])/(double)w.size();
         xout << "Histogram: "<<fcumulative[i]*100<<"% > "<<edges[i]<<std::endl;
