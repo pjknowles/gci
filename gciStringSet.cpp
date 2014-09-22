@@ -84,6 +84,15 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
       }
     }
   }
+  profiler.start("StringSet::addByOperators:distribute");
+  std::vector<char> serialised;
+  for (StringSet::const_iterator s=this->begin(); s!=end(); s++) {
+    std::vector<char> serialised1=s->serialise();
+    for (std::vector<char>::const_iterator c=serialised1.begin(); c!=serialised1.end();c++)
+      serialised.push_back(*c);
+  }
+//  xout << "serialised "<<serialised.size()<<" bytes from "<<size()<<" String objects"<<std::endl;
+  profiler.stop("StringSet::addByOperators:distribute");
 }
 
 void StringSet::setupPartialWeightArray()

@@ -17,12 +17,17 @@ class String : public State
   friend class StringSet;
 public:
   /*!
- \brief
-
- \param State Some State object from which to copy number of electrons etc for bound checking
- \param spin 1=alpha, -1=beta
+   * \brief String Construct a vacuum object
+   * \param State Some State object from which to copy number of electrons etc for bound checking, and to define orbital symmetries
+   * \param spin 1=alpha, -1=beta
 */
-  String(State* State=NULL, int spin=1);
+  String(const State *State=NULL, const int spin=1);
+  /*!
+   * \brief String Construct from a serialised representation of data
+   * \param bytestream representation produced by previous invocation of serialise()
+   * \param State Some State object from which to copy number of electrons etc for bound checking, and to define orbital symmetries
+   */
+  String(const std::vector<char> bytestream, const State* State=NULL);
   /*!
      \brief
 
@@ -67,7 +72,6 @@ public:
   unsigned int computed_symmetry(bool nocheck=false) const;
   static String exhausted; /*!< returned by next() when we're already on the last string */
 
-  std::vector<unsigned int> orbitals_; /*!< The orbitals that make up the string */
 
   static size_t keyUnassigned; ///< conventional null value for key
   static size_t StringNotFound; ///< conventional null value for index
@@ -85,7 +89,15 @@ public:
    * \return
    */
   bool operator==(const String& other) const;
+
+  /*!
+   * \brief serialise Produce a byte representation of the object's data
+   * \return
+   */
+  std::vector<char> serialise() const;
 private:
+  typedef uint8_t orbital_type;
+  std::vector<orbital_type> orbitals_; /*!< The orbitals that make up the string */
 };
 }
 

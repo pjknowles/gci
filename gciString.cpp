@@ -3,11 +3,12 @@
 
 #include <iostream>
 #include <sstream>
+#include <string.h>
 
 size_t gci::String::StringNotFound=(size_t)-1; ///< conventional null value for index
 size_t gci::String::keyUnassigned=(size_t)-1; ///< conventional null value for key
 
-String::String(State* State, int Spin)
+String::String(const State* State, const int Spin)
 {
   if (State == NULL) {
     orbitalSpace=NULL;
@@ -16,6 +17,32 @@ String::String(State* State, int Spin)
   }
   nullify();
   spin=Spin;
+}
+
+String::String(const std::vector<char> bytestream, const State *State)
+{
+  if (State == NULL) {
+    orbitalSpace=NULL;
+  } else {
+    orbitalSpace=State->orbitalSpace;
+  }
+  nullify();
+  size_t offset=0;
+  memcpy(&nelec,&bytestream[offset],sizeof(nelec));offset+=sizeof(nelec);
+  memcpy(&spin,&bytestream[offset],sizeof(spin));offset+=sizeof(spin);
+  orbitals_.resize((size_t)nelec);
+  memcpy(&orbitals_[0],&bytestream[offset],sizeof(orbital_type)*orbitals_.size());offset+=sizeof(orbital_type)*orbitals_.size();
+
+}
+
+std::vector<char> String::serialise() const
+{
+  std::vector<char> bytestream(sizeof(nelec)+sizeof(spin)+nelec*sizeof(orbital_type));
+  size_t offset=0;
+  memcpy(&bytestream[offset],&nelec,sizeof(nelec));offset+=sizeof(nelec);
+  memcpy(&bytestream[offset],&spin,sizeof(spin));offset+=sizeof(spin);
+  memcpy(&bytestream[offset],&orbitals_[0],sizeof(orbital_type)*orbitals_.size());offset+=sizeof(orbital_type)*orbitals_.size();
+  return bytestream;
 }
 
 int String::create(unsigned int orbital) {
@@ -33,7 +60,7 @@ int String::create(unsigned int orbital) {
   int phase=((orbitals_.size()/2)*2 == orbitals_.size()) ? 1 : -1;
   //    xout <<"phase="<<phase<<std::endl;
   //    xout <<"spin="<<spin<<std::endl;
-  for (std::vector<unsigned int>::iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
+  for (std::vector<orbital_type>::iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
     if (*i==orbital) return 0; // exclusion principle
     if (*i > orbital){
       ms2+=spin;
@@ -60,7 +87,7 @@ int String::destroy(unsigned int orbital) {
   //    xout << "String::destroy before="<<str()<<", orbital="<<orbital<<std::endl;
 //  int phase=1;
   int phase=((orbitals_.size()/2)*2 == orbitals_.size()) ? -1 : 1;
-  for (std::vector<unsigned int>::iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
+  for (std::vector<orbital_type>::iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
     if (*i==orbital)  {
       ms2-=spin;
       nelec--;
@@ -85,14 +112,17 @@ void String::nullify()
 }
 
 std::vector<unsigned int> String::orbitals() const {
-  return orbitals_;
+  std::vector<unsigned int> result;
+  for (std::vector<orbital_type>::const_iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i)
+    result.push_back((unsigned int)(*i));
+  return result;
 }
 
 std::string String::str(int verbosity) const {
   std::string result;
   //    xout <<"String::str orbitals_[0]" <<orbitals_[0]<<std::endl;
   if (verbosity >=0) {
-    for (std::vector<unsigned int>::const_iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
+    for (std::vector<orbital_type>::const_iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
       if (i!=orbitals_.begin()) result.append(",");
       std::stringstream ss;
       int ispin=(int)(*i)*(int)spin;
@@ -129,10 +159,10 @@ unsigned int String::computed_symmetry(bool nocheck) const
 bool String::next(int sym) {
   if (sym<0)
   { // generate the next string of any symmetry
-    unsigned int limit=orbitalSpace->total();
-    std::vector<unsigned int>::iterator k;
-    unsigned int floor=0;
-    for (std::vector<unsigned int>::reverse_iterator i = orbitals_.rbegin(); i!=orbitals_.rend(); ++i) {
+    orbital_type limit=orbitalSpace->total();
+    std::vector<orbital_type>::iterator k;
+    orbital_type floor=0;
+    for (std::vector<orbital_type>::reverse_iterator i = orbitals_.rbegin(); i!=orbitals_.rend(); ++i) {
       floor=++(*i);
       k=i.base();
       if (*i <= limit) break;

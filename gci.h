@@ -110,6 +110,8 @@ inline void gather_chunks(double *buffer, const size_t length, const size_t chun
         MPI_Allgatherv(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,buffer,&recvcounts[0],&displs[0],MPI_DOUBLE,MPI_COMM_WORLD);
 #elif defined(MOLPRO)
         cmpi_allgatherv(&parallel_size,buffer,&recvcounts[0],&displs[0]) ;
+#else
+        buffer[0]=buffer[0]; // to silence compiler warnings
 #endif
       }
 }
@@ -120,6 +122,8 @@ void inline gsum(double* buffer, const size_t len)
   mpp.GlobalSum(buffer,(FORTRAN_INT)len);
 #elif GCI_PARALLEL
   {int64_t type=1; int64_t size=(int64_t)len; char op='+';PPIDD_Gsum(&type,buffer,&size,&op);}
+#else
+        buffer[len]=buffer[len]; // to silence compiler warnings
 #endif
 }
 
