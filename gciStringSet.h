@@ -67,6 +67,14 @@ public:
      */
   void addByOperators(const StringSet &referenceSpace, int annihilations, int creations, int sym=-1);
   /*!
+     * \brief Append to a StringSet from a collection of other ones by applying annihilations and creations
+     * \param referenceSpaces
+     * \param annihilations
+     * \param creations
+     * \param sym specify symmetry of String objects; -1 denotes all symmetries
+     */
+  void addByOperators(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym=-1);
+  /*!
      * \brief Generate all excitations from this StringSet to StringSet to.
      * \param to StringSet against which results will be indexed.
      * \param annihilations How many annihilations.

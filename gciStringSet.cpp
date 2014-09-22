@@ -31,9 +31,27 @@ StringSet::StringSet(const StringSet &referenceSpace, int annihilations, int cre
 
 StringSet::StringSet(const std::vector<StringSet>& referenceSpaces, int annihilations, int creations, int sym)
 {
+  addByOperators(referenceSpaces, annihilations, creations, sym);
+}
+
+void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym)
+{
+  size_t initial=size();
   profiler.start("StringSet::addByOperators[]");
   for (std::vector<StringSet>::const_iterator referenceSpace=referenceSpaces.begin(); referenceSpace != referenceSpaces.end(); referenceSpace++)
     addByOperators(*referenceSpace, annihilations, creations, sym);
+  profiler.start("StringSet::addByOperators:distribute");
+  std::vector<char> serialised;
+  for (StringSet::const_iterator s=this->begin(); s!=end(); s++) {
+    std::vector<char> serialised1=s->serialise();
+    for (std::vector<char>::const_iterator c=serialised1.begin(); c!=serialised1.end();c++)
+      serialised.push_back(*c);
+  }
+  xout << "serialised "<<serialised.size()<<" bytes from "<<size()-initial<<" String objects, initial="<<initial<<std::endl;
+  profiler.stop("StringSet::addByOperators:distribute");
+  profiler.start("StringSet::addByOperators:compress");
+  initial = size();
+  profiler.stop("StringSet::addByOperators:compress");
   profiler.stop("StringSet::addByOperators[]");
 }
 
@@ -84,15 +102,6 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
       }
     }
   }
-  profiler.start("StringSet::addByOperators:distribute");
-  std::vector<char> serialised;
-  for (StringSet::const_iterator s=this->begin(); s!=end(); s++) {
-    std::vector<char> serialised1=s->serialise();
-    for (std::vector<char>::const_iterator c=serialised1.begin(); c!=serialised1.end();c++)
-      serialised.push_back(*c);
-  }
-//  xout << "serialised "<<serialised.size()<<" bytes from "<<size()<<" String objects"<<std::endl;
-  profiler.stop("StringSet::addByOperators:distribute");
 }
 
 void StringSet::setupPartialWeightArray()
