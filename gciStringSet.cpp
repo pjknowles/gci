@@ -34,13 +34,10 @@ StringSet::StringSet(const std::vector<StringSet>& referenceSpaces, int annihila
   addByOperators(referenceSpaces, annihilations, creations, sym);
 }
 
+#include <string.h>
 void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym)
 {
   profiler.start("StringSet::addByOperators[]");
-#ifdef GCI_MPI
-  MPI_Barrier(MPI_COMM_COMPUTE);
-  xout << "Barrier crossed parallel_size="<<parallel_size<<", parallel_rank="<<parallel_rank<<std::endl;
-#endif
 //  xout <<"referenceSpaces.size()="<<referenceSpaces.size()<<std::endl;
   size_t ntask=0;
   for (std::vector<StringSet>::const_iterator s=referenceSpaces.begin(); s!=referenceSpaces.end(); s++)
@@ -57,10 +54,21 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
     for (std::vector<char>::const_iterator c=serialised1.begin(); c!=serialised1.end();c++)
       serialised.push_back(*c);
   }
-//  xout << "serialised "<<serialised.size()<<" bytes from "<<size()<<" String objects="<<std::endl;
+  xout << "serialised "<<serialised.size()<<" bytes from "<<size()<<" String objects="<<std::endl;
 //  xout << "addressMap.size()"<< addressMap.size()<<std::endl;
 #ifdef GCI_MPI
+  for (size_t i=0; i<parallel_size; i++){
+  MPI_Barrier(MPI_COMM_COMPUTE);
+  if (i!=parallel_rank)continue;
+  xout << "Barrier crossed parallel_size="<<parallel_size<<", parallel_rank="<<parallel_rank<<std::endl;
+  xout << "end of addByOperators creation phase, size()="<<size()<<std::endl;
+  xout << "unmerged addressMap rank="<<parallel_rank<<", size="<<addressMap.size()<<std::endl;
+  for (std::map<size_t,size_t> ::const_iterator a=addressMap.begin(); a!=addressMap.end(); a++)
+    xout <<parallel_rank<<": "<<(*a).first<<","<<(*a).second<<std::endl;
+  }
   // aggregate on master process
+//    String refString = this->at(0);
+  String refString = referenceSpaces[0][0];
   if (parallel_rank>0) {
     int len=(int)size();
     MPI_Send(&len,(int) 1,MPI_INT,0,0,MPI_COMM_COMPUTE);
@@ -68,26 +76,38 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
     MPI_Send(&bytestreamsize,(int) 1,MPI_INT,0,1,MPI_COMM_COMPUTE);
     MPI_Send(&serialised[0],len*bytestreamsize,MPI_BYTE,0,2,MPI_COMM_COMPUTE);
     MPI_Bcast(&len,(int) 1,MPI_INT,0,MPI_COMM_COMPUTE);
+    MPI_Barrier(MPI_COMM_COMPUTE);
+    xout << "slave after receving broadcast len "<<len<<std::endl;
     serialised.resize(len*bytestreamsize);
+    clear();
     MPI_Bcast(&serialised[0],len*bytestreamsize,MPI_BYTE,0,MPI_COMM_COMPUTE);
+    MPI_Barrier(MPI_COMM_COMPUTE);
     for (size_t k=0; k<len; k++) {
         std::vector<char> s(bytestreamsize); memcpy(&s[0],&serialised[k*bytestreamsize],bytestreamsize);
-        String ss(s);
+        xout << "slave construct string"<<std::endl;
+        String ss(s,&refString);
+        xout << "slave insert string "<<ss.str()<<std::endl;
         insert(ss);
+        xout << "slave inserted string"<<std::endl;
     }
   } else {
+      xout <<"master size()="<<size()<<", bytestreamsize="<<serialised.size()/size()<<", serialised.size()"<<serialised.size()<<std::endl;
     for (int iproc=1; iproc < parallel_size;iproc++) {
       int len;
       MPI_Status status;
       MPI_Recv(&len,(int) 1,MPI_INT,iproc,0,MPI_COMM_COMPUTE,&status);
       int bytestreamsize;
       MPI_Recv(&bytestreamsize,(int) 1,MPI_INT,iproc,1,MPI_COMM_COMPUTE,&status);
+      xout <<"received len="<<len<<", bytestreamsize="<<bytestreamsize<<std::endl;
       serialised.resize((size_t)len*bytestreamsize);
       MPI_Recv(&serialised[0],(int) len*bytestreamsize,MPI_BYTE,iproc,2,MPI_COMM_COMPUTE,&status);
       for (size_t k=0; k<len; k++) {
         std::vector<char> s(bytestreamsize); memcpy(&s[0],&serialised[k*bytestreamsize],bytestreamsize);
-        String ss(s);
+        xout << "master construct string"<<std::endl;
+        String ss(s,&refString);
+        xout <<"master before insert"<<std::endl;
         insert(ss);
+        xout <<"master after insert"<<std::endl;
       }
       serialised.clear();
       for (StringSet::const_iterator s=begin(); s!=end(); s++) {
@@ -95,11 +115,30 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
         for (std::vector<char>::const_iterator c=serialised1.begin(); c!=serialised1.end();c++)
           serialised.push_back(*c);
       }
-      len=(int)size();
-      MPI_Bcast(&len,(int) 1,MPI_INT,0,MPI_COMM_COMPUTE);
-      MPI_Bcast(&serialised[0],len*bytestreamsize,MPI_BYTE,0,MPI_COMM_COMPUTE);
     }
+      size_t len=(int)size();
+        xout <<"master after serialising global list"<<std::endl;
+      MPI_Bcast(&len,(int) 1,MPI_INT,0,MPI_COMM_COMPUTE);
+    MPI_Barrier(MPI_COMM_COMPUTE);
+        xout <<"master after broadcasting len"<<std::endl;
+      MPI_Bcast(&serialised[0],len*bytestreamsize,MPI_BYTE,0,MPI_COMM_COMPUTE);
+    MPI_Barrier(MPI_COMM_COMPUTE);
+        xout <<"master after broadcasting global list"<<std::endl;
   }
+    MPI_Barrier(MPI_COMM_COMPUTE);
+    xout << "Reached end of forked code rank="<<parallel_rank<<std::endl;
+    MPI_Barrier(MPI_COMM_COMPUTE);
+#ifdef GCI_MPI
+  for (size_t i=0; i<parallel_size; i++){
+  MPI_Barrier(MPI_COMM_COMPUTE);
+  if (i!=parallel_rank)continue;
+  xout << "Barrier crossed parallel_size="<<parallel_size<<", parallel_rank="<<parallel_rank<<std::endl;
+  xout << "end of addByOperators size()="<<size()<<std::endl;
+  xout << "merged addressMap rank="<<parallel_rank<<", size="<<addressMap.size()<<std::endl;
+  for (std::map<size_t,size_t> ::const_iterator a=addressMap.begin(); a!=addressMap.end(); a++)
+    xout <<parallel_rank<<": "<<(*a).first<<","<<(*a).second<<std::endl;
+  }
+#endif
 #endif
   profiler.stop("StringSet::addByOperators:distribute");
   profiler.stop("StringSet::addByOperators[]");
@@ -231,17 +270,21 @@ void StringSet::complete(int sym)
 
 void StringSet::insert(String& s)
 {
+  xout << "StringSet::insert "<<s.str()<<std::endl;
   s.key=0;
   for (int k=0; k<(int)s.orbitals_.size(); k++)
     s.key+= PartialWeightArray[k][s.orbitals_[k]-1];
   if (addressMap.count(s.key)) {
+    xout << "StringSet::insert found existing"<<std::endl;
     if (addressMap[s.key] >= size()) throw "something wrong in StringSet reset";
     at(addressMap[s.key]) = s;
   } else {
+    xout << "StringSet::insert found new"<<std::endl;
     addressMap[s.key]=size();
-    //        xout <<"StringSet::push_back " <<s <<" size()=" <<size()<<std::endl;
+            xout <<"StringSet::push_back " <<s <<" size()=" <<size()<<std::endl;
     std::vector<String>::push_back(s);
   }
+  xout << "StringSet::insert finished "<<std::endl;
 }
 
 std::string StringSet::str(int verbosity) const
