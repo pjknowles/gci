@@ -64,8 +64,9 @@ public:
      * \param annihilations
      * \param creations
      * \param sym specify symmetry of String objects; -1 denotes all symmetries
+     * \param parallel whether to run in parallel
      */
-  void addByOperators(const StringSet &referenceSpace, int annihilations, int creations, int sym=-1);
+  void addByOperators(const StringSet &referenceSpace, int annihilations, int creations, int sym=-1, bool parallel=false);
   /*!
      * \brief Append to a StringSet from a collection of other ones by applying annihilations and creations
      * \param referenceSpaces

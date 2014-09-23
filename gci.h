@@ -11,6 +11,18 @@
 #else
 #include "gciMolpro.h"
 #endif
+#if defined(GCI_PARALLEL) || defined(MPI2) || defined(GA_MPI)
+#define GCI_MPI
+#ifdef MPI2
+#include <ppidd_c.h>
+#define MPI_COMM_COMPUTE MPI_GA_WORK_COMM // not yet tested
+#else
+#define MPI_COMM_COMPUTE MPI_COMM_WORLD
+#endif
+#endif
+#if defined(GCI_MPI)
+#include <mpi.h>
+#endif
 
 #ifdef GCI_PARALLEL
 extern "C" {
@@ -90,9 +102,7 @@ extern "C" void cmpi_allgatherv(FORTRAN_INT *nprocs,double *recvbuf,FORTRAN_INT 
 #else
 #define FORTRAN_INT int
 #endif
-#if defined(GCI_PARALLEL)
-#include <mpi.h>
-#endif
+
 inline void gather_chunks(double *buffer, const size_t length, const size_t chunk) {
       {
         std::vector<FORTRAN_INT> recvcounts(parallel_size), displs(parallel_size);
@@ -106,8 +116,8 @@ inline void gather_chunks(double *buffer, const size_t length, const size_t chun
 //        xout << "nsa="<<nsa<<std::endl;
 //        xout << "displ:"; for (size_t i=0; i<(size_t)parallel_size; i++) xout <<" "<<displs[i]; xout <<std::endl;
 //        xout << "recvcounts:"; for (size_t i=0; i<(size_t)parallel_size; i++) xout <<" "<<recvcounts[i]; xout <<std::endl;
-#if defined(GCI_PARALLEL)
-        MPI_Allgatherv(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,buffer,&recvcounts[0],&displs[0],MPI_DOUBLE,MPI_COMM_WORLD);
+#if defined(GCI_MPI)
+        MPI_Allgatherv(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,buffer,&recvcounts[0],&displs[0],MPI_DOUBLE,MPI_COMM_COMPUTE);
 #elif defined(MOLPRO)
         cmpi_allgatherv(&parallel_size,buffer,&recvcounts[0],&displs[0]) ;
 #else

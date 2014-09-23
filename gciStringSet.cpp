@@ -37,9 +37,19 @@ StringSet::StringSet(const std::vector<StringSet>& referenceSpaces, int annihila
 void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym)
 {
   profiler.start("StringSet::addByOperators[]");
+#ifdef GCI_MPI
+  MPI_Barrier(MPI_COMM_COMPUTE);
+  xout << "Barrier crossed parallel_size="<<parallel_size<<", parallel_rank="<<parallel_rank<<std::endl;
+#endif
 //  xout <<"referenceSpaces.size()="<<referenceSpaces.size()<<std::endl;
+  size_t ntask=0;
+  for (std::vector<StringSet>::const_iterator s=referenceSpaces.begin(); s!=referenceSpaces.end(); s++)
+    ntask+=(*s).size();
+  xout << "parallel_rank="<<parallel_rank<<", ntask="<<ntask<<std::endl;
+  DivideTasks(ntask);
   for (std::vector<StringSet>::const_iterator referenceSpace=referenceSpaces.begin(); referenceSpace != referenceSpaces.end(); referenceSpace++)
-    addByOperators(*referenceSpace, annihilations, creations, sym);
+    addByOperators(*referenceSpace, annihilations, creations, sym, true);
+  EndTasks();
   profiler.start("StringSet::addByOperators:distribute");
   std::vector<char> serialised;
   for (StringSet::const_iterator s=begin(); s!=end(); s++) {
@@ -49,21 +59,57 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
   }
 //  xout << "serialised "<<serialised.size()<<" bytes from "<<size()<<" String objects="<<std::endl;
 //  xout << "addressMap.size()"<< addressMap.size()<<std::endl;
-#if defined(GCI_PARALLEL) || defined(MOLPRO)
+#ifdef GCI_MPI
   // aggregate on master process
   if (parallel_rank>0) {
-    PPIDD_Send(void *buf,int64_t *count,int64_t *dtype,int64_t *dest,int64_t *sync);
-  for (int iproc=1; iproc < parallel_size;i++) {
-  extern void PPIDD_Recv(void *buf,int64_t *count,int64_t *dtype,int64_t *source,int64_t *lenreal,int64_t *sourcereal,int64_t *sync);
+    int len=(int)size();
+    MPI_Send(&len,(int) 1,MPI_INT,0,0,MPI_COMM_COMPUTE);
+    int bytestreamsize=(int)serialised.size()/size();
+    MPI_Send(&bytestreamsize,(int) 1,MPI_INT,0,1,MPI_COMM_COMPUTE);
+    MPI_Send(&serialised[0],len*bytestreamsize,MPI_BYTE,0,2,MPI_COMM_COMPUTE);
+    MPI_Bcast(&len,(int) 1,MPI_INT,0,MPI_COMM_COMPUTE);
+    serialised.resize(len*bytestreamsize);
+    MPI_Bcast(&serialised[0],len*bytestreamsize,MPI_BYTE,0,MPI_COMM_COMPUTE);
+    for (size_t k=0; k<len; k++) {
+        std::vector<char> s(bytestreamsize); memcpy(&s[0],&serialised[k*bytestreamsize],bytestreamsize);
+        String ss(s);
+        insert(ss);
+    }
+  } else {
+    for (int iproc=1; iproc < parallel_size;iproc++) {
+      int len;
+      MPI_Status status;
+      MPI_Recv(&len,(int) 1,MPI_INT,iproc,0,MPI_COMM_COMPUTE,&status);
+      int bytestreamsize;
+      MPI_Recv(&bytestreamsize,(int) 1,MPI_INT,iproc,1,MPI_COMM_COMPUTE,&status);
+      serialised.resize((size_t)len*bytestreamsize);
+      MPI_Recv(&serialised[0],(int) len*bytestreamsize,MPI_BYTE,iproc,2,MPI_COMM_COMPUTE,&status);
+      for (size_t k=0; k<len; k++) {
+        std::vector<char> s(bytestreamsize); memcpy(&s[0],&serialised[k*bytestreamsize],bytestreamsize);
+        String ss(s);
+        insert(ss);
+      }
+      serialised.clear();
+      for (StringSet::const_iterator s=begin(); s!=end(); s++) {
+        std::vector<char> serialised1=s->serialise();
+        for (std::vector<char>::const_iterator c=serialised1.begin(); c!=serialised1.end();c++)
+          serialised.push_back(*c);
+      }
+      len=(int)size();
+      MPI_Bcast(&len,(int) 1,MPI_INT,0,MPI_COMM_COMPUTE);
+      MPI_Bcast(&serialised[0],len*bytestreamsize,MPI_BYTE,0,MPI_COMM_COMPUTE);
+    }
   }
-  // broadcast
 #endif
   profiler.stop("StringSet::addByOperators:distribute");
   profiler.stop("StringSet::addByOperators[]");
 }
 
-void StringSet::addByOperators(const StringSet &referenceSpace, int annihilations, int creations, int sym)
+void StringSet::addByOperators(const StringSet &referenceSpace, int annihilations, int creations, int sym, bool parallel)
 {
+  profiler.start("addByOperators");
+  size_t count=0;
+  size_t countall=0;
   bool first=size()==0;
   symmetry = sym;
   //    xout << "in StringSet creator, referenceSpace="<<referenceSpace.str(5)<<std::endl;
@@ -72,6 +118,11 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
     return; // null space because not enough electrons or holes left
   int symexc = (referenceSpace.symmetry>=0 && sym >=0) ? referenceSpace.symmetry ^ sym : -1 ; // use symmetry if we can
   for (StringSet::const_iterator s = referenceSpace.begin(); s != referenceSpace.end(); s++) {
+    countall++;
+    if (! NextTask()) continue;
+    if (parallel && ! NextTask()) continue;
+//    if (parallel && countall%parallel_size != parallel_rank) continue;
+    count++;
     String from = *s;
     //        xout << "from="<<from.str(5)<<std::endl;
     if (annihilations + creations ==1) {
@@ -109,6 +160,8 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
       }
     }
   }
+  xout << "addByOperators parallel="<<parallel<<", parallel_rank="<<parallel_rank<<", count="<<count<<", countall="<<countall<<std::endl;
+  profiler.stop("addByOperators",count);
 }
 
 void StringSet::setupPartialWeightArray()
