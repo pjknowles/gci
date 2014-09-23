@@ -175,6 +175,11 @@ struct Profiler::times Profiler::getTimes()
   return result;
 }
 
+/*!
+ * \brief Profiler::times::operator += add another object to this one
+ * \param w2 object to add
+ * \return a copy of the object
+ */
 struct Profiler::times& Profiler::times::operator+=( const struct Profiler::times &w2)
 {
   cpu += w2.cpu;
