@@ -36,22 +36,29 @@ StringSet::StringSet(const std::vector<StringSet>& referenceSpaces, int annihila
 
 void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym)
 {
-  size_t initial=size();
   profiler.start("StringSet::addByOperators[]");
+//  xout <<"referenceSpaces.size()="<<referenceSpaces.size()<<std::endl;
   for (std::vector<StringSet>::const_iterator referenceSpace=referenceSpaces.begin(); referenceSpace != referenceSpaces.end(); referenceSpace++)
     addByOperators(*referenceSpace, annihilations, creations, sym);
   profiler.start("StringSet::addByOperators:distribute");
   std::vector<char> serialised;
-  for (StringSet::const_iterator s=this->begin(); s!=end(); s++) {
+  for (StringSet::const_iterator s=begin(); s!=end(); s++) {
     std::vector<char> serialised1=s->serialise();
     for (std::vector<char>::const_iterator c=serialised1.begin(); c!=serialised1.end();c++)
       serialised.push_back(*c);
   }
-  xout << "serialised "<<serialised.size()<<" bytes from "<<size()-initial<<" String objects, initial="<<initial<<std::endl;
+//  xout << "serialised "<<serialised.size()<<" bytes from "<<size()<<" String objects="<<std::endl;
+//  xout << "addressMap.size()"<< addressMap.size()<<std::endl;
+#if defined(GCI_PARALLEL) || defined(MOLPRO)
+  // aggregate on master process
+  if (parallel_rank>0) {
+    PPIDD_Send(void *buf,int64_t *count,int64_t *dtype,int64_t *dest,int64_t *sync);
+  for (int iproc=1; iproc < parallel_size;i++) {
+  extern void PPIDD_Recv(void *buf,int64_t *count,int64_t *dtype,int64_t *source,int64_t *lenreal,int64_t *sourcereal,int64_t *sync);
+  }
+  // broadcast
+#endif
   profiler.stop("StringSet::addByOperators:distribute");
-  profiler.start("StringSet::addByOperators:compress");
-  initial = size();
-  profiler.stop("StringSet::addByOperators:compress");
   profiler.stop("StringSet::addByOperators[]");
 }
 
