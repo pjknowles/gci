@@ -84,9 +84,9 @@ std::string Profiler::str(const int verbosity, const int precision)
 {
   if (verbosity<0) return "";
   stopall();
-  resultMap results=this->results; // local copy that we can sum globally
-  while(results.erase(""));
-  for (resultMap::iterator s=results.begin(); s!=results.end(); ++s) {
+  resultMap localResults=this->results; // local copy that we can sum globally
+  while(localResults.erase(""));
+  for (resultMap::iterator s=localResults.begin(); s!=localResults.end(); ++s) {
 #ifdef GCI_PARALLEL
     int64_t type=1, len=1;
     char* opm=strdup("max");
@@ -117,13 +117,13 @@ std::string Profiler::str(const int verbosity, const int precision)
   typedef std::pair<std::string,Profiler::times> data_t;
 #if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #else
-  std::priority_queue<data_t, std::deque<data_t>, compareTimes<data_t>  > q(results.begin(),results.end());
+  std::priority_queue<data_t, std::deque<data_t>, compareTimes<data_t>  > q(localResults.begin(),localResults.end());
 #endif
   std::stringstream ss;
   size_t maxWidth=0;
   long maxOperations=0;
   Profiler::times totalTimes;totalTimes.operations=0;
-  for (resultMap::const_iterator s=results.begin(); s!=results.end(); ++s) {
+  for (resultMap::const_iterator s=localResults.begin(); s!=localResults.end(); ++s) {
       if ((*s).second.operations > maxOperations) maxOperations=(*s).second.operations;
       if ((*s).first.size() > maxWidth) maxWidth=(*s).first.size();
       totalTimes += (*s).second;
