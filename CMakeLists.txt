@@ -6,6 +6,10 @@ project(gci)
 file (GLOB SRCS *.cpp *.h)
 add_executable(gci.exe ${SRCS})
 
+subdirs(FCIdump)
+include_directories(FCIdump)
+target_link_libraries(gci.exe -LFCIdump -lFCIdump)
+
 get_filename_component(COMPILER_NAME  ${CMAKE_CXX_COMPILER} NAME)
 if (${COMPILER_NAME} STREQUAL "mpic++")
 find_package(ppidd)
@@ -24,4 +28,4 @@ else (MKL_FOUND)
 target_link_libraries(gci.exe -llapack)
 endif (MKL_FOUND)
 
-configure_file(FCIDUMP FCIDUMP COPYONLY)
+configure_file(gci.fcidump gci.fcidump COPYONLY)
