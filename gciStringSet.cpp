@@ -69,10 +69,11 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
   // aggregate on master process
 //    String refString = this->at(0);
   String refString = referenceSpaces[0][0];
+  int bytestreamsize;
   if (parallel_rank>0) {
     int len=(int)size();
     MPI_Send(&len,(int) 1,MPI_INT,0,0,MPI_COMM_COMPUTE);
-    int bytestreamsize=(int)serialised.size()/size();
+    bytestreamsize=(int)serialised.size()/size();
     MPI_Send(&bytestreamsize,(int) 1,MPI_INT,0,1,MPI_COMM_COMPUTE);
     MPI_Send(&serialised[0],len*bytestreamsize,MPI_BYTE,0,2,MPI_COMM_COMPUTE);
     MPI_Bcast(&len,(int) 1,MPI_INT,0,MPI_COMM_COMPUTE);
@@ -96,7 +97,6 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
       int len;
       MPI_Status status;
       MPI_Recv(&len,(int) 1,MPI_INT,iproc,0,MPI_COMM_COMPUTE,&status);
-      int bytestreamsize;
       MPI_Recv(&bytestreamsize,(int) 1,MPI_INT,iproc,1,MPI_COMM_COMPUTE,&status);
       xout <<"received len="<<len<<", bytestreamsize="<<bytestreamsize<<std::endl;
       serialised.resize((size_t)len*bytestreamsize);
@@ -116,7 +116,7 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
           serialised.push_back(*c);
       }
     }
-      size_t len=(int)size();
+      int len=(int)size();
         xout <<"master after serialising global list"<<std::endl;
       MPI_Bcast(&len,(int) 1,MPI_INT,0,MPI_COMM_COMPUTE);
     MPI_Barrier(MPI_COMM_COMPUTE);
