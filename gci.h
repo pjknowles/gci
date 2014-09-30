@@ -2,6 +2,7 @@
 #define GCI_H
 #include <vector>
 #include "Profiler.h"
+#include <stdint.h>
 
 #ifndef MOLPRO
 #define xout std::cout
