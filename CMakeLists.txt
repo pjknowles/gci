@@ -2,13 +2,14 @@ cmake_minimum_required(VERSION 2.6)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 project(gci)
+subdirs(FCIdump)
 
 file (GLOB SRCS *.cpp *.h)
 add_executable(gci.exe ${SRCS})
 
-subdirs(FCIdump)
 include_directories(FCIdump)
-target_link_libraries(gci.exe -LFCIdump -lFCIdump)
+link_directories(${CMAKE_BINARY_DIR}/FCIdump)
+target_link_libraries(gci.exe FCIdump)
 
 get_filename_component(COMPILER_NAME  ${CMAKE_CXX_COMPILER} NAME)
 if (${COMPILER_NAME} STREQUAL "mpic++")
