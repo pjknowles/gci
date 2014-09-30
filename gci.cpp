@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
   PPIDD_Rank(&parallel_rank);
 //  if (parallel_rank > 0) freopen("/dev/null", "w", stdout);
 #endif
-  Run run("FCIDUMP");
+  Run run("gci.fcidump");
   if (argc<2) {
     run.addParameter("METHOD","DAVIDSON");
     run.addParameter("PROFILER","0");
