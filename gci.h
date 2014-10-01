@@ -131,7 +131,7 @@ void inline gsum(double* buffer, const size_t len)
 {
 #ifdef MOLPRO
   mpp.GlobalSum(buffer,(FORTRAN_INT)len);
-#elif GCI_PARALLEL
+#elif defined(GCI_PARALLEL)
   {int64_t type=1; int64_t size=(int64_t)len; char op='+';PPIDD_Gsum(&type,buffer,&size,&op);}
 #else
         buffer[len]=buffer[len]; // to silence compiler warnings
