@@ -34,10 +34,10 @@ String::String(const std::vector<char> bytestream, const State *State)
   memcpy(&spin,&bytestream[offset],sizeof(spin));offset+=sizeof(spin);
   orbitals_.resize((size_t)nelec);
   memcpy(&orbitals_[0],&bytestream[offset],sizeof(orbital_type)*orbitals_.size());offset+=sizeof(orbital_type)*orbitals_.size();
-  xout <<"constructed String from bytestream nelec="<<nelec<<", spin="<<spin<<", orbitals=";
-  for (size_t i=0; i<nelec; i++) xout <<orbitals()[i]<<","; xout <<std::endl;
-  xout <<str(1)<<std::endl;
-  xout <<"back from str"<<std::endl;
+//  xout <<"constructed String from bytestream nelec="<<nelec<<", spin="<<spin<<", orbitals=";
+//  for (size_t i=0; i<nelec; i++) xout <<orbitals()[i]<<","; xout <<std::endl;
+//  xout <<str(1)<<std::endl;
+//  xout <<"back from str"<<std::endl;
 
 }
 
@@ -48,8 +48,8 @@ std::vector<char> String::serialise() const
   memcpy(&bytestream[offset],&nelec,sizeof(nelec));offset+=sizeof(nelec);
   memcpy(&bytestream[offset],&spin,sizeof(spin));offset+=sizeof(spin);
   memcpy(&bytestream[offset],&orbitals_[0],sizeof(orbital_type)*orbitals_.size());offset+=sizeof(orbital_type)*orbitals_.size();
-  xout <<"serialised String to bytestream nelec="<<nelec<<", spin="<<spin<<", orbitals=";
-  for (size_t i=0; i<nelec; i++) xout <<orbitals()[i]<<","; xout <<std::endl;
+//  xout <<"serialised String to bytestream nelec="<<nelec<<", spin="<<spin<<", orbitals=";
+//  for (size_t i=0; i<nelec; i++) xout <<orbitals()[i]<<","; xout <<std::endl;
 //  xout <<str()<<std::endl;
   return bytestream;
 }
@@ -129,7 +129,7 @@ std::vector<unsigned int> String::orbitals() const {
 
 std::string String::str(int verbosity) const {
   std::string result;
-      xout <<"String::str orbitals_[0]" <<orbitals_[0]<<std::endl;
+//      xout <<"String::str orbitals_[0]" <<orbitals_[0]<<std::endl;
   if (verbosity >=0) {
     for (std::vector<orbital_type>::const_iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
       if (i!=orbitals_.begin()) result.append(",");
@@ -140,7 +140,7 @@ std::string String::str(int verbosity) const {
       ss >> rr;
       result.append(rr);
     }
-      xout << "end of loop occ orbital"<<std::endl;
+//      xout << "end of loop occ orbital"<<std::endl;
     std::stringstream ss;
     ss << " [";
     if (key != keyUnassigned) ss << key << ".";
@@ -155,7 +155,7 @@ std::string String::str(int verbosity) const {
 unsigned int String::computed_symmetry(bool nocheck) const
 {
   unsigned int s=0;
-  xout << "in computed_symmetry"<<std::endl;
+//  xout << "in computed_symmetry"<<std::endl;
 //  xout <<orbitalSpace->str()<<std::endl;
   for (int i=0; i<(int)orbitals_.size(); i++) {
     s ^= orbitalSpace->orbital_symmetries[orbitals_[i]-1];
@@ -165,7 +165,7 @@ unsigned int String::computed_symmetry(bool nocheck) const
     xout << "s="<<s<<", symmetry="<<symmetry<<std::endl;
     throw "String symmetry messed up";
   }
-  xout << "computed_symmetry"<<s<<std::endl;
+//  xout << "computed_symmetry"<<s<<std::endl;
   return s;
 }
 
