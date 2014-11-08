@@ -150,6 +150,9 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
 //  xout << "MAXIT="<<maxIterations<<std::endl;
   if (energyThreshold < (double)0)
     energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
+  int compressionK = parameter("COMPRESSIONK",std::vector<int>(1,2)).at(0);
+  int compressionL = parameter("COMPRESSIONL",std::vector<int>(1,1)).at(0);
+  bool compressive = compressionK != 2; // whether to use compressive sampling penalty
   Wavefunction w(prototype);
   Wavefunction g(w);
   g.diagonalHamiltonian(hamiltonian);
@@ -207,18 +210,25 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
         track=i; tracktest=std::fabs(eigenvectors[n+1+i*(n+1)]);
       }
     }
+
+    double energy = eigenvalues[track];
+    std::vector<double> alpha;
+    for (int i=0; i <= n; i++)
+        alpha.push_back(eigenvectors[i+track*(n+1)]);
+
     profiler.start("Davidson residual");
     w.set((double)0);
       bool olddistw=w.distributed; w.distributed=true;
       bool olddistg=g.distributed; g.distributed=true;
     for (int i=0; i <= n; i++) {
       g.get(wfile,i);
-//      w += eigenvalues[track]*eigenvectors[i+track*(n+1)] * g;
-      w.axpy(eigenvalues[track]*eigenvectors[i+track*(n+1)] , g);
+//      w += energy*alpha[i] * g;
+      w.axpy(energy*alpha[i] , g);
       g.get(gfile,i);
-//      w -= eigenvectors[i+track*(n+1)] * g;
-      w.axpy( -eigenvectors[i+track*(n+1)] , g);
+//      w -= alpha[i] * g;
+      w.axpy( -alpha[i] , g);
     }
+    // at this point we have the residual
     g.get(h0file);
     w /= g;
     for (int i=0; i <= n; i++) {
@@ -246,7 +256,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
       bool olddist=w.distributed; w.distributed=true;
       for (int i=0; i <= n; i++) {
         g.get(wfile,i);
-        w.axpy(eigenvectors[i+track*(n+1)] , g);
+        w.axpy(alpha[i] , g);
       }
       w.gather();
       w.distributed=olddist;
