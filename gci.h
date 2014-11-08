@@ -12,6 +12,7 @@
 #else
 #include "gciMolpro.h"
 #endif
+
 #if defined(GCI_PARALLEL) || defined(MPI2) || defined(GA_MPI)
 #define GCI_MPI
 #ifdef MPI2
@@ -93,34 +94,22 @@ inline void EndTasks() {
 }
 
 // simple task distribution assembly
-#ifdef MOLPRO
-#ifdef _I8_
-#define FORTRAN_INT int64_t
-#else
-#define FORTRAN_INT int32_t
-#endif
-extern "C" void cmpi_allgatherv(FORTRAN_INT *nprocs,double *recvbuf,FORTRAN_INT *recvcounts,FORTRAN_INT *displs) ;
-#else
-#define FORTRAN_INT int
-#endif
 
 inline void gather_chunks(double *buffer, const size_t length, const size_t chunk) {
       {
-        std::vector<FORTRAN_INT> recvcounts(parallel_size), displs(parallel_size);
+        std::vector<int> recvcounts(parallel_size), displs(parallel_size);
         displs[0]=0;
         for (size_t i=1; i<(size_t)parallel_size; i++) {
-          displs[i]=(FORTRAN_INT)i*chunk;
-          if (displs[i] > (FORTRAN_INT)(length)) displs[i]=(FORTRAN_INT)length;
+          displs[i]=(int)i*chunk;
+          if (displs[i] > (int)(length)) displs[i]=(int)length;
           recvcounts[i-1]=displs[i]-displs[i-1];
         }
-        recvcounts[parallel_size-1]=(FORTRAN_INT)(length)-displs[parallel_size-1];
+        recvcounts[parallel_size-1]=(int)(length)-displs[parallel_size-1];
 //        xout << "nsa="<<nsa<<std::endl;
 //        xout << "displ:"; for (size_t i=0; i<(size_t)parallel_size; i++) xout <<" "<<displs[i]; xout <<std::endl;
 //        xout << "recvcounts:"; for (size_t i=0; i<(size_t)parallel_size; i++) xout <<" "<<recvcounts[i]; xout <<std::endl;
 #if defined(GCI_MPI)
         MPI_Allgatherv(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,buffer,&recvcounts[0],&displs[0],MPI_DOUBLE,MPI_COMM_COMPUTE);
-#elif defined(MOLPRO)
-        cmpi_allgatherv(&parallel_size,buffer,&recvcounts[0],&displs[0]) ;
 #else
         buffer[0]=buffer[0]; // to silence compiler warnings
 #endif
@@ -129,10 +118,14 @@ inline void gather_chunks(double *buffer, const size_t length, const size_t chun
 
 void inline gsum(double* buffer, const size_t len)
 {
-#ifdef MOLPRO
-  mpp.GlobalSum(buffer,(FORTRAN_INT)len);
-#elif defined(GCI_PARALLEL)
-  {int64_t type=1; int64_t size=(int64_t)len; char op='+';PPIDD_Gsum(&type,buffer,&size,&op);}
+#if defined(GCI_MPI)
+  std::vector<double>result;
+  if (parallel_rank == 0)
+    result.resize(len);
+  MPI_Reduce(buffer,&result[0],(int)len,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_COMPUTE);
+  if (parallel_rank == 0)
+    memcpy(buffer,&result[0],sizeof(double)*len);
+  MPI_Bcast(buffer,(int)len,MPI_DOUBLE,0,MPI_COMM_COMPUTE);
 #else
         buffer[len]=buffer[len]; // to silence compiler warnings
 #endif
