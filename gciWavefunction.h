@@ -159,11 +159,11 @@ public:
 
   double norm(const int k=2); ///< k-norm
   /*!
-   * \brief addAbsPower Evaluate v_I += factor * abs(c_I)^k c_I
+   * \brief addAbsPower Evaluate this[i] += factor * abs(c[I])^k * c[I]
    * \param c
    * \param k
    * \param factor
-   * \return
+   * \return a pointer to this
    */
   Wavefunction& addAbsPower(const Wavefunction &c, const int k=0, const double factor=1);
 
