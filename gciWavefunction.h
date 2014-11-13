@@ -157,6 +157,8 @@ public:
   Wavefunction& operator-(); ///< unary minus
   Wavefunction& operator/=(const Wavefunction &other); ///< element-by-element division by another wavefunction
 
+  double norm(const int k); ///< k-norm
+
   friend class TransitionDensity;
   friend double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
 private:

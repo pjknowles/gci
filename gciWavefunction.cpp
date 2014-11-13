@@ -650,3 +650,9 @@ std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> edges
   }
   return cumulative;
 }
+
+double Wavefunction::norm(const int k)
+{
+  double result = (double)0;
+  return result;
+}
