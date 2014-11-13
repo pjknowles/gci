@@ -158,6 +158,14 @@ public:
   Wavefunction& operator/=(const Wavefunction &other); ///< element-by-element division by another wavefunction
 
   double norm(const int k=2); ///< k-norm
+  /*!
+   * \brief addAbsPower Evaluate v_I += factor * abs(c_I)^k c_I
+   * \param c
+   * \param k
+   * \param factor
+   * \return
+   */
+  Wavefunction& addAbsPower(const Wavefunction &c, const int k=0, const double factor=1);
 
   friend class TransitionDensity;
   friend double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions

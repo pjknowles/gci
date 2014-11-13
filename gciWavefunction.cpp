@@ -654,5 +654,26 @@ std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> edges
 double Wavefunction::norm(const int k)
 {
   double result = (double)0;
+  size_t chunk = (buffer.size()-1)/parallel_size+1;
+  if (distributed)
+    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
+      result += pow(abs(buffer[i]),k);
+  else
+    for (size_t i=0; i<buffer.size(); i++)
+      result += pow(abs(buffer[i]),k);
   return result;
+}
+
+Wavefunction& Wavefunction::addAbsPower(const Wavefunction& c, const int k, const double factor)
+{
+
+  if (! compatible(c)) throw "attempt to add incompatible Wavefunction objects";
+  size_t chunk = (buffer.size()-1)/parallel_size+1;
+  if (distributed)
+    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
+      buffer[i] += factor*pow(abs(c.buffer[i]),k)*c.buffer[i];
+  else
+    for (size_t i=0; i<buffer.size(); i++)
+      buffer[i] += factor*pow(abs(c.buffer[i]),k)*c.buffer[i];
+  return *this;
 }
