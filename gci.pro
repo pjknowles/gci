@@ -84,11 +84,11 @@ dox.depends = $$PWD/html
 QMAKE_EXTRA_TARGETS += dox html all
 
 all.target = all
-all.depends += FCIDUMP
+all.depends += gci.fcidump
 all.depends += html
 
-input.target = FCIDUMP
-input.commands = ln -s $$PWD/FCIDUMP FCIDUMP
+input.target = gci.fcidump
+input.commands = ln -s $$PWD/gci.fcidump gci.fcidump
 input.depends =
 QMAKE_EXTRA_TARGETS += input
 
