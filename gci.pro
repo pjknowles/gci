@@ -32,6 +32,7 @@ INCLUDEPATH+=$$PPIDD/src $$PPIDD/include
 DEFINES += GCI_PARALLEL
 LIBS += -L$$PPIDD -lppidd -L$$GA/lib -lga -larmci -lblas
 }
+INCLUDEPATH+=FCIdump
 
 SOURCES += gci.cpp \
     gciHamiltonian.cpp \
@@ -41,7 +42,7 @@ SOURCES += gci.cpp \
     gciDeterminant.cpp \
     gciString.cpp \
     gciWavefunction.cpp \
-    FCIdump.cpp \
+    FCIdump/FCIdump.cpp \
     gciStringSet.cpp \
     gciExcitationSet.cpp \
     gciOperator.cpp \
@@ -62,7 +63,7 @@ HEADERS += gci.h \
     gciDeterminant.h \
     gciString.h \
     gciWavefunction.h \
-    FCIdump.h \
+    FCIdump/FCIdump.h \
     gciStringSet.h \
     gciExcitationSet.h \
     gciOperator.h \
