@@ -270,8 +270,21 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     double mu = d2Edmu2 == (double)0 ? (double) 0 : sqrt(2*energyThreshold/d2Edmu2);
     xout << "d2Edmu2="<< d2Edmu2<<", mu="<<mu<<std::endl;
 
+    // penalised equation solver here
+
     profiler.start("Davidson residual");
-    w.set((double)0);
+    if (compressive) {
+      g.set((double)0);
+      for (int i=0; i <= n; i++) {
+        w.get(wfile,i);
+        g.axpy(alpha[i] , w);
+      } // g contains the current wavefunction
+      w.set((double)0);
+      w.addAbsPower(g,compressionK-2,mu*factor/(2*lknorm));
+      w.axpy(-mu*factor/(2*l2norm),g);
+    }
+    else // !compressive
+      w.set((double)0);
     for (int i=0; i <= n; i++) {
       g.get(wfile,i);
 //      w += energy*alpha[i] * g;
