@@ -215,11 +215,35 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     std::vector<double> alpha;
     for (int i=0; i <= n; i++)
         alpha.push_back(eigenvectors[i+track*(n+1)]);
+    std::vector<double> hamiltonianInverse;
+    for (int i=0; i<=n; i++)
+      for (int j=0; j<=n; j++) {
+        double hinvij=0;
+        for (int k=0; k<=n; k++)
+          hinvij += eigenvectors[i+k*(n+1)]*eigenvectors[j+k*(n+1)]/(eigenvalues[k]-energy);
+        hamiltonianInverse.push_back(hinvij);
+      }
+
+    bool olddistw=w.distributed; w.distributed=true;
+    bool olddistg=g.distributed; g.distributed=true;
+    // determine penalty magnitude, first solving for d.alpha/d.mu
+    w.set((double)0);
+    for (int i=0; i <= n; i++) {
+      g.get(wfile,i);
+      w.axpy(alpha[i] , g);
+    }
+    double l2norm = w.norm(2);
+    double lknorm = w.norm(compressionK);
+    xout << "l2norm="<<l2norm<<" "<<w*w<<std::endl;
+    xout << "lknorm="<<lknorm<<std::endl;
+    double factor = pow(lknorm,compressionL) * pow(l2norm,-compressionK*compressionL*(double)0.5);
+    if (compressionL*(2-compressionK) < 0) factor=-factor;
+    double Pkl=(factor -
+                ((compressionL*(2-compressionK) < 0) ? 1 : -1)) / (compressionK*compressionL);
+    xout << "Pkl from eigenvectors = " <<Pkl<<std::endl;
 
     profiler.start("Davidson residual");
     w.set((double)0);
-      bool olddistw=w.distributed; w.distributed=true;
-      bool olddistg=g.distributed; g.distributed=true;
     for (int i=0; i <= n; i++) {
       g.get(wfile,i);
 //      w += energy*alpha[i] * g;

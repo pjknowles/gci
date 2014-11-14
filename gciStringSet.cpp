@@ -146,7 +146,6 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
 
 void StringSet::addByOperators(const StringSet &referenceSpace, int annihilations, int creations, int sym, bool parallel)
 {
-  profiler.start("addByOperators");
   size_t count=0;
   size_t countall=0;
   bool first=size()==0;
@@ -155,6 +154,7 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
   if ((int) referenceSpace.proto.nelec + creations - annihilations < 0
       || (int) referenceSpace.proto.nelec + creations - annihilations > (int) referenceSpace.proto.orbitals_.size())
     return; // null space because not enough electrons or holes left
+  profiler.start("addByOperators");
   int symexc = (referenceSpace.symmetry>=0 && sym >=0) ? referenceSpace.symmetry ^ sym : -1 ; // use symmetry if we can
   for (StringSet::const_iterator s = referenceSpace.begin(); s != referenceSpace.end(); s++) {
     countall++;

@@ -26,6 +26,7 @@ void Profiler::reset(const std::string name)
 
 void Profiler::start(const std::string name)
 {
+//  std::cout << "Profiler::start "<<name<<std::endl;
   struct times now=getTimes();
   if (! stack.empty())
     stack.top()+=now;
