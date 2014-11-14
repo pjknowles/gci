@@ -153,6 +153,8 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
   int compressionK = parameter("COMPRESSIONK",std::vector<int>(1,2)).at(0);
   int compressionL = parameter("COMPRESSIONL",std::vector<int>(1,1)).at(0);
   bool compressive = compressionK != 2; // whether to use compressive sampling penalty
+  if (compressive)
+    xout << "Compressive sampling algorithm, k="<<compressionK<<", l="<<compressionL<<", epsilon="<<energyThreshold<<std::endl;
   Wavefunction w(prototype);
   Wavefunction g(w);
   g.diagonalHamiltonian(hamiltonian);
@@ -215,12 +217,14 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     std::vector<double> alpha;
     for (int i=0; i <= n; i++)
         alpha.push_back(eigenvectors[i+track*(n+1)]);
-    std::vector<double> hamiltonianInverse;
+    std::vector<double> hamiltonianInverse;  // to contain (H-E)^{-1} in subspace
     for (int i=0; i<=n; i++)
       for (int j=0; j<=n; j++) {
         double hinvij=0;
         for (int k=0; k<=n; k++)
-          hinvij += eigenvectors[i+k*(n+1)]*eigenvectors[j+k*(n+1)]/(eigenvalues[k]-energy);
+          if (k != track)
+            hinvij += eigenvectors[i+k*(n+1)]*eigenvectors[j+k*(n+1)]/(eigenvalues[k]-energy);
+//        xout << "hinv["<<i<<","<<j<<"]="<<hinvij<<std::endl;
         hamiltonianInverse.push_back(hinvij);
       }
 
@@ -229,18 +233,42 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     // determine penalty magnitude, first solving for d.alpha/d.mu
     w.set((double)0);
     for (int i=0; i <= n; i++) {
+//      xout << "alpha "<<alpha[i]<<std::endl;
       g.get(wfile,i);
       w.axpy(alpha[i] , g);
-    }
+    } // w contains current wavefunction
     double l2norm = w.norm(2);
     double lknorm = w.norm(compressionK);
-    xout << "l2norm="<<l2norm<<" "<<w*w<<std::endl;
+//    xout << "l2norm="<<l2norm<<" "<<w*w<<std::endl;
     xout << "lknorm="<<lknorm<<std::endl;
     double factor = pow(lknorm,compressionL) * pow(l2norm,-compressionK*compressionL*(double)0.5);
     if (compressionL*(2-compressionK) < 0) factor=-factor;
+    xout << "factor="<<factor<<std::endl;
     double Pkl=(factor -
-                ((compressionL*(2-compressionK) < 0) ? 1 : -1)) / (compressionK*compressionL);
+                ((compressionL*(2-compressionK) > 0) ? 1 : -1)) / (compressionK*compressionL);
     xout << "Pkl from eigenvectors = " <<Pkl<<std::endl;
+    // construct dP/dmu in g
+    g.set((double)0);
+    g.addAbsPower(w,compressionK-2,factor/lknorm);
+    g.axpy(-factor/l2norm,w);
+    // project dP/dmu onto subspace
+    std::vector<double> dPdmu(n+1);
+    std::vector<double> dalphadmu(n+1);
+    for (size_t i=0; i<=n; i++){
+      w.get(wfile,i);
+      dPdmu[i]=g*w;
+//      xout << "dPdmu[] "<<dPdmu[i]<<std::endl;
+    }
+    double d2Edmu2=(double)0;
+    for (size_t i=0; i<=n; i++){
+        dalphadmu[i]=(double)0;
+      for (size_t j=0; j<=n; j++){
+        dalphadmu[i]-= hamiltonianInverse[j+i*(n+1)]*dPdmu[j];
+      }
+      d2Edmu2-=dalphadmu[i]*dPdmu[i];
+    }
+    double mu = d2Edmu2 == (double)0 ? (double) 0 : sqrt(2*energyThreshold/d2Edmu2);
+    xout << "d2Edmu2="<< d2Edmu2<<", mu="<<mu<<std::endl;
 
     profiler.start("Davidson residual");
     w.set((double)0);

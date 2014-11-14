@@ -657,10 +657,10 @@ double Wavefunction::norm(const int k)
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   if (distributed)
     for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
-      result += pow(abs(buffer[i]),k);
+      result += pow(fabs(buffer[i]),k);
   else
     for (size_t i=0; i<buffer.size(); i++)
-      result += pow(abs(buffer[i]),k);
+      result += pow(fabs(buffer[i]),k);
   return result;
 }
 
@@ -668,12 +668,26 @@ Wavefunction& Wavefunction::addAbsPower(const Wavefunction& c, const int k, cons
 {
 
   if (! compatible(c)) throw "attempt to add incompatible Wavefunction objects";
+//  xout <<"addAbsPower initial=";
+//  for (size_t i=0; i<buffer.size(); i++)
+//    xout <<" "<<buffer[i];
+//  xout <<std::endl;
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   if (distributed)
     for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
-      buffer[i] += factor*pow(abs(c.buffer[i]),k)*c.buffer[i];
+      if (k == -1)
+        buffer[i] += c.buffer[i] <0 ? -factor : factor;
+      else
+        buffer[i] += factor*pow(fabs(c.buffer[i]),k)*c.buffer[i];
   else
     for (size_t i=0; i<buffer.size(); i++)
-      buffer[i] += factor*pow(abs(c.buffer[i]),k)*c.buffer[i];
+      if (k == -1)
+        buffer[i] += c.buffer[i] <0 ? -factor : factor;
+      else
+        buffer[i] += factor*pow(fabs(c.buffer[i]),k)*c.buffer[i];
+//  xout <<"addAbsPower final=";
+//  for (size_t i=0; i<buffer.size(); i++)
+//    xout <<" "<<buffer[i];
+//  xout <<std::endl;
   return *this;
 }
