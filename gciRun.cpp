@@ -254,15 +254,15 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     // project dP/dmu onto subspace
     std::vector<double> dPdmu(n+1);
     std::vector<double> dalphadmu(n+1);
-    for (size_t i=0; i<=n; i++){
+    for (size_t i=0; i<=(size_t)n; i++){
       w.get(wfile,i);
       dPdmu[i]=g*w;
 //      xout << "dPdmu[] "<<dPdmu[i]<<std::endl;
     }
     double d2Edmu2=(double)0;
-    for (size_t i=0; i<=n; i++){
+    for (size_t i=0; i<=(size_t)n; i++){
         dalphadmu[i]=(double)0;
-      for (size_t j=0; j<=n; j++){
+      for (size_t j=0; j<=(size_t)n; j++){
         dalphadmu[i]-= hamiltonianInverse[j+i*(n+1)]*dPdmu[j];
       }
       d2Edmu2-=dalphadmu[i]*dPdmu[i];

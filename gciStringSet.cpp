@@ -83,7 +83,7 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
     clear();
     MPI_Bcast(&serialised[0],len*bytestreamsize,MPI_BYTE,0,MPI_COMM_COMPUTE);
     MPI_Barrier(MPI_COMM_COMPUTE);
-    for (size_t k=0; k<len; k++) {
+    for (size_t k=0; k<(size_t)len; k++) {
         std::vector<char> s(bytestreamsize); memcpy(&s[0],&serialised[k*bytestreamsize],bytestreamsize);
         xout << "slave construct string"<<std::endl;
         String ss(s,&refString);
@@ -101,7 +101,7 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
       xout <<"received len="<<len<<", bytestreamsize="<<bytestreamsize<<std::endl;
       serialised.resize((size_t)len*bytestreamsize);
       MPI_Recv(&serialised[0],(int) len*bytestreamsize,MPI_BYTE,iproc,2,MPI_COMM_COMPUTE,&status);
-      for (size_t k=0; k<len; k++) {
+      for (size_t k=0; k<(size_t)len; k++) {
         std::vector<char> s(bytestreamsize); memcpy(&s[0],&serialised[k*bytestreamsize],bytestreamsize);
         xout << "master construct string"<<std::endl;
         String ss(s,&refString);
