@@ -341,9 +341,9 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
       }
 #ifdef MOLPRO
       // put the histogram to Molpro variable space
-#endif
       SetVariables ("HISTOGRAM_X",&edges[0],(unsigned int)nhist, 0, "");
       SetVariables ("HISTOGRAM_Y",&fcumulative[0],(unsigned int)nhist, 0, "");
+#endif
       profiler.stop("Histogram"); }
     break;
   }
