@@ -34,7 +34,7 @@ int64_t gci::parallel_size=1;
 int64_t gci::parallel_rank=0;
 #ifdef MOLPRO
 #include "cic/ItfMpp.h"
-itf::FMppInt gci::mpp=itf::FMppInt();
+itf::FMppInt gci::mpp=itf::FMppInt(itf::FMppInt::MPP_NeedSharedFs|itf::FMppInt::MPP_GlobalDeclaration);
 #else
 int64_t gci::__nextval_counter=0;
 int64_t gci::__my_first_task=0;
