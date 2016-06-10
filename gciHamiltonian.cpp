@@ -620,7 +620,8 @@ Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
 //    delete result.bracket_integrals_ab;
 //    result.bracket_integrals_ab = NULL;
   }
-  if (spinUnrestricted) delete result.integrals_ab; result.integrals_ab = NULL;
+  if (spinUnrestricted) delete result.integrals_ab;
+  result.integrals_ab = NULL;
 //  xout << "result on return: "<<result.str(2)<<std::endl;
   return result;
 }
