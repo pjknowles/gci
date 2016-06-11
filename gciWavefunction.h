@@ -156,8 +156,9 @@ public:
   Wavefunction& operator-=(const double); ///< subtract a scalar from every element
   Wavefunction& operator-(); ///< unary minus
   Wavefunction& operator/=(const Wavefunction &other); ///< element-by-element division by another wavefunction
+  double update(const Wavefunction &diagonalH, double & eTruncated, double dEmax=(double)0); ///< form a perturbation-theory update, and return the predicted energy change. eTruncated is the energy change lost by truncation
 
-  double norm(const int k=2); ///< k-norm
+  double norm(const double k=2); ///< k-norm
   /*!
    * \brief addAbsPower Evaluate this[i] += factor * abs(c[I])^k * c[I]
    * \param c
@@ -165,7 +166,7 @@ public:
    * \param factor
    * \return a pointer to this
    */
-  Wavefunction& addAbsPower(const Wavefunction &c, const int k=0, const double factor=1);
+  Wavefunction& addAbsPower(const Wavefunction &c, const double k=0, const double factor=1);
 
   friend class TransitionDensity;
   friend double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions

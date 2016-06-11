@@ -20,9 +20,12 @@ extern "C" {
 #endif
   void gcirun(double* energies, int nenergies, char* fcidump) {
     Run run(fcidump);
+    try {
     std::vector<double>e = run.run();
     for (int i=0; i < (nenergies > (int)e.size() ? (int)e.size() : nenergies); i++)
         energies[i]=e[i];
+    }
+    catch(char const* c) { xout << "caught error: " <<c<<std::endl;}
     return;
 }
 #ifdef __cplusplus

@@ -142,15 +142,17 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
 {
   profiler.start("Davidson");
   profiler.start("Davidson preamble");
+  xout << "on entry to Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
   if (nState < 0)
     nState = parameter("NSTATE",std::vector<int>(1,1)).at(0);
   xout << "nState "<<nState<<std::endl;
   if (maxIterations < 0)
     maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
 //  xout << "MAXIT="<<maxIterations<<std::endl;
-  if (energyThreshold < (double)0)
+  if (energyThreshold <= (double)0)
     energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
-  int compressionK = parameter("COMPRESSIONK",std::vector<int>(1,2)).at(0);
+  xout << "after parameter in Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
+  double compressionK = parameter("COMPRESSIONK",std::vector<double>(1,2)).at(0);
   int compressionL = parameter("COMPRESSIONL",std::vector<int>(1,1)).at(0);
   bool compressive = compressionK != 2; // whether to use compressive sampling penalty
   if (compressive)
@@ -237,8 +239,8 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
       g.get(wfile,i);
       w.axpy(alpha[i] , g);
     } // w contains current wavefunction
-    double l2norm = w.norm(2);
-    double lknorm = w.norm(compressionK);
+    double l2norm = w.norm((double)2);
+    double lknorm = w.norm((double)compressionK);
 //    xout << "l2norm="<<l2norm<<" "<<w*w<<std::endl;
     xout << "lknorm="<<lknorm<<std::endl;
     double factor = pow(lknorm,compressionL) * pow(l2norm,-compressionK*compressionL*(double)0.5);
@@ -249,7 +251,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     xout << "Pkl from eigenvectors = " <<Pkl<<std::endl;
     // construct dP/dmu in g
     g.set((double)0);
-    g.addAbsPower(w,compressionK-2,factor/lknorm);
+    g.addAbsPower(w,(double)compressionK-2,factor/lknorm);
     g.axpy(-factor/l2norm,w);
     // project dP/dmu onto subspace
     std::vector<double> dPdmu(n+1);
@@ -257,17 +259,19 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     for (size_t i=0; i<=(size_t)n; i++){
       w.get(wfile,i);
       dPdmu[i]=g*w;
-//      xout << "dPdmu[] "<<dPdmu[i]<<std::endl;
+      //      xout << "dPdmu[] "<<dPdmu[i]<<std::endl;
     }
     double d2Edmu2=(double)0;
     for (size_t i=0; i<=(size_t)n; i++){
         dalphadmu[i]=(double)0;
       for (size_t j=0; j<=(size_t)n; j++){
         dalphadmu[i]-= hamiltonianInverse[j+i*(n+1)]*dPdmu[j];
+	//if (!i) xout << "dPdmu["<<j<<"]="<<dPdmu[j]<<std::endl;
       }
       d2Edmu2-=dalphadmu[i]*dPdmu[i];
+      //xout << "dalphadmum["<<i<<"]="<<dalphadmu[i]<<std::endl;
     }
-    double mu = d2Edmu2 == (double)0 ? (double) 0 : sqrt(2*energyThreshold/d2Edmu2);
+    double mu = d2Edmu2 == (double)0 ? (double) 0 : sqrt(2*energyThreshold/d2Edmu2) * parameter("PENALTY_SCALE",std::vector<double>(1,1)).at(0);
     xout << "d2Edmu2="<< d2Edmu2<<", mu="<<mu<<std::endl;
 
     // penalised equation solver here
@@ -280,7 +284,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
         g.axpy(alpha[i] , w);
       } // g contains the current wavefunction
       w.set((double)0);
-      w.addAbsPower(g,compressionK-2,mu*factor/(2*lknorm));
+      w.addAbsPower(g,(double)compressionK-2,mu*factor/(2*lknorm));
       w.axpy(-mu*factor/(2*l2norm),g);
     }
     else // !compressive
@@ -295,7 +299,22 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     }
     // at this point we have the residual
     g.get(h0file);
-    w /= g;
+    //g -= (energy-e0); // Davidson
+    // form update
+    w.put(h0file,1); // save a copy
+    double etruncate = parameter("ETRUNCATE",std::vector<double>(1,1)).at(energyThreshold);
+    //xout << "energyThreshold="<<energyThreshold<<std::endl;
+    if (etruncate < 0) etruncate = energyThreshold;
+    xout << "etruncate="<<etruncate<<std::endl;
+    double discarded;
+    double ePredicted = w.update(g,discarded,etruncate);
+    xout << "discarded="<<discarded<<std::endl;
+    for (double etrunc=etruncate*.3; etrunc > 1e-50 && discarded > etruncate; etrunc*=0.3) {
+      w.get(h0file,1); // retrieve original
+      ePredicted = w.update(g,discarded,etrunc);
+      xout << "etrunc="<<etrunc<<", discarded="<<discarded<<std::endl;
+    }
+    // orthogonalize to previous expansion vectors
     for (int i=0; i <= n; i++) {
       g.get(wfile,i);
       double factor = -(g*w)/(g*g);
@@ -309,10 +328,19 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     w.distributed=olddistw;
     g.distributed=olddistg;
 
-    double econv=0;for (int i=0; i<(int)e.size(); i++) econv+=std::fabs(e[i]-elast[i]);
-    xout <<"econv="<<econv<<std::endl;
+    double econv=0;
+    for (int i=0; i<(int)e.size(); i++) {
+      //if (i != track)
+	econv+=std::fabs(e[i]-elast[i]);
+      //else {
+	//econv += std::fabs(ePredicted);
+	//e[i] += ePredicted;
+	xout <<"econv="<<econv << " (ePredicted="<<ePredicted<<", e-elast="<<e[i]-elast[i]<<std::endl;
+	//}
+    }
 
     elast=e;
+    // normalise
     w *= ((double)1/std::sqrt(norm2));
     if (norm2 >(double) 1e-30 && econv > energyThreshold) continue;
 

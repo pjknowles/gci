@@ -255,6 +255,29 @@ Wavefunction& Wavefunction::operator/=(const Wavefunction &other)
 }
 
 
+double Wavefunction::update(const Wavefunction &diagonalH, double & eTruncated, double dEmax)
+{
+  if (! compatible(diagonalH)) throw "attempt to combine incompatible Wavefunction objects";
+  size_t chunk = (buffer.size()-1)/parallel_size+1;
+  size_t imin = distributed ? parallel_rank*chunk : 0;
+  size_t imax = distributed ? (parallel_rank+1*chunk) : buffer.size();
+  eTruncated=0;
+  double ePredicted=0;
+  if (imax > buffer.size()) imax = buffer.size();
+  for (size_t i=imin; i<imax; i++) {
+    double dE=buffer[i]*buffer[i]/diagonalH.buffer[i];
+    if (diagonalH.buffer[i] > 1e-5) ePredicted -= dE;
+    if (dE > dEmax)
+      buffer[i] /= diagonalH.buffer[i];
+    else {
+      buffer[i]=(double)0;
+      eTruncated += dE;
+    }
+  }
+  return ePredicted;
+}
+
+
 Wavefunction gci::operator+(const Wavefunction &w1, const Wavefunction &w2)
 {
   Wavefunction result = w1;
@@ -651,20 +674,23 @@ std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> edges
   return cumulative;
 }
 
-double Wavefunction::norm(const int k)
+double Wavefunction::norm(const double k)
 {
   double result = (double)0;
-  size_t chunk = (buffer.size()-1)/parallel_size+1;
-  if (distributed)
-    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
-      result += pow(fabs(buffer[i]),k);
-  else
-    for (size_t i=0; i<buffer.size(); i++)
+  size_t imin = 0;
+  size_t imax = buffer.size();
+  if (distributed) {
+    size_t chunk = (buffer.size()-1)/parallel_size+1;
+    imin=parallel_rank*chunk;
+    imax=(parallel_rank+1)*chunk;
+  }
+  for (size_t i=imin; i<imax; i++)
+    if (buffer[i])
       result += pow(fabs(buffer[i]),k);
   return result;
 }
 
-Wavefunction& Wavefunction::addAbsPower(const Wavefunction& c, const int k, const double factor)
+Wavefunction& Wavefunction::addAbsPower(const Wavefunction& c, const double k, const double factor)
 {
 
   if (! compatible(c)) throw "attempt to add incompatible Wavefunction objects";
@@ -672,19 +698,19 @@ Wavefunction& Wavefunction::addAbsPower(const Wavefunction& c, const int k, cons
 //  for (size_t i=0; i<buffer.size(); i++)
 //    xout <<" "<<buffer[i];
 //  xout <<std::endl;
-  size_t chunk = (buffer.size()-1)/parallel_size+1;
-  if (distributed)
-    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
-      if (k == -1)
-        buffer[i] += c.buffer[i] <0 ? -factor : factor;
-      else
-        buffer[i] += factor*pow(fabs(c.buffer[i]),k)*c.buffer[i];
-  else
-    for (size_t i=0; i<buffer.size(); i++)
-      if (k == -1)
-        buffer[i] += c.buffer[i] <0 ? -factor : factor;
-      else
-        buffer[i] += factor*pow(fabs(c.buffer[i]),k)*c.buffer[i];
+  size_t imin = 0;
+  size_t imax = buffer.size();
+  if (distributed) {
+    size_t chunk = (buffer.size()-1)/parallel_size+1;
+    imin=parallel_rank*chunk;
+    imax=(parallel_rank+1)*chunk;
+  }
+  if (imax > buffer.size()) imax = buffer.size();
+  for (size_t i=imin; i<imax; i++)
+    if (k == -1)
+      buffer[i] += c.buffer[i] <0 ? -factor : factor;
+    else if (c.buffer[i])
+      buffer[i] += factor*pow(fabs(c.buffer[i]),k)*c.buffer[i];
 //  xout <<"addAbsPower final=";
 //  for (size_t i=0; i<buffer.size(); i++)
 //    xout <<" "<<buffer[i];
