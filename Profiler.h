@@ -1,9 +1,12 @@
 #ifndef PROFILER_H
 #define PROFILER_H
+#ifdef __cplusplus
 #include <iostream>
 #include <string>
 #include <map>
-#include <stack>
+#include <vector>
+#include <climits>
+#include <stdint.h>
 
 /*!
  * \brief The Profiler class: framework for timing code sections
@@ -15,8 +18,10 @@ public:
   /*!
    * \brief Profiler construct a named instance
    * \param name the title of this object
+   * \param level
+   * A large value means that data will always be accumulated; zero means that calls to start and stop do nothing.
    */
-  Profiler(std::string name);
+  Profiler(std::string name, const int level=INT_MAX);
   /*!
    * \brief reset the object
    * \param name the title of this object
@@ -40,35 +45,78 @@ public:
    */
   void declare(const std::string name="");
   /*!
+   * \brief active set the maximum stack depth at which data collection is done.
+   * \param level
+   * A large value means that data will always be accumulated; zero means that calls to start and stop do nothing.
+   * \param stopPrint if non-negative, \ref stop() prints the statistics since the corresponding \ref start()
+   */
+  void active(const int level=INT_MAX, const int stopPrint=-1);
+  /*!
    * \brief Generate a printable representation of the object
    * \param verbosity how much to print
+   * \param cumulative whether to print cumulative (ie including all children) resources
    * \param precision how many decimal places for seconds
    * \return
    */
-  std::string str(const int verbosity=0, const int precision=3);
+  std::string str(const int verbosity=0, const bool cumulative=false, const int precision=3) const;
 
-private:
-  struct times {double cpu; double wall; int calls; long operations; std::string name;
-                struct Profiler::times& operator+=(const struct Profiler::times &other);
-                struct Profiler::times& operator-=(const struct Profiler::times &other);
-                struct Profiler::times operator+(const struct Profiler::times &w2);
-                struct Profiler::times operator-(const struct Profiler::times &w2);
+ public:
+  struct resources {double cpu; double wall; int calls; long operations; std::string name; int64_t stack;
+                    struct resources * cumulative;
+                std::string str(const int width=0, const int verbosity=0, const bool cumulative=false, const int precision=3, const std::string defaultName="") const;
+                struct Profiler::resources& operator+=(const struct Profiler::resources &other);
+                struct Profiler::resources& operator-=(const struct Profiler::resources &other);
+                struct Profiler::resources operator+(const struct Profiler::resources &w2);
+                struct Profiler::resources operator-(const struct Profiler::resources &w2);
                };
-  typedef std::map<std::string,struct Profiler::times> resultMap;
-  template<class T> struct compareTimes : std::binary_function<T,T,bool>
+  struct resources getResources();
+
+  typedef std::map<std::string,struct Profiler::resources> resultMap;
+
+  /*!
+   * \brief totals
+   * \return std::map of \ref resources
+   */
+  resultMap totals() const;
+
+ private:
+  void totalise(const struct resources now, const long operations, const int calls=1);
+  template<class T> struct compareResources : std::binary_function<T,T,bool>
   { inline bool operator () (const T& _left, const T& _right)
     {
+//      std::cout<<"Compare "<<_left.first<<" and "<<_right.first<<std::endl;
+//      std::cout<<"compare "<<_left.second.wall<<" and "<<_right.second.wall<<std::endl;
+//      std::cout<<"compare "<<_left.second.cumulative->wall<<" and "<<_right.second.cumulative->wall<<std::endl;
+      if (_left.second.cumulative==NULL)
       return _left.second.wall < _right.second.wall;
+      return _left.second.cumulative->wall < _right.second.cumulative->wall;
     }
   };
 
   std::string Name;
-  std::stack<struct times> stack;
-  struct times startTimes;
-  struct times getTimes();
+  std::vector<struct resources> resourcesStack, startResources;
+  std::vector<int64_t>memoryStack0;
+  std::vector<int64_t>memoryStack1;
   resultMap results;
+  int activeLevel; int level;
+  int stopPrint_;
   void stopall();
+  void accumulate(resultMap &results);
 };
   std::ostream& operator<<(std::ostream& os, Profiler & obj);
+
+extern "C" {
+#endif
+void* profilerNew(char* name);
+void profilerReset(void* profiler, char* name);
+void profilerActive(void* profiler, int level, int stopPrint);
+void profilerStart(void* profiler, char* name);
+void profilerDeclare(void* profiler, char* name);
+void profilerStop(void* profiler, char* name, long operations=0);
+char* profilerStr(void* profiler, int verbosity, int cumulative, int precision);
+void profilerStrSubroutine(void*profiler, char* result, int maxResult, int verbosity, int cumulative, int precision);
+#ifdef __cplusplus
+}
+#endif
 
 #endif // PROFILER_H
