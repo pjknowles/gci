@@ -379,7 +379,9 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
       std::vector<double> fcumulative(cumulative.size());
       for (size_t i=0;i<nhist;i++) {
         fcumulative[i]=((double)cumulative[i])/(double)w.size();
+        if (fcumulative[i]<1e-8) continue;
         xout << "Histogram: "<<fcumulative[i]*100<<"% > "<<edges[i]<<std::endl;
+        if (fcumulative[i]>1-1e-8) break;
       }
 #ifdef MOLPRO
       // put the histogram to Molpro variable space
