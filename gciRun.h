@@ -65,6 +65,17 @@ private:
   std::vector<double> Davidson(const Hamiltonian &hamiltonian,
                                const State& prototype,
                                double energyThreshold=(double)-1, int nState=-1, int maxIterations=-1);
+  /*!
+   * \brief Perform a variational calculation using the preconditioned stepest descent algorithm
+   * \param hamiltonian The Hamiltonian
+   * \param prototype A State object specifying number of electrons, symmetry, spin
+   * If it is a Wavefunction , then that will be used also for specifying the configuration space, otherwise the default FCI
+   * \param energyThreshold Convergence threshold for energy
+   * \return the energy of the state.
+   */
+  double SteepestDescent(const Hamiltonian &hamiltonian,
+                               const State& prototype,
+                               double energyThreshold=(double)-1, int maxIterations=-1);
 
   void HamiltonianMatrixPrint (Hamiltonian& hamiltonian, const State &prototype, int verbosity=0);
 

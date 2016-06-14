@@ -33,13 +33,14 @@ std::vector<double> Run::run()
 #endif
   std::vector<double>energies;
   std::string method = parameter("METHOD",std::vector<std::string>(1,"")).at(0);
+  xout << "method="<<method<<std::endl;
   if (method == "MBPT" || method == "MOLLER") method="RSPT";
   xout << "METHOD="<<method<<std::endl;
 
   profiler.start("load Hamiltonian");
   Hamiltonian hh(globalFCIdump);
   std::vector<double> rot(hh.total(0,0));
-  double theta=-std::acos(-1.0)/10;
+  double theta=-0*std::acos(-1.0)/10;
   for (std::vector<double>::iterator i=rot.begin(); i!=rot.end(); i++) *i=(double)0;
   for (unsigned int i=0; i<hh.basisSize; i++) rot[hh.pairIndex(i+1,i+1,0)]=(double)1;
   rot[hh.pairIndex(1,1,0)]=rot[hh.pairIndex(2,2,0)]=std::cos(theta); rot[hh.pairIndex(2,1,0)]=std::sin(theta); rot[hh.pairIndex(1,2,0)]=-std::sin(theta);
@@ -106,6 +107,8 @@ std::vector<double> Run::run()
 #ifdef MOLPRO
 //    itf::SetVariables( "ENERGY_METHOD", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
+  } else if (method=="SD") {
+    energies.resize(1);energies[0] = SteepestDescent(hh, prototype);
   } else if (method=="HAMILTONIAN")
      HamiltonianMatrixPrint(hh,prototype);
   else if (method=="PROFILETEST") {
@@ -143,6 +146,86 @@ using namespace itf;
 #endif
 
 #include <cmath>
+double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototype, double energyThreshold, int maxIterations)
+{
+  profiler.start("SteepestDescent");
+  profiler.start("SteepestDescent preamble");
+//  xout << "on entry to Run::SteepestDescent energyThreshold="<<energyThreshold<<std::endl;
+  if (maxIterations < 0)
+    maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
+  xout << "MAXIT="<<maxIterations<<std::endl;
+  if (energyThreshold <= (double)0)
+    energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
+  xout << "after parameter in Run::SteepestDescent energyThreshold="<<energyThreshold<<std::endl;
+  Wavefunction w(prototype);
+  Wavefunction g(w);
+  g.diagonalHamiltonian(hamiltonian);
+  size_t reference = g.minloc();
+  double e0=g.at(reference);
+//  g -= (e0-(double)1e-10);
+    xout << "Diagonal H: " << g.str(2) << std::endl;
+  gci::File h0file; h0file.name="H0"; g.put(h0file);
+  gci::File wfile; wfile.name="Wavefunction vectors";
+//  gci::File gfile; gfile.name="Action vectors";
+  w.set((double)0); w.set(reference, (double) 1);
+  double elast=e0+1;
+  double e;
+  profiler.stop("SteepestDescent preamble");
+  for (int n=0; n < maxIterations; n++) {
+//    xout <<" start of iteration "<<n<<std::endl;
+    w.put(wfile);
+//    xout << "w="<<w.str(2)<<std::endl;
+    g.set((double)0);
+    profiler.start("SteepestDescent Hc");
+    g.hamiltonianOnWavefunction(hamiltonian, w);
+//    xout << "g="<<g.str(2)<<std::endl;
+    profiler.stop("SteepestDescent Hc");
+//    g.put(gfile,n);
+    e=g*w;
+    g.axpy(-e,w);
+//    xout << "residual="<<g.str(2)<<std::endl;
+    xout << "Iteration "<<n<<", energy:";
+    xout << std::fixed; xout.precision(8) ;xout << e ;
+    xout <<"; "<<std::endl;
+
+    double energy = e;
+
+    bool olddistw=w.distributed; w.distributed=true;
+    bool olddistg=g.distributed; g.distributed=true;
+    // at this point we have the residual
+    w.get(h0file);
+//    xout <<"h0 "<<w.str(2)<<std::endl;
+    w -= (e-(double)1e-8);
+//    xout <<"h0-e "<<w.str(2)<<std::endl;
+    // form update
+//    xout << "energyThreshold="<<energyThreshold<<std::endl;
+    double etruncate=(double)0;
+    double discarded;
+    double ePredicted = g.update(w,discarded,etruncate);
+//    xout <<"update "<<g.str(2)<<std::endl;
+//    xout << "discarded="<<discarded<<std::endl;
+    w.get(wfile); // retrieve original
+    w+=g;
+//    xout <<"new wavefunction before normalisation "<<w.str(2)<<std::endl;
+    double norm2=w*w;
+    gsum(&norm2,1);
+    w.distributed=olddistw;
+    g.distributed=olddistg;
+
+    double econv=std::fabs(e-elast);
+
+    elast=e;
+    // normalise
+    w *= ((double)1/std::sqrt(norm2));
+//    xout << "norm2="<<norm2<<", econv="<<econv<<" "<<energyThreshold<<std::endl;
+    if (econv > energyThreshold) continue;
+
+    break;
+  }
+  profiler.stop("SteepestDescent");
+    return e;
+}
+
 std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
                                   const State &prototype,
                                   double energyThreshold, int nState, int maxIterations)

@@ -1,5 +1,6 @@
  &FCI NORB=  2,NELEC=  2,MS2= 0,
   ORBSYM=1,1,
+  METHOD=SD,
   ISYM=1,
  /
   0.1026864624835199E+01   1   1   1   1

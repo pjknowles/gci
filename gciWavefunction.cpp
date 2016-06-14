@@ -268,7 +268,7 @@ double Wavefunction::update(const Wavefunction &diagonalH, double & eTruncated, 
     double dE=buffer[i]*buffer[i]/diagonalH.buffer[i];
     if (diagonalH.buffer[i] > 1e-5) ePredicted -= dE;
     if (dE > dEmax)
-      buffer[i] /= diagonalH.buffer[i];
+      buffer[i] = -buffer[i] / diagonalH.buffer[i];
     else {
       buffer[i]=(double)0;
       eTruncated += dE;
