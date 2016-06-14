@@ -8,6 +8,7 @@
 #include <sstream>
 #include <iomanip>
 #include <iterator>
+#include <cmath>
 
 Hamiltonian::Hamiltonian(std::string filename) : OrbitalSpace(filename)
 {
@@ -733,9 +734,9 @@ void Hamiltonian::rotate1(std::vector<double>* integrals,std::vector<double> con
   if (integrals == NULL) return;
 //  xout << "rotate1: input"; for (std::vector<double>::const_iterator i=integrals->begin(); i!=integrals->end(); i++) xout <<" "<<*i; xout <<std::endl;
 //  xout << "rotate1: rotator"; for (std::vector<double>::const_iterator i=rot->begin(); i!=rot->end(); i++) xout <<" "<<*i; xout <<std::endl;
-  for (unsigned int i=1; i<=basisSize; i++)
-    for (unsigned int k=1; k<=basisSize; k++)
-      xout << k<<" "<<i<<" "<<pairIndex(k,i)<<" "<< (*rot)[pairIndex(k,i)]<<std::endl;
+  // for (unsigned int i=1; i<=basisSize; i++)
+    // for (unsigned int k=1; k<=basisSize; k++)
+      // xout << k<<" "<<i<<" "<<pairIndex(k,i)<<" "<< (*rot)[pairIndex(k,i)]<<std::endl;
   std::vector<double> t1(total(0,0));
   for (unsigned int i=1; i<=basisSize; i++) {
     for (unsigned int k=1; k<=basisSize; k++) {
@@ -764,6 +765,16 @@ void Hamiltonian::rotate1(std::vector<double>* integrals,std::vector<double> con
 void Hamiltonian::rotate2(std::vector<double>* integrals,std::vector<double> const * rot1, std::vector<double> const * rot2)
 {
   if (integrals == NULL) return;
+  std::vector<double> t1(std::pow(this->at(0),4));
+  std::vector<double> t2(std::pow(this->at(0),4));
+  // for (unsigned int isym=0; isym<8; isym++) {
+  //   xout <<"rotation for symmetry "<<isym<<std::endl;
+  //   for (unsigned int i=0; i<this->at(isym); i++) {
+  //     for (unsigned int j=0; j<this->at(isym); j++)
+  // 	xout <<" "<<(*rot1)[offset(0,isym)+i+j*this->at(isym)];
+  //     xout <<std::endl;
+  //   }
+  // }
   for (unsigned int ijsym=0; ijsym<8; ijsym++) {
     for (unsigned int isym=0; isym<8; isym++) {
       unsigned int ni=this->at(isym);
@@ -773,9 +784,8 @@ void Hamiltonian::rotate2(std::vector<double>* integrals,std::vector<double> con
       for (unsigned int ksym=0; ksym<8; ksym++) {
         unsigned int nk=this->at(ksym);
         unsigned int lsym=ijsym^ksym;
-        if (lsym > ksym) continue;
         unsigned int nl=this->at(lsym);
-        std::vector<double> t1(ni*nj*nk*nl);
+        if (lsym <= ksym && ni*nj*nk*nl > 0) {
         for (unsigned int l=0; l<nl; l++) {
           for (unsigned int k=0; k<nk; k++) {
             for (unsigned int j=0; j<nj; j++) {
@@ -789,14 +799,13 @@ void Hamiltonian::rotate2(std::vector<double>* integrals,std::vector<double> con
             }
           }
         }
-        std::vector<double> t2(ni*nj*nk*nl);
         for (unsigned int l=0; l<nl; l++) {
           for (unsigned int k=0; k<nk; k++) {
             for (unsigned int j=0; j<nj; j++) {
               for (unsigned int i=0; i<ni; i++) {
                 t2[i+j*ni+k*ni*nj+l*ni*nj*nk]=(double)0;
                 for (unsigned int j1=0; j1<nj; j1++) {
-                  t2[i+j*ni+k*ni*nj+l*ni*nj*nl] += (*rot1)[offset(0,jsym)+j1+j*nj]
+                  t2[i+j*ni+k*ni*nj+l*ni*nj*nk] += (*rot1)[offset(0,jsym)+j1+j*nj]
                    * t1[i+j1*ni+k*ni*nj+l*ni*nj*nk];
                 }
               }
@@ -809,7 +818,7 @@ void Hamiltonian::rotate2(std::vector<double>* integrals,std::vector<double> con
               for (unsigned int i=0; i<ni; i++) {
                 t1[i+j*ni+k*ni*nj+l*ni*nj*nk]=(double)0;
                 for (unsigned int k1=0; k1<nk; k1++) {
-                  t1[i+j*ni+k*ni*nj+l*ni*nj*nl] += (*rot2)[offset(ijsym,ksym)+k1+k*nk]
+                  t1[i+j*ni+k*ni*nj+l*ni*nj*nk] += (*rot2)[offset(0,ksym)+k1+k*nk]
                    * t2[i+j*ni+k1*ni*nj+l*ni*nj*nk];
                 }
               }
@@ -823,13 +832,14 @@ void Hamiltonian::rotate2(std::vector<double>* integrals,std::vector<double> con
                 (*integrals)[int2Index(i+offset(isym)+1,j+offset(jsym)+1,k+offset(ksym)+1,l+offset(lsym)+1)] = (double)0;
                 for (unsigned int l1=0; l1<nl; l1++) {
                 (*integrals)[int2Index(i+offset(isym)+1,j+offset(jsym)+1,k+offset(ksym)+1,l+offset(lsym)+1)] +=
-                  (*rot2)[offset(ijsym,lsym)+l1+l*nl]
+                  (*rot2)[offset(0,lsym)+l1+l*nl]
                    * t1[i+j*ni+k*ni*nj+l1*ni*nj*nk];
                 }
 //                xout << "new integral "<<i<<j<<k<<l<<" "<<int2Index(i+offset(isym)+1,j+offset(jsym)+1,k+offset(ksym)+1,l+offset(lsym)+1)<<(*integrals)[int2Index(i+offset(isym)+1,j+offset(jsym)+1,k+offset(ksym)+1,l+offset(lsym)+1)]<<std::endl;
               }
             }
           }
+        }
         }
       }
     }
@@ -851,7 +861,7 @@ void Hamiltonian::rotate(std::vector<double> const * rota, std::vector<double> c
 //  if (bracket_integrals_ab != NULL) xout << "bracket_integrals_ab "<<bracket_integrals_ab<<std::endl;
 //  if (bracket_integrals_bb != NULL) xout << "bracket_integrals_bb "<<bracket_integrals_bb<<std::endl;
 
-//  xout << "Unrotated hamiltonian" <<std::endl << str() << std::endl;
+ // xout << "Unrotated hamiltonian" <<std::endl << str() << std::endl;
 //  xout << "rotate: rota"; for (std::vector<double>::const_iterator i=rota->begin(); i!=rota->end(); i++) xout <<" "<<*i; xout <<std::endl;
 //  xout << "rotate: rotb"; for (std::vector<double>::const_iterator i=rotb->begin(); i!=rotb->end(); i++) xout <<" "<<*i; xout <<std::endl;
   rotate1(integrals_a,rota);
@@ -863,6 +873,6 @@ void Hamiltonian::rotate(std::vector<double> const * rota, std::vector<double> c
   if (integrals_aa != integrals_ab) rotate2(integrals_ab,rota,rotb);
 //  xout << "Rotated hamiltonian after ab" <<std::endl << str() << std::endl;
   if (integrals_aa != integrals_bb) rotate2(integrals_bb,rotb,rotb);
-//  xout << "Rotated hamiltonian" <<std::endl << str() << std::endl;
+ // xout << "Rotated hamiltonian" <<std::endl << str() << std::endl;
   return;
 }
