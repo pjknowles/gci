@@ -339,7 +339,7 @@ std::string Wavefunction::str(int verbosity) const
   std::ostringstream s;
   if (verbosity >= 1) {
     s<<std::endl<<"Wavefunction object at address " << this ;
-    s<<std::endl<<"alues at address " << &buffer <<" and of length " << buffer.size();
+    s<<std::endl<<"values at address " << &buffer <<" and of length " << buffer.size();
     size_t address=0;
     for (unsigned int syma=0; syma<8; syma++) {
       unsigned int symb = syma ^ symmetry ;

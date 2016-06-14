@@ -56,7 +56,7 @@ void Hamiltonian::_copy(const Hamiltonian &source, const bool forceSpinUnrestric
   bracket_integrals_a = bracket_integrals_b = NULL;
   if (loaded) {
        integrals_a = oneElectron ? new std::vector<double>(*source.integrals_a) : NULL;
-       bracket_integrals_a = (oneElectron && source.bracket_integrals_a != NULL) ? new std::vector<double>(*source.bracket_integrals_a) : NULL;
+       bracket_integrals_a = bracket_integrals_b = (oneElectron && source.bracket_integrals_a != NULL) ? new std::vector<double>(*source.bracket_integrals_a) : NULL;
      if (source.integrals_aa != NULL || spinUnrestricted) {
        integrals_aa = (twoElectron && source.integrals_aa != NULL) ? new std::vector<double>(*source.integrals_aa) : NULL;
        bracket_integrals_aa = (twoElectron && source.bracket_integrals_aa != NULL) ? new std::vector<double>(*source.bracket_integrals_aa) : NULL;
@@ -295,9 +295,12 @@ void Hamiltonian::constructBraKet(int neleca, int nelecb)
           }
         }
         del(bracket_integrals_a);
+//	xout << "considering 1-e bracket " << neleca<<nelecb<<std::endl;
         if (nelecb == 0 && integrals_a != NULL) bracket_integrals_a = new std::vector<double>(*integrals_a);
         del(bracket_integrals_b);
-        if (neleca != 0 && integrals_b != NULL) bracket_integrals_b = new std::vector<double>(*integrals_b);
+        if (neleca == 0 && integrals_b != NULL) bracket_integrals_b = new std::vector<double>(*integrals_b);
+//	xout << "bracket_integrals_a "<<bracket_integrals_a<<std::endl;
+//	xout << "bracket_integrals_b "<<bracket_integrals_b<<std::endl;
 //        if (neleca != 0 && integrals_b != NULL) {
 //          xout << "copied into bracket_integrals_b "<<std::endl;
 //          for (unsigned int i=0; i<bracket_integrals_b->size(); i++) xout << " " << (*bracket_integrals_b)[i]; xout <<std::endl;
@@ -723,4 +726,143 @@ Hamiltonian gci::operator*(const Hamiltonian &h1, const double factor)
 {
   Hamiltonian result = h1;
   return result *= factor;
+}
+
+void Hamiltonian::rotate1(std::vector<double>* integrals,std::vector<double> const * rot)
+{
+  if (integrals == NULL) return;
+//  xout << "rotate1: input"; for (std::vector<double>::const_iterator i=integrals->begin(); i!=integrals->end(); i++) xout <<" "<<*i; xout <<std::endl;
+//  xout << "rotate1: rotator"; for (std::vector<double>::const_iterator i=rot->begin(); i!=rot->end(); i++) xout <<" "<<*i; xout <<std::endl;
+  for (unsigned int i=1; i<=basisSize; i++)
+    for (unsigned int k=1; k<=basisSize; k++)
+      xout << k<<" "<<i<<" "<<pairIndex(k,i)<<" "<< (*rot)[pairIndex(k,i)]<<std::endl;
+  std::vector<double> t1(total(0,0));
+  for (unsigned int i=1; i<=basisSize; i++) {
+    for (unsigned int k=1; k<=basisSize; k++) {
+      if (orbital_symmetries[i-1]!=orbital_symmetries[k-1]) continue;
+      t1[pairIndex(k,i)]=(double)0;
+      for (unsigned int j=1; j<=basisSize; j++) {
+        if (orbital_symmetries[i-1]!=orbital_symmetries[j-1]) continue;
+        t1[pairIndex(k,i)]+=(*rot)[pairIndex(j,k)] * (*integrals)[int1Index(j,i)];
+      }
+    }
+  }
+//  xout << "rotate1: t1"; for (std::vector<double>::const_iterator i=t1.begin(); i!=t1.end(); i++) xout <<" "<<*i; xout <<std::endl;
+  for (unsigned int i=1; i<=basisSize; i++) {
+    for (unsigned int k=1; k<=i; k++) {
+      if (orbital_symmetries[i-1]!=orbital_symmetries[k-1]) continue;
+      (*integrals)[int1Index(k,i)]=(double)0;
+      for (unsigned int j=1; j<=basisSize; j++) {
+        if (orbital_symmetries[i-1]!=orbital_symmetries[j-1]) continue;
+        (*integrals)[int1Index(k,i)] +=  (*rot)[pairIndex(j,k)] * t1[pairIndex(i,j)];
+      }
+    }
+  }
+//  xout << "rotate1: output"; for (std::vector<double>::const_iterator i=integrals->begin(); i!=integrals->end(); i++) xout <<" "<<*i; xout <<std::endl;
+}
+
+void Hamiltonian::rotate2(std::vector<double>* integrals,std::vector<double> const * rot1, std::vector<double> const * rot2)
+{
+  if (integrals == NULL) return;
+  for (unsigned int ijsym=0; ijsym<8; ijsym++) {
+    for (unsigned int isym=0; isym<8; isym++) {
+      unsigned int ni=this->at(isym);
+      unsigned int jsym=ijsym^isym;
+      if (jsym > isym) continue;
+      unsigned int nj=this->at(jsym);
+      for (unsigned int ksym=0; ksym<8; ksym++) {
+        unsigned int nk=this->at(ksym);
+        unsigned int lsym=ijsym^ksym;
+        if (lsym > ksym) continue;
+        unsigned int nl=this->at(lsym);
+        std::vector<double> t1(ni*nj*nk*nl);
+        for (unsigned int l=0; l<nl; l++) {
+          for (unsigned int k=0; k<nk; k++) {
+            for (unsigned int j=0; j<nj; j++) {
+              for (unsigned int i=0; i<ni; i++) {
+                t1[i+j*ni+k*ni*nj+l*ni*nj*nk]=(double)0;
+                for (unsigned int i1=0; i1<ni; i1++) {
+                  t1[i+j*ni+k*ni*nj+l*ni*nj*nk] += (*rot1)[offset(0,isym)+i1+i*ni]
+                      * (*integrals)[int2Index(i1+offset(isym)+1,j+offset(jsym)+1,k+offset(ksym)+1,l+offset(lsym)+1)];
+                }
+              }
+            }
+          }
+        }
+        std::vector<double> t2(ni*nj*nk*nl);
+        for (unsigned int l=0; l<nl; l++) {
+          for (unsigned int k=0; k<nk; k++) {
+            for (unsigned int j=0; j<nj; j++) {
+              for (unsigned int i=0; i<ni; i++) {
+                t2[i+j*ni+k*ni*nj+l*ni*nj*nk]=(double)0;
+                for (unsigned int j1=0; j1<nj; j1++) {
+                  t2[i+j*ni+k*ni*nj+l*ni*nj*nl] += (*rot1)[offset(0,jsym)+j1+j*nj]
+                   * t1[i+j1*ni+k*ni*nj+l*ni*nj*nk];
+                }
+              }
+            }
+          }
+        }
+        for (unsigned int l=0; l<nl; l++) {
+          for (unsigned int k=0; k<nk; k++) {
+            for (unsigned int j=0; j<nj; j++) {
+              for (unsigned int i=0; i<ni; i++) {
+                t1[i+j*ni+k*ni*nj+l*ni*nj*nk]=(double)0;
+                for (unsigned int k1=0; k1<nk; k1++) {
+                  t1[i+j*ni+k*ni*nj+l*ni*nj*nl] += (*rot2)[offset(ijsym,ksym)+k1+k*nk]
+                   * t2[i+j*ni+k1*ni*nj+l*ni*nj*nk];
+                }
+              }
+            }
+          }
+        }
+        for (unsigned int l=0; l<nl; l++) {
+          for (unsigned int k=0; k<(ijsym ? nk : l+1); k++) {
+            for (unsigned int j=0; j<nj; j++) {
+              for (unsigned int i=0; i<(ijsym ? ni : j+1); i++) {
+                (*integrals)[int2Index(i+offset(isym)+1,j+offset(jsym)+1,k+offset(ksym)+1,l+offset(lsym)+1)] = (double)0;
+                for (unsigned int l1=0; l1<nl; l1++) {
+                (*integrals)[int2Index(i+offset(isym)+1,j+offset(jsym)+1,k+offset(ksym)+1,l+offset(lsym)+1)] +=
+                  (*rot2)[offset(ijsym,lsym)+l1+l*nl]
+                   * t1[i+j*ni+k*ni*nj+l1*ni*nj*nk];
+                }
+//                xout << "new integral "<<i<<j<<k<<l<<" "<<int2Index(i+offset(isym)+1,j+offset(jsym)+1,k+offset(ksym)+1,l+offset(lsym)+1)<<(*integrals)[int2Index(i+offset(isym)+1,j+offset(jsym)+1,k+offset(ksym)+1,l+offset(lsym)+1)]<<std::endl;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+void Hamiltonian::rotate(std::vector<double> const * rota, std::vector<double> const * rotb)
+{
+  if (rotb == NULL) rotb=rota;
+//  xout << "Hamiltonian::rotate"<<std::endl;
+//  if (integrals_a != NULL) xout << "integrals_a "<<integrals_a<<std::endl;
+//  if (true || integrals_b != NULL) xout << "integrals_b "<<integrals_b<<std::endl;
+//  if (integrals_aa != NULL) xout << "integrals_aa "<<integrals_aa<<std::endl;
+//  if (integrals_ab != NULL) xout << "integrals_ab "<<integrals_ab<<std::endl;
+//  if (integrals_bb != NULL) xout << "integrals_bb "<<integrals_bb<<std::endl;
+//  if (true || bracket_integrals_a != NULL) xout << "bracket_integrals_a "<<bracket_integrals_a<<std::endl;
+//  if (true || bracket_integrals_b != NULL) xout << "bracket_integrals_b "<<bracket_integrals_b<<std::endl;
+//  if (bracket_integrals_aa != NULL) xout << "bracket_integrals_aa "<<bracket_integrals_aa<<std::endl;
+//  if (bracket_integrals_ab != NULL) xout << "bracket_integrals_ab "<<bracket_integrals_ab<<std::endl;
+//  if (bracket_integrals_bb != NULL) xout << "bracket_integrals_bb "<<bracket_integrals_bb<<std::endl;
+
+//  xout << "Unrotated hamiltonian" <<std::endl << str() << std::endl;
+//  xout << "rotate: rota"; for (std::vector<double>::const_iterator i=rota->begin(); i!=rota->end(); i++) xout <<" "<<*i; xout <<std::endl;
+//  xout << "rotate: rotb"; for (std::vector<double>::const_iterator i=rotb->begin(); i!=rotb->end(); i++) xout <<" "<<*i; xout <<std::endl;
+  rotate1(integrals_a,rota);
+  if (integrals_a != integrals_b) rotate1(integrals_b,rotb);
+  deconstructBraKet();
+//  xout << "Rotated 1-electron hamiltonian" <<std::endl << str() << std::endl;
+  rotate2(integrals_aa,rota,rota);
+//  xout << "Rotated hamiltonian after aa" <<std::endl << str() << std::endl;
+  if (integrals_aa != integrals_ab) rotate2(integrals_ab,rota,rotb);
+//  xout << "Rotated hamiltonian after ab" <<std::endl << str() << std::endl;
+  if (integrals_aa != integrals_bb) rotate2(integrals_bb,rotb,rotb);
+//  xout << "Rotated hamiltonian" <<std::endl << str() << std::endl;
+  return;
 }

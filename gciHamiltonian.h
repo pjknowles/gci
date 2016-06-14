@@ -61,6 +61,8 @@ public:
   std::vector<double> *integrals_bb; /**< \brief point to bbbb integrals */
   std::vector<double> *bracket_integrals_a; /**< \brief point to aa integrals in bra-ket form, antisymmetrised */
   std::vector<double> *bracket_integrals_b; /**< \brief point to bb integrals in bra-ket form, antisymmetrised */
+ private:
+ public:
   std::vector<double> *bracket_integrals_aa; /**< \brief point to aaaa integrals in bra-ket form, antisymmetrised */
   std::vector<double> *bracket_integrals_ab; /**< \brief point to abab integrals in bra-ket form */
   std::vector<double> *bracket_integrals_bb; /**< \brief point to bbbb integrals in bra-ket form, antisymmetrised */
@@ -132,6 +134,10 @@ public:
    * \brief Delete the BraKet form of the Hamiltonian
    */
   void deconstructBraKet();
+
+  void rotate1(std::vector<double>* integrals, const std::vector<double> *rot);
+  void rotate2(std::vector<double>* integrals, const std::vector<double> *rot1, const std::vector<double> *rot2);
+  void rotate(std::vector<double> const * rota, std::vector<double> const * rotb=NULL);
 
 private:
   size_t ijSize;

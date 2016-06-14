@@ -38,6 +38,13 @@ std::vector<double> Run::run()
 
   profiler.start("load Hamiltonian");
   Hamiltonian hh(globalFCIdump);
+  std::vector<double> rot(hh.total(0,0));
+  double theta=-std::acos(-1.0)/10;
+  for (std::vector<double>::iterator i=rot.begin(); i!=rot.end(); i++) *i=(double)0;
+  for (unsigned int i=0; i<hh.basisSize; i++) rot[hh.pairIndex(i+1,i+1,0)]=(double)1;
+  rot[hh.pairIndex(1,1,0)]=rot[hh.pairIndex(2,2,0)]=std::cos(theta); rot[hh.pairIndex(2,1,0)]=std::sin(theta); rot[hh.pairIndex(1,2,0)]=-std::sin(theta);
+  xout << "rotation matrix"; for (std::vector<double>::const_iterator i=rot.begin(); i!=rot.end(); i++) xout <<" "<< *i; xout <<std::endl;
+  hh.rotate(&rot);
   profiler.stop("load Hamiltonian");
   size_t referenceLocation;
   Determinant referenceDeterminant;
@@ -173,10 +180,13 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
   std::vector<double> elast(nState,e0+1);
   profiler.stop("Davidson preamble");
   for (int n=0; n < maxIterations; n++) {
+//    xout <<" start of iteration "<<n<<std::endl;
     w.put(wfile,n);
+//    xout << "w="<<w.str(2)<<std::endl;
     g.set((double)0);
     profiler.start("Davidson Hc");
     g.hamiltonianOnWavefunction(hamiltonian, w);
+//    xout << "g="<<g.str(2)<<std::endl;
     profiler.stop("Davidson Hc");
     g.put(gfile,n);
     reducedHamiltonian.resize((size_t)(n+1)*(n+1));
@@ -197,7 +207,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     w.distributed=olddistw; g.distributed=olddistg;
     }
     profiler.stop("Davidson build rH");
-    // { xout << "Reduced hamiltonian:"<<std::endl; for (int i=0; i < n+1; i++) { for (int j=0; j < n+1; j++) xout <<" "<<reducedHamiltonian[j+(n+1)*i]; xout << std::endl; } }
+//     { xout << "Reduced hamiltonian:"<<std::endl; for (int i=0; i < n+1; i++) { for (int j=0; j < n+1; j++) xout <<" "<<reducedHamiltonian[j+(n+1)*i]; xout << std::endl; } }
     std::vector<double> eigenvectors(reducedHamiltonian);
     std::vector<double> eigenvalues(n+1);
     Diagonalize(&eigenvectors[0], &eigenvalues[0], (unsigned int)(n+1), (unsigned int)(n+1));
@@ -242,7 +252,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     double l2norm = w.norm((double)2);
     double lknorm = w.norm((double)compressionK);
 //    xout << "l2norm="<<l2norm<<" "<<w*w<<std::endl;
-    xout << "lknorm="<<lknorm<<std::endl;
+//    xout << "lknorm="<<lknorm<<std::endl;
     double factor = pow(lknorm,compressionL) * pow(l2norm,-compressionK*compressionL*(double)0.5);
     if (compressionL*(2-compressionK) < 0) factor=-factor;
     xout << "factor="<<factor<<std::endl;
@@ -302,18 +312,20 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     //g -= (energy-e0); // Davidson
     // form update
     w.put(h0file,1); // save a copy
-    double etruncate = parameter("ETRUNCATE",std::vector<double>(1,1)).at(energyThreshold);
-    //xout << "energyThreshold="<<energyThreshold<<std::endl;
+//    xout <<"residual "<<w.str(2)<<std::endl;
+    double etruncate = parameter("ETRUNCATE",std::vector<double>(1,-1)).at(0);
+//    xout << "energyThreshold="<<energyThreshold<<std::endl;
     if (etruncate < 0) etruncate = energyThreshold;
-    xout << "etruncate="<<etruncate<<std::endl;
+//    xout << "etruncate="<<etruncate<<std::endl;
     double discarded;
     double ePredicted = w.update(g,discarded,etruncate);
-    xout << "discarded="<<discarded<<std::endl;
+//    xout << "discarded="<<discarded<<std::endl;
     for (double etrunc=etruncate*.3; etrunc > 1e-50 && discarded > etruncate; etrunc*=0.3) {
       w.get(h0file,1); // retrieve original
       ePredicted = w.update(g,discarded,etrunc);
       xout << "etrunc="<<etrunc<<", discarded="<<discarded<<std::endl;
     }
+//    xout <<"new expansion vector before orthogonalisation "<<w.str(2)<<std::endl;
     // orthogonalize to previous expansion vectors
     for (int i=0; i <= n; i++) {
       g.get(wfile,i);
@@ -323,6 +335,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
       w.axpy(factor,g);
     }
     profiler.stop("Davidson residual");
+//    xout <<"new expansion vector before normalisation "<<w.str(2)<<std::endl;
     double norm2=w*w;
     gsum(&norm2,1);
     w.distributed=olddistw;
@@ -342,6 +355,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     elast=e;
     // normalise
     w *= ((double)1/std::sqrt(norm2));
+    xout << "norm2="<<norm2<<", econv="<<econv<<" "<<energyThreshold<<std::endl;
     if (norm2 >(double) 1e-30 && econv > energyThreshold) continue;
 
     { profiler.start("Histogram");
