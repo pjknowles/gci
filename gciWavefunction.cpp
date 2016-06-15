@@ -255,7 +255,7 @@ Wavefunction& Wavefunction::operator/=(const Wavefunction &other)
 }
 
 
-double Wavefunction::update(const Wavefunction &diagonalH, double & eTruncated, double dEmax)
+double Wavefunction::update(const Wavefunction &diagonalH, double & eTruncated, double const dEmax)
 {
   if (! compatible(diagonalH)) throw "attempt to combine incompatible Wavefunction objects";
   size_t chunk = (buffer.size()-1)/parallel_size+1;

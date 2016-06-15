@@ -156,7 +156,7 @@ public:
   Wavefunction& operator-=(const double); ///< subtract a scalar from every element
   Wavefunction& operator-(); ///< unary minus
   Wavefunction& operator/=(const Wavefunction &other); ///< element-by-element division by another wavefunction
-  double update(const Wavefunction &diagonalH, double & eTruncated, double dEmax=(double)0); ///< form a perturbation-theory update, and return the predicted energy change. eTruncated is the energy change lost by truncation
+  double update(const Wavefunction &diagonalH, double & eTruncated, const double dEmax=(double)0); ///< form a perturbation-theory update, and return the predicted energy change. eTruncated is the energy change lost by truncation
 
   double norm(const double k=2); ///< k-norm
   /*!

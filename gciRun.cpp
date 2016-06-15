@@ -166,47 +166,27 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
 //    xout << "Diagonal H: " << g.str(2) << std::endl;
   gci::File h0file; h0file.name="H0"; g.put(h0file);
   gci::File wfile; wfile.name="Wavefunction vectors";
-//  gci::File gfile; gfile.name="Action vectors";
   w.set((double)0); w.set(reference, (double) 1);
   double elast=e0+1;
   double e;
   profiler.stop("SteepestDescent preamble");
   for (int n=0; n < maxIterations; n++) {
-//    xout <<" start of iteration "<<n<<std::endl;
-    w.put(wfile);
-//    xout << "w="<<w.str(2)<<std::endl;
-    g.set((double)0);
     profiler.start("SteepestDescent Hc");
-    g.hamiltonianOnWavefunction(hamiltonian, w);
-//    xout << "g="<<g.str(2)<<std::endl;
+    g.set((double)0); g.hamiltonianOnWavefunction(hamiltonian, w);
     profiler.stop("SteepestDescent Hc");
-//    g.put(gfile,n);
     e=g*w;
     g.axpy(-e,w);
-//    xout << "residual="<<g.str(2)<<std::endl;
-    xout << "Iteration "<<n<<", energy:";
-    xout << std::fixed; xout.precision(8) ;xout << e ;
-    xout <<"; "<<std::endl;
-
-    double energy = e;
+    xout << "Iteration "<<n<<", energy:"<< std::fixed; xout.precision(8) ;xout << e <<"; "<<std::endl;
 
     bool olddistw=w.distributed; w.distributed=true;
     bool olddistg=g.distributed; g.distributed=true;
-    // at this point we have the residual
-    w.get(h0file);
-//    xout <<"h0 "<<w.str(2)<<std::endl;
-    w -= (e-(double)1e-8);
-//    xout <<"h0-e "<<w.str(2)<<std::endl;
+    // at this point we have the residual in g, and wavefunction in w
+    w.put(wfile);
+    w.get(h0file); w -= (e-(double)1e-8); // get preconditioner
     // form update
-//    xout << "energyThreshold="<<energyThreshold<<std::endl;
-    double etruncate=(double)0;
-    double discarded;
-    double ePredicted = g.update(w,discarded,etruncate);
-//    xout <<"update "<<g.str(2)<<std::endl;
-//    xout << "discarded="<<discarded<<std::endl;
-    w.get(wfile); // retrieve original
+    double discarded; double ePredicted = g.update(w,discarded);
+    w.get(wfile); // retrieve original wavefunction
     w+=g;
-//    xout <<"new wavefunction before normalisation "<<w.str(2)<<std::endl;
     double norm2=w*w;
     gsum(&norm2,1);
     w.distributed=olddistw;
@@ -218,12 +198,10 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
     // normalise
     w *= ((double)1/std::sqrt(norm2));
 //    xout << "norm2="<<norm2<<", econv="<<econv<<" "<<energyThreshold<<std::endl;
-    if (econv > energyThreshold) continue;
-
-    break;
+    if (econv < energyThreshold) break;
   }
   profiler.stop("SteepestDescent");
-    return e;
+  return e;
 }
 
 std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
