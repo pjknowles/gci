@@ -163,7 +163,7 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
   size_t reference = g.minloc();
   double e0=g.at(reference);
 //  g -= (e0-(double)1e-10);
-    xout << "Diagonal H: " << g.str(2) << std::endl;
+//    xout << "Diagonal H: " << g.str(2) << std::endl;
   gci::File h0file; h0file.name="H0"; g.put(h0file);
   gci::File wfile; wfile.name="Wavefunction vectors";
 //  gci::File gfile; gfile.name="Action vectors";
