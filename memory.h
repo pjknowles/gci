@@ -214,9 +214,14 @@ public:
 
   /*!
    * \brief vector<T> Copy constructor
-   * \param source An existing object. A shallow copy is made, i.e. the data buffer is pointed to, not copied.
+   * \param source An existing object. An element-by-element copy is made, i.e. the data buffer is allocated then copied from source.
    */
-  inline vector<T,Alloc>(const vector<T,Alloc>& source) : buffer(source.buffer), length(source.length), vp(0) {}
+  inline vector<T,Alloc>(const vector<T,Alloc>& source) : length(source.size()), vp(new std::vector<T,Alloc>(source.size()))
+  {
+    this->buffer=&((*vp)[0]);
+    for (typename source::const_iterator v=source.begin(); v!=source.end(); v++)
+      buffer[v-source.begin()]=*v;
+  }
 
   inline ~vector() { if (vp) delete vp; }
 

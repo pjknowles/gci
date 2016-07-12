@@ -4,3 +4,6 @@
 [submodule "ppidd"]
 	path = ppidd
 	url = https://bitbucket.org/pjknowles/ppidd
+[submodule "memory"]
+	path = memory
+	url = git@bitbucket.org:pjknowles/memory

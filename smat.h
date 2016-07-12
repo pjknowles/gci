@@ -126,7 +126,7 @@ public:
    * by using a simple assignment statement instead.
    * \param source The source of data.
    * \param parity Force parity of result
-   * \param description
+   * \param description If present, replace this.description.
    */
   void copy(smat const & source, int parity=999999, std::string description="");
 
