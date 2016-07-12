@@ -6,6 +6,7 @@
 #include <cic/ItfMpp.h>
 #include <cic/ItfCommon.h>
 #include <cic/ItfFortranInt.h>
+using namespace itf;
 #else
 typedef unsigned int uint;
 // matrix multiplication routines. All of them call mxma/mxmb as appropriate
@@ -15,7 +16,7 @@ typedef unsigned int uint;
 // Matrices are col-major (i.e., t is the fast dimension) with
 // col-stride==nrows. A^T B is supposed to be the fastest
 // MxM-driver on most machine architectures.
-void MxmDrvTN( double *Out, double *A,
+void MxmDrvTN(double *Out, const double *A,
     double *B, uint nRows, uint nLink, uint nStrideLink, uint nCols, bool AddToDest = false);
 // as above, but for C = A B
 void MxmDrvNN( double *Out, double *A,

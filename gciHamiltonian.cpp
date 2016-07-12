@@ -296,12 +296,12 @@ void Hamiltonian::constructBraKet(int neleca, int nelecb)
           }
         }
         del(bracket_integrals_a);
-//	xout << "considering 1-e bracket " << neleca<<nelecb<<std::endl;
+	// xout << "considering 1-e bracket " << neleca<<nelecb<<std::endl;
         if (nelecb == 0 && integrals_a != NULL) bracket_integrals_a = new std::vector<double>(*integrals_a);
         del(bracket_integrals_b);
         if (neleca == 0 && integrals_b != NULL) bracket_integrals_b = new std::vector<double>(*integrals_b);
-//	xout << "bracket_integrals_a "<<bracket_integrals_a<<std::endl;
-//	xout << "bracket_integrals_b "<<bracket_integrals_b<<std::endl;
+	// xout << "bracket_integrals_a "<<bracket_integrals_a<<std::endl;
+	// xout << "bracket_integrals_b "<<bracket_integrals_b<<std::endl;
 //        if (neleca != 0 && integrals_b != NULL) {
 //          xout << "copied into bracket_integrals_b "<<std::endl;
 //          for (unsigned int i=0; i<bracket_integrals_b->size(); i++) xout << " " << (*bracket_integrals_b)[i]; xout <<std::endl;
@@ -849,20 +849,20 @@ void Hamiltonian::rotate2(std::vector<double>* integrals,std::vector<double> con
 void Hamiltonian::rotate(std::vector<double> const * rota, std::vector<double> const * rotb)
 {
   if (rotb == NULL) rotb=rota;
-//  xout << "Hamiltonian::rotate"<<std::endl;
-//  if (integrals_a != NULL) xout << "integrals_a "<<integrals_a<<std::endl;
-//  if (true || integrals_b != NULL) xout << "integrals_b "<<integrals_b<<std::endl;
-//  if (integrals_aa != NULL) xout << "integrals_aa "<<integrals_aa<<std::endl;
-//  if (integrals_ab != NULL) xout << "integrals_ab "<<integrals_ab<<std::endl;
-//  if (integrals_bb != NULL) xout << "integrals_bb "<<integrals_bb<<std::endl;
-//  if (true || bracket_integrals_a != NULL) xout << "bracket_integrals_a "<<bracket_integrals_a<<std::endl;
-//  if (true || bracket_integrals_b != NULL) xout << "bracket_integrals_b "<<bracket_integrals_b<<std::endl;
-//  if (bracket_integrals_aa != NULL) xout << "bracket_integrals_aa "<<bracket_integrals_aa<<std::endl;
-//  if (bracket_integrals_ab != NULL) xout << "bracket_integrals_ab "<<bracket_integrals_ab<<std::endl;
-//  if (bracket_integrals_bb != NULL) xout << "bracket_integrals_bb "<<bracket_integrals_bb<<std::endl;
+  xout << "Hamiltonian::rotate"<<std::endl;
+  // if (integrals_a != NULL) xout << "integrals_a "<<integrals_a<<std::endl;
+  // if (true || integrals_b != NULL) xout << "integrals_b "<<integrals_b<<std::endl;
+  // if (integrals_aa != NULL) xout << "integrals_aa "<<integrals_aa<<std::endl;
+  // if (integrals_ab != NULL) xout << "integrals_ab "<<integrals_ab<<std::endl;
+  // if (integrals_bb != NULL) xout << "integrals_bb "<<integrals_bb<<std::endl;
+  // if (true || bracket_integrals_a != NULL) xout << "bracket_integrals_a "<<bracket_integrals_a<<std::endl;
+  // if (true || bracket_integrals_b != NULL) xout << "bracket_integrals_b "<<bracket_integrals_b<<std::endl;
+  // if (bracket_integrals_aa != NULL) xout << "bracket_integrals_aa "<<bracket_integrals_aa<<std::endl;
+  // if (bracket_integrals_ab != NULL) xout << "bracket_integrals_ab "<<bracket_integrals_ab<<std::endl;
+  // if (bracket_integrals_bb != NULL) xout << "bracket_integrals_bb "<<bracket_integrals_bb<<std::endl;
 
- // xout << "Unrotated hamiltonian" <<std::endl << str() << std::endl;
-//  xout << "rotate: rota"; for (std::vector<double>::const_iterator i=rota->begin(); i!=rota->end(); i++) xout <<" "<<*i; xout <<std::endl;
+//  xout << "Unrotated hamiltonian" <<std::endl << str() << std::endl;
+  xout << "rotate: rota"; for (std::vector<double>::const_iterator i=rota->begin(); i!=rota->end(); i++) xout <<" "<<*i; xout <<std::endl;
 //  xout << "rotate: rotb"; for (std::vector<double>::const_iterator i=rotb->begin(); i!=rotb->end(); i++) xout <<" "<<*i; xout <<std::endl;
   rotate1(integrals_a,rota);
   if (integrals_a != integrals_b) rotate1(integrals_b,rotb);
@@ -873,6 +873,25 @@ void Hamiltonian::rotate(std::vector<double> const * rota, std::vector<double> c
   if (integrals_aa != integrals_ab) rotate2(integrals_ab,rota,rotb);
 //  xout << "Rotated hamiltonian after ab" <<std::endl << str() << std::endl;
   if (integrals_aa != integrals_bb) rotate2(integrals_bb,rotb,rotb);
- // xout << "Rotated hamiltonian" <<std::endl << str() << std::endl;
+//  xout << "Rotated hamiltonian" <<std::endl << str() << std::endl;
+  constructBraKet();
   return;
+}
+
+#include "memory.h"
+void Hamiltonian::rotate(smat const * rota, smat const * rotb)
+{
+  smat rotan = rota->desymmetrise();
+  std::vector<double> rotanv;
+  for (size_t i=0; i<rotan.size(); i++)
+    rotanv.push_back(rotan.buffer[i]);
+  if (rotb != NULL) {
+    smat rotbn = rotb->desymmetrise();
+    std::vector<double> rotbnv;
+    for (size_t i=0; i<rotbn.size(); i++)
+      rotbnv.push_back(rotbn.buffer[i]);
+    rotate(&rotanv,&rotbnv);
+  }
+  else
+    rotate(&rotanv,NULL);
 }

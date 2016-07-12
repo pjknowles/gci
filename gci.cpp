@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 #endif
   Run run("gci.fcidump");
   if (argc<2) {
-    run.addParameter("METHOD","SD");
+    run.addParameter("METHOD","DAVIDSON");
     run.addParameter("PROFILER","0");
   }
   else

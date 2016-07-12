@@ -94,6 +94,31 @@ public:
    * \param syma the symmetry of alpha strings
    * \return  the offset
    */
+
+  /*!
+   * \brief construct 1- and 2-particle density matrices
+   * \param den1 The 1-particle density matrix
+   * \param den2 The 2-particle density matrix
+   */
+  void density(std::vector<double>& den1, std::vector<double>& den2);
+  void density(std::vector<double>& den1);
+  /*!
+   * \brief construct 1- and 2-particle transition density matrices
+   * \param den1 The 1-particle density matrix
+   * \param den2 The 2-particle density matrix
+   * \param bra Wavefunction defining the bra state (the ket is this)
+   */
+  void density(std::vector<double>& den1, std::vector<double>& den2, const Wavefunction& bra);
+  void density(std::vector<double>& den1, const Wavefunction& bra);
+  /*!
+   * \brief Calculate natural orbitals
+   * \return
+   */
+  std::vector<double> naturalOrbitals();
+private:
+  void gdensity(std::vector<double>& den1, std::vector<double>& den2, bool d1, bool d2, const Wavefunction& bra);
+public:
+
   size_t blockOffset(const unsigned int syma) const;
 
   std::string str(int verbosity=0) const;

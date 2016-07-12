@@ -38,10 +38,17 @@ public:
    * \param w a Wavefunction object that will receive contributions
    */
   void action(Wavefunction& w);
+  /*!
+   * \brief Contract TransitionDensity with a bra state to form a 1-particle density matrix
+   * \param w the bra state
+   * \return  the 1-particle density matrix
+   */
+  std::vector<double> density(Wavefunction& w);
   std::string str(int verbosity) const;
 private:
   size_t nsa; ///< number of alpha strings
   size_t nsb; ///< number of beta strings
+  unsigned int symexc; ///< symmetry of excitations
   size_t excitations; ///< number of excitations
   StringSet::const_iterator alphaStringsBegin;
   StringSet::const_iterator alphaStringsEnd;

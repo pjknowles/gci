@@ -1,0 +1,10 @@
+#!/bin/sh
+dest=src/gci
+files=$(ls -1 ${0%export_molpro}*.{cpp,h} | sed -e '/gciMolpro/d' -e '/Profiler/d')
+if [ -r $dest ]; then
+    cp $files $dest
+    git status $dest
+else
+    echo "Not in molpro source tree"
+    exit 1
+fi

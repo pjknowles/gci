@@ -24,7 +24,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
   unsigned int symb =  betaStringsBegin->computed_symmetry();
   //  xout << "syma="<<syma<<", nsa="<<nsa<<std::endl;
   //  xout << "symb="<<symb<<", nsb="<<nsb<<std::endl;
-  unsigned int symexc = w.symmetry ^ syma ^ symb;
+  symexc = w.symmetry ^ syma ^ symb;
   excitations = w.orbitalSpace->total(symexc,parity);
   int deltaAlpha = w.alphaStrings[0].proto.nelec - alphaStringsBegin->nelec;
   int deltaBeta = w.betaStrings[0].proto.nelec - betaStringsBegin->nelec;
@@ -198,8 +198,8 @@ void TransitionDensity::action(Wavefunction &w)
   if (nsa==0 || nsb==0) return;
   unsigned int syma = alphaStringsBegin->computed_symmetry();
   unsigned int symb =  betaStringsBegin->computed_symmetry();
-  unsigned int symexc = w.symmetry ^ syma ^ symb;
-  excitations = w.orbitalSpace->total(symexc,parity);
+  unsigned int symexcw = w.symmetry ^ syma ^ symb;
+  excitations = w.orbitalSpace->total(symexcw,parity);
   int deltaAlpha = w.alphaStrings[0].proto.nelec - alphaStringsBegin->nelec;
   int deltaBeta = w.betaStrings[0].proto.nelec - betaStringsBegin->nelec;
 
@@ -310,7 +310,7 @@ void TransitionDensity::action(Wavefunction &w)
     for (unsigned int wsyma=0; wsyma<8; wsyma++) {
       unsigned int wsymb = w.symmetry^wsyma;
       unsigned int symexca = wsyma ^ syma;
-      size_t intoff = w.orbitalSpace->offset(symexc,symexca,parity);
+      size_t intoff = w.orbitalSpace->offset(symexcw,symexca,parity);
       size_t wnsb = w.betaStrings[wsymb].size();
       size_t woffset = w.blockOffset(wsyma);
       size_t offb = 0;
@@ -337,6 +337,18 @@ void TransitionDensity::action(Wavefunction &w)
     xout <<"deltaAlpha="<<deltaAlpha<<", deltaBeta="<<deltaBeta<<std::endl;
     throw "unimplemented case";
   }
+}
+
+#include "gciMolpro.h"
+std::vector<double> TransitionDensity::density(Wavefunction &w)
+{
+  unsigned int syma = alphaStringsBegin->computed_symmetry();
+  unsigned int symb = betaStringsBegin->computed_symmetry();
+  if ((syma^symb) != w.symmetry) throw "Symmetry mismatch, TransitionDensity::density";
+  if (nsa*nsb != (w.blockOffset(syma+1)-w.blockOffset(syma))) throw "Wrong dimensions, TransitionDensity::density"; // present implementation only for complete space in TransitionDensity
+  std::vector<double> result(excitations,(double)0);
+  MxmDrvTN(&result[0],&this->at(0),&(w.buffer[w.blockOffset(syma)]),excitations,nsa*nsb,1,1);
+  return result;
 }
 
 std::string TransitionDensity::str(int verbosity) const

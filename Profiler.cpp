@@ -51,7 +51,7 @@ void Profiler::start(const std::string name)
     totalise(now,0,0);
 #ifdef MEMORY_H
   // memory accounting:
-  // the statistic for a segment is the maximum used, ie memory_used('S',1) minus the actual start memory, ie memory_used('S',0)
+  // the statistic for a segment is the maximum used, ie memory_used(1) minus the actual start memory, ie memory_used(0)
   // memory_reset_maximum_stack()  is used to reset the memory manager's notion of high water
   // memoryStack[01] are used to store the values from memory_used in start()
   // in start(),
@@ -62,10 +62,10 @@ void Profiler::start(const std::string name)
   //  (a) reset maximum stack to memoryStack1[me]
   // in accumulate(), add max(children) to parent
   //if (! memoryStack0.empty()) {
-    //resourcesStack.back().stack = std::max((int64_t)memory_used('S',(size_t)1)-memoryStack0.back(),resourcesStack.back().stack);
+    //resourcesStack.back().stack = std::max((int64_t)memory_used(1)-memoryStack0.back(),resourcesStack.back().stack);
   //}
-  memoryStack0.push_back(memory_used('S',(size_t)0));
-  memoryStack1.push_back(memory_used('S',(size_t)1));
+  memoryStack0.push_back(memory_used(0));
+  memoryStack1.push_back(memory_used(1));
 #endif
   resourcesStack.push_back(now);
   startResources.push_back(now);
@@ -79,7 +79,7 @@ void Profiler::totalise(const struct resources now, const long operations, const
   diff.name=resourcesStack.back().name;
   diff.operations=operations;
 #ifdef MEMORY_H
-  diff.stack=memory_used('S',(size_t)1)-memoryStack0.back();
+  diff.stack=memory_used(1)-memoryStack0.back();
 #endif
   std::string key;
   for(std::vector<resources>::const_reverse_iterator r=resourcesStack.rbegin(); r!= resourcesStack.rend(); r++) key=r->name+":"+key;
@@ -288,7 +288,7 @@ struct Profiler::resources Profiler::getResources()
     result.wall-=wallbase;
   }
 #ifdef MEMORY_H
-  result.stack=(size_t) memory_used('S',(size_t)1);
+  result.stack=(size_t) memory_used(1);
 #else
   result.stack=0;
   result.cumulative=NULL;
