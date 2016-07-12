@@ -3,8 +3,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 project(gci)
 subdirs(FCIdump)
+enable_language(Fortran)
 
-file (GLOB SRCS *.cpp *.h)
+file (GLOB SRCS *.cpp *.h *.F90)
+add_definitions(-DNOMAIN)
 add_executable(gci.exe ${SRCS})
 
 include_directories(FCIdump)

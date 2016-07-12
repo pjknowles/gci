@@ -245,7 +245,7 @@ CONTAINS
   END IF
   i=stack_size
   IF (memory_count_heap_size) i=stack_size+heap_size
-  memory_remaining = (SIZE(memory_stack)-i)*storage_SIZE(0.0d0)/(8*datalengt)
+  memory_remaining = (SIZE(memory_stack)-i)*storage_size(0.0d0)/(8*datalengt)
  END FUNCTION memory_remaining
 
 
@@ -284,8 +284,8 @@ CONTAINS
   INTEGER :: n_entries
   IF (.NOT. initialised) RETURN
   WRITE (iout,112)
-112 FORMAT(40(' ='))
-113 FORMAT(40(' -'))
+112 FORMAT(50(' ='))
+113 FORMAT(50(' -'))
   WRITE (iout,'('' Memory manager status, default implementation '',A)') TRIM(implementations(default_implementation))
   IF (PRESENT(title)) THEN
    WRITE (iout,'(1X, A)') TRIM(title)
@@ -316,11 +316,12 @@ CONTAINS
   n_entries=0; DO k=1,n_segments; IF (segments(k)%implementation.EQ.implementation_stack) n_entries=n_entries+1; END DO
   IF (n_entries.GT.0 .OR. default_implementation.EQ.implementation_stack) THEN
    levelr = stack_size+1
-   WRITE (iout,'('' Stack status: Remaining memory='',A,'' doubles ('',A,'' currently used, '',A,'' maximum used)'')'&
+   WRITE (iout,'('' Stack status: Remaining memory='',A,'' doubles ('',A,'' currently used, '',A,'' maximum used), Entries='',A)'&
         ) TRIM(IntegerString(memory_remaining())),&
-        TRIM(IntegerString(memory_used('STACK',.FALSE.))), TRIM(IntegerString(memory_used('STACK',.TRUE.)))
+        TRIM(IntegerString(memory_used('STACK',.FALSE.))), TRIM(IntegerString(memory_used('STACK',.TRUE.))) &
+        ,TRIM(IntegerString(n_entries))
    IF (n_entries.GT.0) WRITE (iout,'(27X,''Type'',T40,''Depth'',T57,''Address'',T70,''Size  Rank Bounds'')')
-   if (n_entries.gt.0) WRITE (iout,113)
+   IF (n_entries.GT.0) WRITE (iout,113)
    IF (PRESENT(maximum_depth)) n_entries=MIN(n_entries,maximum_depth)
    DO k=n_segments,1,-1
     IF (segments(k)%implementation.NE.implementation_stack) CYCLE
@@ -328,7 +329,7 @@ CONTAINS
     n_entries = n_entries-1
     s=segments(k)
      IF (s%rank.GT.0) THEN
-111   FORMAT(1X,A24,T26,1X,A,T35,I10,T45,I19,T66,I8,I6,15(:,2X,A,':',A))
+111   FORMAT(1X,A24,T26,1X,A,T36,I9,T45,I19,T66,I8,I6,15(:,2X,A,':',A))
       WRITE (iout,111) TRIM(s%description),s%data_type,levelr-s%level,loc(s%p(1)),s%size,s%rank&
            ,(TRIM(IntegerString(s%lbound(l))),TRIM(IntegerString(s%ubound(l))),l=1,s%rank)
      ELSE
@@ -542,15 +543,15 @@ SUBROUTINE memory_clean(stack_only)
    ENDDO
    datalengt=1; IF (PRESENT(datalength)) datalengt=datalength
    IF (datatyp.EQ.'double') THEN
-    datalengt=storage_SIZE(0.0d0)/8
+    datalengt=storage_size(0.0d0)/8
    ELSE IF (datatyp.EQ.'integer') THEN
-    datalengt=storage_SIZE(0)/8
+    datalengt=storage_size(0)/8
    ELSE IF (datatyp.EQ.'character') THEN
     CONTINUE
    ELSE
     CALL Error('Unknown datatype "'//TRIM(datatyp)//'"','memory')
    END IF
-   nn(1)=(n(1)*datalengt-1)/(storage_SIZE(0.0d0)/8)+1
+   nn(1)=(n(1)*datalengt-1)/(storage_size(0.0d0)/8)+1
   ELSE
    datatyp='double'
    datalengt=8
@@ -913,6 +914,9 @@ SUBROUTINE memory_clean(stack_only)
   TYPE(c_ptr) :: cptr1, cptr2
   IF (SIZE(p) == 0) RETURN
   cptr1 = c_loc(p(LBOUND(p,1)))
+! perhaps at the top of the stack
+  cptr2 = c_loc(memory_stack(stack_size+1))
+  IF (c_ASSOCIATED(cptr1,cptr2)) RETURN
   DO k=n_segments,1,-1
    cptr2 = c_loc(segments(k)%p(1))
    IF ( ASSOCIATED(p,segments(k)%p) .OR. c_ASSOCIATED(cptr1,cptr2) ) THEN
@@ -931,13 +935,10 @@ SUBROUTINE memory_clean(stack_only)
     RETURN
    END IF
   END DO
-! perhaps at the top of the stack
-  cptr2 = c_loc(memory_stack(stack_size+1))
-  IF (c_ASSOCIATED(cptr1,cptr2)) RETURN
 ! perhaps somewhere in stack, and we want to allow cavalier resetting of the top of the stack
   IF (loc(p(LBOUND(p,1))).GE.loc(memory_stack(1)) .AND. &
        loc(p(LBOUND(p,1))).LT.loc(memory_stack(SIZE(memory_stack)))) THEN
-   stack_size = (loc(p(LBOUND(p,1)))-loc(memory_stack(1)))/(storage_SIZE(0d0)/storage_SIZE(' '))
+   stack_size = (loc(p(LBOUND(p,1)))-loc(memory_stack(1)))/(storage_size(0d0)/storage_size(' '))
    maximum_stack_size = MAX(maximum_stack_size, stack_size)
    CALL memory_clean(.TRUE.)
    RETURN
@@ -1058,7 +1059,7 @@ SUBROUTINE memory_clean(stack_only)
   IF (LEN(p) == 0) RETURN
   ptr => p(1:1) ! to circumvent bug in gfortran 4.8
   cptr = c_loc(ptr)
-  CALL c_f_pointer(cptr,pd,shape=[(LEN(p)-1)/(storage_SIZE(0d0)/character_storage_size)+1])
+  CALL c_f_pointer(cptr,pd,shape=[(LEN(p)-1)/(storage_size(0d0)/character_storage_size)+1])
   CALL memory_release(pd)
  END SUBROUTINE memory_release_character
 
@@ -1634,7 +1635,7 @@ SUBROUTINE memory_clean(stack_only)
 !! allocation calls (\ref icorr etc).
  SUBROUTINE memory_register_stack_array(q)
   DOUBLE PRECISION, DIMENSION(1), INTENT(in) :: q
-  legacy_stack_offset = (loc(memory_stack(1))-loc(q(1)))/(storage_SIZE(0d0)/storage_size(' '))
+  legacy_stack_offset = (loc(memory_stack(1))-loc(q(1)))/(storage_size(0d0)/storage_size(' '))
   IF (legacy_stack_offset.GT.HUGE(0)) CALL Error(&
        'Traditional stack memory allocation routines cannot be used because offset is too large to store','memory')
   !PRINT *, 'loc(memory_stack(1)) ',loc(memory_stack(1))
@@ -2068,7 +2069,7 @@ SUBROUTINE memory_clean(stack_only)
   CONTIGUOUS :: pp
   INTEGER :: l
   TYPE(c_ptr) :: cptr
-  l = (LEN(p)-1)/(storage_SIZE(0d0)/character_storage_size) + 1
+  l = (LEN(p)-1)/(storage_size(0d0)/character_storage_size) + 1
   cptr = c_loc(p(1:1))
   CALL c_f_pointer(cptr,pp,shape=[l])
   find_memory_entry_character => find_memory_entry1(pp)
@@ -2089,7 +2090,7 @@ FUNCTION icori(n)
  INTEGER :: icori
  INTEGER, INTENT(in) :: n
  INTEGER, POINTER, DIMENSION(:) :: p
- icori = (stack_size + legacy_stack_offset)*(storage_SIZE(0d0)/storage_SIZE(0)) + 1
+ icori = (stack_size + legacy_stack_offset)*(storage_size(0d0)/storage_size(0)) + 1
  IF (n.NE.0) p => memory_allocate_integer(ABS(n), implementation='STACK', maximum=n.GT.0)
 END FUNCTION icori
 
@@ -2108,7 +2109,7 @@ SUBROUTINE corlsi(i)
  INTEGER, INTENT(in) :: i
  INTEGER, POINTER, DIMENSION(:) :: p
  TYPE(c_ptr) :: cptr
- cptr = c_LOC(memory_stack(1+(i-1)/(storage_SIZE(0d0)/storage_SIZE(0))-legacy_stack_offset))
+ cptr = c_LOC(memory_stack(1+(i-1)/(storage_size(0d0)/storage_size(0))-legacy_stack_offset))
  CALL c_f_pointer(cptr,p,[1])
  CALL memory_release(p)
 END SUBROUTINE corlsi
@@ -2147,6 +2148,13 @@ END FUNCTION loc
 
 ! limited and dirty interface for C
 ! Simple C binding of byte allocator on stack
+SUBROUTINE memory_initializeC(stack_length) BIND(C,name="memory_initialize")
+ USE memory
+ USE iso_c_binding
+ INTEGER(kind=c_size_t), VALUE, INTENT(in) :: stack_length
+ CALL memory_initialize(INT(stack_length/(storage_size(0d0)/storage_size(' '))))
+END SUBROUTINE memory_initializeC
+
 FUNCTION memory_allocate(n) BIND(C,name="memory_allocate")
  USE memory, ONLY : memory_allocate_character_array
  USE iso_c_binding, ONLY : c_loc, c_ptr, c_size_t
@@ -2185,14 +2193,14 @@ FUNCTION memory_used(maximum) BIND(C,name='memory_used')
  USE iso_c_binding, ONLY : c_size_t, c_int, c_char
  INTEGER(c_int), INTENT(in), VALUE :: maximum !< if true, report the maximum memory allocated to date
  INTEGER(c_size_t) :: memory_used
- memory_used = (storage_SIZE(0d0)/storage_SIZE(' '))*memory_usedF('STACK',maximum=INT(maximum).NE.0)
+ memory_used = (storage_size(0d0)/storage_size(' '))*memory_usedF('STACK',maximum=INT(maximum).NE.0)
 END FUNCTION memory_used
 
 FUNCTION memory_remaining() BIND(C,name='memory_remaining')
  USE memory, ONLY : memory_remainingF => memory_remaining
  USE iso_c_binding, ONLY : c_size_t, c_int, c_char
  INTEGER(c_size_t) :: memory_remaining
- memory_remaining = (storage_SIZE(0d0)/storage_SIZE(' '))*memory_remainingF('double')
+ memory_remaining = (storage_size(0d0)/storage_size(' '))*memory_remainingF('double')
 END FUNCTION memory_remaining
 
 SUBROUTINE memory_reset_maximum_stack(level) BIND(C, name='memory_reset_maximum_stack')
@@ -2202,7 +2210,7 @@ SUBROUTINE memory_reset_maximum_stack(level) BIND(C, name='memory_reset_maximum_
  IF (level.LT.0) THEN
   CALL memory_reset_maximum_stackF
  ELSE
-  CALL memory_reset_maximum_stackF(storage_SIZE(' ')*INT(level)/storage_SIZE(0d0))
+  CALL memory_reset_maximum_stackF(storage_size(' ')*INT(level)/storage_size(0d0))
  END IF
 END SUBROUTINE memory_reset_maximum_stack
 
@@ -2456,6 +2464,7 @@ SUBROUTINE memory_module_test(printlevel)
 
 
  impl=memory_default_implementation(impl_default)
+
  !WRITE (6,*) 'End of test memory module'
 CONTAINS
 !> \private
@@ -2470,16 +2479,24 @@ END SUBROUTINE memory_module_test
 #ifndef NOMAIN
 PROGRAM main
  USE memory
+ INTERFACE
+  SUBROUTINE cmain() BIND(C,name="cmain")
+  END SUBROUTINE cmain
+ END INTERFACE
  CHARACTER(len=:), POINTER :: string
  DOUBLE PRECISION, DIMENSION(1) :: q
  COMMON /big/ q
  CALL memory_initialize(1001000)
  CALL memory_register_stack_array(q)
  CALL memory_module_test(0)
- string => memory_duplicate('abcde',implementation='HEAP')
- call memory_print_status
+ string => memory_duplicate('abcde',implementation='STACK')
+ CALL memory_print_status
+ WRITE (6,*) 'memory_used before cmain ',memory_used()
+ CALL cmain
+ CALL memory_print_status
  CALL memory_close
 END PROGRAM main
+#endif
 SUBROUTINE Error(msg,place)
  CHARACTER(*), INTENT(in) :: msg, place
  PRINT *,'Error: ',msg,':',place
@@ -2490,5 +2507,4 @@ SUBROUTINE Warning(msg,place)
  PRINT *,'Warning: ',msg,':',place
  STOP
 END SUBROUTINE Warning
-#endif
 #endif

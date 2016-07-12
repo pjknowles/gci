@@ -3,15 +3,71 @@
 #ifdef MOLPRO
 #include "cic/ItfFortranInt.h"
 #include "cic/ItfBlasInt.h"
-#define dger FD(dger_x)
-#define dgemm FD(dgemm_x)
-#define dgemv FD(dgemv_x)
-#define dsyev FD(dsyev_x)
-#define dgeev FD(dgeev_x)
+#define dsyev_y FD(dsyev_x)
+#define dgemm_y FD(dgemm_x)
+#define dger_y FD(dger_x)
+#define dgemv_y FD(dgemv_x)
+#define dgeev_y FD(dgeev_x)
 #else
 #define xout std::cout
+#define FD(x) x ## _
+typedef int64_t FORTINT;
+typedef double FORTDBL;
+typedef FORTINT const & FINTARG;
+typedef FORTDBL const & FDBLARG;
+#include <mkl_lapack.h>
+#include <mkl_blas.h>
+
+extern "C" {
+void dgemm_y(char const &TransA, char const &TransB, FINTARG M, FINTARG N, FINTARG K,
+             FORTDBL const &Alpha, FORTDBL const *A, FINTARG lda, FORTDBL const *B, FINTARG ldb,
+             FORTDBL const &Beta, FORTDBL *C, FINTARG ldc)
+{
+  MKL_INT M_=M;
+  MKL_INT N_=N;
+  MKL_INT K_=K;
+  MKL_INT lda_=lda;
+  MKL_INT ldb_=ldb;
+  MKL_INT ldc_=ldc;
+  dgemm(&TransA, &TransB, &M_, &N_, &K_,
+        &Alpha, A, &lda_, B, &ldb_,
+        &Beta, C, &ldc_);
+}
+
+void dgemv_y(char const &Trans, FINTARG M, FINTARG N,
+             FORTDBL const &Alpha, FORTDBL const *A, FINTARG lda, FORTDBL const *X, FINTARG incx,
+             FORTDBL const &Beta, FORTDBL *Y, FINTARG incy);
+
+void dger_y(FINTARG M, FINTARG N, FORTDBL const &Alpha, FORTDBL const *X, FINTARG incx, FORTDBL const *Y, FINTARG incy, FORTDBL *A, FINTARG lda);
+
+void dsyev_y(char const &jobz, char const &uplo, FINTARG N, FORTDBL *A, FINTARG lda, FORTDBL* w, FORTDBL* work, FINTARG lwork, FORTINT& info)
+{
+  MKL_INT N_=N;
+  MKL_INT lda_=lda;
+  MKL_INT lwork_=lwork;
+  MKL_INT info_=info;
+  dsyev(&jobz, &uplo, &N_, A, &lda_, w, work, &lwork_, &info_);
+  info=info_;
+}
+
+void dgeev_y(char const &jobvl, char const &jobvr, FINTARG N, FORTDBL *A, FINTARG lda, FORTDBL* wr, FORTDBL* wi,
+             FORTDBL* vl, FINTARG ldvl,
+             FORTDBL* vr, FINTARG ldvr,
+             FORTDBL* work, FINTARG lwork, FORTINT& info)
+{
+  MKL_INT N_=N;
+  MKL_INT lda_=lda;
+  MKL_INT ldvl_=ldvl;
+  MKL_INT ldvr_=ldvr;
+  MKL_INT lwork_=lwork;
+  MKL_INT info_=info;
+  dgeev(&jobvl, &jobvr, &N_, A, &lda_,  wr, wi,
+        vl, &ldvl_,
+        vr, &ldvr_,
+        work, &lwork_, &info_);
+}
+}
 #include <iostream>
-#define FORTINT int
 #endif
 
  smat::smat(std::vector<std::vector<size_t> > dimensions, int parity, int symmetry, unsigned int rank, int create, double *buffer, std::string description)
@@ -62,17 +118,7 @@ void smat::initialise(std::vector<std::vector<size_t> > dimensions, int symmetry
 }
 
 #include <stdlib.h>
-#ifdef MOLPRO
-// use Molpro's stack for the buffer
 #include "memory.h"
-//#define malloc memory_allocate
-//#define free memory_release
-// using memory::malloc;
-// using memory::free;
-#else
-inline void* memory_allocate(size_t n) { return malloc(n);}
-inline void memory_release(void* p) { free(p);}
-#endif
 void smat::ensure_buffer()
 {
   size_t desired_size=size();
@@ -345,7 +391,7 @@ void smat::gemm(smat const & a, smat const & b, char transa, char transb, double
     unsigned int lst=ls; if (transposeb) lst=ls^bs;
     double* bblock=b.block[lst];
     size_t ldb=b.dimensions[0][lst];
-    dgemm(transa,transb,cr,cc,k,alpha,ablock,lda,bblock,ldb,beta,cblock,cr);
+    dgemm_y(transa,transb,cr,cc,k,alpha,ablock,lda,bblock,ldb,beta,cblock,cr);
   }
 }
 
@@ -387,9 +433,9 @@ int smat::ev(smat & val, smat* vec, smat* vali, smat* vecl, const std::string al
     double* valblock=val.block[k];
     if (this->parity>0) {
       double lwork;
-      dsyev(jobz,'L',n,vblock,n,valblock,&lwork,-1,info);
+      dsyev_y(jobz,'L',n,vblock,n,valblock,&lwork,-1,info);
       double* work = memory_allocate(sizeof(double)*(size_t)(lwork+1));
-      dsyev(jobz,'L',n,vblock,n,valblock,work,(size_t)lwork,info);
+      dsyev_y(jobz,'L',n,vblock,n,valblock,work,(size_t)lwork,info);
       if (info!=0) { memory_release_saved(base); return info; }
     } else if (this->parity == 0) {
       double* mpt = memory_allocate(sizeof(double)*n*n);
@@ -399,9 +445,9 @@ int smat::ev(smat & val, smat* vec, smat* vali, smat* vecl, const std::string al
       mpt2 = NULL; if (vecl!=NULL) mpt2=vecl->block[k];
       double* mpt3 = NULL; if (vec!=NULL) mpt3=vec->block[k];
       double lwork;
-      dgeev(jobvl,jobz,n,mpt,n,valblock,vpt,mpt2,n,mpt3,n,&lwork,-1,info);
+      dgeev_y(jobvl,jobz,n,mpt,n,valblock,vpt,mpt2,n,mpt3,n,&lwork,-1,info);
       double* work = memory_allocate(sizeof(double)*(size_t)(lwork+1));
-      dgeev(jobvl,jobz,n,mpt,n,valblock,vpt,mpt2,n,mpt3,n,work,(size_t)lwork,info);
+      dgeev_y(jobvl,jobz,n,mpt,n,valblock,vpt,mpt2,n,mpt3,n,work,(size_t)lwork,info);
       memory_release(work);
       for (size_t m=0; m<n; m++)
 	if (vpt[m]!=0.0) {
@@ -567,6 +613,7 @@ smat smat::desymmetrise() const
 #include <cmath>
 extern "C" {
   void symmetry_matrix_module_test_c(int printlevel) {
+#ifdef MOLPRO
     memory_module_test();
     try {
     smat om("YY",1,0);
@@ -624,5 +671,6 @@ extern "C" {
     catch(char const* msg) {
       xout <<msg<<std::endl;
     }
+#endif
   }
 }

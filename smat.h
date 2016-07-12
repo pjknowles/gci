@@ -124,7 +124,7 @@ public:
    * Even if no conversions are done, the routine does a 'deep' copy, in other words allocating
    * a new buffer if necessary. A shallow copy, where only the pointer to the buffer is copied, can be achieved
    * by using a simple assignment statement instead.
-   * \param out The source of data.
+   * \param source The source of data.
    * \param parity Force parity of result
    * \param description
    */
