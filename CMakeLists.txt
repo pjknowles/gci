@@ -2,17 +2,16 @@ cmake_minimum_required(VERSION 2.6)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 project(gci)
-subdirs(FCIdump)
-subdirs(memory)
+subdirs(FCIdump memory)
 enable_language(Fortran)
 
 file (GLOB SRCS *.cpp *.h *.F90)
 add_definitions(-DNOMAIN)
 add_executable(gci.exe ${SRCS})
 
-include_directories(FCIdump)
-link_directories(${CMAKE_BINARY_DIR}/FCIdump)
-target_link_libraries(gci.exe FCIdump)
+include_directories(FCIdump memory)
+target_link_libraries(gci.exe FCIdump memory)
+link_directories(${CMAKE_BINARY_DIR}/FCIdump ${CMAKE_BINARY_DIR}/memory)
 
 get_filename_component(COMPILER_NAME  ${CMAKE_CXX_COMPILER} NAME)
 if (${COMPILER_NAME} STREQUAL "mpic++")
