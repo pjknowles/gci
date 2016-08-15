@@ -10,6 +10,7 @@
 #include "FCIdump.h"
 #include <iostream>
 #include <iomanip>
+#include "memory.h"
 using namespace gci;
 
 
@@ -67,8 +68,11 @@ int main(int argc, char *argv[])
       if (equals != std::string::npos)
         run.addParameter(s.substr(0,equals),s.substr(equals+1),true);
   }
+  memory_initialize(run.parameter("MEMORY",std::vector<int>{100000000})[0]);
+  size_t memory_allocated=memory_remaining();
   std::vector<double> e=run.run();
   xout << "e after run:"; for (size_t i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;
+  xout << "initial memory="<<memory_allocated<<", remaining memory="<<memory_remaining()<<std::endl;
 #ifdef GCI_PARALLEL
   PPIDD_Finalize();
 #endif

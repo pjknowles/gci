@@ -79,6 +79,7 @@ private:
 
   void HamiltonianMatrixPrint (Hamiltonian& hamiltonian, const State &prototype, int verbosity=0);
 
+public:
   /*!
      * \brief parameter Obtain an integer namelist parameter from Molpro input (if available) or the FCIDUMP data.
      * \param key The name of the parameter
@@ -86,6 +87,7 @@ private:
      * \return  The result as a vector of integers.
      */
   std::vector<int> parameter(std::string key, std::vector<int> def=std::vector<int>(1,0));
+private:
 
   /*!
      * \brief parameter Obtain a real namelist parameter from Molpro input (if available) or the FCIDUMP data.
