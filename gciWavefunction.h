@@ -92,12 +92,6 @@ public:
   void hamiltonianOnWavefunction(const Hamiltonian& h, const Wavefunction &w);
 
   /*!
-   * \brief blockOffset gives the address of the start of a symmetry block of the Wavefunction object
-   * \param syma the symmetry of alpha strings
-   * \return  the offset
-   */
-
-  /*!
    * \brief construct 1- and 2-particle density matrices
    * \param den1 The 1-particle density matrix
    * \param den2 The 2-particle density matrix
@@ -120,6 +114,12 @@ public:
 private:
   void gdensity(memory::vector<double>& den1, memory::vector<double>& den2, bool d1, bool d2, const Wavefunction& bra);
 public:
+
+  /*!
+   * \brief blockOffset gives the address of the start of a symmetry block of the Wavefunction object
+   * \param syma the symmetry of alpha strings
+   * \return  the offset
+   */
 
   size_t blockOffset(const unsigned int syma) const;
 

@@ -43,8 +43,9 @@ private:
    * \param hamiltonians A vector of pointers to the zero, first, second... order hamiltonians
    * \param prototype A State object specifying number of electrons, symmetry, spin
    * If it is a Wavefunction , then that will be used also for specifying the configuration space, otherwise the default FCI
-   * \param energyThreshold Convergence threshold for energy
    * \param maxOrder The maximum order of perturbation theory
+   * \param energyThreshold Convergence threshold for energy
+   * \param maxIterations The maximum number of iterations to perform
    * \return the energies order by order
    */
   std::vector<double> RSPT(const std::vector<Hamiltonian *> &hamiltonians,
@@ -60,6 +61,7 @@ private:
    * If it is a Wavefunction , then that will be used also for specifying the configuration space, otherwise the default FCI
    * \param energyThreshold Convergence threshold for energy
    * \param nState The number of eigenstates to be converged
+   * \param maxIterations The maximum number of iterations to perform
    * \return the energies for each state. Note that only the first nState energies are considered converged
    */
   std::vector<double> Davidson(const Hamiltonian &hamiltonian,
@@ -71,6 +73,7 @@ private:
    * \param prototype A State object specifying number of electrons, symmetry, spin
    * If it is a Wavefunction , then that will be used also for specifying the configuration space, otherwise the default FCI
    * \param energyThreshold Convergence threshold for energy
+   * \param maxIterations The maximum number of iterations to perform
    * \return the energy of the state.
    */
   double SteepestDescent(const Hamiltonian &hamiltonian,
