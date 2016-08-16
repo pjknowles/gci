@@ -883,13 +883,16 @@ void Hamiltonian::rotate(smat const * rota, smat const * rotb)
 {
   smat rotan = rota->desymmetrise();
   std::vector<double> rotanv;
+  memory::vector<double>* dd;
+  dd=rotan.data();
   for (size_t i=0; i<rotan.size(); i++)
-    rotanv.push_back(rotan.data()[i]);
+    rotanv.push_back((*dd)[i]);
   if (rotb != NULL) {
     smat rotbn = rotb->desymmetrise();
     std::vector<double> rotbnv;
+    dd=rotbn.data();
     for (size_t i=0; i<rotbn.size(); i++)
-      rotbnv.push_back(rotbn.data()[i]);
+      rotbnv.push_back((*dd)[i]);
     rotate(&rotanv,&rotbnv);
   }
   else

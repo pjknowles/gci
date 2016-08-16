@@ -163,7 +163,7 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
     maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
   xout << "MAXIT="<<maxIterations<<std::endl;
   if (energyThreshold <= (double)0)
-    energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
+    energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-12)).at(0);
   xout << "after parameter in Run::SteepestDescent energyThreshold="<<energyThreshold<<std::endl;
   Wavefunction w(prototype);
   Wavefunction g(w);
@@ -180,8 +180,7 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
   profiler.stop("SteepestDescent preamble");
   for (int n=0; n < maxIterations; n++) {
     profiler.start("SteepestDescent density");
-    std::vector<double> natorb;
-    natorb=w.naturalOrbitals();
+    smat natorb=w.naturalOrbitals();
     h.rotate(&natorb);
     profiler.stop("SteepestDescent density");
     profiler.start("SteepestDescent Hc");
@@ -190,6 +189,7 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
     e=g*w;
     g.axpy(-e,w);
     xout << "Iteration "<<n<<", energy:"<< std::fixed; xout.precision(8) ;xout << e <<"; "<<std::endl;
+    if (false) xout << "Residual:"<<g.str(2)<<std::endl;
 
     bool olddistw=w.distributed; w.distributed=true;
     bool olddistg=g.distributed; g.distributed=true;
@@ -198,9 +198,13 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
     w.get(h0file); w -= (e-(double)1e-8); // get preconditioner
     // form update
     double discarded; double ePredicted = g.update(w,discarded);
+    g.set(reference,0);
     if (false) xout << "ePredicted="<<ePredicted<<std::endl;
+    if (false) xout << "Update:"<<g.str(2)<<std::endl;
     w.get(wfile); // retrieve original wavefunction
+    if (false) xout << "Old wavefunction:"<<w.str(2)<<std::endl;
     w+=g;
+    if (false) xout << "New wavefunction:"<<w.str(2)<<std::endl;
     double norm2=w*w;
     gsum(&norm2,1);
     w.distributed=olddistw;
@@ -211,7 +215,7 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
     elast=e;
     // normalise
     w *= ((double)1/std::sqrt(norm2));
-//    xout << "norm2="<<norm2<<", econv="<<econv<<" "<<energyThreshold<<std::endl;
+    xout << "norm2="<<norm2<<", econv="<<econv<<" "<<energyThreshold<<std::endl;
     if (econv < energyThreshold) break;
   }
   profiler.stop("SteepestDescent");

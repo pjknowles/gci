@@ -614,30 +614,31 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
   profiler.stop("hamiltonianOnWavefunction");
 }
 
-void Wavefunction::density(std::vector<double>& den1)
+void Wavefunction::density(memory::vector<double>& den1)
 {
- std::vector<double> den2;
+ memory::vector<double> den2(0);
  gdensity(den1,den2,true,false,*this);
 }
-void Wavefunction::density(std::vector<double>& den1,std::vector<double>& den2)
+void Wavefunction::density(memory::vector<double>& den1,memory::vector<double>& den2)
 {
  gdensity(den1,den2,true,true,*this);
 }
-void Wavefunction::density(std::vector<double>& den1,const Wavefunction& bra)
+void Wavefunction::density(memory::vector<double>& den1,const Wavefunction& bra)
 {
- std::vector<double> den2;
+ memory::vector<double> den2(0);
  gdensity(den1,den2,true,false,bra);
 }
-void Wavefunction::density(std::vector<double>& den1,std::vector<double>& den2,const Wavefunction& bra)
+void Wavefunction::density(memory::vector<double>& den1,memory::vector<double>& den2,const Wavefunction& bra)
 {
  gdensity(den1,den2,true,true,bra);
 }
-void Wavefunction::gdensity(std::vector<double>& den1, std::vector<double>& den2, bool d1, bool d2, const Wavefunction &bra)
+void Wavefunction::gdensity(memory::vector<double>& den1, memory::vector<double>& den2, bool d1, bool d2, const Wavefunction &bra)
 {
   profiler.start("1-electron");
   size_t offset=0, nsa=0, nsb=0;
   unsigned int symdens=symmetry^bra.symmetry;
-  den1.resize(orbitalSpace->total(symdens,1),(double)0);
+//  den1.resize(orbitalSpace->total(symdens,1),(double)0);
+  den1.assign(0);
   for (unsigned int syma=0; syma<8; syma++) {
     offset += nsa*nsb;
     unsigned int symb = bra.symmetry^syma;
@@ -661,35 +662,19 @@ void Wavefunction::gdensity(std::vector<double>& den1, std::vector<double>& den2
 
 }
 
-std::vector<double> Wavefunction::naturalOrbitals()
+smat Wavefunction::naturalOrbitals()
 {
 //    xout <<"naturalOrbitals"<<std::endl;
-    std::vector<double> dens1(orbitalSpace->total(0,1));
-    std::vector<double> natorb(orbitalSpace->total(0,0));
-    density(dens1);
-//    xout << "density "<<dens1.size()<<std::endl; for (std::vector<double>::const_iterator d=dens1.begin(); d != dens1.end(); d++) xout <<" "<<*d; xout <<std::endl;
-    for (unsigned int sym=0; sym<8; sym++) {
-      size_t n=orbitalSpace->at(sym);
-      if (n==0) continue;
-//      xout << "sym="<<sym<<", n="<<n<<std::endl;
-    for (unsigned int i=0; i<n; i++ )
-      for (unsigned int j=0; j<=i; j++ )
-        natorb[orbitalSpace->offset(0,sym,0)+i+j*n]=natorb[orbitalSpace->offset(0,sym,0)+j+i*n]= -dens1[orbitalSpace->offset(0,sym,1)+i*(i+1)/2+j];
-    std::vector<double> ee(n);
-//    xout << "matrix";
-//    for (uint i=0; i<n*n; i++) xout << " "<<natorb[orbitalSpace->offset(0,sym,0)+i]; xout <<std::endl;
-    Diagonalize(&natorb[orbitalSpace->offset(0,sym,0)+0],&ee[0],n,n);
-//    xout << "eigenvectors";
-//    for (uint i=0; i<n*n; i++) xout << " "<<natorb[orbitalSpace->offset(0,sym,0)+i]; xout <<std::endl;
-//    xout << "eigenvalues";
-//    for (uint i=0; i<n; i++) xout << " "<<ee[i]; xout <<std::endl;
-//    for (unsigned int i=0; i<n; i++ )
-//      for (unsigned int j=0; j<=i; j++ ) {
-//        double x=natorb[orbitalSpace->offset(0,sym,0)+i+j*n];
-//        natorb[orbitalSpace->offset(0,sym,0)+i+j*n]=natorb[orbitalSpace->offset(0,sym,0)+j+i*n];
-//        natorb[orbitalSpace->offset(0,sym,0)+j+i*n]=x;
-//      }
-    }
+    smat natorb({*orbitalSpace,*orbitalSpace},0,0,"Natural orbitals");
+    smat dens1({*orbitalSpace,*orbitalSpace},1,0,"Density");
+    smat ee({*orbitalSpace},0,-1,"Occupation numbers");
+    density(*dens1.data());
+    // at this point, the off-diagonal elements of the density are twice what they should be, so sort that out.
+    dens1 *=0.5; for (auto k=0; k<dens1.max_symmetry(); k++) for (auto l=0;l<dens1.dimension(k);l++) dens1.block(k)[(l+2)*(l+1)/2-1]*=2;
+
+    xout << dens1;
+    dens1.ev(ee,&natorb);
+    xout <<ee<<natorb;
     return natorb;
 }
 
