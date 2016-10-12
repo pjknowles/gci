@@ -76,7 +76,7 @@ private:
    * \param maxIterations The maximum number of iterations to perform
    * \return the energy of the state.
    */
-  double SteepestDescent(const Hamiltonian &hamiltonian,
+  double DIIS(const Hamiltonian &hamiltonian,
                                const State& prototype,
                                double energyThreshold=(double)-1, int maxIterations=-1);
 

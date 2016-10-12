@@ -20,15 +20,15 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
     for (size_t k=0; k<psx.size(); k++) {
         const Wavefunction* x=dynamic_cast <const Wavefunction*> (psx[k]);
         Wavefunction* g=dynamic_cast <Wavefunction*> (outputs[k]);
-        profiler.start("SteepestDescent density");
+        profiler.start("DIIS density");
 //        SMat natorb=x->naturalOrbitals();
         //    activeHamiltonian->rotate(&natorb);
-        profiler.stop("SteepestDescent density");
-        profiler.start("SteepestDescent Hc");
+        profiler.stop("DIIS density");
+        profiler.start("DIIS Hc");
         if (not append)
             g->zero();
         g->hamiltonianOnWavefunction(*activeHamiltonian, *x);
-        profiler.stop("SteepestDescent Hc");
+        profiler.stop("DIIS Hc");
     }
 }
 
@@ -161,8 +161,8 @@ std::vector<double> Run::run()
 #ifdef MOLPRO
 //    itf::SetVariables( "ENERGY_METHOD", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
-  } else if (method=="SD") {
-    energies.resize(1);energies[0] = SteepestDescent(hh, prototype);
+  } else if (method=="DIIS") {
+    energies.resize(1);energies[0] = DIIS(hh, prototype);
   } else if (method=="HAMILTONIAN")
      HamiltonianMatrixPrint(hh,prototype);
   else if (method=="PROFILETEST") {
@@ -200,18 +200,18 @@ using namespace itf;
 #endif
 
 #include <cmath>
-double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototype, double energyThreshold, int maxIterations)
+double Run::DIIS(const Hamiltonian &hamiltonian, const State &prototype, double energyThreshold, int maxIterations)
 {
   Hamiltonian h(hamiltonian);
-  profiler.start("SteepestDescent");
-  profiler.start("SteepestDescent preamble");
-//  xout << "on entry to Run::SteepestDescent energyThreshold="<<energyThreshold<<std::endl;
+  profiler.start("DIIS");
+  profiler.start("DIIS preamble");
+//  xout << "on entry to Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
   if (maxIterations < 0)
     maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
   xout << "MAXIT="<<maxIterations<<std::endl;
   if (energyThreshold <= (double)0)
     energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-12)).at(0);
-  xout << "after parameter in Run::SteepestDescent energyThreshold="<<energyThreshold<<std::endl;
+  xout << "after parameter in Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
   Wavefunction w(prototype);
   Wavefunction g(w);
   g.diagonalHamiltonian(h);
@@ -241,15 +241,15 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
   w.set((double)0); w.set(reference, (double) 1);
   double elast=e0+1;
   double e=0.0;
-  profiler.stop("SteepestDescent preamble");
+  profiler.stop("DIIS preamble");
   for (int n=0; n < maxIterations; n++) {
-    profiler.start("SteepestDescent density");
+    profiler.start("DIIS density");
     SMat natorb=w.naturalOrbitals();
 //    h.rotate(&natorb);
-    profiler.stop("SteepestDescent density");
-    profiler.start("SteepestDescent Hc");
+    profiler.stop("DIIS density");
+    profiler.start("DIIS Hc");
     g.set((double)0); g.hamiltonianOnWavefunction(h, w);
-    profiler.stop("SteepestDescent Hc");
+    profiler.stop("DIIS Hc");
     e=g*w;
     g.axpy(-e,&w);
     xout << "Iteration "<<n<<", energy:"<< std::fixed; xout.precision(8) ;xout << e <<"; "<<std::endl;
@@ -287,7 +287,7 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
     xout << "norm2="<<norm2<<", econv="<<econv<<" "<<energyThreshold<<std::endl;
     if (econv < energyThreshold) break;
   }
-  profiler.stop("SteepestDescent");
+  profiler.stop("DIIS");
   return e;
 }
 
