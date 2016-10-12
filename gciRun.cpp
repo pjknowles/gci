@@ -226,6 +226,7 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
       w.set((double)0); w.set(reference, (double) 1);
       IterativeSolver::ParameterVectorSet gg; gg.push_back(&g);
       IterativeSolver::ParameterVectorSet ww; ww.push_back(&w);
+      diis.m_verbosity=1;
       diis.solve(gg,ww);
       return g*w;
   }
