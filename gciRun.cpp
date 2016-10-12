@@ -16,26 +16,33 @@ using namespace gci;
 using namespace IterativeSolver;
 
 static Hamiltonian* activeHamiltonian;
+static Wavefunction* _preconditioning_diagonals;
 static double _lastEnergy;
+static bool _residual_subtract_Energy;
 static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<ParameterScalar> shift=std::vector<ParameterScalar>(), bool append=false) {
     for (size_t k=0; k<psx.size(); k++) {
         const Wavefunction* x=dynamic_cast <const Wavefunction*> (psx[k]);
         Wavefunction* g=dynamic_cast <Wavefunction*> (outputs[k]);
-        profiler.start("DIIS density");
+        profiler.start("density");
 //        SMat natorb=x->naturalOrbitals();
         //    activeHamiltonian->rotate(&natorb);
-        profiler.stop("DIIS density");
-        profiler.start("DIIS Hc");
+        profiler.stop("density");
+        profiler.start("Hc");
         if (not append)
             g->zero();
 //        xout << "x "<<x->str(2)<<std::endl;
-        g->hamiltonianOnWavefunction(*activeHamiltonian, *x);
 //        xout << "g "<<g->str(2)<<std::endl;
+//        xout <<"g->buffer"<<g->data()<<std::endl;
+//        xout << "activeHamiltonian "<<activeHamiltonian->str(2)<<std::endl;
+        g->hamiltonianOnWavefunction(*activeHamiltonian, *x);
+        profiler.stop("Hc");
+//        xout << "g "<<g->str(2)<<std::endl;
+        if (_residual_subtract_Energy) {
         _lastEnergy=g->dot(x)/x->dot(x);
 //        xout << "e "<<_lastEnergy<<std::endl;
         g->axpy(-_lastEnergy,x);
+        }
 //        xout << "g "<<g->str(2)<<std::endl;
-        profiler.stop("DIIS Hc");
     }
 }
 
@@ -226,15 +233,18 @@ double Run::DIIS(const Hamiltonian &hamiltonian, const State &prototype, double 
     energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-12)).at(0);
 //  xout << "after parameter in Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
   Wavefunction w(prototype);
-  Wavefunction g(w);
-  g.diagonalHamiltonian(h);
-  size_t reference = g.minloc();
-  double e0=g.at(reference);
+  Wavefunction d(w);
+  d.diagonalHamiltonian(h);
+  Wavefunction g(d);
+  size_t reference = d.minloc();
+  double e0=d.at(reference);
 //  g -= (e0-(double)1e-10);
 //    xout << "Diagonal H: " << g.str(2) << std::endl;
   bool iterativesolver=true;
   if (iterativesolver) {
+      _preconditioning_diagonals = &d;
       activeHamiltonian = &h;
+      _residual_subtract_Energy=true;
       IterativeSolver::DIIS diis(&_residual,&_preconditioner);
       w.set((double)0); w.set(reference, (double) 1);
       IterativeSolver::ParameterVectorSet gg; gg.push_back(&g);
@@ -577,6 +587,93 @@ std::vector<double> Run::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
   xout <<"RSPT wavefunction size="<<w.size()<<std::endl;
   Wavefunction g(w);
   g.diagonalHamiltonian(*hamiltonians[0]);
+  size_t reference = g.minloc();
+  e[0]=g.at(reference);
+  g-=e[0];g.set(reference,(double)1);
+//  xout << "Møller-Plesset denominators: " << g.str(2) << std::endl;
+  gci::File h0file; h0file.name="H0"; g.put(h0file);
+  w.set((double)0); w.set(reference, (double) 1);
+  gci::File wfile; wfile.name="Wavefunction vectors"; w.put(wfile,0);
+  gci::File gfile; gfile.name="Action vectors";
+  for (int k=0; k < (int) hamiltonians.size(); k++) {
+    g.set((double)0);
+//    xout << "hamiltonian about to be applied to reference: "<< *hamiltonians[k] <<std::endl;
+    g.hamiltonianOnWavefunction(*hamiltonians[k],w);
+//    xout << "hamiltonian on reference: " << g.str(2) << std::endl;
+    g.put(gfile,k);
+  }
+  int nmax = maxOrder < maxIterations ? maxOrder : maxIterations+1;
+  e.resize(nmax+1);
+  for (int n=1; n < maxOrder && n <= maxIterations; n++) {
+    // construct  |n> = -(H0-E0)^{-1} ( -sum_k^{n-1} E_{n-k} |k> + sum_{k=n-h}^{n-1} H|k>) where h is the maximum order of hamiltonian
+//    xout <<std::endl<<std::endl<<"MAIN ITERATION n="<<n<<std::endl;
+    g.set((double)0);
+//            xout <<std::endl<< "g after set 0: " << g.str(2) <<std::endl;
+    for (int k=n; k>0; k--) {
+      w.getAll(wfile,n-k);
+      if (k < (int) hamiltonians.size()) {
+//            xout <<"k="<<k<< " g before H.w: " << g.str(2) <<std::endl;
+        g.hamiltonianOnWavefunction(*hamiltonians[k], w);
+//            xout << "g after H.w: " << g.str(2) <<std::endl;
+        if (n == k) e[n]+=g.at(reference);
+//        if (n == k) xout << "k, E:"<<k<<" "<<e[k]<<std::endl;
+      }
+//        xout << "k, E:"<<k<<" "<<e[k]<<", g before -E.w: " << g.str(2) <<std::endl;
+//        xout <<"w="<<w.str(2)<<std::endl;
+//      g -= w * e[k];
+      g.axpy(-e[k],&w);
+//        xout << "k, E:"<<k<<" "<<e[k]<<", g after -E.w: " << g.str(2) <<std::endl;
+    }
+      {
+    bool olddistw=w.distributed; w.distributed=true;
+    bool olddistg=g.distributed; g.distributed=true;
+    w = -g;
+    g.get(h0file);
+//    xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
+    w.set(reference,(double)0);
+    w /= g;
+//     xout <<std::endl<< "Perturbed wavefunction, order="<<n<<": " << w.str(2) <<std::endl;
+    w.put(wfile,n);
+    for (int k=1; k < (int) hamiltonians.size(); k++) {
+      if (n+k > maxOrder) break;
+      g.get(gfile,k);
+//      xout <<"gfile "<<g.str(2)<<std::endl;
+//      xout <<"contribution from n="<<n<<", k="<<k<<" to E("<<n+k<<")="<<g*w<<std::endl;
+      e[n+k]+=g*w;
+    }
+    gsum(&e[n+1],(size_t)(hamiltonians.size()-1));
+    w.distributed=olddistw; g.distributed=olddistg;
+  }
+    xout << "n="<<n<<", E(n+1)="<<e[n+1]<<std::endl;
+    if ((e[n+1] < 0 ? -e[n+1] : e[n+1]) < energyThreshold && e[n+1] != (double)0) {e.resize(n+2);break;}
+  }
+  return e;
+}
+
+std::vector<double> Run::ISRSPT(const std::vector<gci::Hamiltonian*>& hamiltonians,
+                              const State &prototype,
+            int maxOrder,
+                              double energyThreshold,
+            int maxIterations)
+{
+  if (maxOrder < 0)
+    maxOrder = parameter("MAXORDER",std::vector<int>(1,1000)).at(0);
+  if (maxIterations < 0)
+    maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
+  if (energyThreshold < (double)0)
+    energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
+  std::vector<double> e(maxOrder+1,(double)0);
+//  for (int k=0; k<(int)hamiltonians.size(); k++)
+//    HamiltonianMatrixPrint(*hamiltonians[k],prototype);
+//  return e;
+  if (hamiltonians.size() < 1) throw "not enough hamiltonians";
+  if (hamiltonians.size() > 2) throw std::runtime_error("More than 2 hamiltonians not yet coded");
+//  for (int k=0; k<(int)hamiltonians.size(); k++) xout << "H("<<k<<"): " << *hamiltonians[k] << std::endl;
+  Wavefunction w(prototype);
+  xout <<"RSPT wavefunction size="<<w.size()<<std::endl;
+  Wavefunction g(w);
+  g.diagonalHamiltonian(*hamiltonians[0]);
+  activeHamiltonian=hamiltonians[0];
   size_t reference = g.minloc();
   e[0]=g.at(reference);
   g-=e[0];g.set(reference,(double)1);

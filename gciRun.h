@@ -53,6 +53,11 @@ private:
          int maxOrder=-1,
          double energyThreshold=-1,
          int maxIterations=-1);
+  std::vector<double> ISRSPT(const std::vector<Hamiltonian *> &hamiltonians,
+         const State &prototype,
+         int maxOrder=-1,
+         double energyThreshold=-1,
+         int maxIterations=-1);
 
   /*!
    * \brief Perform a variational calculation using the Davidson algorithm
