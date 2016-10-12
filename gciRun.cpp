@@ -11,11 +11,12 @@
 #include "IterativeSolver/ISDiis.h"
 using namespace gci;
 
-static Hamiltonian* activeHamiltonian;
 
 
 using namespace IterativeSolver;
 
+static Hamiltonian* activeHamiltonian;
+static double _lastEnergy;
 static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<ParameterScalar> shift=std::vector<ParameterScalar>(), bool append=false) {
     for (size_t k=0; k<psx.size(); k++) {
         const Wavefunction* x=dynamic_cast <const Wavefunction*> (psx[k]);
@@ -27,7 +28,13 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
         profiler.start("DIIS Hc");
         if (not append)
             g->zero();
+//        xout << "x "<<x->str(2)<<std::endl;
         g->hamiltonianOnWavefunction(*activeHamiltonian, *x);
+//        xout << "g "<<g->str(2)<<std::endl;
+        _lastEnergy=g->dot(x)/x->dot(x);
+//        xout << "e "<<_lastEnergy<<std::endl;
+        g->axpy(-_lastEnergy,x);
+//        xout << "g "<<g->str(2)<<std::endl;
         profiler.stop("DIIS Hc");
     }
 }
@@ -42,16 +49,22 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
         const Wavefunction* gw=dynamic_cast <const Wavefunction*>(psg[state]);
         double* c = cw->data();
         const double* g = gw->cdata();
-        if (shift[state]==0)
+        if (shift[state]==0) {
+//            xout << "preconditioner in H0 mode"<<std::endl;
             for (size_t i=0; i<diag.size(); i++)
                 c[i] = g[i]*d[i];
+        }
         else if (append) {
-            for (size_t i=0; i<diag.size(); i++)
+//            xout << "preconditioner in append mode"<<std::endl;
+            for (size_t i=0; i<diag.size(); i++) {
+//                xout << "d[i]"<<d[i]<<std::endl;
                 if (i != reference)
-                    c[i] -= g[i] /(d[i]+shift[state]);
+                    c[i] -= g[i] /(d[i]-d[reference]+shift[state]);
+            }
         } else {
+//            xout << "preconditioner in set mode"<<std::endl;
             for (size_t i=0; i<diag.size(); i++)
-                c[i] =- g[i]/(d[i]+shift[state]);
+                c[i] =- g[i]/(d[i]-d[reference]+shift[state]);
             c[reference]=0;
         }
     }
@@ -211,7 +224,7 @@ double Run::DIIS(const Hamiltonian &hamiltonian, const State &prototype, double 
   xout << "MAXIT="<<maxIterations<<std::endl;
   if (energyThreshold <= (double)0)
     energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-12)).at(0);
-  xout << "after parameter in Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
+//  xout << "after parameter in Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
   Wavefunction w(prototype);
   Wavefunction g(w);
   g.diagonalHamiltonian(h);
@@ -227,8 +240,14 @@ double Run::DIIS(const Hamiltonian &hamiltonian, const State &prototype, double 
       IterativeSolver::ParameterVectorSet gg; gg.push_back(&g);
       IterativeSolver::ParameterVectorSet ww; ww.push_back(&w);
       diis.m_verbosity=1;
+      diis.m_thresh=energyThreshold;
+      diis.m_maxIterations=maxIterations;
       diis.solve(gg,ww);
-      return g*w;
+//      xout << "Final w: "<<w.str(2)<<std::endl;
+//      xout << "Final g: "<<g.str(2)<<std::endl;
+      diis.m_thresh=energyThreshold;
+      diis.m_maxIterations=maxIterations;
+      return _lastEnergy;
   }
   gci::File h0file; h0file.name="H0";
   gci::File wfile; wfile.name="Wavefunction vectors";
