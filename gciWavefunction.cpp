@@ -285,44 +285,43 @@ Wavefunction operator+(const Wavefunction &w1, const Wavefunction &w2)
   return result += w2;
 }
 
-Wavefunction gci::operator-(const Wavefunction &w1, const Wavefunction &w2)
+Wavefunction operator-(const Wavefunction &w1, const Wavefunction &w2)
 {
   Wavefunction result = w1;
   return result -= w2;
 }
 
-Wavefunction gci::operator/(const Wavefunction &w1, const Wavefunction &w2)
+Wavefunction operator/(const Wavefunction &w1, const Wavefunction &w2)
 {
   Wavefunction result = w1;
   return result /= w2;
 }
 
-Wavefunction gci::operator*(const Wavefunction &w1, const double &value)
+Wavefunction operator*(const Wavefunction &w1, const double &value)
 {
   Wavefunction result = w1;
   return result *= value;
 }
 
-Wavefunction gci::operator*(const double &value, const Wavefunction &w1)
+Wavefunction operator*(const double &value, const Wavefunction &w1)
 {
   Wavefunction result = w1;
   return result *= value;
 }
 
-IterativeSolver::ParameterScalar Wavefunction::dot(const ParameterVector *other)
+IterativeSolver::ParameterScalar Wavefunction::dot(const ParameterVector *other) const
 {
- return (*this)*(*other);
+ return (*this)*(*(dynamic_cast<const Wavefunction*>(other)));
 }
 void Wavefunction::zero()
 {
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   if (distributed)
-    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<w1.buffer.size(); i++)
+    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
       buffer[i]=0;
   else
     for (size_t i=0; i<buffer.size(); i++)
       buffer[i] = 0;
-  return result;
 }
 
 double gci::operator *(const Wavefunction &w1, const Wavefunction &w2)

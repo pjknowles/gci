@@ -13,6 +13,7 @@ using namespace gci;
 
 static Hamiltonian* activeHamiltonian;
 
+
 using namespace IterativeSolver;
 
 static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<ParameterScalar> shift=std::vector<ParameterScalar>(), bool append=false) {
@@ -584,6 +585,7 @@ std::vector<double> Run::RSPT(const std::vector<gci::Hamiltonian*>& hamiltonians
       }
 //        xout << "k, E:"<<k<<" "<<e[k]<<", g before -E.w: " << g.str(2) <<std::endl;
 //        xout <<"w="<<w.str(2)<<std::endl;
+      using namespace IterativeSolver;
       g -= e[k] * w;
 //        xout << "k, E:"<<k<<" "<<e[k]<<", g after -E.w: " << g.str(2) <<std::endl;
     }
