@@ -7,3 +7,6 @@
 [submodule "symmetry_matrix"]
 	path = symmetry_matrix
 	url = bb:symmetry_matrix
+[submodule "IterativeSolver"]
+	path = IterativeSolver
+	url = git@bitbucket.org:pjknowles/IterativeSolver

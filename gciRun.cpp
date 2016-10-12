@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <vector>
 #include <cmath>
+#include "IterativeSolver.h"
 using namespace gci;
 
 Run::Run(std::string fcidump)
@@ -172,8 +173,17 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
   double e0=g.at(reference);
 //  g -= (e0-(double)1e-10);
 //    xout << "Diagonal H: " << g.str(2) << std::endl;
-  gci::File h0file; h0file.name="H0"; g.put(h0file);
+  bool iterativesolver=true;
+  IterativeSolver::Diis diis({g.size(),w.size()});//,6,1e6,IterativeSolver::Diis::disabled);
+  gci::File h0file; h0file.name="H0";
   gci::File wfile; wfile.name="Wavefunction vectors";
+  if (iterativesolver) {
+      diis.addPreconditioner(g.data(),-e0+1e-8,true);
+    }
+  else {
+    g.put(h0file);
+    }
+
   w.set((double)0); w.set(reference, (double) 1);
   double elast=e0+1;
   double e=0.0;
@@ -181,7 +191,7 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
   for (int n=0; n < maxIterations; n++) {
     profiler.start("SteepestDescent density");
     smat natorb=w.naturalOrbitals();
-    h.rotate(&natorb);
+//    h.rotate(&natorb);
     profiler.stop("SteepestDescent density");
     profiler.start("SteepestDescent Hc");
     g.set((double)0); g.hamiltonianOnWavefunction(h, w);
@@ -191,9 +201,19 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
     xout << "Iteration "<<n<<", energy:"<< std::fixed; xout.precision(8) ;xout << e <<"; "<<std::endl;
     if (false) xout << "Residual:"<<g.str(2)<<std::endl;
 
-    bool olddistw=w.distributed; w.distributed=true;
-    bool olddistg=g.distributed; g.distributed=true;
     // at this point we have the residual in g, and wavefunction in w
+    bool olddistw=w.distributed;
+    bool olddistg=g.distributed;
+    if (iterativesolver) {
+        w.distributed=false;
+        g.distributed=false;
+        double wrefold = w.at(reference);
+        diis.iterate(g.data(),w.data());
+        w.set(reference,wrefold);
+
+      } else {
+    w.distributed=true;
+    g.distributed=true;
     w.put(wfile);
     w.get(h0file); w -= (e-(double)1e-8); // get preconditioner
     // form update
@@ -204,6 +224,7 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
     w.get(wfile); // retrieve original wavefunction
     if (false) xout << "Old wavefunction:"<<w.str(2)<<std::endl;
     w+=g;
+      }
     if (false) xout << "New wavefunction:"<<w.str(2)<<std::endl;
     double norm2=w*w;
     gsum(&norm2,1);

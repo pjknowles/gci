@@ -2,16 +2,16 @@ cmake_minimum_required(VERSION 2.6)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 project(gci)
-subdirs(FCIdump symmetry_matrix)
+subdirs(FCIdump symmetry_matrix IterativeSolver)
 enable_language(Fortran)
 
 file (GLOB SRCS *.cpp *.h *.F90)
 add_definitions(-DNOMAIN)
 add_executable(gci.exe ${SRCS})
 
-include_directories(FCIdump symmetry_matrix symmetry_matrix/memory)
-target_link_libraries(gci.exe FCIdump memory symmetry_matrix)
-link_directories(${CMAKE_BINARY_DIR}/FCIdump ${CMAKE_BINARY_DIR}/symmetry_matrix ${CMAKE_BINARY_DIR}/symmetry_matrix/memory)
+include_directories(FCIdump IterativeSolver IterativeSolver/Eigen symmetry_matrix symmetry_matrix/memory)
+target_link_libraries(gci.exe FCIdump memory IterativeSolver symmetry_matrix)
+link_directories(${CMAKE_BINARY_DIR}/FCIdump ${CMAKE_BINARY_DIR}/symmetry_matrix ${CMAKE_BINARY_DIR}/IterativeSolver ${CMAKE_BINARY_DIR}/symmetry_matrix/memory)
 
 get_filename_component(COMPILER_NAME  ${CMAKE_CXX_COMPILER} NAME)
 if (${COMPILER_NAME} STREQUAL "mpic++")
