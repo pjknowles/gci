@@ -201,6 +201,7 @@ public:
   Wavefunction& addAbsPower(const Wavefunction &c, const double k=0, const double factor=1);
 
   double* data() { return &buffer[0];}
+  const double* cdata() const { return &buffer[0];}
 
   friend class TransitionDensity;
   friend double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions

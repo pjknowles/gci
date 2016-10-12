@@ -5,6 +5,8 @@ project(gci)
 subdirs(FCIdump symmetry_matrix IterativeSolver)
 enable_language(Fortran)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 file (GLOB SRCS *.cpp *.h *.F90)
 add_definitions(-DNOMAIN)
 add_executable(gci.exe ${SRCS})

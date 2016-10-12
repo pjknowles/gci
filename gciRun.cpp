@@ -34,20 +34,25 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
 
 static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet & psc, std::vector<ParameterScalar> shift=std::vector<ParameterScalar>(), bool append=false) {
     Wavefunction diag(*(dynamic_cast <const Wavefunction*>(psc.front())));
-    diag.diagonalHamiltonian(*activeHamiltonian);
+    diag.diagonalHamiltonian(*activeHamiltonian); // FIXME don't want to generate and store every call
+    const double* d = diag.cdata();
     size_t reference = diag.minloc();
     for (size_t state=0; state<psc.size(); state++){
+        Wavefunction* cw=dynamic_cast <Wavefunction*>(psc[state]);
+        const Wavefunction* gw=dynamic_cast <const Wavefunction*>(psg[state]);
+        double* c = cw->data();
+        const double* g = gw->cdata();
         if (shift[state]==0)
             for (size_t i=0; i<diag.size(); i++)
-                (*psc[state])[i] = (*psg[state])[i]*diag[i];
+                c[i] = g[i]*d[i];
         else if (append) {
             for (size_t i=0; i<diag.size(); i++)
                 if (i != reference)
-                    (*psc[state])[i] -= (*psg[state])[i]/(diag[i]+shift[state]);
+                    c[i] -= g[i] /(d[i]+shift[state]);
         } else {
             for (size_t i=0; i<diag.size(); i++)
-                (*psc[state])[i] =- (*psg[state])[i]/(diag[i]+shift[state]);
-            (*psc[state])[reference]=0;
+                c[i] =- g[i]/(d[i]+shift[state]);
+            c[reference]=0;
         }
     }
 }
