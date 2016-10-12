@@ -139,7 +139,7 @@ public:
   void rotate1(std::vector<double>* integrals, const std::vector<double> *rot);
   void rotate2(std::vector<double>* integrals, const std::vector<double> *rot1, const std::vector<double> *rot2);
   void rotate(std::vector<double> const * rota, std::vector<double> const * rotb=NULL);
-  void rotate(smat const * rota, smat const * rotb=NULL);
+  void rotate(SMat const * rota, SMat const * rotb=NULL);
 
 private:
   size_t ijSize;

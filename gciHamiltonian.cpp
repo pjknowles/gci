@@ -879,16 +879,16 @@ void Hamiltonian::rotate(std::vector<double> const * rota, std::vector<double> c
 }
 
 #include "memory.h"
-void Hamiltonian::rotate(smat const * rota, smat const * rotb)
+void Hamiltonian::rotate(SMat const * rota, SMat const * rotb)
 {
-  smat rotan = rota->desymmetrise();
+  SMat rotan = rota->desymmetrise();
   std::vector<double> rotanv;
   memory::vector<double>* dd;
   dd=rotan.data();
   for (size_t i=0; i<rotan.size(); i++)
     rotanv.push_back((*dd)[i]);
   if (rotb != NULL) {
-    smat rotbn = rotb->desymmetrise();
+    SMat rotbn = rotb->desymmetrise();
     std::vector<double> rotbnv;
     dd=rotbn.data();
     for (size_t i=0; i<rotbn.size(); i++)

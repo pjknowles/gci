@@ -21,7 +21,7 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
         const Wavefunction* x=dynamic_cast <const Wavefunction*> (psx[k]);
         Wavefunction* g=dynamic_cast <Wavefunction*> (outputs[k]);
         profiler.start("SteepestDescent density");
-//        smat natorb=x->naturalOrbitals();
+//        SMat natorb=x->naturalOrbitals();
         //    activeHamiltonian->rotate(&natorb);
         profiler.stop("SteepestDescent density");
         profiler.start("SteepestDescent Hc");
@@ -238,7 +238,7 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
   profiler.stop("SteepestDescent preamble");
   for (int n=0; n < maxIterations; n++) {
     profiler.start("SteepestDescent density");
-    smat natorb=w.naturalOrbitals();
+    SMat natorb=w.naturalOrbitals();
 //    h.rotate(&natorb);
     profiler.stop("SteepestDescent density");
     profiler.start("SteepestDescent Hc");

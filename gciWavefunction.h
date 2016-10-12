@@ -111,7 +111,7 @@ public:
    * \brief Calculate natural orbitals
    * \return
    */
-  smat naturalOrbitals();
+  SMat naturalOrbitals();
 private:
   void gdensity(memory::vector<double>& den1, memory::vector<double>& den2, bool d1, bool d2, const Wavefunction& bra);
 public:
