@@ -53,7 +53,7 @@ private:
          int maxOrder=-1,
          double energyThreshold=-1,
          int maxIterations=-1);
-  std::vector<double> ISRSPT(const std::vector<Hamiltonian *> &hamiltonians,
+  std::vector<double> ISRSPT(const Hamiltonian &hamiltonian, const Hamiltonian &hamiltonian0,
          const State &prototype,
          int maxOrder=-1,
          double energyThreshold=-1,
