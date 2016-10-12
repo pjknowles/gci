@@ -8,8 +8,48 @@
 #include <iomanip>
 #include <vector>
 #include <cmath>
-#include "IterativeSolver.h"
+#include "IterativeSolver/ISDiis.h"
 using namespace gci;
+
+static Hamiltonian* activeHamiltonian;
+
+using namespace IterativeSolver;
+
+static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<ParameterScalar> shift=std::vector<ParameterScalar>(), bool append=false) {
+    for (size_t k=0; k<psx.size(); k++) {
+        const Wavefunction* x=dynamic_cast <const Wavefunction*> (psx[k]);
+        Wavefunction* g=dynamic_cast <Wavefunction*> (outputs[k]);
+        profiler.start("SteepestDescent density");
+//        smat natorb=x->naturalOrbitals();
+        //    activeHamiltonian->rotate(&natorb);
+        profiler.stop("SteepestDescent density");
+        profiler.start("SteepestDescent Hc");
+        if (not append)
+            g->zero();
+        g->hamiltonianOnWavefunction(*activeHamiltonian, *x);
+        profiler.stop("SteepestDescent Hc");
+    }
+}
+
+static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet & psc, std::vector<ParameterScalar> shift=std::vector<ParameterScalar>(), bool append=false) {
+    Wavefunction diag(*(dynamic_cast <const Wavefunction*>(psc.front())));
+    diag.diagonalHamiltonian(*activeHamiltonian);
+    size_t reference = diag.minloc();
+    for (size_t state=0; state<psc.size(); state++){
+        if (shift[state]==0)
+            for (size_t i=0; i<diag.size(); i++)
+                (*psc[state])[i] = (*psg[state])[i]*diag[i];
+        else if (append) {
+            for (size_t i=0; i<diag.size(); i++)
+                if (i != reference)
+                    (*psc[state])[i] -= (*psg[state])[i]/(diag[i]+shift[state]);
+        } else {
+            for (size_t i=0; i<diag.size(); i++)
+                (*psc[state])[i] =- (*psg[state])[i]/(diag[i]+shift[state]);
+            (*psc[state])[reference]=0;
+        }
+    }
+}
 
 Run::Run(std::string fcidump)
 {
@@ -174,11 +214,18 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
 //  g -= (e0-(double)1e-10);
 //    xout << "Diagonal H: " << g.str(2) << std::endl;
   bool iterativesolver=true;
-  IterativeSolver::Diis diis({g.size(),w.size()});//,6,1e6,IterativeSolver::Diis::disabled);
+  if (iterativesolver) {
+      activeHamiltonian = &h;
+      IterativeSolver::DIIS diis(&_residual,&_preconditioner);
+      w.set((double)0); w.set(reference, (double) 1);
+      IterativeSolver::ParameterVectorSet gg; gg.push_back(&g);
+      IterativeSolver::ParameterVectorSet ww; ww.push_back(&w);
+      diis.solve(gg,ww);
+      return g*w;
+  }
   gci::File h0file; h0file.name="H0";
   gci::File wfile; wfile.name="Wavefunction vectors";
   if (iterativesolver) {
-      diis.addPreconditioner(g.data(),-e0+1e-8,true);
     }
   else {
     g.put(h0file);
@@ -197,7 +244,7 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
     g.set((double)0); g.hamiltonianOnWavefunction(h, w);
     profiler.stop("SteepestDescent Hc");
     e=g*w;
-    g.axpy(-e,w);
+    g.axpy(-e,&w);
     xout << "Iteration "<<n<<", energy:"<< std::fixed; xout.precision(8) ;xout << e <<"; "<<std::endl;
     if (false) xout << "Residual:"<<g.str(2)<<std::endl;
 
@@ -205,12 +252,6 @@ double Run::SteepestDescent(const Hamiltonian &hamiltonian, const State &prototy
     bool olddistw=w.distributed;
     bool olddistg=g.distributed;
     if (iterativesolver) {
-        w.distributed=false;
-        g.distributed=false;
-        double wrefold = w.at(reference);
-        diis.iterate(g.data(),w.data());
-        w.set(reference,wrefold);
-
       } else {
     w.distributed=true;
     g.distributed=true;
@@ -344,7 +385,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     for (int i=0; i <= n; i++) {
 //      xout << "alpha "<<alpha[i]<<std::endl;
       g.get(wfile,i);
-      w.axpy(alpha[i] , g);
+      w.axpy(alpha[i] , &g);
     } // w contains current wavefunction
     double l2norm = w.norm((double)2);
     double lknorm = w.norm((double)compressionK);
@@ -359,7 +400,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
     // construct dP/dmu in g
     g.set((double)0);
     g.addAbsPower(w,(double)compressionK-2,factor/lknorm);
-    g.axpy(-factor/l2norm,w);
+    g.axpy(-factor/l2norm,&w);
     // project dP/dmu onto subspace
     std::vector<double> dPdmu(n+1);
     std::vector<double> dalphadmu(n+1);
@@ -388,21 +429,21 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
       g.set((double)0);
       for (int i=0; i <= n; i++) {
         w.get(wfile,i);
-        g.axpy(alpha[i] , w);
+        g.axpy(alpha[i] , &w);
       } // g contains the current wavefunction
       w.set((double)0);
       w.addAbsPower(g,(double)compressionK-2,mu*factor/(2*lknorm));
-      w.axpy(-mu*factor/(2*l2norm),g);
+      w.axpy(-mu*factor/(2*l2norm),&g);
     }
     else // !compressive
       w.set((double)0);
     for (int i=0; i <= n; i++) {
       g.get(wfile,i);
 //      w += energy*alpha[i] * g;
-      w.axpy(energy*alpha[i] , g);
+      w.axpy(energy*alpha[i] , &g);
       g.get(gfile,i);
 //      w -= alpha[i] * g;
-      w.axpy( -alpha[i] , g);
+      w.axpy( -alpha[i] , &g);
     }
     // at this point we have the residual
     g.get(h0file);
@@ -427,7 +468,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
       double factor = -(g*w)/(g*g);
       gsum(&factor,1);
 //      w += factor*g;
-      w.axpy(factor,g);
+      w.axpy(factor,&g);
     }
     profiler.stop("Davidson residual");
     double norm2=w*w;
@@ -456,7 +497,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
       bool olddist=w.distributed; w.distributed=true;
       for (int i=0; i <= n; i++) {
         g.get(wfile,i);
-        w.axpy(alpha[i] , g);
+        w.axpy(alpha[i] , &g);
       }
       w.gather();
       w.distributed=olddist;
@@ -624,3 +665,4 @@ std::vector<double> Run::parameter(std::string key, std::vector<double> def)
   if (globalFCIdump != NULL) return globalFCIdump->parameter(key,def);
   return def;
 }
+

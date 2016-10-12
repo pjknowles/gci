@@ -10,12 +10,13 @@
 #include "gciDeterminant.h"
 #include "memory.h"
 #include "smat.h"
+#include "ParameterVector.h"
 
 namespace gci {
 /*!
  * \brief The Wavefunction class, which holds a configuration expansion in the tensor space defined by a hamiltonian
  */
-class Wavefunction : public State
+class Wavefunction : public State, public IterativeSolver::ParameterVector
 {
 public:
   /**
@@ -130,7 +131,10 @@ public:
    * \param a the factor defining the multiple
    * \param x the other wavefunction
    */
-  void axpy(double a, Wavefunction& x);
+//  void axpy(IterativeSolver::ParameterScalar a, const Wavefunction *other);
+  void axpy(IterativeSolver::ParameterScalar a, const IterativeSolver::ParameterVector *other);
+    // Every child of ParameterVector needs exactly this
+    Wavefunction* clone() const { return new Wavefunction(*this); }
 
   /*!
    * \brief push the object's buffer to a file
@@ -177,6 +181,7 @@ public:
   void set(size_t offset, const double val);///< set one element to a scalar
   void set(const double val);///< set all elements to a scalar
   //    Wavefunction& operator=(const Wavefunction &other); ///< copy
+//  namespace IterativeSolver {
   Wavefunction& operator*=(const double &value); ///< multiply by a scalar
   Wavefunction& operator+=(const Wavefunction &other); ///< add another wavefunction
   Wavefunction& operator-=(const Wavefunction &other); ///< subtract another wavefunction
@@ -199,6 +204,8 @@ public:
 
   friend class TransitionDensity;
   friend double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
+  IterativeSolver::ParameterScalar dot(const ParameterVector *other) const;
+  void zero();
 private:
   void buildStrings(); ///< build alphaStrings and betaStrings
   size_t dimension; ///< the size of the space
@@ -208,11 +215,12 @@ private:
 
 };
 double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
-Wavefunction operator+(const Wavefunction &w1, const Wavefunction &w2); ///< add two wavefunctions
-Wavefunction operator-(const Wavefunction &w1, const Wavefunction &w2); ///< subtract two wavefunctions
-Wavefunction operator/(const Wavefunction &w1, const Wavefunction &w2); ///< element-by-element division of two wavefunctions
-Wavefunction operator*(const Wavefunction &w1, const double &value);///< multiply by a scalar
-Wavefunction operator*(const double &value, const Wavefunction &w1);///< multiply by a scalar
+Wavefunction& operator+(const Wavefunction &w1, const Wavefunction &w2); ///< add two wavefunctions
+Wavefunction& operator-(const Wavefunction &w1, const Wavefunction &w2); ///< subtract two wavefunctions
+Wavefunction& operator/(const Wavefunction &w1, const Wavefunction &w2); ///< element-by-element division of two wavefunctions
+Wavefunction& operator*(const Wavefunction &w1, const double &value);///< multiply by a scalar
+Wavefunction& operator*(const double &value, const Wavefunction &w1);///< multiply by a scalar
 }
 using namespace gci;
+
 #endif // GCIWAVEFUNCTION_H
