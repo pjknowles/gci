@@ -47,30 +47,31 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
 }
 
 static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet & psc, std::vector<ParameterScalar> shift=std::vector<ParameterScalar>(), bool append=false) {
-    Wavefunction diag(*(dynamic_cast <const Wavefunction*>(psc.front())));
-    diag.diagonalHamiltonian(*activeHamiltonian); // FIXME don't want to generate and store every call
-    const double* d = diag.cdata();
-    size_t reference = diag.minloc();
+    //FIXME all this arithmetic should be hidden inside Wavefunction
+    Wavefunction* diag = _preconditioning_diagonals;
+    const double* d = diag->cdata();
+    size_t reference = diag->minloc();
     for (size_t state=0; state<psc.size(); state++){
         Wavefunction* cw=dynamic_cast <Wavefunction*>(psc[state]);
         const Wavefunction* gw=dynamic_cast <const Wavefunction*>(psg[state]);
+        size_t n=cw->size();
         double* c = cw->data();
         const double* g = gw->cdata();
         if (shift[state]==0) {
 //            xout << "preconditioner in H0 mode"<<std::endl;
-            for (size_t i=0; i<diag.size(); i++)
+            for (size_t i=0; i<n; i++)
                 c[i] = g[i]*d[i];
         }
         else if (append) {
 //            xout << "preconditioner in append mode"<<std::endl;
-            for (size_t i=0; i<diag.size(); i++) {
+            for (size_t i=0; i<n; i++) {
 //                xout << "d[i]"<<d[i]<<std::endl;
                 if (i != reference)
                     c[i] -= g[i] /(d[i]-d[reference]+shift[state]);
             }
         } else {
 //            xout << "preconditioner in set mode"<<std::endl;
-            for (size_t i=0; i<diag.size(); i++)
+            for (size_t i=0; i<n; i++)
                 c[i] =- g[i]/(d[i]-d[reference]+shift[state]);
             c[reference]=0;
         }
