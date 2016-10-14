@@ -206,6 +206,12 @@ public:
   friend class TransitionDensity;
   friend double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
   IterativeSolver::ParameterScalar dot(const ParameterVector *other) const;
+  /*!
+   * \brief this[i] = a[i]*b[i]
+   * \param a
+   * \param b
+   */
+  void times(const ParameterVector *a, const ParameterVector *b);
   void zero();
 private:
   void buildStrings(); ///< build alphaStrings and betaStrings

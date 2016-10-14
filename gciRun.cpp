@@ -10,6 +10,7 @@
 #include <cmath>
 #include "IterativeSolver/ISDiis.h"
 #include "IterativeSolver/ISRSPT.h"
+#include "IterativeSolver/ISDavidson.h"
 using namespace gci;
 
 
@@ -65,8 +66,9 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
         const double* g = gw->cdata();
         if (shift[state]==0) {
 //            xout << "preconditioner in H0 mode"<<std::endl;
-            for (size_t i=0; i<n; i++)
-                c[i] = g[i]*d[i];
+            cw->times(gw,diag);
+//            for (size_t i=0; i<n; i++)
+//                c[i] = g[i]*d[i];
         }
         else if (append) {
 //            xout << "preconditioner in append mode"<<std::endl;
@@ -198,6 +200,8 @@ std::vector<double> Run::run()
 #endif
   } else if (method == "DAVIDSON") {
     energies = Davidson(hh, prototype);
+  } else if (method == "CS") {
+    energies = CSDavidson(hh, prototype);
 #ifdef MOLPRO
 //    itf::SetVariables( "ENERGY_METHOD", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
@@ -340,6 +344,46 @@ double Run::DIIS(const Hamiltonian &hamiltonian, const State &prototype, double 
 }
 
 std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
+                                  const State &prototype,
+                                  double energyThreshold, int nState, int maxIterations)
+{
+  Hamiltonian h(hamiltonian);
+  profiler.start("Davidson");
+  profiler.start("Davidson preamble");
+  //  xout << "on entry to Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
+  if (maxIterations < 0)
+    maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
+  xout << "MAXIT="<<maxIterations<<std::endl;
+  if (energyThreshold <= (double)0)
+    energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-12)).at(0);
+  //  xout << "after parameter in Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
+  Wavefunction w(prototype);
+  Wavefunction d(w);
+  d.diagonalHamiltonian(h);
+  Wavefunction g(d);
+  size_t reference = d.minloc();
+  double e0=d.at(reference);
+  _preconditioning_diagonals = &d;
+  activeHamiltonian = &h;
+  _residual_subtract_Energy=false;
+  _preconditioner_subtractDiagonal=false;
+  IterativeSolver::Davidson solver(&_residual,&_preconditioner);
+  w.set((double)0); w.set(reference, (double) 1);
+  IterativeSolver::ParameterVectorSet gg; gg.push_back(&g);
+  IterativeSolver::ParameterVectorSet ww; ww.push_back(&w);
+  solver.m_verbosity=1;
+  solver.m_thresh=energyThreshold;
+  solver.m_maxIterations=maxIterations;
+  solver.solve(gg,ww);
+//  xout << "Final w: "<<w.str(2)<<std::endl;
+//  xout << "Final g: "<<g.str(2)<<std::endl;
+  profiler.stop("Davidson");
+  return solver.eigenvalues();
+}
+
+
+
+std::vector<double> Run::CSDavidson(const Hamiltonian& hamiltonian,
                                   const State &prototype,
                                   double energyThreshold, int nState, int maxIterations)
 {

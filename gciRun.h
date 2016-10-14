@@ -72,6 +72,9 @@ private:
   std::vector<double> Davidson(const Hamiltonian &hamiltonian,
                                const State& prototype,
                                double energyThreshold=(double)-1, int nState=-1, int maxIterations=-1);
+  std::vector<double> CSDavidson(const Hamiltonian &hamiltonian,
+                               const State& prototype,
+                               double energyThreshold=(double)-1, int nState=-1, int maxIterations=-1);
   /*!
    * \brief Perform a variational calculation using the preconditioned stepest descent algorithm
    * \param hamiltonian The Hamiltonian

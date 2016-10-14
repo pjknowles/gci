@@ -313,6 +313,20 @@ IterativeSolver::ParameterScalar Wavefunction::dot(const ParameterVector *other)
 {
  return (*this)*(*(dynamic_cast<const Wavefunction*>(other)));
 }
+
+void Wavefunction::times(const ParameterVector *a, const ParameterVector *b)
+{
+ const Wavefunction* wa = dynamic_cast<const Wavefunction*>(a);
+ const Wavefunction* wb = dynamic_cast<const Wavefunction*>(b);
+ size_t chunk = (buffer.size()-1)/parallel_size+1;
+  if (distributed)
+    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
+      buffer[i]=wa->buffer[i]*wb->buffer[i];
+  else
+    for (size_t i=0; i<buffer.size(); i++)
+      buffer[i] = wa->buffer[i]*wb->buffer[i];
+}
+
 void Wavefunction::zero()
 {
   size_t chunk = (buffer.size()-1)/parallel_size+1;
