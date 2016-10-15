@@ -338,28 +338,33 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
   if (energyThreshold <= (double)0)
     energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-12)).at(0);
   //  xout << "after parameter in Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
-  Wavefunction w(prototype);
-  Wavefunction d(w);
+  Wavefunction d(prototype);
   d.diagonalHamiltonian(h);
-  Wavefunction g(d);
-  size_t reference = d.minloc();
-  double e0=d.at(reference);
   _preconditioning_diagonals = &d;
   activeHamiltonian = &h;
   _residual_subtract_Energy=false;
   _preconditioner_subtractDiagonal=false;
   IterativeSolver::Davidson solver(&_residual,&_preconditioner);
-  w.set((double)0); w.set(reference, (double) 1);
-  IterativeSolver::ParameterVectorSet gg; gg.push_back(&g);
-  IterativeSolver::ParameterVectorSet ww; ww.push_back(&w);
+  IterativeSolver::ParameterVectorSet gg;
+  IterativeSolver::ParameterVectorSet ww;
+  for (size_t root=0; root<nState; root++) {
+      Wavefunction* w=new Wavefunction(prototype);
+      ww.push_back(w);
+      w->set((double)0);
+      xout << "root="<<root<<", guess="<<d.minloc(root+1)<<std::endl;
+      w->set(d.minloc(root+1), (double) 1);
+      Wavefunction* g=new Wavefunction(prototype);
+      g->allocate_buffer();
+      gg.push_back(g);
+    }
   solver.m_verbosity=1;
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;
   solver.m_roots=nState;
   solver.solve(gg,ww);
-//  xout << "Final w: "<<w.str(2)<<std::endl;
-//  xout << "Final g: "<<g.str(2)<<std::endl;
   profiler.stop("Davidson");
+  while (ww.size()>0) { delete ww.back(); ww.pop_back(); }
+  while (gg.size()>0) { delete gg.back(); gg.pop_back(); }
   return solver.eigenvalues();
 }
 

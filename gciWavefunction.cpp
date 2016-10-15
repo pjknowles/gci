@@ -443,10 +443,11 @@ size_t Wavefunction::minloc(size_t n)
 {
   std::vector<size_t> results;
   for (size_t k=0; k<n; k++) {
-      auto m=begin();
+      auto m=begin(); while(std::count(results.begin(),results.end(),m-begin())!=0) m++;
       size_t result=0;
-      for (auto i=begin(); i!=end(); i++)
+      for (auto i=begin(); i!=end(); i++) {
         if (*i < *m && std::count(results.begin(),results.end(),i-begin())==0) m=i;
+        }
       if (distributed && parallel_size>1)
         throw std::logic_error("Wavefunction::minloc: parallel implementation unfinished"); //FIXME
       results.push_back(m-begin());
