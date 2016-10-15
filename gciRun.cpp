@@ -331,13 +331,14 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
   //  xout << "on entry to Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
   if (maxIterations < 0)
     maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
-  xout << "MAXIT="<<maxIterations<<std::endl;
   if (nState < 0)
     nState = parameter("NSTATE",std::vector<int>(1,1)).at(0);
-  xout << "nState "<<nState<<std::endl;
   if (energyThreshold <= (double)0)
     energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-12)).at(0);
-  //  xout << "after parameter in Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
+  xout << "Davidson eigensolver, maximum iterations="<<maxIterations;
+  if (nState>1) xout << "; number of states="<<nState;
+  xout << "; energy threshold="<<std::scientific<<std::setprecision(1)<<energyThreshold<<std::endl;
+  xout <<std::fixed<<std::setprecision(8);
   Wavefunction d(prototype);
   d.diagonalHamiltonian(h);
   _preconditioning_diagonals = &d;
@@ -351,7 +352,6 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
       Wavefunction* w=new Wavefunction(prototype);
       ww.push_back(w);
       w->set((double)0);
-      xout << "root="<<root<<", guess="<<d.minloc(root+1)<<std::endl;
       w->set(d.minloc(root+1), (double) 1);
       Wavefunction* g=new Wavefunction(prototype);
       g->allocate_buffer();
