@@ -6,6 +6,7 @@
 #include "gciStringSet.h"
 #include "gciTransitionDensity.h"
 #include "Profiler.h"
+#include <algorithm>
 
 Wavefunction::Wavefunction(FCIdump *dump) : State(dump) {
   distributed = false;
@@ -441,22 +442,16 @@ bool Wavefunction::compatible(const Wavefunction &other) const
 size_t Wavefunction::minloc(size_t n)
 {
   std::vector<size_t> results;
-  if ()
   for (size_t k=0; k<n; k++) {
+      auto m=begin();
       size_t result=0;
-      for (size_t offset=0; offset<buffer.size(); offset++)
-        if (buffer[offset] < buffer[result] && std::count(results.begin(),results.end(),result)==0) result=offset;
-      results.push_back(result);
+      for (auto i=begin(); i!=end(); i++)
+        if (*i < *m && std::count(results.begin(),results.end(),i-begin())==0) m=i;
+      if (distributed && parallel_size>1)
+        throw std::logic_error("Wavefunction::minloc: parallel implementation unfinished"); //FIXME
+      results.push_back(m-begin());
     }
   return results.back();
-}
-
-size_t Wavefunction::maxloc(size_t n)
-{
-  size_t result=0;
-  for (size_t offset=0; offset<buffer.size(); offset++)
-    if (buffer[offset] > buffer[result]) result=offset;
-  return result;
 }
 
 double Wavefunction::at(size_t offset)
@@ -859,18 +854,16 @@ Wavefunction& Wavefunction::addAbsPower(const Wavefunction& c, const double k, c
 
 std::vector<double>::iterator Wavefunction::begin()
 {
-  if (not distributed)
-    return buffer.begin();
-  else
+  if (distributed)
     return buffer.begin() + parallel_rank*((buffer.size()-1)/parallel_size+1);
- size_t chunk = (buffer.size()-1)/parallel_size+1;
-    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
+  else
+    return buffer.begin();
 }
 
 std::vector<double>::iterator Wavefunction::end()
 {
-  if (not distributed)
-    return buffer.end();
+  if (distributed)
+    return buffer.begin() + std::min((size_t)buffer.size(),(size_t)((parallel_rank+1)*((buffer.size()-1)/parallel_size+1)));
   else
-    return buffer.begin() + std::min(buffer.size(),(parallel_rank+1)*((buffer.size()-1)/parallel_size+1));
+    return buffer.end();
 }

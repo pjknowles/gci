@@ -52,11 +52,9 @@ static bool _preconditioner_subtractDiagonal;
 static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet & psc, std::vector<ParameterScalar> shift=std::vector<ParameterScalar>(), bool append=false) {
     Wavefunction* diag = _preconditioning_diagonals;
     std::vector<double> shifts=shift;
-    size_t reference = diag->minloc();
-    if (_preconditioner_subtractDiagonal) {
-        shifts[0]-=(*diag)[reference]; //FIXME multistate
-    }
     for (size_t state=0; state<psc.size(); state++){
+        if (_preconditioner_subtractDiagonal)
+          shifts[0]-=(*diag)[diag->minloc(state+1)];
         Wavefunction* cw=dynamic_cast <Wavefunction*>(psc[state]);
         const Wavefunction* gw=dynamic_cast <const Wavefunction*>(psg[state]);
         if (shift[state]==0) {
@@ -334,6 +332,9 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
   if (maxIterations < 0)
     maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
   xout << "MAXIT="<<maxIterations<<std::endl;
+  if (nState < 0)
+    nState = parameter("NSTATE",std::vector<int>(1,1)).at(0);
+  xout << "nState "<<nState<<std::endl;
   if (energyThreshold <= (double)0)
     energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-12)).at(0);
   //  xout << "after parameter in Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
@@ -354,6 +355,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
   solver.m_verbosity=1;
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;
+  solver.m_roots=nState;
   solver.solve(gg,ww);
 //  xout << "Final w: "<<w.str(2)<<std::endl;
 //  xout << "Final g: "<<g.str(2)<<std::endl;

@@ -128,7 +128,7 @@ public:
    * \param x the other wavefunction
    */
 //  void axpy(IterativeSolver::ParameterScalar a, const Wavefunction *other);
-  void axpy(IterativeSolver::ParameterScalar a, const IterativeSolver::ParameterVector *other);
+  void axpy(IterativeSolver::ParameterScalar a, const IterativeSolver::ParameterVector *x);
     // Every child of ParameterVector needs exactly this
     Wavefunction* clone() const { return new Wavefunction(*this); }
 
