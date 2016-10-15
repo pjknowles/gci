@@ -50,40 +50,20 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
 
 static bool _preconditioner_subtractDiagonal;
 static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet & psc, std::vector<ParameterScalar> shift=std::vector<ParameterScalar>(), bool append=false) {
-    //FIXME all this arithmetic should be hidden inside Wavefunction
     Wavefunction* diag = _preconditioning_diagonals;
-    const double* d = diag->cdata();
     std::vector<double> shifts=shift;
     size_t reference = diag->minloc();
     if (_preconditioner_subtractDiagonal) {
-        shifts[0]-=d[reference];
+        shifts[0]-=(*diag)[reference]; //FIXME multistate
     }
     for (size_t state=0; state<psc.size(); state++){
         Wavefunction* cw=dynamic_cast <Wavefunction*>(psc[state]);
         const Wavefunction* gw=dynamic_cast <const Wavefunction*>(psg[state]);
-        size_t n=cw->size();
-        double* c = cw->data();
-        const double* g = gw->cdata();
         if (shift[state]==0) {
-//            xout << "preconditioner in H0 mode"<<std::endl;
             cw->times(gw,diag);
-//            for (size_t i=0; i<n; i++)
-//                c[i] = g[i]*d[i];
         }
-        else if (append) {
-//            xout << "preconditioner in append mode"<<std::endl;
-//            xout << "shifts "<<shifts[0]<<std::endl;
-            for (size_t i=0; i<n; i++) {
-//                xout << "d[i]"<<d[i]<<std::endl;
-                if (i != reference)
-                    c[i] -= g[i] /(d[i]+shifts[state]);
-            }
-        } else {
-//            xout << "preconditioner in set mode"<<std::endl;
-            for (size_t i=0; i<n; i++)
-                c[i] =- g[i]/(d[i]+shifts[state]);
-            c[reference]=0;
-        }
+        else
+          cw->divide(gw,diag,shifts[state],append,true);
     }
 }
 

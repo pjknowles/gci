@@ -63,14 +63,10 @@ public:
 
   /*!
      * \brief find the index of the smallest component
+     * \param n the n'th smallest will be found
      * \return offset in buffer
      */
-  size_t minloc();
-  /*!
-     * \brief find the index of the largest component
-     * \return offset in buffer
-     */
-  size_t maxloc();
+  size_t minloc(size_t n=1);
 
   /*!
      * \brief Get a component of the wavefunction
@@ -200,8 +196,8 @@ public:
    */
   Wavefunction& addAbsPower(const Wavefunction &c, const double k=0, const double factor=1);
 
-  double* data() { return &buffer[0];}
-  const double* cdata() const { return &buffer[0];}
+//  double* data() { return &buffer[0];}
+//  const double* cdata() const { return &buffer[0];}
 
   friend class TransitionDensity;
   friend double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
@@ -212,11 +208,22 @@ public:
    * \param b
    */
   void times(const ParameterVector *a, const ParameterVector *b);
+  /*!
+   * \brief this[i] = a[i]/(b[i]+shift)
+   * \param a
+   * \param b
+   * \param shift
+   * \param append whether to do += or =
+   * \param negative whether =- or =+
+   */
+  void divide(const ParameterVector *a, const ParameterVector *b, double shift=0, bool append=false, bool negative=false);
   void zero();
 private:
   void buildStrings(); ///< build alphaStrings and betaStrings
   size_t dimension; ///< the size of the space
   std::vector<double> buffer; ///< buffer to hold coefficients describing the object
+  std::vector<double>::iterator begin(); ///< beginning of this processor's data
+  std::vector<double>::iterator end(); ///< end of this processor's data
   bool compatible(const Wavefunction &other) const; ///< whether this wavefunction is on the same space as another
   std::vector<size_t> _blockOffset;
 
