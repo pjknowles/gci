@@ -9,8 +9,8 @@
 #include "gciFile.h"
 #include "gciDeterminant.h"
 #include "memory.h"
-#include "smat.h"
-#include "ParameterVector.h"
+#include "SMat.h"
+#include "IterativeSolver/ParameterVector.h"
 
 namespace gci {
 /*!

@@ -8,9 +8,9 @@
 #include <iomanip>
 #include <vector>
 #include <cmath>
-#include "ISDiis.h"
-#include "ISRSPT.h"
-#include "ISDavidson.h"
+#include "IterativeSolver/ISDiis.h"
+#include "IterativeSolver/ISRSPT.h"
+#include "IterativeSolver/ISDavidson.h"
 using namespace gci;
 
 
@@ -348,7 +348,7 @@ std::vector<double> Run::Davidson(const Hamiltonian& hamiltonian,
   IterativeSolver::Davidson solver(&_residual,&_preconditioner);
   IterativeSolver::ParameterVectorSet gg;
   IterativeSolver::ParameterVectorSet ww;
-  for (size_t root=0; root<nState; root++) {
+  for (int root=0; root<nState; root++) {
       Wavefunction* w=new Wavefunction(prototype);
       ww.push_back(w);
       w->set((double)0);

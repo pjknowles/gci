@@ -5,7 +5,7 @@
 #include "gciSymmetrySpace.h"
 #include "gciDeterminant.h"
 #include "gciOrbitalSpace.h"
-#include "smat.h"
+#include "SMat.h"
 #include <string>
 #include <vector>
 
