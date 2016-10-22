@@ -11,7 +11,7 @@ file (GLOB SRCS src/*.cpp src/*.h src/*.F90 extra/*.cpp extra/*.h)
 add_definitions(-DNOMAIN)
 add_executable(gci.exe ${SRCS})
 
-include_directories(src extra FCIdump IterativeSolver/src IterativeSolver/Eigen symmetry_matrix symmetry_matrix/memory)
+include_directories(src extra FCIdump IterativeSolver IterativeSolver/Eigen symmetry_matrix symmetry_matrix/memory)
 target_link_libraries(gci.exe FCIdump memory IterativeSolver symmetry_matrix)
 link_directories(${CMAKE_BINARY_DIR}/FCIdump ${CMAKE_BINARY_DIR}/symmetry_matrix ${CMAKE_BINARY_DIR}/IterativeSolver ${CMAKE_BINARY_DIR}/symmetry_matrix/memory)
 
