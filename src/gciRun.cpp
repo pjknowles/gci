@@ -8,9 +8,9 @@
 #include <iomanip>
 #include <vector>
 #include <cmath>
-#include "IterativeSolver/ISDiis.h"
-#include "IterativeSolver/ISRSPT.h"
-#include "IterativeSolver/ISDavidson.h"
+#include "ISDiis.h"
+#include "ISRSPT.h"
+#include "ISDavidson.h"
 using namespace gci;
 
 
