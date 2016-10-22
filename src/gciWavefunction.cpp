@@ -82,37 +82,37 @@ void Wavefunction::set(const double value)
   for (std::vector<double>::iterator b=buffer.begin(); b != buffer.end(); b++) *b=value;
 }
 
-void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
+void Wavefunction::diagonalOperator(const Operator &oper)
 {
-  profiler.start("diagonalHamiltonian");
-  std::vector<double> ha=hamiltonian.int1(1);
-  std::vector<double> hbb=hamiltonian.int1(-1);
+  profiler.start("diagonalOperator");
+  std::vector<double> ha=oper.int1(1);
+  std::vector<double> hbb=oper.int1(-1);
   std::vector<double> Jaa, Jab, Jbb, Kaa, Kbb;
-  if (hamiltonian.integrals_aa != NULL) {
-    Jaa=hamiltonian.intJ(1,1);
-    Jab=hamiltonian.intJ(1,-1);
-    Jbb=hamiltonian.intJ(1,1);
-    Kaa=hamiltonian.intK(1);
-    Kbb=hamiltonian.intK(-1);
+  if (oper.integrals_aa != NULL) {
+    Jaa=oper.intJ(1,1);
+    Jab=oper.intJ(1,-1);
+    Jbb=oper.intJ(1,1);
+    Kaa=oper.intK(1);
+    Kbb=oper.intK(-1);
   }
   //    xout << "ha" <<std::endl;
-  //        for (size_t i=0; i<hamiltonian->basisSize; i++)
+  //        for (size_t i=0; i<oper->basisSize; i++)
   //            xout << ha[i] << " ";
   //        xout <<std::endl;
   //    xout << "Jaa" <<std::endl;
-  //    for (size_t j=0; j<hamiltonian->basisSize; j++) {
-  //        for (size_t i=0; i<hamiltonian->basisSize; i++)
-  //            xout << Jaa[i+j*hamiltonian->basisSize] << " ";
+  //    for (size_t j=0; j<oper->basisSize; j++) {
+  //        for (size_t i=0; i<oper->basisSize; i++)
+  //            xout << Jaa[i+j*oper->basisSize] << " ";
   //        xout <<std::endl;
   //    }
   //    xout << "Kaa" <<std::endl;
-  //    for (size_t j=0; j<hamiltonian->basisSize; j++) {
-  //        for (size_t i=0; i<hamiltonian->basisSize; i++)
-  //            xout << Kaa[i+j*hamiltonian->basisSize] << " ";
+  //    for (size_t j=0; j<oper->basisSize; j++) {
+  //        for (size_t i=0; i<oper->basisSize; i++)
+  //            xout << Kaa[i+j*oper->basisSize] << " ";
   //        xout <<std::endl;
   //    }
   size_t offset=0;
-  set(hamiltonian.coreEnergy);
+  set(oper.coreEnergy);
   for (unsigned int syma=0; syma<8; syma++) {
     unsigned int symb = syma ^ symmetry;
     size_t nsa = alphaStrings[syma].size();
@@ -134,7 +134,7 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
         for (size_t i=0; i<nact; i++)
           for (size_t ib=0; ib < nsb; ib++)
             buffer[offset+ia*nsb+ib] += on[ib+i*nsb] * ha[i];
-        if (hamiltonian.integrals_aa != NULL) {
+        if (oper.integrals_aa != NULL) {
           for (size_t i=0; i<nact; i++) {
             for (size_t j=0; j<=i; j++) {
               double zz = Jaa[j+i*nact] - (double)0.5 * Kaa[j+i*nact];
@@ -171,7 +171,7 @@ void Wavefunction::diagonalHamiltonian(const Hamiltonian &hamiltonian)
     offset +=nsa*nsb;
   }
 //  xout << "diagonal elements"<<std::endl; for (size_t i=0; i < buffer.size(); i++) xout <<" "<<buffer[i]; xout <<std::endl;
-  profiler.stop("diagonalHamiltonian");
+  profiler.stop("diagonalOperator");
 }
 
 void Wavefunction::axpy(IterativeSolver::ParameterScalar a, const ParameterVector *x)
@@ -485,9 +485,9 @@ size_t Wavefunction::blockOffset(const unsigned int syma) const
 using namespace itf;
 #endif
 
-void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefunction &w)
+void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction &w)
 {
-  profiler.start("hamiltonianOnWavefunction");
+  profiler.start("operatorOnWavefunction");
   if (parallel_rank == 0)
     for (size_t i=0; i<buffer.size(); i++)
       buffer[i] += h.coreEnergy * w.buffer[i];
@@ -495,7 +495,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
     for (size_t i=0; i<buffer.size(); i++)
       buffer[i] = (double)0;
 
-//  xout <<std::endl<<"w in hamiltonianOnWavefunction="<<w.str(2)<<std::endl;
+//  xout <<std::endl<<"w in operatorOnWavefunction="<<w.str(2)<<std::endl;
   profiler.declare("1-electron TransitionDensity");
   profiler.declare("1-electron MXM");
   profiler.declare("aa integrals");
@@ -681,7 +681,7 @@ void Wavefunction::hamiltonianOnWavefunction(const Hamiltonian &h, const Wavefun
   EndTasks();
 
   gsum(&buffer[0],buffer.size());
-  profiler.stop("hamiltonianOnWavefunction");
+  profiler.stop("operatorOnWavefunction");
 }
 
 void Wavefunction::density(memory::vector<double>& den1)

@@ -2,7 +2,7 @@
 #define GCIWAVEFUNCTION_H
 #include <vector>
 #include "gci.h"
-#include "gciHamiltonian.h"
+#include "gciOperator.h"
 #include "gciState.h"
 #include "gciStringSet.h"
 #include "gciPrintable.h"
@@ -59,7 +59,7 @@ public:
   void allocate_buffer(); ///< allocate buffer to full size
   size_t size(); ///< the size of the space
 
-  void diagonalHamiltonian(const Hamiltonian& hamiltonian); ///< set this object to the diagonal elements of the hamiltonian
+  void diagonalOperator(const Operator& oper); ///< set this object to the diagonal elements of the hamiltonian
 
   /*!
      * \brief find the index of the smallest component
@@ -82,11 +82,11 @@ public:
   Determinant determinantAt(size_t offset);
 
   /*!
-     * \brief Fill this object with the action of a hamiltonian operator on another wavefunction
-     * \param h the hamiltonian
+     * \brief Fill this object with the action of an operator on another wavefunction
+     * \param h the operator
      * \param w the wavefunction
      */
-  void hamiltonianOnWavefunction(const Hamiltonian& h, const Wavefunction &w);
+  void operatorOnWavefunction(const Operator& h, const Wavefunction &w);
 
   /*!
    * \brief construct 1- and 2-particle density matrices

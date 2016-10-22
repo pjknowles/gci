@@ -58,7 +58,7 @@ public:
   String stringBeta; /*!< The String of beta-spin orbitals that make up the determinant */
 
 private:
-  friend class Hamiltonian;
+  friend class Operator;
 };
 }
 

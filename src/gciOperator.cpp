@@ -1,4 +1,4 @@
-#include "gciHamiltonian.h"
+#include "gciOperator.h"
 #include "FCIdump.h"
 #include <iostream>
 #include <sstream>
@@ -10,7 +10,7 @@
 #include <iterator>
 #include <cmath>
 
-Hamiltonian::Hamiltonian(std::string filename) : OrbitalSpace(filename)
+Operator::Operator(std::string filename) : OrbitalSpace(filename)
 {
   bracket_integrals_a=bracket_integrals_b=NULL;
   bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
@@ -18,7 +18,7 @@ Hamiltonian::Hamiltonian(std::string filename) : OrbitalSpace(filename)
   if (filename != "") load(filename);
 }
 
-Hamiltonian::Hamiltonian(FCIdump* dump) : OrbitalSpace(dump)
+Operator::Operator(FCIdump* dump) : OrbitalSpace(dump)
 {
   bracket_integrals_a=bracket_integrals_b=NULL;
   bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
@@ -26,7 +26,7 @@ Hamiltonian::Hamiltonian(FCIdump* dump) : OrbitalSpace(dump)
   load(dump,0);
 }
 
-Hamiltonian::Hamiltonian(const Hamiltonian &source)
+Operator::Operator(const Operator &source)
   : OrbitalSpace(source)
   ,loaded(source.loaded)
   , coreEnergy(source.coreEnergy)
@@ -35,7 +35,7 @@ Hamiltonian::Hamiltonian(const Hamiltonian &source)
  this->_copy(source);
 }
 
-Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestricted, const bool oneElectron, const bool twoElectron)
+Operator::Operator(const Operator &source, const bool forceSpinUnrestricted, const bool oneElectron, const bool twoElectron)
   : OrbitalSpace(source)
   ,loaded(source.loaded)
   , coreEnergy(source.coreEnergy)
@@ -44,15 +44,15 @@ Hamiltonian::Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestri
   this->_copy(source,forceSpinUnrestricted,oneElectron,twoElectron);
 }
 
-Hamiltonian& Hamiltonian::operator=(const Hamiltonian &source)
+Operator& Operator::operator=(const Operator &source)
 {
  this->_copy(source);
  return *this;
 }
 
-void Hamiltonian::_copy(const Hamiltonian &source, const bool forceSpinUnrestricted, const bool oneElectron, const bool twoElectron)
+void Operator::_copy(const Operator &source, const bool forceSpinUnrestricted, const bool oneElectron, const bool twoElectron)
 {
-//  xout << "Hamiltonian::_copy"<<std::endl<<source.str(2)<<std::endl;
+//  xout << "Operator::_copy"<<std::endl<<source.str(2)<<std::endl;
   if (forceSpinUnrestricted) spinUnrestricted = true;
   bracket_integrals_a = bracket_integrals_b = NULL;
   if (loaded) {
@@ -74,7 +74,7 @@ void Hamiltonian::_copy(const Hamiltonian &source, const bool forceSpinUnrestric
          integrals_bb = (twoElectron && source.integrals_aa != NULL) ? new std::vector<double>(*source.integrals_aa) : NULL;
          bracket_integrals_bb = (twoElectron && source.bracket_integrals_aa != NULL) ? new std::vector<double>(*source.bracket_integrals_aa) : NULL;
          bracket_integrals_b = (oneElectron && source.bracket_integrals_a != NULL) ? new std::vector<double>(*source.bracket_integrals_a) : NULL;
-//         xout << "Hamiltonian::_copy unrestrict bracket_integrals.b "<<bracket_integrals_b<<std::endl;
+//         xout << "Operator::_copy unrestrict bracket_integrals.b "<<bracket_integrals_b<<std::endl;
 //         if (bracket_integrals_b!=NULL)
 //         for (size_t i=0; i<bracket_integrals_b->size();i++) xout << " " <<(*bracket_integrals_b)[i]; xout <<std::endl;
        }
@@ -87,7 +87,7 @@ void Hamiltonian::_copy(const Hamiltonian &source, const bool forceSpinUnrestric
          integrals_bb = (twoElectron && source.integrals_bb != NULL) ? new std::vector<double>(*source.integrals_bb) : NULL;
          bracket_integrals_bb = (twoElectron && source.bracket_integrals_bb != NULL) ? new std::vector<double>(*source.bracket_integrals_bb) : NULL;
          bracket_integrals_b = (oneElectron && source.bracket_integrals_b != NULL) ? new std::vector<double>(*source.bracket_integrals_b) : NULL;
-//         xout << "Hamiltonian::_copy bracket_integrals.b "<<bracket_integrals_b<<std::endl;
+//         xout << "Operator::_copy bracket_integrals.b "<<bracket_integrals_b<<std::endl;
 //         if (bracket_integrals_b!=NULL)
 //         for (size_t i=0; i<bracket_integrals_b->size();i++) xout << " " <<(*bracket_integrals_b)[i]; xout <<std::endl;
        }
@@ -101,17 +101,17 @@ void Hamiltonian::_copy(const Hamiltonian &source, const bool forceSpinUnrestric
   }
 }
 
-Hamiltonian::~Hamiltonian() {
+Operator::~Operator() {
   deconstructBraKet();
 }
 
-void Hamiltonian::load(std::string filename, int verbosity) {
+void Operator::load(std::string filename, int verbosity) {
   FCIdump d(filename);
   load(&d, verbosity);
 }
 
-void Hamiltonian::load(FCIdump* dump, int verbosity) {
-  profiler.start("Hamiltonian::load");
+void Operator::load(FCIdump* dump, int verbosity) {
+  profiler.start("Operator::load");
   if (loaded) unload();
   if (verbosity) xout <<"Load hamiltonian from " << dump->fileName() <<std::endl;
   //    State::load(filename);
@@ -174,12 +174,12 @@ void Hamiltonian::load(FCIdump* dump, int verbosity) {
   }
   constructBraKet();
   //    xout <<str(3) <<std::endl;exit(0);
-  profiler.stop("Hamiltonian::load");
+  profiler.stop("Operator::load");
 }
 
 #define del(x) if (x != NULL && x->size()) delete x; x=NULL;
 #define del2(x,y) if (x != y) del(x); del(y); del(x);
-void Hamiltonian::constructBraKet(int neleca, int nelecb)
+void Operator::constructBraKet(int neleca, int nelecb)
 {
   deconstructBraKet();
   // construct <ik||jl> = (ij|kl) - (il|kj)
@@ -368,7 +368,7 @@ void Hamiltonian::constructBraKet(int neleca, int nelecb)
 }
 
 
-void Hamiltonian::deconstructBraKet()
+void Operator::deconstructBraKet()
 {
   if (! loaded) return;
   del2(bracket_integrals_b, bracket_integrals_a);
@@ -376,7 +376,7 @@ void Hamiltonian::deconstructBraKet()
   del(bracket_integrals_ab);
 }
 
-void Hamiltonian::unload() {
+void Operator::unload() {
   if (loaded) {
     delete integrals_a;
     delete integrals_aa;
@@ -392,7 +392,7 @@ void Hamiltonian::unload() {
   loaded=false;
 }
 
-std::string Hamiltonian::str(int verbosity) const
+std::string Operator::str(int verbosity) const
 {
   std::ostringstream o;
   o << OrbitalSpace::str(verbosity>3 ? verbosity : 0);
@@ -463,16 +463,16 @@ std::string Hamiltonian::str(int verbosity) const
   return o.str();
 }
 
-size_t Hamiltonian::int1Index(unsigned int i, unsigned int j) const {
+size_t Operator::int1Index(unsigned int i, unsigned int j) const {
   return pairIndex(i,j,1);
 }
 
-size_t Hamiltonian::int2Index(unsigned int i, unsigned int j, unsigned int k, unsigned int l) const
+size_t Operator::int2Index(unsigned int i, unsigned int j, unsigned int k, unsigned int l) const
 {
   return quadIndex(i,j,k,l,1,0);
 }
 
-std::vector<double> Hamiltonian::int1(int spin) const
+std::vector<double> Operator::int1(int spin) const
 {
   std::vector<double> result(basisSize,(double)0);
   std::vector<double> * integrals = spin < 0 ? integrals_b : integrals_a;
@@ -483,7 +483,7 @@ std::vector<double> Hamiltonian::int1(int spin) const
 }
 
 
-std::vector<double> Hamiltonian::intJ(int spini, int spinj) const
+std::vector<double> Operator::intJ(int spini, int spinj) const
 {
   std::vector<double> result(basisSize*basisSize,(double)0);
   std::vector<double> * integrals = spini < 0 ? (spinj < 0 ? integrals_bb : integrals_ab) : integrals_aa;
@@ -496,7 +496,7 @@ std::vector<double> Hamiltonian::intJ(int spini, int spinj) const
   return result;
 }
 
-std::vector<double> Hamiltonian::intK(int spin) const
+std::vector<double> Operator::intK(int spin) const
 {
   std::vector<double> result(basisSize*basisSize,(double)0);
   std::vector<double> * integrals = spin < 0 ? integrals_bb : integrals_aa;
@@ -508,18 +508,18 @@ std::vector<double> Hamiltonian::intK(int spin) const
   return result;
 }
 
-Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
+Operator Operator::FockOperator(const Determinant &reference) const
 {
-  Hamiltonian f;
+  Operator f;
   for (int i=0; i<8; i++)
     f[i]=at(i);
   f.calculateOffsets();
-  // xout << "FockHamiltonian Reference alpha: "<<reference.stringAlpha<<std::endl;
-  // xout << "FockHamiltonian Reference beta: "<<reference.stringBeta<<std::endl;
+  // xout << "FockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
+  // xout << "FockOperator Reference beta: "<<reference.stringBeta<<std::endl;
   bool closed = reference.stringAlpha==reference.stringBeta;
-//  xout << "FockHamiltonian Reference alpha=beta: "<<closed<<std::endl;
+//  xout << "FockOperator Reference alpha=beta: "<<closed<<std::endl;
   f.spinUnrestricted = spinUnrestricted || ! closed;
-//  xout << "FockHamiltonian spinUnrestricted="<<f.spinUnrestricted<<std::endl;
+//  xout << "FockOperator spinUnrestricted="<<f.spinUnrestricted<<std::endl;
   std::vector<unsigned int> refAlphaOrbitals=reference.stringAlpha.orbitals();
   std::vector<unsigned int> refBetaOrbitals=reference.stringBeta.orbitals();
   f.coreEnergy = coreEnergy;
@@ -533,7 +533,7 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
   // for (std::vector<unsigned int>::const_iterator o=reference.stringAlpha.orbitals().begin(); o != reference.stringAlpha.orbitals().end(); o++)
   for (std::vector<unsigned int>::const_iterator o=refAlphaOrbitals.begin(); o != refAlphaOrbitals.end(); o++)
   {
-    // xout << "FockHamiltonian Reference alpha: "<<reference.stringAlpha<<std::endl;
+    // xout << "FockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
   // xout<< "f alpha, alpha occ: " <<*o << std::endl;
     for (unsigned int i=1; i<=basisSize; i++)
       for (unsigned int j=1; j<=i; j++) {
@@ -557,7 +557,7 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
   f.bracket_integrals_ab = NULL;
   f.bracket_integrals_bb = NULL;
   f.bracket_integrals_a = (f.integrals_a != NULL) ? new std::vector<double>(*f.integrals_a) : NULL;
-  // xout << "in FockHamiltonian, after alpha f="; for (size_t ij=0; ij< f.integrals_a->size(); ij++) xout <<" "<<(*f.integrals_a)[ij]; xout <<std::endl;
+  // xout << "in FockOperator, after alpha f="; for (size_t ij=0; ij< f.integrals_a->size(); ij++) xout <<" "<<(*f.integrals_a)[ij]; xout <<std::endl;
   if (f.spinUnrestricted) {
     f.integrals_b = new std::vector<double>(ijSize,0.0);
     *f.integrals_b = *integrals_b;
@@ -588,18 +588,18 @@ Hamiltonian Hamiltonian::FockHamiltonian(const Determinant &reference) const
   return f;
 }
 
-Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
+Operator Operator::sameSpinOperator(const Determinant &reference) const
 {
-  Hamiltonian result = *this;
+  Operator result = *this;
 //  xout << "result when initialized: "<<result.str(2)<<std::endl;
   result.spinUnrestricted = true;
   if (!spinUnrestricted) *(result.integrals_b = new std::vector<double>(integrals_a->size())) = *result.integrals_a;
-//  xout << "sameSpinHamiltonian, old integrals_a="<<&integrals_a[0]<<", new integrals_a ="<<&result.integrals_a[0]<<std::endl;
-//  xout << "sameSpinHamiltonian, old integrals_b="<<&integrals_b[0]<<", new integrals_b ="<<&result.integrals_b[0]<<std::endl;
+//  xout << "sameSpinOperator, old integrals_a="<<&integrals_a[0]<<", new integrals_a ="<<&result.integrals_a[0]<<std::endl;
+//  xout << "sameSpinOperator, old integrals_b="<<&integrals_b[0]<<", new integrals_b ="<<&result.integrals_b[0]<<std::endl;
   Determinant ra = reference; ra.stringBeta.nullify();
 //  xout << "this before alpha fock: "<<str(2)<<std::endl;
 //  xout << "result before alpha fock: "<<result.str(2)<<std::endl;
-  Hamiltonian f = this->FockHamiltonian(ra);
+  Operator f = this->FockOperator(ra);
 //  xout << "this after alpha fock: "<<str(2)<<std::endl;
 //  xout << "result before alpha: "<<result.str(2)<<std::endl;
   for (size_t i=0; i<integrals_a->size(); i++) {
@@ -609,10 +609,10 @@ Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
 //  xout << "this after alpha: "<<str(2)<<std::endl;
 //  xout << "result after alpha: "<<result.str(2)<<std::endl;
   ra = reference; ra.stringAlpha.nullify();
-  f = this->FockHamiltonian(ra);
-//  xout << "sameSpinHamiltonian, after beta Fock, f at "<<&f<<", f.bracket_integrals_a at "<<f.bracket_integrals_a<<std::endl;
+  f = this->FockOperator(ra);
+//  xout << "sameSpinOperator, after beta Fock, f at "<<&f<<", f.bracket_integrals_a at "<<f.bracket_integrals_a<<std::endl;
 //  xout << "f.bracket_integrals_a->size() "<<f.bracket_integrals_a->size()<<std::endl;
-//  xout << "sameSpinHamiltonian, fock integrals_a="<<&f.integrals_a[0]<<", fock integrals_b ="<<&f.integrals_b[0]<<std::endl;
+//  xout << "sameSpinOperator, fock integrals_a="<<&f.integrals_a[0]<<", fock integrals_b ="<<&f.integrals_b[0]<<std::endl;
   for (size_t i=0; i<integrals_b->size(); i++) {
     result.integrals_b->at(i) = this->integrals_b->at(i) - f.integrals_b->at(i);
 //    xout << " result b = " << result.integrals_b->at(i) <<"=" << this->integrals_b->at(i) <<"-"<< f.integrals_b->at(i)<<std::endl;
@@ -631,9 +631,9 @@ Hamiltonian Hamiltonian::sameSpinHamiltonian(const Determinant &reference) const
 }
 
 #include <assert.h>
-Hamiltonian& Hamiltonian::plusminusOperator(const Hamiltonian &other, const char operation)
+Operator& Operator::plusminusOperator(const Operator &other, const char operation)
 {
-//  if (! compatible(other)) throw "attempt to add incompatible Hamiltonian objects";
+//  if (! compatible(other)) throw "attempt to add incompatible Operator objects";
   assert(this->spinUnrestricted || ! other.spinUnrestricted);
   if (operation == '+')
     coreEnergy += other.coreEnergy;
@@ -656,17 +656,17 @@ Hamiltonian& Hamiltonian::plusminusOperator(const Hamiltonian &other, const char
     plusminusEqualsHelper(this->bracket_integrals_bb, other.bracket_integrals_bb,operation);
   return *this;
 }
-Hamiltonian& Hamiltonian::operator+=(const Hamiltonian &other)
+Operator& Operator::operator+=(const Operator &other)
 {
   return plusminusOperator(other,'+');
 }
-Hamiltonian& Hamiltonian::operator-=(const Hamiltonian &other)
+Operator& Operator::operator-=(const Operator &other)
 {
   return plusminusOperator(other,'-');
 }
 
 #include <cmath>
-void Hamiltonian::plusminusEqualsHelper(std::vector<double> *&me,
+void Operator::plusminusEqualsHelper(std::vector<double> *&me,
                                     std::vector<double> * const &other,
                                         const char operation)
 {
@@ -684,7 +684,7 @@ void Hamiltonian::plusminusEqualsHelper(std::vector<double> *&me,
     for (size_t i=0; i<n; i++)
       me->at(i) -= other->at(i);
 }
-void Hamiltonian::starEqualsHelper(std::vector<double> *&me,
+void Operator::starEqualsHelper(std::vector<double> *&me,
                                     const double factor)
 {
   if (factor == (double)1) return;
@@ -694,7 +694,7 @@ void Hamiltonian::starEqualsHelper(std::vector<double> *&me,
     me->at(i) *= factor ;
 }
 
-Hamiltonian& Hamiltonian::operator*=(const double factor)
+Operator& Operator::operator*=(const double factor)
 {
   coreEnergy *= factor;
   starEqualsHelper(this->integrals_a, factor);
@@ -713,23 +713,23 @@ Hamiltonian& Hamiltonian::operator*=(const double factor)
 
 }
 
-Hamiltonian gci::operator+(const Hamiltonian &h1, const Hamiltonian &h2)
+Operator gci::operator+(const Operator &h1, const Operator &h2)
 {
-  Hamiltonian result = h1;
+  Operator result = h1;
   return result += h2;
 }
-Hamiltonian gci::operator-(const Hamiltonian &h1, const Hamiltonian &h2)
+Operator gci::operator-(const Operator &h1, const Operator &h2)
 {
-  Hamiltonian result = h1;
+  Operator result = h1;
   return result -= h2;
 }
-Hamiltonian gci::operator*(const Hamiltonian &h1, const double factor)
+Operator gci::operator*(const Operator &h1, const double factor)
 {
-  Hamiltonian result = h1;
+  Operator result = h1;
   return result *= factor;
 }
 
-void Hamiltonian::rotate1(std::vector<double>* integrals,std::vector<double> const * rot)
+void Operator::rotate1(std::vector<double>* integrals,std::vector<double> const * rot)
 {
   if (integrals == NULL) return;
 //  xout << "rotate1: input"; for (std::vector<double>::const_iterator i=integrals->begin(); i!=integrals->end(); i++) xout <<" "<<*i; xout <<std::endl;
@@ -762,7 +762,7 @@ void Hamiltonian::rotate1(std::vector<double>* integrals,std::vector<double> con
 //  xout << "rotate1: output"; for (std::vector<double>::const_iterator i=integrals->begin(); i!=integrals->end(); i++) xout <<" "<<*i; xout <<std::endl;
 }
 
-void Hamiltonian::rotate2(std::vector<double>* integrals,std::vector<double> const * rot1, std::vector<double> const * rot2)
+void Operator::rotate2(std::vector<double>* integrals,std::vector<double> const * rot1, std::vector<double> const * rot2)
 {
   if (integrals == NULL) return;
   std::vector<double> t1(std::pow(this->at(0),4));
@@ -846,10 +846,10 @@ void Hamiltonian::rotate2(std::vector<double>* integrals,std::vector<double> con
   }
 }
 
-void Hamiltonian::rotate(std::vector<double> const * rota, std::vector<double> const * rotb)
+void Operator::rotate(std::vector<double> const * rota, std::vector<double> const * rotb)
 {
   if (rotb == NULL) rotb=rota;
-  xout << "Hamiltonian::rotate"<<std::endl;
+  xout << "Operator::rotate"<<std::endl;
   // if (integrals_a != NULL) xout << "integrals_a "<<integrals_a<<std::endl;
   // if (true || integrals_b != NULL) xout << "integrals_b "<<integrals_b<<std::endl;
   // if (integrals_aa != NULL) xout << "integrals_aa "<<integrals_aa<<std::endl;
@@ -879,7 +879,7 @@ void Hamiltonian::rotate(std::vector<double> const * rota, std::vector<double> c
 }
 
 #include "memory.h"
-void Hamiltonian::rotate(SMat const * rota, SMat const * rotb)
+void Operator::rotate(SMat const * rota, SMat const * rotb)
 {
   SMat rotan = rota->desymmetrise();
   std::vector<double> rotanv;

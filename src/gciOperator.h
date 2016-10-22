@@ -1,5 +1,5 @@
-#ifndef GCIHAMILTONIAN_H
-#define GCIHAMILTONIAN_H
+#ifndef GCIOPERATOR_H
+#define GCIOPERATOR_H
 #include "gci.h"
 #include "FCIdump.h"
 #include "gciSymmetrySpace.h"
@@ -12,29 +12,29 @@
 namespace gci {
 /**
  * @brief
- * Class holds hamiltonian operator for FCI or other calculation
+ * Class holds hamiltonian or other operator for FCI or other calculation
  *
  */
-class Hamiltonian : public OrbitalSpace
+class Operator : public OrbitalSpace
 {
 public:
 
   /*!
- \brief construct Hamiltonian object
+ \brief construct Operator object
 
  \param filename : if present, call load
 */
-  Hamiltonian(std::string filename="");
+  Operator(std::string filename="");
   /*!
-     \brief construct Hamiltonian object
+     \brief construct Operator object
 
      \param dump : if present, call load
-    */   Hamiltonian(FCIdump* dump);
+    */   Operator(FCIdump* dump);
   /*!
    * \brief copy constructor
    * \param source
    */
-  Hamiltonian(const Hamiltonian& source);
+  Operator(const Operator& source);
   /*!
    * \brief general copy constructor
    * \param source
@@ -42,15 +42,15 @@ public:
    * \param oneElectron whether to copy the 1-electron part of source
    * \param twoElectron whether to copy the 2-electron part of source
    */
-  Hamiltonian(const Hamiltonian &source, const bool forceSpinUnrestricted, const bool oneElectron=true, const bool twoElectron=true);
-  ~Hamiltonian();
+  Operator(const Operator &source, const bool forceSpinUnrestricted, const bool oneElectron=true, const bool twoElectron=true);
+  ~Operator();
   void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load integrals from FCIDUMP */
   void load(FCIdump* dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */
   void unload(); /**< \brief destroy loaded integrals */
   /*!
-     * \brief Construct a printable representation of the hamiltonian
+     * \brief Construct a printable representation of the operator
      * \param verbosity how much information to include
-     * \return printable representation of the hamiltonian
+     * \return printable representation of the operator
      */
   std::string str(int verbosity=0) const;
   bool loaded;  /**< \brief whether the integrals are loaded */
@@ -108,31 +108,31 @@ public:
   std::vector<double> intK(int spin) const;
 
   /*!
-     * \brief Generate a new object containing the Fock hamiltonian corresponding to a given reference determinant
+     * \brief Generate a new object containing the Fock operator corresponding to a given reference determinant
      * \param reference the reference Slater determinant
-     * \return  the Fock hamiltonian
+     * \return  the Fock operator
      */
-  Hamiltonian FockHamiltonian(const Determinant& reference) const;
+  Operator FockOperator(const Determinant& reference) const;
 
-  Hamiltonian& operator+=(const Hamiltonian &other); ///< add another Hamiltonian
-  Hamiltonian& operator-=(const Hamiltonian &other); ///< subtract another Hamiltonian
-  Hamiltonian& operator*=(const double factor); ///< scale by a factor
-  Hamiltonian& operator=(const Hamiltonian &h1); ///< assignment overload
+  Operator& operator+=(const Operator &other); ///< add another Operator
+  Operator& operator-=(const Operator &other); ///< subtract another Operator
+  Operator& operator*=(const double factor); ///< scale by a factor
+  Operator& operator=(const Operator &h1); ///< assignment overload
   /*!
-   * \brief Construct the same-spin perturbed Hamiltonian
+   * \brief Construct the same-spin perturbed Operator
    * \param reference the zero-order Slater determinant
-   * \return  the same-spin Hamiltonian
+   * \return  the same-spin Operator
    */
-  Hamiltonian sameSpinHamiltonian(const Determinant &reference) const;
+  Operator sameSpinOperator(const Determinant &reference) const;
 
   /*!
-   * \brief construct the BraKet form of the Hamiltonian
+   * \brief construct the BraKet form of the Operator
    * \param neleca if non-zero, incorporate 1-electron integrals into 2-electron for neleca electrons
    * \param nelecb if non-zero, incorporate 1-electron integrals into 2-electron for nelecb electrons
    */
   void constructBraKet(int neleca=0, int nelecb=0);
   /*!
-   * \brief Delete the BraKet form of the Hamiltonian
+   * \brief Delete the BraKet form of the Operator
    */
   void deconstructBraKet();
 
@@ -144,7 +144,7 @@ public:
 private:
   size_t ijSize;
   size_t ijklSize;
-  Hamiltonian& plusminusOperator(const Hamiltonian &other, const char operation='+');
+  Operator& plusminusOperator(const Operator &other, const char operation='+');
   void plusminusEqualsHelper(std::vector<double>*& me, std::vector<double> * const &other, const char operation='+');
   void starEqualsHelper(std::vector<double> *&me, const double factor);
   /*!
@@ -154,14 +154,14 @@ private:
    * \param oneElectron whether to copy the 1-electron part of source
    * \param twoElectron whether to copy the 2-electron part of source
    */
-  void _copy(const Hamiltonian &source, const bool forceSpinUnrestricted=false, const bool oneElectron=true, const bool twoElectron=true);
+  void _copy(const Operator &source, const bool forceSpinUnrestricted=false, const bool oneElectron=true, const bool twoElectron=true);
 };
-Hamiltonian operator+(const Hamiltonian &h1, const Hamiltonian &h2); ///< add two Hamiltonian objects
-Hamiltonian operator-(const Hamiltonian &h1, const Hamiltonian &h2); ///< subtract two Hamiltonian objects
-Hamiltonian operator*(const Hamiltonian &h1, const double factor); ///< return a factor times the Hamiltonian object
+Operator operator+(const Operator &h1, const Operator &h2); ///< add two Operator objects
+Operator operator-(const Operator &h1, const Operator &h2); ///< subtract two Operator objects
+Operator operator*(const Operator &h1, const double factor); ///< return a factor times the Operator object
 
 }
 
 using namespace gci;
 
-#endif // GCIHAMILTONIAN_H
+#endif // GCIOPERATOR_H
