@@ -54,7 +54,7 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
     std::vector<double> shifts=shift;
     for (size_t state=0; state<psc.size(); state++){
         if (_preconditioner_subtractDiagonal)
-          shifts[0]-=(*diag)[diag->minloc(state+1)];
+          shifts[0]-=diag->at(diag->minloc(state+1));
         Wavefunction* cw=dynamic_cast <Wavefunction*>(psc[state]);
         const Wavefunction* gw=dynamic_cast <const Wavefunction*>(psg[state]);
         if (shift[state]==0) {
