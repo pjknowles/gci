@@ -1,5 +1,5 @@
-#ifndef GCIOPERATOR_H
-#define GCIOPERATOR_H
+#ifndef GCIEXCITATIONOPERATOR_H
+#define GCIEXCITATIONOPERATOR_H
 
 #include "gciHamiltonian.h"
 
@@ -9,7 +9,7 @@ namespace gci {
      * A quantum-mechanical operator
      *
      */
-class Operator
+class ExcitationOperator
 {
 public:
   /*!
@@ -17,7 +17,7 @@ public:
      * \param hamiltonian the hamiltonian defining orbital spaces
      * \param ranks Ranks of operator
      */
-  Operator(Hamiltonian &hamiltonian, std::vector<int> ranks);
+  ExcitationOperator(Hamiltonian &hamiltonian, std::vector<int> ranks);
   /*!
      \brief
     Ranks of operator
@@ -34,4 +34,4 @@ public:
 };
 }
 
-#endif // GCIOPERATOR_H
+#endif // GCIEXCITATIONOPERATOR_H
