@@ -44,6 +44,42 @@ Operator::Operator(const Operator &source, const bool forceSpinUnrestricted, con
   this->_copy(source,forceSpinUnrestricted,oneElectron,twoElectron);
 }
 
+Operator::Operator(const Operator &source, const std::string special, const bool forceSpinUnrestricted)
+  : OrbitalSpace(source)
+  ,loaded(false)
+  , coreEnergy(0)
+  , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
+{
+  this->_copy(source,forceSpinUnrestricted,false,false);
+  if (special=="P" || special=="Q") {
+      double fill=(special=="Q"? 0 : 1);
+      integrals_a = new std::vector<double>(ijSize,0.0);
+      if (spinUnrestricted)
+        integrals_b = new std::vector<double>(ijSize,0.0);
+      else
+        integrals_b = integrals_a;
+      for (auto aa=integrals_b->begin(); aa!= integrals_b->end(); aa++) *aa=fill;
+      for (auto aa=integrals_a->begin(); aa!= integrals_a->end(); aa++) *aa=fill;
+      // determine the uncoupled orbital
+      size_t uncoupled_orbital=0;
+      double min_rowsum=1e50;
+      for (unsigned int sym=0; sym<8; sym++) {
+          for (size_t k=0; k<this->at(sym); k++) {
+              double rowsum=0;
+              for (size_t l=0; l<this->at(sym); l++)
+                rowsum+=integrals_a->at(int1Index(k+offset(sym),l+offset(sym)));
+              if (std::fabs(rowsum) < min_rowsum) {
+                  min_rowsum=rowsum;
+                  uncoupled_orbital=k+offset(sym);
+                }
+            }
+        }
+      xout << "non-interacting orbital is "<<uncoupled_orbital<<std::endl;
+      integrals_b->at(int1Index(uncoupled_orbital,uncoupled_orbital))=1-fill;
+      loaded=true;
+    }
+}
+
 Operator& Operator::operator=(const Operator &source)
 {
  this->_copy(source);
