@@ -544,7 +544,6 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
       profiler.stop("1-electron MXM",2*nsa*nsb*w.orbitalSpace->total(0,1));
     }
     if (h.spinUnrestricted && h.bracket_integrals_b != NULL) {
-        for (size_t k=0; k<6; k++) xout <<h.bracket_integrals_b->at(k)<<std::endl;
       profiler.start("1-electron TransitionDensity");
       TransitionDensity d(w,
                           w.alphaStrings[syma].begin(),

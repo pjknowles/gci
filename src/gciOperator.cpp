@@ -92,10 +92,10 @@ Operator::Operator(const std::string special, const Operator &source, const bool
       loaded=true;
       bracket_integrals_a = new std::vector<double>(*integrals_a) ;
       bracket_integrals_b = new std::vector<double>(*integrals_b) ;
-        xout << "integrals_b"<<std::endl;
-        for (size_t k=0; k<6; k++) xout <<integrals_b->at(k)<<std::endl;
-        xout << "bracket_integrals_b"<<std::endl;
-        for (size_t k=0; k<6; k++) xout <<bracket_integrals_b->at(k)<<std::endl;
+//        xout << "integrals_b"<<std::endl;
+//        for (size_t k=0; k<6; k++) xout <<integrals_b->at(k)<<std::endl;
+//        xout << "bracket_integrals_b"<<std::endl;
+//        for (size_t k=0; k<6; k++) xout <<bracket_integrals_b->at(k)<<std::endl;
     }
 }
 

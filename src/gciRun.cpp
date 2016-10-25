@@ -34,7 +34,7 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
         profiler.start("Hc");
         if (not append)
             g->zero();
-        xout << "x "<<x->str(2)<<std::endl;
+        xout << "x in residual "<<x->str(2)<<std::endl;
 //        xout << "g "<<g->str(2)<<std::endl;
 //        xout <<"g->buffer"<<g->data()<<std::endl;
 //        xout << "activeHamiltonian "<<activeHamiltonian->str(2)<<std::endl;
@@ -46,7 +46,7 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
             double cg = x->dot(g);
             double epsilon=cg/cc;
             if (_residual_Q != nullptr) {
-                xout << "_residual_Q in _residual"<<std::endl<<*_residual_Q<<std::endl;
+//                xout << "@ _residual_Q in _residual"<<std::endl<<*_residual_Q<<std::endl;
                 Wavefunction m(*g);
                 m.zero();
                 m.operatorOnWavefunction(*_residual_Q,*x);
@@ -79,18 +79,23 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
             cw->times(gw,diag);
         }
         else {
+//                xout << "initial gw  in preconditioner"<<gw->str(2)<<std::endl;
+//                xout << "initial cw  in preconditioner"<<cw->str(2)<<std::endl;
+//                xout << "append "<<append<<std::endl;
             cw->divide(gw,diag,shifts[state],append,true);
+//                xout << "cw after divide in preconditioner"<<cw->str(2)<<std::endl;
             if (_residual_Q != nullptr) {
                 //FIXME this is fragile to the case that cw does not have any component in Q
                 // but this has to be dealt with by providing an appropriate trial function
                 // however we have the diagonals right here so we can do it.
                 Wavefunction m(*cw);
                 m.zero();
+                xout << "cw  in preconditioner"<<cw->str(2)<<std::endl;
                 m.operatorOnWavefunction(*_residual_Q,*cw);
                 xout << "m  in preconditioner"<<m.str(2)<<std::endl;
                 double cm = cw->dot(&m);
 //                if (cm==0) throw std::runtime_error("IPT wavefunction has no component in Q");
-                if (cm==0) {
+                if (std::fabs(cm)<1e-12) {
                     // generate an ion trial vector
                     xout << "generating ion trial vector"<<std::endl;
                     Wavefunction d(*diag);
@@ -98,7 +103,7 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
                     xout << "diag"<<std::endl<<diag->str(2)<<std::endl;
                     d.operatorOnWavefunction(*_residual_Q,*diag);
                     xout << "d"<<std::endl<<d.str(2)<<std::endl;
-                    m.set(diag->minloc(state+1),1);
+                    m.set(d.minloc(state+1),1);
                     xout << "m"<<std::endl<<m.str(2)<<std::endl;
                     cw->axpy(_residual_q/(1-_residual_q),&m);
                     xout << "cw"<<std::endl<<cw->str(2)<<std::endl;
@@ -106,7 +111,10 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
                   }
                 double cc = cw->dot(cw);
                 double lambda=-1+std::sqrt(_residual_q*(cc-cm)/((1-_residual_q)*cm));
+                xout << "cc="<<cc<<std::endl;
+                xout << "cm="<<cm<<std::endl;
                 cw->axpy(lambda,&m);
+                    xout << "cw after updating mu constraint"<<std::endl<<cw->str(2)<<std::endl;
               }
           }
     }
