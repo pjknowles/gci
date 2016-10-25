@@ -42,7 +42,7 @@ public:
    * \param oneElectron whether to copy the 1-electron part of source
    * \param twoElectron whether to copy the 2-electron part of source
    */
-  Operator(const Operator &source, const bool forceSpinUnrestricted, const bool oneElectron=true, const bool twoElectron=true);
+  explicit Operator(const Operator &source, const bool forceSpinUnrestricted, const bool oneElectron=true, const bool twoElectron=true);
   /*!
    * \brief Construct an operator templated on another, but with a special specification
    * \param source
@@ -51,7 +51,7 @@ public:
    * - "Q" projector onto space containing satellite orbital
    * - "P" 1-Q
    */
-  Operator(const Operator &source, const std::string special, const bool forceSpinUnrestricted=false);
+  explicit Operator(const std::string special, const Operator &source, const bool forceSpinUnrestricted=false);
   ~Operator();
   void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load integrals from FCIDUMP */
   void load(FCIdump* dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */

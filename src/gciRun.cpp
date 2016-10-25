@@ -21,6 +21,8 @@ const static Operator* activeHamiltonian;
 static Wavefunction* _preconditioning_diagonals;
 static double _lastEnergy;
 static bool _residual_subtract_Energy;
+static Operator* _residual_Q;
+static double _residual_q;
 static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<ParameterScalar> shift=std::vector<ParameterScalar>(), bool append=false) {
     for (size_t k=0; k<psx.size(); k++) {
         const Wavefunction* x=dynamic_cast <const Wavefunction*> (psx[k]);
@@ -32,13 +34,20 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
         profiler.start("Hc");
         if (not append)
             g->zero();
-//        xout << "x "<<x->str(2)<<std::endl;
+        xout << "x "<<x->str(2)<<std::endl;
 //        xout << "g "<<g->str(2)<<std::endl;
 //        xout <<"g->buffer"<<g->data()<<std::endl;
 //        xout << "activeHamiltonian "<<activeHamiltonian->str(2)<<std::endl;
         g->operatorOnWavefunction(*activeHamiltonian, *x);
         profiler.stop("Hc");
 //        xout << "g "<<g->str(2)<<std::endl;
+        if (_residual_Q != nullptr) {
+            xout << "_residual_Q in _residual"<<std::endl<<*_residual_Q<<std::endl;
+            Wavefunction m(*g);
+            m.zero();
+            m.operatorOnWavefunction(*_residual_Q,*x);
+            xout << "m "<<m.str(2)<<std::endl;
+          }
         if (_residual_subtract_Energy) {
         _lastEnergy=g->dot(x)/x->dot(x);
 //        xout << "e "<<_lastEnergy<<std::endl;
@@ -233,92 +242,39 @@ double Run::DIIS(const Operator &hamiltonian, const State &prototype, double ene
   xout << "MAXIT="<<maxIterations<<std::endl;
   if (energyThreshold <= (double)0)
     energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-12)).at(0);
-//  xout << "after parameter in Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
+  //  xout << "after parameter in Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
+  _residual_q = parameter("CHARGE",std::vector<double>{0}).at(0);
+  if (_residual_q>0) {
+      xout << "q="<<_residual_q<<std::endl;
+      _residual_Q =new Operator("Q",hamiltonian,true);
+      xout << "Q operator" <<std::endl<<_residual_Q<<std::endl;
+    }
+//  Operator P("P",hamiltonian,true);
+//  xout << "P operator" <<std::endl<<P<<std::endl;
   Wavefunction w(prototype);
   Wavefunction d(w);
   d.diagonalOperator(h);
   Wavefunction g(d);
   size_t reference = d.minloc();
   double e0=d.at(reference);
-//  g -= (e0-(double)1e-10);
-//    xout << "Diagonal H: " << g.str(2) << std::endl;
-  bool iterativesolver=true;
-  if (iterativesolver) {
-      _preconditioning_diagonals = &d;
-      activeHamiltonian = &h;
-      _residual_subtract_Energy=true;
-      _preconditioner_subtractDiagonal=true;
-      IterativeSolver::DIIS solver(&_residual,&_preconditioner);
-      w.set((double)0); w.set(reference, (double) 1);
-      IterativeSolver::ParameterVectorSet gg; gg.push_back(&g);
-      IterativeSolver::ParameterVectorSet ww; ww.push_back(&w);
-      solver.m_verbosity=1;
-      solver.m_thresh=energyThreshold;
-      solver.m_maxIterations=maxIterations;
-      solver.solve(gg,ww);
-//      xout << "Final w: "<<w.str(2)<<std::endl;
-//      xout << "Final g: "<<g.str(2)<<std::endl;
-      return _lastEnergy;
-  }
-  gci::File h0file; h0file.name="H0";
-  gci::File wfile; wfile.name="Wavefunction vectors";
-  if (iterativesolver) {
-    }
-  else {
-    g.put(h0file);
-    }
-
+  //  g -= (e0-(double)1e-10);
+  //    xout << "Diagonal H: " << g.str(2) << std::endl;
+  _preconditioning_diagonals = &d;
+  activeHamiltonian = &h;
+  _residual_subtract_Energy=true;
+  _preconditioner_subtractDiagonal=true;
+  IterativeSolver::DIIS solver(&_residual,&_preconditioner);
   w.set((double)0); w.set(reference, (double) 1);
-  double elast=e0+1;
-  double e=0.0;
-  profiler.stop("DIIS preamble");
-  for (int n=0; n < maxIterations; n++) {
-    profiler.start("DIIS density");
-    SMat natorb=w.naturalOrbitals();
-//    h.rotate(&natorb);
-    profiler.stop("DIIS density");
-    profiler.start("DIIS Hc");
-    g.set((double)0); g.operatorOnWavefunction(h, w);
-    profiler.stop("DIIS Hc");
-    e=g*w;
-    g.axpy(-e,&w);
-    xout << "Iteration "<<n<<", energy:"<< std::fixed; xout.precision(8) ;xout << e <<"; "<<std::endl;
-    if (false) xout << "Residual:"<<g.str(2)<<std::endl;
-
-    // at this point we have the residual in g, and wavefunction in w
-    bool olddistw=w.distributed;
-    bool olddistg=g.distributed;
-    if (iterativesolver) {
-      } else {
-    w.distributed=true;
-    g.distributed=true;
-    w.put(wfile);
-    w.get(h0file); w -= (e-(double)1e-8); // get preconditioner
-    // form update
-    double discarded; double ePredicted = g.update(w,discarded);
-    g.set(reference,0);
-    if (false) xout << "ePredicted="<<ePredicted<<std::endl;
-    if (false) xout << "Update:"<<g.str(2)<<std::endl;
-    w.get(wfile); // retrieve original wavefunction
-    if (false) xout << "Old wavefunction:"<<w.str(2)<<std::endl;
-    w+=g;
-      }
-    if (false) xout << "New wavefunction:"<<w.str(2)<<std::endl;
-    double norm2=w*w;
-    gsum(&norm2,1);
-    w.distributed=olddistw;
-    g.distributed=olddistg;
-
-    double econv=std::fabs(e-elast);
-
-    elast=e;
-    // normalise
-    w *= ((double)1/std::sqrt(norm2));
-    xout << "norm2="<<norm2<<", econv="<<econv<<" "<<energyThreshold<<std::endl;
-    if (econv < energyThreshold) break;
-  }
-  profiler.stop("DIIS");
-  return e;
+  IterativeSolver::ParameterVectorSet gg; gg.push_back(&g);
+  IterativeSolver::ParameterVectorSet ww; ww.push_back(&w);
+  solver.m_verbosity=1;
+  solver.m_thresh=energyThreshold;
+  solver.m_maxIterations=maxIterations;
+  solver.solve(gg,ww);
+  //      xout << "Final w: "<<w.str(2)<<std::endl;
+  //      xout << "Final g: "<<g.str(2)<<std::endl;
+  if (_residual_q>0) delete _residual_Q;
+  return _lastEnergy;
 }
 
 std::vector<double> Run::Davidson(const Operator& hamiltonian,

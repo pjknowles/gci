@@ -44,7 +44,7 @@ Operator::Operator(const Operator &source, const bool forceSpinUnrestricted, con
   this->_copy(source,forceSpinUnrestricted,oneElectron,twoElectron);
 }
 
-Operator::Operator(const Operator &source, const std::string special, const bool forceSpinUnrestricted)
+Operator::Operator(const std::string special, const Operator &source, const bool forceSpinUnrestricted)
   : OrbitalSpace(source)
   ,loaded(false)
   , coreEnergy(0)
@@ -58,8 +58,19 @@ Operator::Operator(const Operator &source, const std::string special, const bool
         integrals_b = new std::vector<double>(ijSize,0.0);
       else
         integrals_b = integrals_a;
-      for (auto aa=integrals_b->begin(); aa!= integrals_b->end(); aa++) *aa=fill;
-      for (auto aa=integrals_a->begin(); aa!= integrals_a->end(); aa++) *aa=fill;
+      for (auto aa=integrals_b->begin(); aa!= integrals_b->end(); aa++) *aa=0;
+      for (auto aa=integrals_a->begin(); aa!= integrals_a->end(); aa++) *aa=0;
+      for (unsigned int sym=0; sym<8; sym++) {
+          for (size_t k=0; k<this->at(sym); k++)
+            integrals_a->at(int1Index(offset(sym)+1+k,offset(sym)+1+k))=
+            integrals_b->at(int1Index(offset(sym)+1+k,offset(sym)+1+k))=fill;
+        }
+      integrals_aa = NULL;
+      integrals_ab = NULL;
+      integrals_bb = NULL;
+      bracket_integrals_aa = NULL;
+      bracket_integrals_ab = NULL;
+      bracket_integrals_bb = NULL;
       // determine the uncoupled orbital
       size_t uncoupled_orbital=0;
       double min_rowsum=1e50;
@@ -67,10 +78,11 @@ Operator::Operator(const Operator &source, const std::string special, const bool
           for (size_t k=0; k<this->at(sym); k++) {
               double rowsum=0;
               for (size_t l=0; l<this->at(sym); l++)
-                rowsum+=integrals_a->at(int1Index(k+offset(sym),l+offset(sym)));
+                rowsum+=source.integrals_a->at(int1Index(k+offset(sym)+1,l+offset(sym)+1));
+//              xout << "k="<<k<<", rowsum="<<rowsum<<std::endl;
               if (std::fabs(rowsum) < min_rowsum) {
-                  min_rowsum=rowsum;
-                  uncoupled_orbital=k+offset(sym);
+                  min_rowsum=std::fabs(rowsum);
+                  uncoupled_orbital=k+offset(sym)+1;
                 }
             }
         }
