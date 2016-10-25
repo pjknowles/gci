@@ -518,6 +518,8 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
   profiler.declare("1-electron beta excitations");
   DivideTasks(99999999,1,1);
 
+//  xout << "h.bracket_integrals_a "<<h.bracket_integrals_a<<std::endl;
+//  xout << "h.bracket_integrals_b "<<h.bracket_integrals_b<<std::endl;
   if ((h.bracket_integrals_a!=NULL || h.bracket_integrals_b!=NULL)) {
   profiler.start("1-electron");
   size_t offset=0, nsa=0, nsb=0;
@@ -542,6 +544,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
       profiler.stop("1-electron MXM",2*nsa*nsb*w.orbitalSpace->total(0,1));
     }
     if (h.spinUnrestricted && h.bracket_integrals_b != NULL) {
+        for (size_t k=0; k<6; k++) xout <<h.bracket_integrals_b->at(k)<<std::endl;
       profiler.start("1-electron TransitionDensity");
       TransitionDensity d(w,
                           w.alphaStrings[syma].begin(),
@@ -554,6 +557,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
       MxmDrvNN(&buffer[offset],&d[0], &(*h.bracket_integrals_b)[0],
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
       profiler.stop("1-electron MXM",2*nsa*nsb*w.orbitalSpace->total(0,1));
+//  xout <<"residual after 1-electron b:"<<std::endl<<str(2)<<std::endl;
     }
   }
   profiler.stop("1-electron");

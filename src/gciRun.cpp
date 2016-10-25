@@ -83,12 +83,27 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
             if (_residual_Q != nullptr) {
                 //FIXME this is fragile to the case that cw does not have any component in Q
                 // but this has to be dealt with by providing an appropriate trial function
+                // however we have the diagonals right here so we can do it.
                 Wavefunction m(*cw);
                 m.zero();
                 m.operatorOnWavefunction(*_residual_Q,*cw);
                 xout << "m  in preconditioner"<<m.str(2)<<std::endl;
                 double cm = cw->dot(&m);
-                if (cm==0) throw std::runtime_error("IPT wavefunction has no component in Q");
+//                if (cm==0) throw std::runtime_error("IPT wavefunction has no component in Q");
+                if (cm==0) {
+                    // generate an ion trial vector
+                    xout << "generating ion trial vector"<<std::endl;
+                    Wavefunction d(*diag);
+                    d.zero();
+                    xout << "diag"<<std::endl<<diag->str(2)<<std::endl;
+                    d.operatorOnWavefunction(*_residual_Q,*diag);
+                    xout << "d"<<std::endl<<d.str(2)<<std::endl;
+                    m.set(diag->minloc(state+1),1);
+                    xout << "m"<<std::endl<<m.str(2)<<std::endl;
+                    cw->axpy(_residual_q/(1-_residual_q),&m);
+                    xout << "cw"<<std::endl<<cw->str(2)<<std::endl;
+                    cm = cw->dot(&m);
+                  }
                 double cc = cw->dot(cw);
                 double lambda=-1+std::sqrt(_residual_q*(cc-cm)/((1-_residual_q)*cm));
                 cw->axpy(lambda,&m);

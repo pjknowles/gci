@@ -71,6 +71,7 @@ Operator::Operator(const std::string special, const Operator &source, const bool
       bracket_integrals_aa = NULL;
       bracket_integrals_ab = NULL;
       bracket_integrals_bb = NULL;
+//      constructBraKet(0,1);
       // determine the uncoupled orbital
       size_t uncoupled_orbital=0;
       double min_rowsum=1e50;
@@ -89,6 +90,12 @@ Operator::Operator(const std::string special, const Operator &source, const bool
       xout << "non-interacting orbital is "<<uncoupled_orbital<<std::endl;
       integrals_b->at(int1Index(uncoupled_orbital,uncoupled_orbital))=1-fill;
       loaded=true;
+      bracket_integrals_a = new std::vector<double>(*integrals_a) ;
+      bracket_integrals_b = new std::vector<double>(*integrals_b) ;
+        xout << "integrals_b"<<std::endl;
+        for (size_t k=0; k<6; k++) xout <<integrals_b->at(k)<<std::endl;
+        xout << "bracket_integrals_b"<<std::endl;
+        for (size_t k=0; k<6; k++) xout <<bracket_integrals_b->at(k)<<std::endl;
     }
 }
 
