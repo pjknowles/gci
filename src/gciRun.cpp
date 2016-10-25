@@ -78,8 +78,22 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
         if (shift[state]==0) {
             cw->times(gw,diag);
         }
-        else
-          cw->divide(gw,diag,shifts[state],append,true);
+        else {
+            cw->divide(gw,diag,shifts[state],append,true);
+            if (_residual_Q != nullptr) {
+                //FIXME this is fragile to the case that cw does not have any component in Q
+                // but this has to be dealt with by providing an appropriate trial function
+                Wavefunction m(*cw);
+                m.zero();
+                m.operatorOnWavefunction(*_residual_Q,*cw);
+                xout << "m  in preconditioner"<<m.str(2)<<std::endl;
+                double cm = cw->dot(&m);
+                if (cm==0) throw std::runtime_error("IPT wavefunction has no component in Q");
+                double cc = cw->dot(cw);
+                double lambda=-1+std::sqrt(_residual_q*(cc-cm)/((1-_residual_q)*cm));
+                cw->axpy(lambda,&m);
+              }
+          }
     }
 }
 
