@@ -56,13 +56,15 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
                 double mu = cm==0 ? 0 : (cg*cm-cc*gm)/(cm*cm-cm*cc);
                 epsilon = (cg-cm*mu+cc*mu*_residual_q)/(cc);
                 g->axpy(-mu,&m);
+                xout << "mu="<<mu<<std::endl;
+            xout << "epsilon="<<epsilon<<", cg/cc="<<cg/cc<<std::endl;
                 // FIXME idempotency constraint to follow
               }
             //        xout << "e "<<_lastEnergy<<std::endl;
             g->axpy(-epsilon,x);
             _lastEnergy=epsilon;
           }
-//        xout << "g "<<g->str(2)<<std::endl;
+        xout << "final residual "<<g->str(2)<<std::endl;
     }
 }
 
@@ -105,8 +107,11 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
                     xout << "d"<<std::endl<<d.str(2)<<std::endl;
                     m.set(d.minloc(state+1),1);
                     xout << "m"<<std::endl<<m.str(2)<<std::endl;
-                    cw->axpy(_residual_q/(1-_residual_q),&m);
-                    xout << "cw"<<std::endl<<cw->str(2)<<std::endl;
+                    double  lambda=std::sqrt(_residual_q/(1-_residual_q));
+                    cw->axpy(lambda,&m);
+                    m.axpy(lambda-1,&m);
+                    xout << "cw after initial generation"<<std::endl<<cw->str(2)<<std::endl;
+                    xout << "m after initial generation"<<std::endl<<m.str(2)<<std::endl;
                     cm = cw->dot(&m);
                   }
                 double cc = cw->dot(cw);
@@ -114,7 +119,10 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
                 xout << "cc="<<cc<<std::endl;
                 xout << "cm="<<cm<<std::endl;
                 cw->axpy(lambda,&m);
-                    xout << "cw after updating mu constraint"<<std::endl<<cw->str(2)<<std::endl;
+                xout << "cw after updating mu constraint"<<std::endl<<cw->str(2)<<std::endl;
+                cc = cw->dot(cw);
+                cw->axpy(1/std::sqrt(cc)-1,cw);
+                xout << "cw after renormalising"<<std::endl<<cw->str(2)<<std::endl;
               }
           }
     }
