@@ -40,10 +40,11 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
 //        xout << "activeHamiltonian "<<activeHamiltonian->str(2)<<std::endl;
         g->operatorOnWavefunction(*activeHamiltonian, *x);
         profiler.stop("Hc");
-//        xout << "g "<<g->str(2)<<std::endl;
+        xout << "g=Hc "<<g->str(2)<<std::endl;
         if (_residual_subtract_Energy) {
             double cc = x->dot(x);
             double cg = x->dot(g);
+            _lastEnergy=cg/cc;
             double epsilon=cg/cc;
             if (_residual_Q != nullptr) {
 //                xout << "@ _residual_Q in _residual"<<std::endl<<*_residual_Q<<std::endl;
@@ -56,13 +57,16 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
                 double mu = cm==0 ? 0 : (cg*cm-cc*gm)/(cm*cm-cm*cc);
                 epsilon = (cg-cm*mu+cc*mu*_residual_q)/(cc);
                 g->axpy(-mu,&m);
+                xout << "cm="<<cm<<std::endl;
+                xout << "gm="<<gm<<std::endl;
                 xout << "mu="<<mu<<std::endl;
-            xout << "epsilon="<<epsilon<<", cg/cc="<<cg/cc<<std::endl;
+                xout << "epsilon="<<epsilon<<", cg/cc="<<cg/cc<<std::endl;
+                xout << "residual after subtracting m "<<g->str(2)<<std::endl;
                 // FIXME idempotency constraint to follow
+                _lastEnergy=epsilon-mu*_residual_q;
               }
-            //        xout << "e "<<_lastEnergy<<std::endl;
-            g->axpy(-epsilon,x);
-            _lastEnergy=epsilon;
+            xout << "_lastEnergy "<<_lastEnergy<<std::endl;
+            g->axpy(-_lastEnergy,x);
           }
         xout << "final residual "<<g->str(2)<<std::endl;
     }
