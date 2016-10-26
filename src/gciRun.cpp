@@ -20,6 +20,7 @@ using namespace IterativeSolver;
 const static Operator* activeHamiltonian;
 static Wavefunction* _preconditioning_diagonals;
 static double _lastEnergy;
+static double _mu;
 static bool _residual_subtract_Energy;
 static Operator* _residual_Q;
 static double _residual_q;
@@ -54,16 +55,16 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
                 xout << "m "<<m.str(2)<<std::endl;
                 double cm = x->dot(&m);
                 double gm = g->dot(&m);
-                double mu = cm==0 ? 0 : (cg*cm-cc*gm)/(cm*cm-cm*cc);
-                epsilon = (cg-cm*mu+cc*mu*_residual_q)/(cc);
-                g->axpy(-mu,&m);
+                _mu = cm==0 ? 0 : (cg*cm-cc*gm)/(cm*cm-cm*cc);
+                epsilon = (cg-cm*_mu+cc*_mu*_residual_q)/(cc);
+                g->axpy(-_mu,&m);
                 xout << "cm="<<cm<<std::endl;
                 xout << "gm="<<gm<<std::endl;
-                xout << "mu="<<mu<<std::endl;
+                xout << "mu="<<_mu<<std::endl;
                 xout << "epsilon="<<epsilon<<", cg/cc="<<cg/cc<<std::endl;
                 xout << "residual after subtracting m "<<g->str(2)<<std::endl;
                 // FIXME idempotency constraint to follow
-                _lastEnergy=epsilon-mu*_residual_q;
+                _lastEnergy=epsilon-_mu*_residual_q;
               }
             xout << "_lastEnergy "<<_lastEnergy<<std::endl;
             g->axpy(-_lastEnergy,x);
@@ -251,7 +252,7 @@ std::vector<double> Run::run()
 //    itf::SetVariables( "ENERGY_METHOD", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
   } else if (method=="DIIS") {
-    energies.resize(1);energies[0] = DIIS(hh, prototype);
+    energies = DIIS(hh, prototype);
   } else if (method=="HAMILTONIAN")
      HamiltonianMatrixPrint(hh,prototype);
   else if (method=="PROFILETEST") {
@@ -289,7 +290,7 @@ using namespace itf;
 #endif
 
 #include <cmath>
-double Run::DIIS(const Operator &hamiltonian, const State &prototype, double energyThreshold, int maxIterations)
+std::vector<double> Run::DIIS(const Operator &hamiltonian, const State &prototype, double energyThreshold, int maxIterations)
 {
   Operator h(hamiltonian);
   profiler.start("DIIS");
@@ -331,8 +332,11 @@ double Run::DIIS(const Operator &hamiltonian, const State &prototype, double ene
   solver.solve(gg,ww);
   //      xout << "Final w: "<<w.str(2)<<std::endl;
   //      xout << "Final g: "<<g.str(2)<<std::endl;
-  if (_residual_q>0) delete _residual_Q;
-  return _lastEnergy;
+  if (_residual_q>0) {
+      delete _residual_Q;
+      return std::vector<double>{_lastEnergy,_lastEnergy+_mu};
+    }
+  return std::vector<double>{_lastEnergy};
 }
 
 std::vector<double> Run::Davidson(const Operator& hamiltonian,

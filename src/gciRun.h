@@ -84,7 +84,7 @@ private:
    * \param maxIterations The maximum number of iterations to perform
    * \return the energy of the state.
    */
-  double DIIS(const Operator &hamiltonian,
+  std::vector<double> DIIS(const Operator &hamiltonian,
                                const State& prototype,
                                double energyThreshold=(double)-1, int maxIterations=-1);
 
