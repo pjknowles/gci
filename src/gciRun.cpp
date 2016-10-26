@@ -35,13 +35,13 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
         profiler.start("Hc");
         if (not append)
             g->zero();
-        xout << "x in residual "<<x->str(2)<<std::endl;
+//        xout << "x in residual "<<x->str(2)<<std::endl;
 //        xout << "g "<<g->str(2)<<std::endl;
 //        xout <<"g->buffer"<<g->data()<<std::endl;
 //        xout << "activeHamiltonian "<<activeHamiltonian->str(2)<<std::endl;
         g->operatorOnWavefunction(*activeHamiltonian, *x);
         profiler.stop("Hc");
-        xout << "g=Hc "<<g->str(2)<<std::endl;
+//        xout << "g=Hc "<<g->str(2)<<std::endl;
         if (_residual_subtract_Energy) {
             double cc = x->dot(x);
             double cg = x->dot(g);
@@ -52,24 +52,24 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
                 Wavefunction m(*g);
                 m.zero();
                 m.operatorOnWavefunction(*_residual_Q,*x);
-                xout << "m "<<m.str(2)<<std::endl;
+//                xout << "m "<<m.str(2)<<std::endl;
                 double cm = x->dot(&m);
                 double gm = g->dot(&m);
                 _mu = cm==0 ? 0 : (cg*cm-cc*gm)/(cm*cm-cm*cc);
                 epsilon = (cg-cm*_mu+cc*_mu*_residual_q)/(cc);
                 g->axpy(-_mu,&m);
-                xout << "cm="<<cm<<std::endl;
-                xout << "gm="<<gm<<std::endl;
-                xout << "mu="<<_mu<<std::endl;
-                xout << "epsilon="<<epsilon<<", cg/cc="<<cg/cc<<std::endl;
-                xout << "residual after subtracting m "<<g->str(2)<<std::endl;
+//                xout << "cm="<<cm<<std::endl;
+//                xout << "gm="<<gm<<std::endl;
+//                xout << "mu="<<_mu<<std::endl;
+//                xout << "epsilon="<<epsilon<<", cg/cc="<<cg/cc<<std::endl;
+//                xout << "residual after subtracting m "<<g->str(2)<<std::endl;
                 // FIXME idempotency constraint to follow
                 _lastEnergy=epsilon-_mu*_residual_q;
               }
-            xout << "_lastEnergy "<<_lastEnergy<<std::endl;
+//            xout << "_lastEnergy "<<_lastEnergy<<std::endl;
             g->axpy(-_lastEnergy,x);
           }
-        xout << "final residual "<<g->str(2)<<std::endl;
+//        xout << "final residual "<<g->str(2)<<std::endl;
     }
 }
 
@@ -97,9 +97,9 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
                 // however we have the diagonals right here so we can do it.
                 Wavefunction m(*cw);
                 m.zero();
-                xout << "cw  in preconditioner"<<cw->str(2)<<std::endl;
+//                xout << "cw  in preconditioner"<<cw->str(2)<<std::endl;
                 m.operatorOnWavefunction(*_residual_Q,*cw);
-                xout << "m  in preconditioner"<<m.str(2)<<std::endl;
+//                xout << "m  in preconditioner"<<m.str(2)<<std::endl;
                 double cm = cw->dot(&m);
 //                if (cm==0) throw std::runtime_error("IPT wavefunction has no component in Q");
                 if (std::fabs(cm)<1e-12) {
@@ -107,27 +107,27 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
                     xout << "generating ion trial vector"<<std::endl;
                     Wavefunction d(*diag);
                     d.zero();
-                    xout << "diag"<<std::endl<<diag->str(2)<<std::endl;
+//                    xout << "diag"<<std::endl<<diag->str(2)<<std::endl;
                     d.operatorOnWavefunction(*_residual_Q,*diag);
-                    xout << "d"<<std::endl<<d.str(2)<<std::endl;
+//                    xout << "d"<<std::endl<<d.str(2)<<std::endl;
                     m.set(d.minloc(state+1),1);
-                    xout << "m"<<std::endl<<m.str(2)<<std::endl;
+//                    xout << "m"<<std::endl<<m.str(2)<<std::endl;
                     double  lambda=std::sqrt(_residual_q/(1-_residual_q));
                     cw->axpy(lambda,&m);
                     m.axpy(lambda-1,&m);
-                    xout << "cw after initial generation"<<std::endl<<cw->str(2)<<std::endl;
-                    xout << "m after initial generation"<<std::endl<<m.str(2)<<std::endl;
+//                    xout << "cw after initial generation"<<std::endl<<cw->str(2)<<std::endl;
+//                    xout << "m after initial generation"<<std::endl<<m.str(2)<<std::endl;
                     cm = cw->dot(&m);
                   }
                 double cc = cw->dot(cw);
                 double lambda=-1+std::sqrt(_residual_q*(cc-cm)/((1-_residual_q)*cm));
-                xout << "cc="<<cc<<std::endl;
-                xout << "cm="<<cm<<std::endl;
+//                xout << "cc="<<cc<<std::endl;
+//                xout << "cm="<<cm<<std::endl;
                 cw->axpy(lambda,&m);
-                xout << "cw after updating mu constraint"<<std::endl<<cw->str(2)<<std::endl;
+//                xout << "cw after updating mu constraint"<<std::endl<<cw->str(2)<<std::endl;
                 cc = cw->dot(cw);
                 cw->axpy(1/std::sqrt(cc)-1,cw);
-                xout << "cw after renormalising"<<std::endl<<cw->str(2)<<std::endl;
+//                xout << "cw after renormalising"<<std::endl<<cw->str(2)<<std::endl;
               }
           }
     }
@@ -306,7 +306,7 @@ std::vector<double> Run::DIIS(const Operator &hamiltonian, const State &prototyp
   if (_residual_q>0) {
       xout << "q="<<_residual_q<<std::endl;
       _residual_Q =new Operator("Q",hamiltonian,true);
-      xout << "Q operator" <<std::endl<<_residual_Q<<std::endl;
+//      xout << "Q operator" <<std::endl<<*_residual_Q<<std::endl;
     }
 //  Operator P("P",hamiltonian,true);
 //  xout << "P operator" <<std::endl<<P<<std::endl;
