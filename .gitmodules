@@ -10,6 +10,3 @@
 [submodule "IterativeSolver"]
 	path = IterativeSolver
 	url = git@bitbucket.org:pjknowles/IterativeSolver
-[submodule "memory"]
-	path = memory
-	url = git@bitbucket.org:pjknowles/memory
