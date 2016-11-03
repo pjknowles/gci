@@ -15,7 +15,7 @@ using namespace gci;
 
 
 
-using namespace IterativeSolver;
+using namespace LinearAlgebra;
 
 const static Operator* activeHamiltonian;
 static Wavefunction* _preconditioning_diagonals;
@@ -24,7 +24,7 @@ static double _mu;
 static bool _residual_subtract_Energy;
 static Operator* _residual_Q;
 static double _residual_q;
-static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<ParameterScalar> shift=std::vector<ParameterScalar>(), bool append=false) {
+static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<double> shift=std::vector<double>(), bool append=false) {
     for (size_t k=0; k<psx.size(); k++) {
         const Wavefunction* x=dynamic_cast <const Wavefunction*> (psx[k]);
         Wavefunction* g=dynamic_cast <Wavefunction*> (outputs[k]);
@@ -74,7 +74,7 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
 }
 
 static bool _preconditioner_subtractDiagonal;
-static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet & psc, std::vector<ParameterScalar> shift=std::vector<ParameterScalar>(), bool append=false) {
+static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet & psc, std::vector<double> shift=std::vector<double>(), bool append=false) {
     Wavefunction* diag = _preconditioning_diagonals;
     std::vector<double> shifts=shift;
     for (size_t state=0; state<psc.size(); state++){
@@ -322,10 +322,10 @@ std::vector<double> Run::DIIS(const Operator &hamiltonian, const State &prototyp
   activeHamiltonian = &h;
   _residual_subtract_Energy=true;
   _preconditioner_subtractDiagonal=true;
-  IterativeSolver::DIIS solver(&_residual,&_preconditioner);
+  LinearAlgebra::DIIS solver(&_residual,&_preconditioner);
   w.set((double)0); w.set(reference, (double) 1);
-  IterativeSolver::ParameterVectorSet gg; gg.push_back(&g);
-  IterativeSolver::ParameterVectorSet ww; ww.push_back(&w);
+  LinearAlgebra::ParameterVectorSet gg; gg.push_back(&g);
+  LinearAlgebra::ParameterVectorSet ww; ww.push_back(&w);
   solver.m_verbosity=1;
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;
@@ -363,9 +363,9 @@ std::vector<double> Run::Davidson(const Operator& hamiltonian,
   activeHamiltonian = &h;
   _residual_subtract_Energy=false;
   _preconditioner_subtractDiagonal=false;
-  IterativeSolver::Davidson solver(&_residual,&_preconditioner);
-  IterativeSolver::ParameterVectorSet gg;
-  IterativeSolver::ParameterVectorSet ww;
+  LinearAlgebra::Davidson solver(&_residual,&_preconditioner);
+  LinearAlgebra::ParameterVectorSet gg;
+  LinearAlgebra::ParameterVectorSet ww;
   for (int root=0; root<nState; root++) {
       Wavefunction* w=new Wavefunction(prototype);
       ww.push_back(w);
@@ -744,10 +744,10 @@ std::vector<double> Run::ISRSPT(
   activeHamiltonian=&hamiltonian;
   _residual_subtract_Energy=false;
   _preconditioner_subtractDiagonal=false;
-  IterativeSolver::RSPT solver(&_residual,&_preconditioner);
+  LinearAlgebra::RSPT solver(&_residual,&_preconditioner);
   w.set((double)0); w.set(reference, (double) 1);
-  IterativeSolver::ParameterVectorSet gg; gg.push_back(&g);
-  IterativeSolver::ParameterVectorSet ww; ww.push_back(&w);
+  LinearAlgebra::ParameterVectorSet gg; gg.push_back(&g);
+  LinearAlgebra::ParameterVectorSet ww; ww.push_back(&w);
   solver.m_verbosity=1;
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;

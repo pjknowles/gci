@@ -10,13 +10,13 @@
 #include "gciDeterminant.h"
 #include "memory.h"
 #include "SMat.h"
-#include "IterativeSolver/ParameterVector.h"
+#include "LinearAlgebra.h"
 
 namespace gci {
 /*!
  * \brief The Wavefunction class, which holds a configuration expansion in the tensor space defined by a hamiltonian
  */
-class Wavefunction : public State, public IterativeSolver::ParameterVector
+class Wavefunction : public State, public LinearAlgebra::vector<double>
 {
 public:
   /**
@@ -127,8 +127,8 @@ public:
    * \param a the factor defining the multiple
    * \param x the other wavefunction
    */
-//  void axpy(IterativeSolver::ParameterScalar a, const Wavefunction *other);
-  void axpy(IterativeSolver::ParameterScalar a, const IterativeSolver::ParameterVector *x);
+  void axpy(double a, const LinearAlgebra::vector<double> *x);
+  void scal(double a);
     // Every child of ParameterVector needs exactly this
     Wavefunction* clone() const { return new Wavefunction(*this); }
 
@@ -201,13 +201,13 @@ public:
 
   friend class TransitionDensity;
   friend double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
-  IterativeSolver::ParameterScalar dot(const ParameterVector *other) const;
+  double dot(const LinearAlgebra::vector<double> *other) const;
   /*!
    * \brief this[i] = a[i]*b[i]
    * \param a
    * \param b
    */
-  void times(const ParameterVector *a, const ParameterVector *b);
+  void times(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b);
   /*!
    * \brief this[i] = a[i]/(b[i]+shift)
    * \param a
@@ -216,7 +216,7 @@ public:
    * \param append whether to do += or =
    * \param negative whether =- or =+
    */
-  void divide(const ParameterVector *a, const ParameterVector *b, double shift=0, bool append=false, bool negative=false);
+  void divide(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b, double shift=0, bool append=false, bool negative=false);
   void zero();
 private:
   void buildStrings(); ///< build alphaStrings and betaStrings

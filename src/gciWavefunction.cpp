@@ -174,7 +174,7 @@ void Wavefunction::diagonalOperator(const Operator &oper)
   profiler.stop("diagonalOperator");
 }
 
-void Wavefunction::axpy(IterativeSolver::ParameterScalar a, const ParameterVector *x)
+void Wavefunction::axpy(double a, const LinearAlgebra::vector<double> *x)
 {
   const Wavefunction* xx=dynamic_cast <const Wavefunction*> (x);
   size_t chunk = (buffer.size()-1)/parallel_size+1;
@@ -182,6 +182,15 @@ void Wavefunction::axpy(IterativeSolver::ParameterScalar a, const ParameterVecto
     for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++) buffer[i] += xx->buffer[i]*a;
   else
     for (size_t i=0; i<buffer.size(); i++) buffer[i] += xx->buffer[i]*a;
+}
+
+void Wavefunction::scal(double a)
+{
+  size_t chunk = (buffer.size()-1)/parallel_size+1;
+  if (distributed)
+    for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++) buffer[i] *= a;
+  else
+    for (size_t i=0; i<buffer.size(); i++) buffer[i] *= a;
 }
 
 Wavefunction& Wavefunction::operator*=(const double &value)
@@ -310,12 +319,12 @@ Wavefunction operator*(const double &value, const Wavefunction &w1)
   return result *= value;
 }
 
-IterativeSolver::ParameterScalar Wavefunction::dot(const ParameterVector *other) const
+double Wavefunction::dot(const LinearAlgebra::vector<double> *other) const
 {
  return (*this)*(*(dynamic_cast<const Wavefunction*>(other)));
 }
 
-void Wavefunction::times(const ParameterVector *a, const ParameterVector *b)
+void Wavefunction::times(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b)
 {
  const Wavefunction* wa = dynamic_cast<const Wavefunction*>(a);
  const Wavefunction* wb = dynamic_cast<const Wavefunction*>(b);
@@ -328,7 +337,7 @@ void Wavefunction::times(const ParameterVector *a, const ParameterVector *b)
       buffer[i] = wa->buffer[i]*wb->buffer[i];
 }
 
-void Wavefunction::divide(const ParameterVector *a, const ParameterVector *b, double shift, bool append, bool negative)
+void Wavefunction::divide(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b, double shift, bool append, bool negative)
 {
   const Wavefunction* wa = dynamic_cast<const Wavefunction*>(a);
   const Wavefunction* wb = dynamic_cast<const Wavefunction*>(b);
