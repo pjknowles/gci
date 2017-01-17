@@ -41,6 +41,11 @@ extern Profiler profiler; // global profiler
 
 extern int64_t parallel_rank, parallel_size;
 
+#ifdef GCI_MPI
+extern MPI_Comm molpro_plugin_intercomm;
+extern bool molpro_plugin;
+#endif
+
 // shared counter
 extern int64_t __nextval_counter;
 inline long nextval(int64_t option=parallel_size){

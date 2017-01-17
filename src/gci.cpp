@@ -11,6 +11,9 @@
 #include <iostream>
 #include <iomanip>
 #include "memory.h"
+#include <unistd.h>
+#include <string.h>
+#include <fcntl.h>
 using namespace gci;
 
 
@@ -36,6 +39,10 @@ extern "C" {
 
 int64_t gci::parallel_size=1;
 int64_t gci::parallel_rank=0;
+bool gci::molpro_plugin=false;
+#ifdef GCI_PARALLEL
+MPI_Comm gci::molpro_plugin_intercomm=MPI_COMM_NULL;
+#endif
 #ifdef MOLPRO
 #include "cic/ItfMpp.h"
 itf::FMppInt gci::mpp=itf::FMppInt(itf::FMppInt::MPP_NeedSharedFs|itf::FMppInt::MPP_GlobalDeclaration);
@@ -50,13 +57,49 @@ int64_t gci::__task_granularity=1;
 int main(int argc, char *argv[])
 //int main()
 {
+  char fcidumpname[1024]="gci.fcidump";
+  molpro_plugin=false;
 #ifdef GCI_PARALLEL
   PPIDD_Initialize(argc,argv);
   PPIDD_Size(&parallel_size);
   PPIDD_Rank(&parallel_rank);
 //  if (parallel_rank > 0) freopen("/dev/null", "w", stdout);
+  MPI_Comm_get_parent(&molpro_plugin_intercomm);
+  if (parallel_rank==0 && molpro_plugin_intercomm != MPI_COMM_NULL) {
+      int length;
+      MPI_Status status;
+      // expect plugin server to identify itself
+      MPI_Recv(&length,1,MPI_INT,0,0,molpro_plugin_intercomm,&status);
+      char* id = (char*) malloc(length);
+      MPI_Recv(id,length,MPI_CHAR,0,1,molpro_plugin_intercomm,&status);
+//      printf("Plugin server: %s\n",id);
+      molpro_plugin = !strncmp(id,"MOLPRO",6);
+      if (molpro_plugin) {
+          char molpro_version[5];
+          strncpy(molpro_version,&id[7],4);
+          fflush(stdout);
+          int n = open(&id[12],O_WRONLY);
+          dup2(n,1);
+          close(n);
+          printf("Plugin for Molpro version %s\n",molpro_version);
+        }
+    }
+  MPI_Bcast(&molpro_plugin,1,MPI_INT,0,MPI_COMM_WORLD);
+  if (molpro_plugin && parallel_rank==0) { // communication should be handled by just the root process, exchanging messages with the root process on the server
+      // ask for an FCIDUMP
+      char cmd[]="GIVE OPERATOR HAMILTONIAN FCIDUMP";
+      int length=sizeof(cmd);
+      MPI_Send(&length,1,MPI_INT,0,0,molpro_plugin_intercomm);
+      MPI_Send(cmd,length,MPI_CHAR,0,1,molpro_plugin_intercomm);
+      MPI_Status status;
+      MPI_Recv(&length,1,MPI_INT,0,0,molpro_plugin_intercomm,&status);
+      if (length==0) throw std::logic_error("plugin request has failed");
+      MPI_Recv(fcidumpname,length,MPI_CHAR,0,1,molpro_plugin_intercomm,&status);
+    }
+  int length=strlen(fcidumpname);
+  MPI_Bcast(fcidumpname,length,MPI_CHAR,0,MPI_COMM_WORLD);
 #endif
-  Run run("gci.fcidump");
+  Run run(fcidumpname);
   if (argc<2) {
     run.addParameter("METHOD","DAVIDSON");
     run.addParameter("PROFILER","0");
@@ -72,8 +115,28 @@ int main(int argc, char *argv[])
   size_t memory_allocated=memory_remaining();
   std::vector<double> e=run.run();
   xout << "e after run:"; for (size_t i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;
+
+  if (molpro_plugin && parallel_rank==0) {
+     // send the energy back
+     char cmd[]="TAKE ENERGY";
+     int length=sizeof(cmd);
+     MPI_Send(&length,1,MPI_INT,0,0,molpro_plugin_intercomm);
+     MPI_Send(cmd,length,MPI_CHAR,0,1,molpro_plugin_intercomm);
+     int nstate=e.size();
+     MPI_Send(&nstate,1,MPI_INT,0,2,molpro_plugin_intercomm);
+     MPI_Status status;
+     MPI_Recv(&length,1,MPI_INT,0,0,molpro_plugin_intercomm,&status);
+     if (length) { // 'yes' answer received
+       MPI_Send(&e[0],nstate,MPI_DOUBLE,0,3,molpro_plugin_intercomm);
+     }
+   }
+
   xout << "initial memory="<<memory_allocated<<", remaining memory="<<memory_remaining()<<std::endl;
 #ifdef GCI_PARALLEL
+  if (molpro_plugin && parallel_rank==0) {
+      int signal=0;
+      MPI_Send(&signal,1,MPI_INT,0,0,molpro_plugin_intercomm);
+    }
   PPIDD_Finalize();
 #endif
   return 0;
