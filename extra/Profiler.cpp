@@ -167,8 +167,8 @@ Profiler::resultMap Profiler::totals() const
     value=(int64_t)(*s).second.operations; type=0;
     PPIDD_Gsum(&type,&value,&len,op);
     (*s).second.operations=(long)value;
-    char* opm=strdup("max");
-    int64_t stack=(fortint)(*s).second.stack; type=0;
+    opm=strdup("max");
+    int64_t stack=(int64_t)(*s).second.stack; type=0;
     PPIDD_Gsum(&type,&stack,&len,opm);
     (*s).second.stack=(int64_t)stack;
 #else

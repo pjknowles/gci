@@ -1,6 +1,7 @@
 #ifndef GCI_H
 #define GCI_H
 #include <vector>
+#include <cstring>
 #include "Profiler.h"
 #include <stdint.h>
 
@@ -124,7 +125,7 @@ void inline gsum(double* buffer, const size_t len)
     result.resize(len);
   MPI_Reduce(buffer,&result[0],(int)len,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_COMPUTE);
   if (parallel_rank == 0)
-    memcpy(buffer,&result[0],sizeof(double)*len);
+    std::memcpy(buffer,&result[0],sizeof(double)*len);
   MPI_Bcast(buffer,(int)len,MPI_DOUBLE,0,MPI_COMM_COMPUTE);
 #else
         buffer[len]=buffer[len]; // to silence compiler warnings
