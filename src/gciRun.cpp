@@ -147,8 +147,8 @@ std::vector<double> Run::run()
    parallel_rank=(int64_t)GET_IPROCS_CXX();
    parallel_size=(int64_t)GET_NPROCS_CXX();
 #elif defined(GCI_PARALLEL)
-  PPIDD_Rank(&parallel_rank);
-  PPIDD_Size(&parallel_size);
+  MPI_Comm_rank(MPI_COMM_WORLD,&parallel_rank);
+  MPI_Comm_size(MPI_COMM_WORLD,&parallel_size);
   xout << "Parallel run of "<<parallel_size<<" processes"<< std::endl;
 #else
   parallel_rank=0;

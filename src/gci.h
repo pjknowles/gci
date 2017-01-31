@@ -4,6 +4,7 @@
 #include <cstring>
 #include "Profiler.h"
 #include <stdint.h>
+#include "sharedCounter.h"
 
 #ifndef MOLPRO
 #define xout std::cout
@@ -16,21 +17,11 @@
 
 #if defined(GCI_PARALLEL) || defined(MPI2) || defined(GA_MPI)
 #define GCI_MPI
-#ifdef MPI2
-#include <ppidd_c.h>
-#define MPI_COMM_COMPUTE MPI_GA_WORK_COMM // not yet tested
-#else
 #define MPI_COMM_COMPUTE MPI_COMM_WORLD
-#endif
-#endif
-#if defined(GCI_MPI)
-#include <mpi.h>
 #endif
 
 #ifdef GCI_PARALLEL
-extern "C" {
-#include "ppidd_c.h"
-}
+#include "mpi.h"
 #endif
 
 
@@ -39,7 +30,7 @@ namespace gci {
 
 extern Profiler profiler; // global profiler
 
-extern int64_t parallel_rank, parallel_size;
+extern int parallel_rank, parallel_size;
 
 #ifdef GCI_MPI
 extern MPI_Comm molpro_plugin_intercomm;
@@ -48,10 +39,12 @@ extern bool molpro_plugin;
 
 // shared counter
 extern int64_t __nextval_counter;
+extern sharedCounter* _nextval_counter;
 inline long nextval(int64_t option=parallel_size){
 #ifdef GCI_PARALLEL
-  int64_t value; PPIDD_Nxtval(&option,&value); //xout <<std::endl<<"@nextval("<<option<<",rank="<<parallel_rank<<")="<<value<<std::endl;
-  return value;
+//  int64_t value; PPIDD_Nxtval(&option,&value); //xout <<std::endl<<"@nextval("<<option<<",rank="<<parallel_rank<<")="<<value<<std::endl;
+//  return value;
+  return _nextval_counter->increment();
 #else
   if (option < 0) __nextval_counter=-2;
   return ++__nextval_counter;

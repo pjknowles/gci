@@ -134,12 +134,7 @@ void Profiler::stopall()
 
 #include <cmath>
 #ifdef GCI_PARALLEL
-#define HAVE_PPIDD
-#endif
-#ifdef HAVE_PPIDD
-extern "C" {
-#include "ppidd_c.h"
-}
+#include "mpi.h"
 #endif
 #ifdef MOLPRO
 #include "mpp/CxMpp.h"
@@ -156,21 +151,17 @@ Profiler::resultMap Profiler::totals() const
   while(thiscopy.results.erase(""));
   for (resultMap::iterator s=thiscopy.results.begin(); s!=thiscopy.results.end(); ++s) {
 #ifdef GCI_PARALLEL
-    int64_t type=1, len=1;
-    char* opm=strdup("max");
-    PPIDD_Gsum(&type,&((*s).second.wall),&len,opm);
-    char* op=strdup("+");
-    PPIDD_Gsum(&type,&((*s).second.cpu),&len,op);
-    int64_t value=(int64_t)(*s).second.calls; type=0;
-    PPIDD_Gsum(&type,&value,&len,op);
-    (*s).second.calls=(int)value;
-    value=(int64_t)(*s).second.operations; type=0;
-    PPIDD_Gsum(&type,&value,&len,op);
-    (*s).second.operations=(long)value;
-    opm=strdup("max");
-    int64_t stack=(int64_t)(*s).second.stack; type=0;
-    PPIDD_Gsum(&type,&stack,&len,opm);
-    (*s).second.stack=(int64_t)stack;
+      int type=1, len=1;
+      double val=s->second.wall;
+      MPI_Allreduce(&val,&((*s).second.wall),len,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
+      val=s->second.cpu;
+      MPI_Allreduce(&val,&((*s).second.cpu),len,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+      int calls=s->second.calls;
+      MPI_Allreduce(&calls,&((*s).second.calls),len,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+      long operations=s->second.operations;
+      MPI_Allreduce(&operations,&((*s).second.operations),len,MPI_LONG,MPI_SUM,MPI_COMM_WORLD);
+      int64_t stack = s->second.stack;
+      MPI_Allreduce(&stack,&((*s).second.stack),len,MPI_LONG_LONG_INT,MPI_MAX,MPI_COMM_WORLD);
 #else
 #ifdef MOLPRO
     // only '+' works in Molpro runtime

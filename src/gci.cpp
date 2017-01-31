@@ -37,8 +37,8 @@ extern "C" {
 #endif
 #endif
 
-int64_t gci::parallel_size=1;
-int64_t gci::parallel_rank=0;
+int gci::parallel_size=1;
+int gci::parallel_rank=0;
 bool gci::molpro_plugin=false;
 #ifdef GCI_PARALLEL
 MPI_Comm gci::molpro_plugin_intercomm=MPI_COMM_NULL;
@@ -47,6 +47,7 @@ MPI_Comm gci::molpro_plugin_intercomm=MPI_COMM_NULL;
 #include "cic/ItfMpp.h"
 itf::FMppInt gci::mpp=itf::FMppInt(itf::FMppInt::MPP_NeedSharedFs|itf::FMppInt::MPP_GlobalDeclaration);
 #else
+sharedCounter* gci::_nextval_counter;
 int64_t gci::__nextval_counter=0;
 int64_t gci::__my_first_task=0;
 int64_t gci::__task=0;
@@ -60,9 +61,10 @@ int main(int argc, char *argv[])
   char fcidumpname[1024]="gci.fcidump";
   molpro_plugin=false;
 #ifdef GCI_PARALLEL
-  PPIDD_Initialize(argc,argv);
-  PPIDD_Size(&parallel_size);
-  PPIDD_Rank(&parallel_rank);
+  MPI_Init(&argc,&argv);
+  MPI_Comm_size(MPI_COMM_WORLD,&parallel_size);
+  MPI_Comm_rank(MPI_COMM_WORLD,&parallel_rank);
+  gci::_nextval_counter= new sharedCounter();
 //  if (parallel_rank > 0) freopen("/dev/null", "w", stdout);
   MPI_Comm_get_parent(&molpro_plugin_intercomm);
   if (parallel_rank==0 && molpro_plugin_intercomm != MPI_COMM_NULL) {
@@ -137,7 +139,8 @@ int main(int argc, char *argv[])
       int signal=0;
       MPI_Send(&signal,1,MPI_INT,0,0,molpro_plugin_intercomm);
     }
-  PPIDD_Finalize();
+  delete _nextval_counter;
+  MPI_Finalize();
 #endif
   return 0;
 }
