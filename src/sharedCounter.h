@@ -10,6 +10,7 @@ public:
   sharedCounter(MPI_Comm communicator=MPI_COMM_WORLD);
   ~sharedCounter();
   int increment(int amount=1);
+  void reset();
 private:
   MPI_Win m_win;
   int  m_hostrank ;

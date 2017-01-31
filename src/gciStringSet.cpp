@@ -32,6 +32,7 @@ StringSet::StringSet(const StringSet &referenceSpace, int annihilations, int cre
 
 StringSet::StringSet(const std::vector<StringSet>& referenceSpaces, int annihilations, int creations, int sym)
 {
+  xout << "StringSet constructor from referenceSpaces"<<std::endl;
   addByOperators(referenceSpaces, annihilations, creations, sym);
 }
 
@@ -47,8 +48,10 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
   }
 //  xout << "parallel_rank="<<parallel_rank<<", ntask="<<ntask<<std::endl;
   DivideTasks(ntask);
+  xout <<"about to call addByOperators "<<annihilations<<creations<<sym<<std::endl;
   for (std::vector<StringSet>::const_iterator referenceSpace=referenceSpaces.begin(); referenceSpace != referenceSpaces.end(); referenceSpace++)
     addByOperators(*referenceSpace, annihilations, creations, sym, true);
+  xout << "size="<<size()<<std::endl;
   EndTasks();
   profiler.start("StringSet::addByOperators:distribute");
   std::vector<char> serialised;
@@ -80,36 +83,43 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
   }
   String refString = referenceSpaces[initial_symmetry][0];
   int bytestreamsize;
-  //std::cout << "parallel_rank = "<<parallel_rank<<std::endl;std::cout.flush();
-  //xout.flush();
+  xout << "mark "<<std::endl;
+  std::cout << "parallel_rank = "<<parallel_rank<<std::endl;std::cout.flush();
+  xout.flush();
   if (parallel_rank>0) {
     std::cout << "slave "<<std::endl;    std::cout.flush();
     int len=(int)size();
     MPI_Send(&len,(int) 1,MPI_INT,0,0,MPI_COMM_COMPUTE);
+    xout << "slave sends len="<<len<<std::endl;
+    if (len>0) {
     bytestreamsize=(int)serialised.size()/size();
-    MPI_Send(&bytestreamsize,(int) 1,MPI_INT,0,1,MPI_COMM_COMPUTE);
+      MPI_Send(&bytestreamsize,(int) 1,MPI_INT,0,1,MPI_COMM_COMPUTE);
     MPI_Send(&serialised[0],len*bytestreamsize,MPI_BYTE,0,2,MPI_COMM_COMPUTE);
+      }
     MPI_Bcast(&len,(int) 1,MPI_INT,0,MPI_COMM_COMPUTE);
     MPI_Barrier(MPI_COMM_COMPUTE);
-        std::cout << "slave after receving broadcast len "<<len<<std::endl; std::cout.flush();
+//        std::cout << "slave after receving broadcast len "<<len<<std::endl; std::cout.flush();
     serialised.resize(len*bytestreamsize);
     clear();
+    xout << "save ready to bcast"<<std::endl;
     MPI_Bcast(&serialised[0],len*bytestreamsize,MPI_BYTE,0,MPI_COMM_COMPUTE);
     MPI_Barrier(MPI_COMM_COMPUTE);
     for (size_t k=0; k<(size_t)len; k++) {
         std::vector<char> s(bytestreamsize); memcpy(&s[0],&serialised[k*bytestreamsize],bytestreamsize);
-            std::cout << "slave construct string"<<std::endl;
+//            std::cout << "slave construct string"<<std::endl;
         String ss(s,&refString);
-            std::cout << "slave insert string "<<ss.str()<<std::endl; std::cout.flush();
+//            std::cout << "slave insert string "<<ss.str()<<std::endl; std::cout.flush();
         insert(ss);
-	std::cout << "slave inserted string"<<std::endl; std::cout.flush();
+//	std::cout << "slave inserted string"<<std::endl; std::cout.flush();
     }
   } else {
-    //xout <<"master size()="<<size()<<", bytestreamsize="<<serialised.size()/(size() ? size() : 1) <<", serialised.size()"<<serialised.size()<<std::endl;
+//    xout <<"master size()="<<size()<<", bytestreamsize="<<serialised.size()/(size() ? size() : 1) <<", serialised.size()"<<serialised.size()<<std::endl;
     for (int iproc=1; iproc < parallel_size;iproc++) {
       int len;
       MPI_Status status;
       MPI_Recv(&len,(int) 1,MPI_INT,iproc,0,MPI_COMM_COMPUTE,&status);
+    xout << "master receives len="<<len<<std::endl;
+        if (len>0) {
       MPI_Recv(&bytestreamsize,(int) 1,MPI_INT,iproc,1,MPI_COMM_COMPUTE,&status);
       xout <<"received len="<<len<<", bytestreamsize="<<bytestreamsize<<std::endl;
       serialised.resize((size_t)len*bytestreamsize);
@@ -129,11 +139,14 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
           serialised.push_back(*c);
       }
     }
+    }
       int len=(int)size();
-        //xout <<"master after serialising global list"<<std::endl;
+//        xout <<"master after serialising global list"<<std::endl;
+//    xout << "master ready to bcast"<<std::endl;
       MPI_Bcast(&len,(int) 1,MPI_INT,0,MPI_COMM_COMPUTE);
     MPI_Barrier(MPI_COMM_COMPUTE);
         //xout <<"master after broadcasting len"<<std::endl;
+//    xout << "master ready to bcast"<<std::endl;
       MPI_Bcast(&serialised[0],len*bytestreamsize,MPI_BYTE,0,MPI_COMM_COMPUTE);
     MPI_Barrier(MPI_COMM_COMPUTE);
         //xout <<"master after broadcasting global list"<<std::endl;

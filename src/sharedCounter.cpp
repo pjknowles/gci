@@ -15,13 +15,20 @@ sharedCounter::sharedCounter(MPI_Comm communicator)
       MPI_Win_create(&m_data[0], 0, sizeof(int),
           MPI_INFO_NULL, communicator, &m_win);
     }
-  m_myval = 0;
 }
 sharedCounter::~sharedCounter()
 {
   MPI_Win_free(&m_win);
 }
 
+void sharedCounter::reset()
+{
+  m_myval = 0;
+  if (m_rank == m_hostrank)
+    m_data.assign((size_t)m_size,0);
+}
+
+#include <iostream>
 int sharedCounter::increment(int amount) {
   std::vector<int> vals(m_size);
 
@@ -37,9 +44,10 @@ int sharedCounter::increment(int amount) {
     }
 
   MPI_Win_unlock(0, m_win);
-  m_myval += amount;
 
   vals[m_rank] = m_myval;
-  return std::accumulate(vals.begin(),vals.end(),0);
+  m_myval += amount;
+  std::cout << "vals[m_rank], m_myval"<<vals[m_rank]<<", "<<m_myval<<std::endl;
+  return std::accumulate(vals.begin(),vals.end(),0); // first returned value is zero
 }
 
