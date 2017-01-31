@@ -206,7 +206,7 @@ Wavefunction& Wavefunction::operator*=(const double &value)
 //Wavefunction& Wavefunction::operator = ( const Wavefunction &other)
 //{
 //    if (this != &other) {
-//    if (! compatible(other)) throw "attempt to copy between incompatible Wavefunction objects";
+//    if (! compatible(other)) throw std::domain_error("attempt to copy between incompatible Wavefunction objects");
 //        *this = other;
 //    }
 //    return *this;
@@ -214,7 +214,7 @@ Wavefunction& Wavefunction::operator*=(const double &value)
 
 Wavefunction& Wavefunction::operator+=(const Wavefunction &other)
 {
-  if (! compatible(other)) throw "attempt to add incompatible Wavefunction objects";
+  if (! compatible(other)) throw std::domain_error("attempt to add incompatible Wavefunction objects");
 //  xout << "Wavefunction::operator += &this=" << this <<" &other="<<&other <<std::endl;
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   if (distributed)
@@ -228,7 +228,7 @@ Wavefunction& Wavefunction::operator+=(const Wavefunction &other)
 
 Wavefunction& Wavefunction::operator-=(const Wavefunction &other)
 {
-  if (! compatible(other)) throw "attempt to add incompatible Wavefunction objects";
+  if (! compatible(other)) throw std::domain_error("attempt to add incompatible Wavefunction objects");
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   if (distributed)
     for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
@@ -254,7 +254,7 @@ Wavefunction& Wavefunction::operator-=(const double other)
 
 Wavefunction& Wavefunction::operator/=(const Wavefunction &other)
 {
-  if (! compatible(other)) throw "attempt to add incompatible Wavefunction objects";
+  if (! compatible(other)) throw std::domain_error("attempt to add incompatible Wavefunction objects");
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   if (distributed)
     for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++)
@@ -268,7 +268,7 @@ Wavefunction& Wavefunction::operator/=(const Wavefunction &other)
 
 double Wavefunction::update(const Wavefunction &diagonalH, double & eTruncated, double const dEmax)
 {
-  if (! compatible(diagonalH)) throw "attempt to combine incompatible Wavefunction objects";
+  if (! compatible(diagonalH)) throw std::domain_error("attempt to combine incompatible Wavefunction objects");
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   size_t imin = distributed ? parallel_rank*chunk : 0;
   size_t imax = distributed ? (parallel_rank+1*chunk) : buffer.size();
@@ -390,7 +390,7 @@ void Wavefunction::zero()
 
 double gci::operator *(const Wavefunction &w1, const Wavefunction &w2)
 {
-  if (! w1.compatible(w2)) throw "attempt to form scalar product between incompatible Wavefunction objects";
+  if (! w1.compatible(w2)) throw std::domain_error("attempt to form scalar product between incompatible Wavefunction objects");
   double result=(double)0;
   size_t chunk = (w1.buffer.size()-1)/parallel_size+1;
   if (w1.distributed)
@@ -481,7 +481,7 @@ Determinant Wavefunction::determinantAt(size_t offset)
     }
     address=newaddress;
   }
-  throw "Wavefunction::determinantAt cannot find";
+  throw std::runtime_error("Wavefunction::determinantAt cannot find");
 }
 
 size_t Wavefunction::blockOffset(const unsigned int syma) const
@@ -839,7 +839,7 @@ double Wavefunction::norm(const double k)
 Wavefunction& Wavefunction::addAbsPower(const Wavefunction& c, const double k, const double factor)
 {
 
-  if (! compatible(c)) throw "attempt to add incompatible Wavefunction objects";
+  if (! compatible(c)) throw std::domain_error("attempt to add incompatible Wavefunction objects");
 //  xout <<"addAbsPower initial=";
 //  for (size_t i=0; i<buffer.size(); i++)
 //    xout <<" "<<buffer[i];

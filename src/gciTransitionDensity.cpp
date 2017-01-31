@@ -155,7 +155,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       offb ++;
     }
   } else if (deltaAlpha==1 && deltaBeta==1) { // wavefunction has 1 more alpha and beta electrons than interacting states
-    if (parity) throw "wrong parity in alpha-beta";
+    if (parity) throw std::logic_error("wrong parity in alpha-beta");
     for (unsigned int wsyma=0; wsyma<8; wsyma++) {
       unsigned int wsymb = w.symmetry^wsyma;
       unsigned int symexca = wsyma ^ syma;
@@ -184,7 +184,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
     }
   } else {
     xout <<"deltaAlpha="<<deltaAlpha<<", deltaBeta="<<deltaBeta<<std::endl;
-    throw "unimplemented case";
+    throw std::logic_error("unimplemented case");
   }
 //  size_t populated=0; for (const_iterator x=begin(); x!=end(); x++) if (*x !=(double)0) ++populated; xout <<"TransitionDensity population="<<((double)populated)/((double)size()+1)<<std::endl;
 
@@ -306,7 +306,7 @@ void TransitionDensity::action(Wavefunction &w)
       offb ++;
     }
   } else if (deltaAlpha==1 && deltaBeta==1) { // wavefunction has 1 more alpha and beta electrons than interacting states
-    if (parity) throw "wrong parity in alpha-beta";
+    if (parity) throw std::logic_error("wrong parity in alpha-beta");
     for (unsigned int wsyma=0; wsyma<8; wsyma++) {
       unsigned int wsymb = w.symmetry^wsyma;
       unsigned int symexca = wsyma ^ syma;
@@ -335,7 +335,7 @@ void TransitionDensity::action(Wavefunction &w)
     }
   } else {
     xout <<"deltaAlpha="<<deltaAlpha<<", deltaBeta="<<deltaBeta<<std::endl;
-    throw "unimplemented case";
+    throw std::logic_error("unimplemented case");
   }
 }
 
@@ -344,8 +344,8 @@ std::vector<double> TransitionDensity::density(Wavefunction &w)
 {
   unsigned int syma = alphaStringsBegin->computed_symmetry();
   unsigned int symb = betaStringsBegin->computed_symmetry();
-  if ((syma^symb) != w.symmetry) throw "Symmetry mismatch, TransitionDensity::density";
-  if (nsa*nsb != (w.blockOffset(syma+1)-w.blockOffset(syma))) throw "Wrong dimensions, TransitionDensity::density"; // present implementation only for complete space in TransitionDensity
+  if ((syma^symb) != w.symmetry) throw std::runtime_error("Symmetry mismatch, TransitionDensity::density");
+  if (nsa*nsb != (w.blockOffset(syma+1)-w.blockOffset(syma))) throw std::range_error("Wrong dimensions, TransitionDensity::density"); // present implementation only for complete space in TransitionDensity
   std::vector<double> result(excitations,(double)0);
   MxmDrvTN(&result[0],&this->at(0),&(w.buffer[w.blockOffset(syma)]),excitations,nsa*nsb,1,1);
   return result;
@@ -356,7 +356,7 @@ std::string TransitionDensity::str(int verbosity) const
   if (verbosity < 0) return std::string("");
   std::ostringstream s;
   //  xout <<"TransitionDensity::str size()="<<size()<<std::endl;
-  if (size()!= nsa*nsb*excitations) {xout << "wrong size in TransitionDensity::str "<<size()<<" "<<nsa*nsb*excitations<<std::endl; throw "help";}
+  if (size()!= nsa*nsb*excitations) {xout << "wrong size in TransitionDensity::str "<<size()<<" "<<nsa*nsb*excitations<<std::endl; throw std::range_error("help");}
   if (size())
     for (size_t ij=0; ij < excitations; ij++) {
       s <<std::endl;

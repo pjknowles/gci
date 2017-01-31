@@ -80,14 +80,14 @@ void SymmetrySpace::calculateOffsets()
 
 size_t SymmetrySpace::offset(int sym1) const {
   if (offsets.empty())
-    throw "SymmetrySpace::calculateOffsets has not been called";
+    throw std::logic_error("SymmetrySpace::calculateOffsets has not been called");
   return offsets[sym1];
 }
 
 size_t SymmetrySpace::offset(int sym1, int sym2, int parity) const
 {
   if (offsets.empty())
-    throw "SymmetrySpace::calculateOffsets has not been called";
+    throw std::logic_error("SymmetrySpace::calculateOffsets has not been called");
   return offsets[9 + 8*9 * (parity + 1) + sym1*9 + sym2];
 }
 

@@ -51,7 +51,7 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
               size_t ti=to.addressMap.find(tt.key)->second;
               if (tt.key == String::keyUnassigned || ti>= to.size()) {
                 xout <<"i="<<i+1<<" phase="<<phase<<" ti="<<ti<<" tt="<<tt.str()<<std::endl;
-                throw "index error in ExcitationSet";
+                throw std::range_error("index error in ExcitationSet");
               }
               push_back(Excitation(ti,phase,from.orbitalSpace->pairIndex(i+1,j+1,parity)));
             }

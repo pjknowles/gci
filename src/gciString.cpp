@@ -59,9 +59,9 @@ int String::create(unsigned int orbital) {
   //        xout  << "create orbital "<<orbital <<" " <<orbitals_.size()<<std::endl;
   //        xout << "hamiltonian "<<(hamiltonian!=NULL)<<std::endl;
   if (orbitalSpace==NULL)
-    throw "String::create missing orbitalSpace";
+    throw std::logic_error("String::create missing orbitalSpace");
   //        xout << "basisSize "<<hamiltonian->total()<<std::endl;
-  if (orbitalSpace==NULL || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total()) throw "invalid orbital";
+  if (orbitalSpace==NULL || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total()) throw std::range_error("invalid orbital");
   //    xout <<"make iterator "<<std::endl;
 //  std::vector<unsigned int>::iterator ilast=orbitals_.begin();
   //    xout <<"iterator OK"<<std::endl;
@@ -91,7 +91,7 @@ int String::create(unsigned int orbital) {
 }
 
 int String::destroy(unsigned int orbital) {
-  if (orbitalSpace==NULL || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total() ) throw "invalid orbital";
+  if (orbitalSpace==NULL || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total() ) throw std::range_error("invalid orbital");
   if (orbitals_.size() <= 0) return (int) 0; //throw "too few electrons in String";
   //    xout << "String::destroy before="<<str()<<", orbital="<<orbital<<std::endl;
 //  int phase=1;
@@ -163,7 +163,7 @@ unsigned int String::computed_symmetry(bool nocheck) const
   }
   if (s!=symmetry && !nocheck) {
     xout << "s="<<s<<", symmetry="<<symmetry<<std::endl;
-    throw "String symmetry messed up";
+    throw std::runtime_error("String symmetry messed up");
   }
 //  xout << "computed_symmetry"<<s<<std::endl;
   return s;

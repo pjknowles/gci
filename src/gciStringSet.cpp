@@ -186,7 +186,7 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
     countall++;
     // really correct to have both the following two???? 2014-12-09
     if (! NextTask()) continue;
-    if (parallel && ! NextTask()) continue;
+//    if (parallel && ! NextTask()) continue;
 //    if (parallel && countall%parallel_size != parallel_rank) continue;
     count++;
     String from = *s;
@@ -303,7 +303,7 @@ void StringSet::insert(String& s)
     s.key+= PartialWeightArray[k][s.orbitals_[k]-1];
   if (addressMap.count(s.key)) {
         //std::cout <<parallel_rank<< "StringSet::insert found existing"<<std::endl;std::cout.flush();
-    if (addressMap[s.key] >= size()) throw "something wrong in StringSet reset";
+    if (addressMap[s.key] >= size()) throw std::logic_error("something wrong in StringSet reset");
     at(addressMap[s.key]) = s;
   } else {
         //std::cout <<parallel_rank<< "StringSet::insert found new"<<std::endl;std::cout.flush();

@@ -688,7 +688,7 @@ Operator Operator::sameSpinOperator(const Determinant &reference) const
 #include <assert.h>
 Operator& Operator::plusminusOperator(const Operator &other, const char operation)
 {
-//  if (! compatible(other)) throw "attempt to add incompatible Operator objects";
+//  if (! compatible(other)) throw std::logic_error("attempt to add incompatible Operator objects");
   assert(this->spinUnrestricted || ! other.spinUnrestricted);
   if (operation == '+')
     coreEnergy += other.coreEnergy;

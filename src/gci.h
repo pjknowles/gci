@@ -2,6 +2,7 @@
 #define GCI_H
 #include <vector>
 #include <cstring>
+#include <stdexcept>
 #include "Profiler.h"
 #include <stdint.h>
 #include "sharedCounter.h"

@@ -21,22 +21,22 @@ Determinant::Determinant(State* State, String* alpha, String*beta)
 int Determinant::create(int orbital) {
   //    xout << "create orbital "<<orbital <<std::endl;
   unsigned int orbabs = orbital > 0 ? orbital : -orbital;
-  if (orbitalSpace==NULL || orbital==(int)0 || orbital > (int) orbitalSpace->total() || orbital < -(int)orbitalSpace->total()) throw "invalid orbital";
+  if (orbitalSpace==NULL || orbital==(int)0 || orbital > (int) orbitalSpace->total() || orbital < -(int)orbitalSpace->total()) throw std::range_error("invalid orbital");
   if (orbital > 0) {
-    if (stringAlpha.orbitals().size() >= (nelec+ms2)/2) throw "too many electrons in determinant";
+    if (stringAlpha.orbitals().size() >= (nelec+ms2)/2) throw std::range_error("too many electrons in determinant");
     //        xout <<"try to populate stringAlpha"<<std::endl;
     return stringAlpha.create(orbabs);
   } else {
-    if (stringBeta.orbitals().size() >= (nelec-ms2)/2) throw "too many electrons in determinant";
+    if (stringBeta.orbitals().size() >= (nelec-ms2)/2) throw std::range_error("too many electrons in determinant");
     return stringBeta.create(orbabs);
   }
 }
 
 int Determinant::destroy(int orbital) {
-  if (orbitalSpace==NULL || orbital==(int)0 || orbital > (int) orbitalSpace->total() || orbital < -(int)orbitalSpace->total()) throw "invalid orbital";
+  if (orbitalSpace==NULL || orbital==(int)0 || orbital > (int) orbitalSpace->total() || orbital < -(int)orbitalSpace->total()) throw std::range_error("invalid orbital");
   unsigned int orbabs = orbital > 0 ? orbital : -orbital;
   String* string = orbital > 0 ? &stringAlpha : &stringBeta;
-//  if (string->orbitals().size() <= 0) throw "too few electrons in determinant";
+//  if (string->orbitals().size() <= 0) throw std::range_error("too few electrons in determinant");
   return string->destroy(orbabs);
 
 }

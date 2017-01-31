@@ -649,7 +649,7 @@ std::vector<double> Run::RSPT(const std::vector<gci::Operator*>& hamiltonians,
 //  for (int k=0; k<(int)hamiltonians.size(); k++)
 //    HamiltonianMatrixPrint(*hamiltonians[k],prototype);
 //  return e;
-  if (hamiltonians.size() < 1) throw "not enough hamiltonians";
+  if (hamiltonians.size() < 1) throw std::logic_error("not enough hamiltonians");
 //  for (int k=0; k<(int)hamiltonians.size(); k++) xout << "H("<<k<<"): " << *hamiltonians[k] << std::endl;
   Wavefunction w(prototype);
   xout <<"RSPT wavefunction size="<<w.size()<<std::endl;
