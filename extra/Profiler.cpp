@@ -121,10 +121,15 @@ void Profiler::stop(const std::string name, long operations)
 
 void Profiler::declare(const std::string name)
 {
-  if (results.count(name)==0) {
-  struct resources tt; tt.cpu=0; tt.wall=0; tt.name=name; tt.operations=0; tt.calls=0;
-  results[name] = tt;
-  }
+  // not very useful so abandon
+//  std::string key;
+//  for(std::vector<resources>::const_reverse_iterator r=resourcesStack.rbegin(); r!= resourcesStack.rend(); r++) key=r->name+":"+key;
+//  key=key+":"+name;
+//  std::cout << "Profiler::declare "<<key<<std::endl;
+//  if (results.count(key)==0) {
+//  struct resources tt; tt.cpu=0; tt.wall=0; tt.name=name; tt.operations=0; tt.calls=0;
+//  results[key] = tt;
+//  }
 }
 
 void Profiler::stopall()
@@ -149,19 +154,40 @@ Profiler::resultMap Profiler::totals() const
   Profiler thiscopy=*this; // take a copy so that we can run stopall yet be const, and so that we can sum globally
   thiscopy.stopall();
   while(thiscopy.results.erase(""));
-  for (resultMap::iterator s=thiscopy.results.begin(); s!=thiscopy.results.end(); ++s) {
+//  std::cout << "thiscopy.size()"<<thiscopy.results.size()<<std::endl;
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+//  for (resultMap::iterator s=thiscopy.results.begin(); s!=thiscopy.results.end(); ++s) {
+//      std::cout << rank << "thiscopy.results["<<s->first<<"]"<<std::endl;
+//    }
+      std::string key;
+      int n=thiscopy.results.size();
+      MPI_Bcast(&n,1,MPI_INT,0,MPI_COMM_WORLD);
+      for (int i=0; i<n; i++) {
+//  for (resultMap::iterator s=thiscopy.results.begin(); s!=thiscopy.results.end(); ++s) {
 #ifdef GCI_PARALLEL
+          resultMap::iterator s=thiscopy.results.begin(); for (int j=1; j<i; j++) s++;
+          key = s->first;
+          int l=key.size();
+          MPI_Bcast(&l,1,MPI_INT,0,MPI_COMM_WORLD);
+          key.resize(l);
+      MPI_Bcast(&key[0],l,MPI_CHAR,0,MPI_COMM_WORLD);
+      auto ss = thiscopy.results[key];
       int type=1, len=1;
-      double val=s->second.wall;
-      MPI_Allreduce(&val,&((*s).second.wall),len,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
-      val=s->second.cpu;
-      MPI_Allreduce(&val,&((*s).second.cpu),len,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-      int calls=s->second.calls;
-      MPI_Allreduce(&calls,&((*s).second.calls),len,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
-      long operations=s->second.operations;
-      MPI_Allreduce(&operations,&((*s).second.operations),len,MPI_LONG,MPI_SUM,MPI_COMM_WORLD);
-      int64_t stack = s->second.stack;
-      MPI_Allreduce(&stack,&((*s).second.stack),len,MPI_LONG_LONG_INT,MPI_MAX,MPI_COMM_WORLD);
+      double val=ss.wall;
+      MPI_Allreduce(&val,&(ss.wall),len,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
+      val=ss.cpu;
+      MPI_Allreduce(&val,&(ss.cpu),len,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+//      std::cout << "got cpu"<<std::endl;
+      int calls=ss.calls;
+      MPI_Allreduce(&calls,&(ss.calls),len,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+//      std::cout << "got calls"<<std::endl;
+      long operations=ss.operations;
+      MPI_Allreduce(&operations,&(ss.operations),len,MPI_LONG,MPI_SUM,MPI_COMM_WORLD);
+//      std::cout << "got operations"<<std::endl;
+      int64_t stack = ss.stack;
+      MPI_Allreduce(&stack,&(ss.stack),len,MPI_LONG_LONG_INT,MPI_MAX,MPI_COMM_WORLD);
+//      std::cout << "got stack"<<std::endl;
 #else
 #ifdef MOLPRO
     // only '+' works in Molpro runtime
@@ -180,7 +206,9 @@ Profiler::resultMap Profiler::totals() const
     (*s).second.stack=(int64_t)value;
 #endif
 #endif
+//  std::cout <<"loop end"<<std::endl;
   }
+//  std::cout <<"before accumulate"<<std::endl;
   thiscopy.accumulate(thiscopy.results);
   return thiscopy.results;
 }
