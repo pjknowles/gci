@@ -1,15 +1,16 @@
 #include "gciStringSet.h"
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 
 StringSet::StringSet() : std::vector<String>()
 {
-  //    xout <<"StringSet default constructor"<<std::endl;
+//      xout <<parallel_rank<<"StringSet default constructor"<<std::endl;
 }
 
 StringSet::StringSet(String prototype, bool all, int sym) : std::vector<String>()
 {
-  //    xout <<"StringSet prototype constructor "<<all<<std::endl;
+//      xout <<parallel_rank<<"StringSet prototype constructor "<<all<<std::endl;
   // copy prototype
   proto = prototype;
   symmetry = sym;
@@ -32,7 +33,7 @@ StringSet::StringSet(const StringSet &referenceSpace, int annihilations, int cre
 
 StringSet::StringSet(const std::vector<StringSet>& referenceSpaces, int annihilations, int creations, int sym)
 {
-  xout << "StringSet constructor from referenceSpaces"<<std::endl;
+//  xout << "StringSet constructor from referenceSpaces size()="<<size()<<parallel_rank<<std::endl;
   addByOperators(referenceSpaces, annihilations, creations, sym);
 }
 
@@ -48,10 +49,10 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
   }
 //  xout << "parallel_rank="<<parallel_rank<<", ntask="<<ntask<<std::endl;
   DivideTasks(ntask);
-  xout <<"about to call addByOperators "<<annihilations<<creations<<sym<<std::endl;
+//  xout <<"about to call addByOperators "<<annihilations<<creations<<sym<<std::endl;
   for (std::vector<StringSet>::const_iterator referenceSpace=referenceSpaces.begin(); referenceSpace != referenceSpaces.end(); referenceSpace++)
     addByOperators(*referenceSpace, annihilations, creations, sym, true);
-  xout << "size="<<size()<<std::endl;
+//  xout << "size="<<size()<<std::endl;
   EndTasks();
   profiler.start("StringSet::addByOperators:distribute");
   std::vector<char> serialised;
@@ -60,8 +61,8 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
     for (std::vector<char>::const_iterator c=serialised1.begin(); c!=serialised1.end();c++)
       serialised.push_back(*c);
   }
-//  xout << "serialised "<<serialised.size()<<" bytes from "<<size()<<" String objects="<<std::endl;
-//  xout << "addressMap.size()"<< addressMap.size()<<std::endl;
+//  xout << parallel_rank<<"serialised "<<serialised.size()<<" bytes from "<<size()<<" String objects="<<std::endl;
+//  xout << parallel_rank<<"addressMap.size()"<< addressMap.size()<<std::endl;
 #ifdef GCI_MPI
 //  for (size_t i=0; i<parallel_size; i++){
 //  MPI_Barrier(MPI_COMM_COMPUTE);
@@ -83,34 +84,32 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
   }
   String refString = referenceSpaces[initial_symmetry][0];
   int bytestreamsize;
-  xout << "mark "<<std::endl;
-  std::cout << "parallel_rank = "<<parallel_rank<<std::endl;std::cout.flush();
-  xout.flush();
+//  std::cout << "parallel_rank = "<<parallel_rank<<std::endl;std::cout.flush();
   if (parallel_rank>0) {
-    std::cout << "slave "<<std::endl;    std::cout.flush();
+//    std::cout << "slave "<<std::endl;    std::cout.flush();
     int len=(int)size();
     MPI_Send(&len,(int) 1,MPI_INT,0,0,MPI_COMM_COMPUTE);
-    xout << "slave sends len="<<len<<std::endl;
+//    xout << "slave sends len="<<len<<std::endl;
     if (len>0) {
     bytestreamsize=(int)serialised.size()/size();
       MPI_Send(&bytestreamsize,(int) 1,MPI_INT,0,1,MPI_COMM_COMPUTE);
     MPI_Send(&serialised[0],len*bytestreamsize,MPI_BYTE,0,2,MPI_COMM_COMPUTE);
       }
     MPI_Bcast(&len,(int) 1,MPI_INT,0,MPI_COMM_COMPUTE);
-    MPI_Barrier(MPI_COMM_COMPUTE);
-//        std::cout << "slave after receving broadcast len "<<len<<std::endl; std::cout.flush();
+    MPI_Bcast(&bytestreamsize,(int) 1,MPI_INT,0,MPI_COMM_COMPUTE);
+//        std::cout << "slave after receving broadcast len "<<len<<", bytestreamsize="<<bytestreamsize<<std::endl; std::cout.flush();
     serialised.resize(len*bytestreamsize);
     clear();
-    xout << "save ready to bcast"<<std::endl;
+    addressMap.clear();
+//    xout << "slave ready to bcast"<<std::endl;
     MPI_Bcast(&serialised[0],len*bytestreamsize,MPI_BYTE,0,MPI_COMM_COMPUTE);
-    MPI_Barrier(MPI_COMM_COMPUTE);
     for (size_t k=0; k<(size_t)len; k++) {
         std::vector<char> s(bytestreamsize); memcpy(&s[0],&serialised[k*bytestreamsize],bytestreamsize);
 //            std::cout << "slave construct string"<<std::endl;
         String ss(s,&refString);
 //            std::cout << "slave insert string "<<ss.str()<<std::endl; std::cout.flush();
         insert(ss);
-//	std::cout << "slave inserted string"<<std::endl; std::cout.flush();
+//        std::cout << "slave inserted string"<<std::endl; std::cout.flush();
     }
   } else {
 //    xout <<"master size()="<<size()<<", bytestreamsize="<<serialised.size()/(size() ? size() : 1) <<", serialised.size()"<<serialised.size()<<std::endl;
@@ -118,19 +117,19 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
       int len;
       MPI_Status status;
       MPI_Recv(&len,(int) 1,MPI_INT,iproc,0,MPI_COMM_COMPUTE,&status);
-    xout << "master receives len="<<len<<std::endl;
+//    xout << "master receives len="<<len<<std::endl;
         if (len>0) {
       MPI_Recv(&bytestreamsize,(int) 1,MPI_INT,iproc,1,MPI_COMM_COMPUTE,&status);
-      xout <<"received len="<<len<<", bytestreamsize="<<bytestreamsize<<std::endl;
+//      xout <<"received len="<<len<<", bytestreamsize="<<bytestreamsize<<std::endl;
       serialised.resize((size_t)len*bytestreamsize);
       MPI_Recv(&serialised[0],(int) len*bytestreamsize,MPI_BYTE,iproc,2,MPI_COMM_COMPUTE,&status);
       for (size_t k=0; k<(size_t)len; k++) {
         std::vector<char> s(bytestreamsize); memcpy(&s[0],&serialised[k*bytestreamsize],bytestreamsize);
-        //xout << "master construct string"<<std::endl;
+//        xout << "master construct string"<<std::endl;
         String ss(s,&refString);
-        //xout <<"master before insert"<<std::endl;
+//        xout <<"master before insert"<<std::endl;
         insert(ss);
-        //xout <<"master after insert"<<std::endl;
+//        xout <<"master after insert"<<std::endl;
       }
       serialised.clear();
       for (StringSet::const_iterator s=begin(); s!=end(); s++) {
@@ -142,18 +141,16 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
     }
       int len=(int)size();
 //        xout <<"master after serialising global list"<<std::endl;
-//    xout << "master ready to bcast"<<std::endl;
+//    xout << "master ready to bcast len="<<len<<", bytestreamsize="<<bytestreamsize<<std::endl;
+      bytestreamsize=serialised.size()/std::max((int)size(),1);
       MPI_Bcast(&len,(int) 1,MPI_INT,0,MPI_COMM_COMPUTE);
-    MPI_Barrier(MPI_COMM_COMPUTE);
+      MPI_Bcast(&bytestreamsize,(int) 1,MPI_INT,0,MPI_COMM_COMPUTE);
         //xout <<"master after broadcasting len"<<std::endl;
 //    xout << "master ready to bcast"<<std::endl;
       MPI_Bcast(&serialised[0],len*bytestreamsize,MPI_BYTE,0,MPI_COMM_COMPUTE);
-    MPI_Barrier(MPI_COMM_COMPUTE);
-        //xout <<"master after broadcasting global list"<<std::endl;
+//        xout <<"master after broadcasting global list"<<std::endl;
   }
-    MPI_Barrier(MPI_COMM_COMPUTE);
-    //xout << "Reached end of forked code rank="<<parallel_rank<<std::endl;
-    MPI_Barrier(MPI_COMM_COMPUTE);
+//    xout << "Reached end of forked code rank="<<parallel_rank<<std::endl;
 #ifdef GCI_MPI
 //  for (size_t i=0; i<parallel_size; i++){
 //  MPI_Barrier(MPI_COMM_COMPUTE);
@@ -279,37 +276,39 @@ long StringSet::binomial_coefficient(unsigned long n, unsigned long k) {
 void StringSet::complete(int sym)
 {
   profiler.start("StringSet::complete");
-  //    xout <<"StringSet::complete prototype"<<proto.printable(1)<<std::endl;
+//      xout <<"StringSet::complete prototype"<<proto.str(1)<<std::endl;
   String string(&proto);
   this->erase(this->begin(),this->end());
   if (string.first(proto.nelec,sym)) {
     //    xout <<"StringSet::complete symmetry="<<sym<<" first String: "<<string.printable()<<std::endl;
     do {
-      //        xout << "in StringSet::complete about to push_back " << string.printable(1) <<std::endl;
+//              xout << "in StringSet::complete about to push_back " << string.str(1) <<std::endl;
       this->insert(string);
     } while (string.next(sym));
   }
-  //    xout << "in StringSet::complete final list: " <<std::endl ;
-  //    for (iterator s=this->begin(); s!=this->end(); s++) xout << s->printable()<<std::endl;
+//      xout << "in StringSet::complete final list: " <<std::endl ;
+//      for (iterator s=this->begin(); s!=this->end(); s++) xout << s->str()<<std::endl;
 
   profiler.stop("StringSet::complete");
 }
 
 void StringSet::insert(String& s)
 {
-    //std::cout <<parallel_rank<< "StringSet::insert "<<s.str()<<std::endl;std::cout.flush();
+//    std::cout <<parallel_rank<< "StringSet::insert "<<s.str()<<std::endl;std::cout.flush();
+//    xout <<parallel_rank<< "addressMap has "<<addressMap.size()<<" entries; size()="<<size()<<std::endl;
   s.key=0;
   for (int k=0; k<(int)s.orbitals_.size(); k++)
     s.key+= PartialWeightArray[k][s.orbitals_[k]-1];
+//  xout << "s.key="<<s.key<<", s.orbitals_.size()="<<s.orbitals_.size()<<std::endl;
   if (addressMap.count(s.key)) {
-        //std::cout <<parallel_rank<< "StringSet::insert found existing"<<std::endl;std::cout.flush();
+//        std::cout <<parallel_rank<<" "<<size()<<" "<<addressMap.count(s.key)<< "StringSet::insert found existing"<<std::endl;std::cout.flush();
     if (addressMap[s.key] >= size()) throw std::logic_error("something wrong in StringSet reset");
     at(addressMap[s.key]) = s;
   } else {
-        //std::cout <<parallel_rank<< "StringSet::insert found new"<<std::endl;std::cout.flush();
+//        if (s.orbitals_.size()==0) std::cout <<parallel_rank<< "StringSet::insert found new"<<std::endl;std::cout.flush();
     addressMap[s.key]=size();
-      //std::cout <<parallel_rank<<"StringSet::push_back " <<s <<" size()=" <<size()<<std::endl;std::cout.flush();
     std::vector<String>::push_back(s);
+//      if (s.orbitals_.size()==0) std::cout <<parallel_rank<<"StringSet::push_back " <<s <<" size()=" <<size()<<std::endl;std::cout.flush();
   }
   //std::cout <<parallel_rank<< "StringSet::insert finished "<<std::endl;std::cout.flush();
 }

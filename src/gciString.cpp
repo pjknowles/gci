@@ -130,6 +130,7 @@ std::vector<unsigned int> String::orbitals() const {
 std::string String::str(int verbosity) const {
   std::string result;
 //      xout <<"String::str orbitals_[0]" <<orbitals_[0]<<std::endl;
+//  xout << "String::str length of orbitals_="<<orbitals_.size()<<std::endl;
   if (verbosity >=0) {
     for (std::vector<orbital_type>::const_iterator i = orbitals_.begin(); i!=orbitals_.end(); ++i) {
       if (i!=orbitals_.begin()) result.append(",");

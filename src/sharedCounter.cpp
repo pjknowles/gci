@@ -47,7 +47,7 @@ int sharedCounter::increment(int amount) {
 
   vals[m_rank] = m_myval;
   m_myval += amount;
-  std::cout << "vals[m_rank], m_myval"<<vals[m_rank]<<", "<<m_myval<<std::endl;
+//  std::cout << "vals[m_rank], m_myval"<<vals[m_rank]<<", "<<m_myval<<std::endl;
   return std::accumulate(vals.begin(),vals.end(),0); // first returned value is zero
 }
 

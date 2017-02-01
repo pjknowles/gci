@@ -46,10 +46,10 @@ inline long nextval(int64_t option=parallel_size){
 //  int64_t value; PPIDD_Nxtval(&option,&value); //xout <<std::endl<<"@nextval("<<option<<",rank="<<parallel_rank<<")="<<value<<std::endl;
 //  return value;
   if (option < 0 ) {_nextval_counter->reset();return 0;}
-  long value= _nextval_counter->increment();
-  xout <<"nextval returning "<<value<<std::endl;
-  return value;
-//  return _nextval_counter->increment();
+//  long value= _nextval_counter->increment();
+//  xout <<"nextval returning "<<value<<std::endl;
+//  return value;
+  return _nextval_counter->increment();
 #else
   if (option < 0) __nextval_counter=-2;
   return ++__nextval_counter;
@@ -73,10 +73,10 @@ inline void DivideTasks(std::size_t ntasks, std::size_t nMinBatch = 0, std::size
   if ((int64_t)nMaxBatch > 0 && __task_granularity > (int64_t)nMaxBatch) __task_granularity = (int64_t)nMaxBatch;
 //  __task_granularity = 3;
   nextval(-parallel_size);
-  xout << "DivideTasks ntasks="<<ntasks<<std::endl;
+//  xout << "DivideTasks ntasks="<<ntasks<<std::endl;
   __task=0;
   __my_first_task=-__task_granularity-1;
-  xout << "__task_granularity="<<__task_granularity<<", __my_first_task="<<__my_first_task<<std::endl;
+//  xout << "__task_granularity="<<__task_granularity<<", __my_first_task="<<__my_first_task<<std::endl;
 #endif
 }}
 inline bool NextTask() {
@@ -86,13 +86,13 @@ inline bool NextTask() {
 //    size_t junk=mpp.NextTask();
   return mpp.NextTask();
 #else
-    xout << "On entry, NextTask has __my_first_task="<<__my_first_task <<std::endl;
+//    xout << "On entry, NextTask has __my_first_task="<<__my_first_task <<std::endl;
   if (__my_first_task+__task_granularity <= __task)
-    xout << "NextTask calls nextval()"<<std::endl;
+//    xout << "NextTask calls nextval()"<<std::endl;
   if (__my_first_task+__task_granularity <= __task)
     __my_first_task = nextval()*__task_granularity;
-  xout << "NextTask has __my_first_task="<<__my_first_task<<", __task_granularity="<<__task_granularity<<", __task="<<__task<<std::endl;
-  xout << "NextTask returns "<< (__task++ >= __my_first_task && __task <= __my_first_task+__task_granularity) <<std::endl;
+//  xout << "NextTask has __my_first_task="<<__my_first_task<<", __task_granularity="<<__task_granularity<<", __task="<<__task<<std::endl;
+//  xout << "NextTask returns "<< (__task++ >= __my_first_task && __task <= __my_first_task+__task_granularity) <<std::endl;
   return (__task++ >= __my_first_task && __task <= __my_first_task+__task_granularity) ;
 #endif
   }

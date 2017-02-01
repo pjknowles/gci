@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
   MPI_Comm_size(MPI_COMM_WORLD,&parallel_size);
   MPI_Comm_rank(MPI_COMM_WORLD,&parallel_rank);
   gci::_nextval_counter= new sharedCounter();
-//  if (parallel_rank > 0) freopen("/dev/null", "w", stdout);
+  if (parallel_rank > 0) freopen("/dev/null", "w", stdout);
   MPI_Comm_get_parent(&molpro_plugin_intercomm);
   if (parallel_rank==0 && molpro_plugin_intercomm != MPI_COMM_NULL) {
       int length;
