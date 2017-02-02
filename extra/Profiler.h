@@ -39,8 +39,9 @@ public:
    */
   void stop(const std::string name="",long operations=0);
   /*!
-   * \brief declare Ensure that a code segment is entered into the result table. This must be called for
+   * \brief declare Ensure that a code segment is entered into the result table. This used to need to be called for
    * any code segments for which start/stop is non-collective and therefore might not be called on some processes.
+   * It isn't necessary any more, and the routine is a dummy, provided only for backward compatibility.
    * \param name name of the code segment
    */
   void declare(const std::string name="");

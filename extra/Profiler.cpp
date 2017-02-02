@@ -3,6 +3,14 @@
 #else
 #define _GNU_SOURCE
 #endif
+// if you want to force MPI mode, uncomment the next line
+//#define PROFILER_MPI
+#if defined(GA_MPI) || defined(MPI2) || defined(GCI_MPI) || defined(GCI_PARALLEL)
+#define PROFILER_MPI
+#endif
+#ifdef PROFILER_MPI
+#include "mpi.h"
+#endif
 #include <algorithm>
 #include <sstream>
 #include <iostream>
@@ -121,15 +129,7 @@ void Profiler::stop(const std::string name, long operations)
 
 void Profiler::declare(const std::string name)
 {
-  // not very useful so abandon
-//  std::string key;
-//  for(std::vector<resources>::const_reverse_iterator r=resourcesStack.rbegin(); r!= resourcesStack.rend(); r++) key=r->name+":"+key;
-//  key=key+":"+name;
-//  std::cout << "Profiler::declare "<<key<<std::endl;
-//  if (results.count(key)==0) {
-//  struct resources tt; tt.cpu=0; tt.wall=0; tt.name=name; tt.operations=0; tt.calls=0;
-//  results[key] = tt;
-//  }
+  // not very useful now that keys are full path, so abandon
 }
 
 void Profiler::stopall()
@@ -138,77 +138,43 @@ void Profiler::stopall()
 }
 
 #include <cmath>
-#ifdef GCI_PARALLEL
-#include "mpi.h"
-#endif
-#ifdef MOLPRO
-#include "mpp/CxMpp.h"
-#include "cic/ItfMpp.h"
-itf::FMppInt interface(itf::FMppInt::MPP_NeedSharedFs|itf::FMppInt::MPP_GlobalDeclaration);
-//extern "C" {
-//int64_t get_iprocs_cxx_();
-//}
-#endif
 Profiler::resultMap Profiler::totals() const
 {
   Profiler thiscopy=*this; // take a copy so that we can run stopall yet be const, and so that we can sum globally
   thiscopy.stopall();
   while(thiscopy.results.erase(""));
-//  std::cout << "thiscopy.size()"<<thiscopy.results.size()<<std::endl;
+#ifdef PROFILER_MPI
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-//  for (resultMap::iterator s=thiscopy.results.begin(); s!=thiscopy.results.end(); ++s) {
-//      std::cout << rank << "thiscopy.results["<<s->first<<"]"<<std::endl;
-//    }
-      std::string key;
-      int n=thiscopy.results.size();
-      MPI_Bcast(&n,1,MPI_INT,0,MPI_COMM_WORLD);
-      for (int i=0; i<n; i++) {
-//  for (resultMap::iterator s=thiscopy.results.begin(); s!=thiscopy.results.end(); ++s) {
-#ifdef GCI_PARALLEL
+  std::string key;
+  // use the table on the master node as definitive, since others may be missing entries
+  int n=thiscopy.results.size();
+  MPI_Bcast(&n,1,MPI_INT,0,MPI_COMM_WORLD);
+  for (int i=0; i<n; i++) {
+      int l;
+      if (rank == 0) {
           resultMap::iterator s=thiscopy.results.begin(); for (int j=1; j<i; j++) s++;
           key = s->first;
-          int l=key.size();
-          MPI_Bcast(&l,1,MPI_INT,0,MPI_COMM_WORLD);
-          key.resize(l);
+          l=key.size();
+        }
+      MPI_Bcast(&l,1,MPI_INT,0,MPI_COMM_WORLD);
+      key.resize(l);
       MPI_Bcast(&key[0],l,MPI_CHAR,0,MPI_COMM_WORLD);
-      auto ss = thiscopy.results[key];
+      struct Profiler::resources ss = thiscopy.results[key];
       int type=1, len=1;
       double val=ss.wall;
       MPI_Allreduce(&val,&(ss.wall),len,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
       val=ss.cpu;
       MPI_Allreduce(&val,&(ss.cpu),len,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-//      std::cout << "got cpu"<<std::endl;
       int calls=ss.calls;
       MPI_Allreduce(&calls,&(ss.calls),len,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
-//      std::cout << "got calls"<<std::endl;
       long operations=ss.operations;
       MPI_Allreduce(&operations,&(ss.operations),len,MPI_LONG,MPI_SUM,MPI_COMM_WORLD);
-//      std::cout << "got operations"<<std::endl;
       int64_t stack = ss.stack;
       MPI_Allreduce(&stack,&(ss.stack),len,MPI_LONG_LONG_INT,MPI_MAX,MPI_COMM_WORLD);
-//      std::cout << "got stack"<<std::endl;
-#else
-#ifdef MOLPRO
-    // only '+' works in Molpro runtime
-    //    interface.GlobalSum(&((*s).second.wall),(std::size_t)1,(uint)0,(const char*) "max");
-    interface.GlobalSum(&((*s).second.cpu),(std::size_t)1);
-    // Molpro interface presently only does doubles
-    double value=(double)(*s).second.calls;
-    interface.GlobalSum(&value,(std::size_t)1);
-    (*s).second.calls=(int)value;
-    value=(double)(*s).second.operations;
-    interface.GlobalSum(&value,(std::size_t)1);
-    (*s).second.operations=(long)value;
-    // global max of (*s).second.stack
-    value=(double)(*s).second.stack;
-    interface.GlobalSum(&value,(std::size_t)1, (uint)0, "max");
-    (*s).second.stack=(int64_t)value;
-#endif
-#endif
-//  std::cout <<"loop end"<<std::endl;
+      thiscopy.results[key]=ss;
   }
-//  std::cout <<"before accumulate"<<std::endl;
+#endif
   thiscopy.accumulate(thiscopy.results);
   return thiscopy.results;
 }
