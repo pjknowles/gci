@@ -61,20 +61,24 @@ int main(int argc, char *argv[])
   char fcidumpname[1024]="gci.fcidump";
   molpro_plugin=false;
 #ifdef GCI_PARALLEL
+  fprintf(stderr,"Before MPI_Init\n");
   MPI_Init(&argc,&argv);
+  fprintf(stderr,"after MPI_Init\n");
   MPI_Comm_size(MPI_COMM_WORLD,&parallel_size);
   MPI_Comm_rank(MPI_COMM_WORLD,&parallel_rank);
+  fprintf(stderr,"Hello from rank %d\n",parallel_rank);
   gci::_nextval_counter= new sharedCounter();
   if (parallel_rank > 0) freopen("/dev/null", "w", stdout);
   MPI_Comm_get_parent(&molpro_plugin_intercomm);
   if (parallel_rank==0 && molpro_plugin_intercomm != MPI_COMM_NULL) {
+      xout << "Molpro plugin server detected"<<std::endl;
       int length;
       MPI_Status status;
       // expect plugin server to identify itself
       MPI_Recv(&length,1,MPI_INT,0,0,molpro_plugin_intercomm,&status);
       char* id = (char*) malloc(length);
       MPI_Recv(id,length,MPI_CHAR,0,1,molpro_plugin_intercomm,&status);
-//      printf("Plugin server: %s\n",id);
+      printf("Plugin server: %s\n",id); fflush(stdout);
       molpro_plugin = !strncmp(id,"MOLPRO",6);
       if (molpro_plugin) {
           char molpro_version[5];
