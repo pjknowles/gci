@@ -143,17 +143,9 @@ std::vector<double> Run::run()
 {
   profiler.reset("GCI");
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
-#ifdef MOLPRO
-   parallel_rank=(int64_t)GET_IPROCS_CXX();
-   parallel_size=(int64_t)GET_NPROCS_CXX();
-#elif defined(GCI_PARALLEL)
   MPI_Comm_rank(MPI_COMM_WORLD,&parallel_rank);
   MPI_Comm_size(MPI_COMM_WORLD,&parallel_size);
   xout << "Parallel run of "<<parallel_size<<" processes"<< std::endl;
-#else
-  parallel_rank=0;
-  parallel_size=1;
-#endif
   std::vector<double>energies;
   std::string method = parameter("METHOD",std::vector<std::string>(1,"")).at(0);
   if (method == "MBPT" || method == "MOLLER") method="RSPT";

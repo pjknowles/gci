@@ -40,19 +40,12 @@ extern "C" {
 int gci::parallel_size=1;
 int gci::parallel_rank=0;
 bool gci::molpro_plugin=false;
-#ifdef GCI_PARALLEL
 MPI_Comm gci::molpro_plugin_intercomm=MPI_COMM_NULL;
-#endif
-#ifdef MOLPRO
-#include "cic/ItfMpp.h"
-itf::FMppInt gci::mpp=itf::FMppInt(itf::FMppInt::MPP_NeedSharedFs|itf::FMppInt::MPP_GlobalDeclaration);
-#else
 sharedCounter* gci::_nextval_counter;
 int64_t gci::__nextval_counter=0;
 int64_t gci::__my_first_task=0;
 int64_t gci::__task=0;
 int64_t gci::__task_granularity=1;
-#endif
 
 #ifndef MOLPRO
 int main(int argc, char *argv[])
@@ -60,7 +53,6 @@ int main(int argc, char *argv[])
 {
   char fcidumpname[1024]="gci.fcidump";
   molpro_plugin=false;
-#ifdef GCI_PARALLEL
   fprintf(stderr,"Before MPI_Init\n");
   MPI_Init(&argc,&argv);
   fprintf(stderr,"after MPI_Init\n");
@@ -104,7 +96,6 @@ int main(int argc, char *argv[])
     }
   int length=strlen(fcidumpname);
   MPI_Bcast(fcidumpname,length,MPI_CHAR,0,MPI_COMM_WORLD);
-#endif
   Run run(fcidumpname);
   if (argc<2) {
     run.addParameter("METHOD","DAVIDSON");
@@ -138,14 +129,12 @@ int main(int argc, char *argv[])
    }
 
   xout << "initial memory="<<memory_allocated<<", remaining memory="<<memory_remaining()<<std::endl;
-#ifdef GCI_PARALLEL
   if (molpro_plugin && parallel_rank==0) {
       int signal=0;
       MPI_Send(&signal,1,MPI_INT,0,0,molpro_plugin_intercomm);
     }
   delete _nextval_counter;
   MPI_Finalize();
-#endif
   return 0;
 }
 #endif

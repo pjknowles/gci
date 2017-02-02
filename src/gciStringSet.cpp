@@ -63,7 +63,6 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
   }
 //  xout << parallel_rank<<"serialised "<<serialised.size()<<" bytes from "<<size()<<" String objects="<<std::endl;
 //  xout << parallel_rank<<"addressMap.size()"<< addressMap.size()<<std::endl;
-#ifdef GCI_MPI
 //  for (size_t i=0; i<parallel_size; i++){
 //  MPI_Barrier(MPI_COMM_COMPUTE);
 //  if (i!=parallel_rank)continue;
@@ -151,7 +150,6 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
 //        xout <<"master after broadcasting global list"<<std::endl;
   }
 //    xout << "Reached end of forked code rank="<<parallel_rank<<std::endl;
-#ifdef GCI_MPI
 //  for (size_t i=0; i<parallel_size; i++){
 //  MPI_Barrier(MPI_COMM_COMPUTE);
 //  if (i!=parallel_rank)continue;
@@ -161,8 +159,6 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
 //  for (std::map<size_t,size_t> ::const_iterator a=addressMap.begin(); a!=addressMap.end(); a++)
 //    xout <<parallel_rank<<": "<<(*a).first<<","<<(*a).second<<std::endl;
 //  }
-#endif
-#endif
   profiler.stop("StringSet::addByOperators:distribute");
   profiler.stop("StringSet::addByOperators[]");
 }
