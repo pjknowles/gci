@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
 
   if (molpro_plugin && parallel_rank==0) {
      // send the energy back
-     char cmd[]="TAKE ENERGY";
+     char cmd[]="TAKE PROPERTY ENERGY";
      int length=sizeof(cmd);
      MPI_Send(&length,1,MPI_INT,0,0,molpro_plugin_intercomm);
      MPI_Send(cmd,length,MPI_CHAR,0,1,molpro_plugin_intercomm);
