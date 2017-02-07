@@ -53,9 +53,7 @@ int main(int argc, char *argv[])
 {
   char fcidumpname[1024]="gci.fcidump";
   molpro_plugin=false;
-  fprintf(stderr,"Before MPI_Init\n");
   MPI_Init(&argc,&argv);
-  fprintf(stderr,"after MPI_Init\n");
   MPI_Comm_size(MPI_COMM_WORLD,&parallel_size);
   MPI_Comm_rank(MPI_COMM_WORLD,&parallel_rank);
   gci::_nextval_counter= new sharedCounter();
