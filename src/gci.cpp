@@ -94,11 +94,13 @@ int main(int argc, char *argv[])
       MPI_Recv(fcidumpname,length,MPI_CHAR,0,1,molpro_plugin_intercomm,&status);
     }
   int length=strlen(fcidumpname);
+  MPI_Bcast(&length,1,MPI_INT,0,MPI_COMM_WORLD);
   MPI_Bcast(fcidumpname,length,MPI_CHAR,0,MPI_COMM_WORLD);
   Run run(fcidumpname);
-  if (argc<2) {
+  if (argc<2 || 
+      molpro_plugin) {
     run.addParameter("METHOD","DAVIDSON");
-    run.addParameter("PROFILER","0");
+    // run.addParameter("PROFILER","0");
   }
   else
     for (int i=1; i<argc; i++) {
