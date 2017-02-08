@@ -32,7 +32,7 @@ public:
      * \param creations number of creations to make
      * \param sym specify symmetry of String objects; -1 denotes all symmetries
      */
-  StringSet(const StringSet &referenceSpace, int annihilations, int creations, int sym=-1);
+  StringSet(const StringSet &referenceSpace, int annihilations, int creations, int sym=-1, bool parallel=false);
   /*!
      * \brief Construct a StringSet from a vector of other ones by applying annihilations and creations
      * \param referenceSpaces vector of reference spaces
@@ -40,7 +40,7 @@ public:
      * \param creations number of creations to make
      * \param sym specify symmetry of String objects; -1 denotes all symmetries
      */
-  StringSet(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym=-1);
+  StringSet(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym=-1,bool parallel=false);
   /*!
      * \brief PartialWeightArray holds the partial weight array for addressing the full set of String objects
      */
@@ -74,7 +74,7 @@ public:
      * \param creations
      * \param sym specify symmetry of String objects; -1 denotes all symmetries
      */
-  void addByOperators(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym=-1);
+  void addByOperators(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym=-1,bool parallel=false);
   /*!
      * \brief Generate all excitations from this StringSet to StringSet to.
      * \param to StringSet against which results will be indexed.
