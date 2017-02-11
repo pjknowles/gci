@@ -33,8 +33,8 @@ StringSet::StringSet(const StringSet &referenceSpace, int annihilations, int cre
 
 StringSet::StringSet(const std::vector<StringSet>& referenceSpaces, int annihilations, int creations, int sym, bool parallel)
 {
-//  xout << "StringSet constructor from referenceSpaces size()="<<size()<<parallel_rank<<std::endl;
   addByOperators(referenceSpaces, annihilations, creations, sym, parallel);
+//  xout << "StringSet constructor from referenceSpaces size()="<<size()<<", rank="<<parallel_rank<<", parallel="<<parallel<<std::endl;
 }
 
 #include <string.h>
@@ -181,9 +181,8 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
   int symexc = (referenceSpace.symmetry>=0 && sym >=0) ? referenceSpace.symmetry ^ sym : -1 ; // use symmetry if we can
   for (StringSet::const_iterator s = referenceSpace.begin(); s != referenceSpace.end(); s++) {
     countall++;
-    // really correct to have both the following two???? 2014-12-09
-    if (! NextTask()) continue;
-//    if (parallel && ! NextTask()) continue;
+    if (parallel)
+      if (! NextTask()) continue;
 //    if (parallel && countall%parallel_size != parallel_rank) continue;
     count++;
     String from = *s;

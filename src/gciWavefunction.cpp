@@ -644,6 +644,9 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
     profiler.start("ab integrals");
     size_t nsaaMax = 640; // temporary static
     size_t nsbbMax = 640; // temporary static
+//    xout << "before ab loop, rank="<<parallel_rank<<std::endl;
+//      xout <<parallel_rank<<"betaStrings "<<w.betaStrings.size()<<std::endl;
+//      xout <<parallel_rank<<"alphaStrings "<<w.alphaStrings.size()<<std::endl;
     for (unsigned int symb=0; symb<8; symb++) {
       StringSet bb(w.betaStrings,1,0,symb);
       if (bb.size()==0) continue;
@@ -658,8 +661,6 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
           for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
             size_t nsb = bb1-bb0;
             if (!NextTask()) continue;
-//            for (unsigned int i=0; i<99; i++)
-//              TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
           profiler.start("TransitionDensity ab");
             TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
           profiler.stop("TransitionDensity ab");
