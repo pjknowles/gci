@@ -48,6 +48,14 @@ int64_t gci::__task=0;
 int64_t gci::__task_granularity=1;
 
 #ifndef MOLPRO
+#include <errno.h>
+#include <string.h>
+#include <sys/param.h>
+std::string get_working_path()
+{
+   char temp[MAXPATHLEN];
+   return ( getcwd(temp, MAXPATHLEN) ? std::string( temp ) : std::string("") );
+}
 int main(int argc, char *argv[])
 //int main()
 {
@@ -60,20 +68,26 @@ int main(int argc, char *argv[])
   if (parallel_rank > 0) freopen("/dev/null", "w", stdout);
   MPI_Comm_get_parent(&molpro_plugin_intercomm);
   if (parallel_rank==0 && molpro_plugin_intercomm != MPI_COMM_NULL) {
-      xout << "Molpro plugin server detected"<<std::endl;
+//      xout << "Molpro plugin server detected"<<std::endl;
       int length;
       MPI_Status status;
       // expect plugin server to identify itself
       MPI_Recv(&length,1,MPI_INT,0,0,molpro_plugin_intercomm,&status);
       char* id = (char*) malloc(length);
       MPI_Recv(id,length,MPI_CHAR,0,1,molpro_plugin_intercomm,&status);
-      printf("Plugin server: %s\n",id); fflush(stdout);
+//      printf("Plugin server: %s\n",id); fflush(stdout);
       molpro_plugin = !strncmp(id,"MOLPRO",6);
       if (molpro_plugin) {
           char molpro_version[5];
           strncpy(molpro_version,&id[7],4);
           fflush(stdout);
-          int n = open(&id[12],O_WRONLY);
+//          printf("redirecting output to @%s@\n",&id[12]);
+          int n = open(&id[12],O_RDWR|O_CREAT,0600);
+          if (n<0) {
+              printf("cannot redirect output to %s\n",&id[12]);
+              xout << "Working directory: "<<get_working_path()<<std::endl;
+              perror("System message");
+            }
           dup2(n,1);
           close(n);
           printf("Plugin for Molpro version %s\n",molpro_version);
