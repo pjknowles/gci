@@ -79,15 +79,17 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
     std::vector<double> shifts=shift;
     for (size_t state=0; state<psc.size(); state++){
         if (_preconditioner_subtractDiagonal)
-          shifts[0]-=diag->at(diag->minloc(state+1));
+          shifts[state]-=diag->at(diag->minloc(state+1));
         Wavefunction* cw=dynamic_cast <Wavefunction*>(psc[state]);
         const Wavefunction* gw=dynamic_cast <const Wavefunction*>(psg[state]);
         if (shift[state]==0) {
             cw->times(gw,diag);
         }
         else {
+            shifts[state]+=std::numeric_limits<scalar>::epsilon();
 //                xout << "initial gw  in preconditioner"<<gw->str(2)<<std::endl;
 //                xout << "initial cw  in preconditioner"<<cw->str(2)<<std::endl;
+//                xout << "diag  in preconditioner"<<diag->str(2)<<std::endl;
 //                xout << "append "<<append<<std::endl;
             cw->divide(gw,diag,shifts[state],append,true);
 //                xout << "cw after divide in preconditioner"<<cw->str(2)<<std::endl;

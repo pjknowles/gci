@@ -177,11 +177,17 @@ void Wavefunction::diagonalOperator(const Operator &oper)
 void Wavefunction::axpy(double a, const LinearAlgebra::vector<double> *x)
 {
   const Wavefunction* xx=dynamic_cast <const Wavefunction*> (x);
+//  xout << "Wavefunction::axpy initial=";
+//  for (size_t i=0; i<buffer.size(); i++) xout<<" "<<buffer[i]; xout << std::endl;
+//  xout << "Wavefunction::axpy x=";
+//  for (size_t i=0; i<buffer.size(); i++) xout<<" "<<xx->buffer[i]; xout << std::endl;
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   if (distributed)
     for (size_t i=parallel_rank*chunk; i<(parallel_rank+1)*chunk && i<buffer.size(); i++) buffer[i] += xx->buffer[i]*a;
   else
     for (size_t i=0; i<buffer.size(); i++) buffer[i] += xx->buffer[i]*a;
+//  xout << "Wavefunction::axpy result=";
+//  for (size_t i=0; i<buffer.size(); i++) xout<<" "<<buffer[i]; xout << std::endl;
 }
 
 void Wavefunction::scal(double a)
@@ -269,6 +275,8 @@ Wavefunction& Wavefunction::operator/=(const Wavefunction &other)
 double Wavefunction::update(const Wavefunction &diagonalH, double & eTruncated, double const dEmax)
 {
   if (! compatible(diagonalH)) throw std::domain_error("attempt to combine incompatible Wavefunction objects");
+//  xout << "Wavefunction::update this="; for (size_t i=0; i<buffer.size(); i++) xout<<buffer[i]<<" ";xout <<std::endl;
+//  xout << "Wavefunction::update diagonalH="; for (size_t i=0; i<diagonalH.buffer.size(); i++) xout<<diagonalH.buffer[i]<<" ";xout <<std::endl;
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   size_t imin = distributed ? parallel_rank*chunk : 0;
   size_t imax = distributed ? (parallel_rank+1*chunk) : buffer.size();
