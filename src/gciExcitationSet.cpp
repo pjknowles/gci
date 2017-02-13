@@ -53,6 +53,7 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
                 xout <<"i="<<i+1<<" phase="<<phase<<" ti="<<ti<<" tt="<<tt.str()<<std::endl;
                 throw std::range_error("index error in ExcitationSet");
               }
+              if (from.orbitalSpace->orbital_symmetries[i] > from.orbitalSpace->orbital_symmetries[j]) phase=-phase;
               push_back(Excitation(ti,phase,from.orbitalSpace->pairIndex(i+1,j+1,parity)));
             }
           }
