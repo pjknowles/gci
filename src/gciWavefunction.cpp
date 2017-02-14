@@ -502,7 +502,7 @@ size_t Wavefunction::blockOffset(const unsigned int syma) const
 using namespace itf;
 #endif
 
-void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction &w)
+void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction &w, bool parallel_stringset)
 {
   profiler.start("operatorOnWavefunction");
   if (parallel_rank == 0)
@@ -586,7 +586,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
     size_t nsbbMax = 64; // temporary static
     for (unsigned int syma=0; syma<8; syma++) {
       profiler.start("StringSet aa");
-      StringSet aa(w.alphaStrings,2,0,syma);
+      StringSet aa(w.alphaStrings,2,0,syma,parallel_stringset);
       profiler.stop("StringSet aa");
       if (aa.size()==0) continue;
       for (unsigned int symb=0; symb<8; symb++) {
@@ -621,7 +621,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
     profiler.start("bb integrals");
     size_t nsbbMax = 64; // temporary static
     for (unsigned int symb=0; symb<8; symb++) {
-      StringSet bb(w.betaStrings,2,0,symb);
+      StringSet bb(w.betaStrings,2,0,symb,parallel_stringset);
       if (bb.size()==0) continue;
       for (unsigned int syma=0; syma<8; syma++) {
         if (!NextTask()) continue;
@@ -656,10 +656,10 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
 //      xout <<parallel_rank<<"betaStrings "<<w.betaStrings.size()<<std::endl;
 //      xout <<parallel_rank<<"alphaStrings "<<w.alphaStrings.size()<<std::endl;
     for (unsigned int symb=0; symb<8; symb++) {
-      StringSet bb(w.betaStrings,1,0,symb);
+      StringSet bb(w.betaStrings,1,0,symb,parallel_stringset);
       if (bb.size()==0) continue;
       for (unsigned int syma=0; syma<8; syma++) {
-        StringSet aa(w.alphaStrings,1,0,syma);
+        StringSet aa(w.alphaStrings,1,0,syma,parallel_stringset);
         if (aa.size()==0) continue;
         unsigned int symexc = symb^syma^w.symmetry;
         size_t nexc = h.pairSpace.find(0)->second[symexc];

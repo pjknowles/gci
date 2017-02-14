@@ -24,6 +24,7 @@ static double _mu;
 static bool _residual_subtract_Energy;
 static Operator* _residual_Q;
 static double _residual_q;
+static bool parallel_stringset;
 static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<double> shift=std::vector<double>(), bool append=false) {
     for (size_t k=0; k<psx.size(); k++) {
         const Wavefunction* x=dynamic_cast <const Wavefunction*> (psx[k]);
@@ -39,7 +40,7 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
 //        xout << "g "<<g->str(2)<<std::endl;
 //        xout <<"g->buffer"<<g->data()<<std::endl;
 //        xout << "activeHamiltonian "<<activeHamiltonian->str(2)<<std::endl;
-        g->operatorOnWavefunction(*activeHamiltonian, *x);
+        g->operatorOnWavefunction(*activeHamiltonian, *x, parallel_stringset);
         profiler.stop("Hc");
 //        xout << "g=Hc "<<g->str(2)<<std::endl;
         if (_residual_subtract_Energy) {
@@ -155,6 +156,7 @@ std::vector<double> Run::run()
 
   profiler.start("load Hamiltonian");
   Operator hh(globalFCIdump);
+  parallel_stringset = parameter("PARALLEL_STRINGSET").at(0) != 0;
 
   bool test_rotation_of_hamiltonian=false;
   if (test_rotation_of_hamiltonian) {
