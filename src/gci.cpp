@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
   MPI_Bcast(&molpro_plugin,1,MPI_INT,0,MPI_COMM_WORLD);
   if (molpro_plugin && parallel_rank==0) { // communication should be handled by just the root process, exchanging messages with the root process on the server
       // ask for an FCIDUMP
-      char cmd[]="GIVE OPERATOR HAMILTONIAN FCIDUMP";
+      char cmd[]="GIVE OPERATOR HAMILTONIAN FCIDUMP GCI";
       int length=sizeof(cmd);
       MPI_Send(&length,1,MPI_INT,0,0,molpro_plugin_intercomm);
       MPI_Send(cmd,length,MPI_CHAR,0,1,molpro_plugin_intercomm);
