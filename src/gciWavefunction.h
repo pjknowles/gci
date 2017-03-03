@@ -109,7 +109,7 @@ public:
    */
   SMat naturalOrbitals();
 private:
-  void gdensity(memory::vector<double>& den1, memory::vector<double>& den2, bool d1, bool d2, const Wavefunction& bra);
+  void density(memory::vector<double>& den1, memory::vector<double>& den2, bool d1, bool d2, const Wavefunction& bra);
 public:
 
   /*!

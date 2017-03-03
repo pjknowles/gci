@@ -708,22 +708,22 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
 void Wavefunction::density(memory::vector<double>& den1)
 {
  memory::vector<double> den2(0);
- gdensity(den1,den2,true,false,*this);
+ density(den1,den2,true,false,*this);
 }
 void Wavefunction::density(memory::vector<double>& den1,memory::vector<double>& den2)
 {
- gdensity(den1,den2,true,true,*this);
+ density(den1,den2,true,true,*this);
 }
 void Wavefunction::density(memory::vector<double>& den1,const Wavefunction& bra)
 {
  memory::vector<double> den2(0);
- gdensity(den1,den2,true,false,bra);
+ density(den1,den2,true,false,bra);
 }
 void Wavefunction::density(memory::vector<double>& den1,memory::vector<double>& den2,const Wavefunction& bra)
 {
- gdensity(den1,den2,true,true,bra);
+ density(den1,den2,true,true,bra);
 }
-void Wavefunction::gdensity(memory::vector<double>& den1, memory::vector<double>& den2, bool d1, bool d2, const Wavefunction &bra)
+void Wavefunction::density(memory::vector<double>& den1, memory::vector<double>& den2, bool d1, bool d2, const Wavefunction &bra)
 {
   profiler.start("1-electron");
   size_t offset=0, nsa=0, nsb=0;
