@@ -29,11 +29,11 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
     for (size_t k=0; k<psx.size(); k++) {
         const Wavefunction* x=dynamic_cast <const Wavefunction*> (psx[k]);
         Wavefunction* g=dynamic_cast <Wavefunction*> (outputs[k]);
-        profiler.start("density");
+        profiler->start("density");
 //        SMat natorb=x->naturalOrbitals();
         //    activeHamiltonian->rotate(&natorb);
-        profiler.stop("density");
-        profiler.start("Hc");
+        profiler->stop("density");
+        profiler->start("Hc");
         if (not append)
             g->zero();
 //        xout << "x in residual "<<x->str(2)<<std::endl;
@@ -41,7 +41,7 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
 //        xout <<"g->buffer"<<g->data()<<std::endl;
 //        xout << "activeHamiltonian "<<activeHamiltonian->str(2)<<std::endl;
         g->operatorOnWavefunction(*activeHamiltonian, *x, parallel_stringset);
-        profiler.stop("Hc");
+        profiler->stop("Hc");
 //        xout << "g=Hc "<<g->str(2)<<std::endl;
         if (_residual_subtract_Energy) {
             double cc = x->dot(x);
@@ -136,15 +136,17 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
     }
 }
 
+#include <memory>
 Run::Run(std::string fcidump)
 {
   globalFCIdump = new FCIdump(fcidump);
 }
 
-  Profiler gci::profiler("GCI");
+std::shared_ptr<Profiler> gci::profiler=nullptr;
 std::vector<double> Run::run()
 {
-  profiler.reset("GCI");
+  if (profiler==nullptr) profiler = std::make_shared<Profiler>("GCI");
+  profiler->reset("GCI");
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
   MPI_Comm_rank(MPI_COMM_WORLD,&parallel_rank);
   MPI_Comm_size(MPI_COMM_WORLD,&parallel_size);
@@ -154,7 +156,7 @@ std::vector<double> Run::run()
   if (method == "MBPT" || method == "MOLLER") method="RSPT";
   xout << "METHOD="<<method<<std::endl;
 
-  profiler.start("load Hamiltonian");
+  profiler->start("load Hamiltonian");
   Operator hh(globalFCIdump);
   parallel_stringset = parameter("PARALLEL_STRINGSET").at(0) != 0;
 
@@ -172,11 +174,11 @@ std::vector<double> Run::run()
     hh.rotate(&rot);
   }
 
-  profiler.stop("load Hamiltonian");
+  profiler->stop("load Hamiltonian");
   size_t referenceLocation;
   Determinant referenceDeterminant;
   State prototype;
-  profiler.start("find reference");
+  profiler->start("find reference");
   { // so that w goes out of scope
     Wavefunction w(globalFCIdump);
     w.diagonalOperator(hh);
@@ -187,7 +189,7 @@ std::vector<double> Run::run()
     xout << "Lowest energy determinant " << referenceDeterminant <<" with energy "<<w.at(referenceLocation)<<std::endl;
     prototype = State(&hh,w.nelec,w.symmetry,w.ms2);
   }
-  profiler.stop("find reference");
+  profiler->stop("find reference");
   if (parameter("EXPLICIT1").at(0)==0 && method != "RSPT") hh.constructBraKet(
         referenceDeterminant.nelec+referenceDeterminant.ms2,
         referenceDeterminant.nelec-referenceDeterminant.ms2
@@ -259,7 +261,7 @@ std::vector<double> Run::run()
   else {
     xout << "Unknown method in GCI, " << method << std::endl;
   }
-  xout <<profiler.str(parameter("PROFILER",std::vector<int>(1,-1)).at(0)) <<std::endl;
+  xout <<profiler->str(parameter("PROFILER",std::vector<int>(1,-1)).at(0)) <<std::endl;
   return energies;
 }
 
@@ -289,8 +291,8 @@ using namespace itf;
 std::vector<double> Run::DIIS(const Operator &hamiltonian, const State &prototype, double energyThreshold, int maxIterations)
 {
   Operator h(hamiltonian);
-  profiler.start("DIIS");
-  profiler.start("DIIS preamble");
+  profiler->start("DIIS");
+  profiler->start("DIIS preamble");
 //  xout << "on entry to Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
   if (maxIterations < 0)
     maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
@@ -340,8 +342,8 @@ std::vector<double> Run::Davidson(const Operator& hamiltonian,
                                   double energyThreshold, int nState, int maxIterations)
 {
   Operator h(hamiltonian);
-  profiler.start("Davidson");
-  profiler.start("Davidson preamble");
+  profiler->start("Davidson");
+  profiler->start("Davidson preamble");
   //  xout << "on entry to Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
   if (maxIterations < 0)
     maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
@@ -376,7 +378,7 @@ std::vector<double> Run::Davidson(const Operator& hamiltonian,
   solver.m_maxIterations=maxIterations;
   solver.m_roots=nState;
   solver.solve(gg,ww);
-  profiler.stop("Davidson");
+  profiler->stop("Davidson");
   while (ww.size()>0) { delete ww.back(); ww.pop_back(); }
   while (gg.size()>0) { delete gg.back(); gg.pop_back(); }
   return solver.eigenvalues();
@@ -388,8 +390,8 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
                                   const State &prototype,
                                   double energyThreshold, int nState, int maxIterations)
 {
-  profiler.start("Davidson");
-  profiler.start("Davidson preamble");
+  profiler->start("Davidson");
+  profiler->start("Davidson preamble");
   // xout << "on entry to Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
   if (nState < 0)
     nState = parameter("NSTATE",std::vector<int>(1,1)).at(0);
@@ -419,16 +421,16 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
   w.set((double)0); w.set(reference, (double) 1);
   std::vector<double> reducedHamiltonian;
   std::vector<double> elast(nState,e0+1);
-  profiler.stop("Davidson preamble");
+  profiler->stop("Davidson preamble");
   for (int n=0; n < maxIterations; n++) {
     w.put(wfile,n);
     g.set((double)0);
-    profiler.start("Davidson Hc");
+    profiler->start("Davidson Hc");
     g.operatorOnWavefunction(hamiltonian, w);
-    profiler.stop("Davidson Hc");
+    profiler->stop("Davidson Hc");
     g.put(gfile,n);
     reducedHamiltonian.resize((size_t)(n+1)*(n+1));
-    profiler.start("Davidson build rH");
+    profiler->start("Davidson build rH");
     {
     for (int i=n-1; i>-1; i--)
       for (int j=n-1; j>-1; j--)
@@ -444,7 +446,7 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
       reducedHamiltonian[n+i*(n+1)] = reducedHamiltonian[i+n*(n+1)];
     w.distributed=olddistw; g.distributed=olddistg;
     }
-    profiler.stop("Davidson build rH");
+    profiler->stop("Davidson build rH");
     // { xout << "Reduced hamiltonian:"<<std::endl; for (int i=0; i < n+1; i++) { for (int j=0; j < n+1; j++) xout <<" "<<reducedHamiltonian[j+(n+1)*i]; xout << std::endl; } }
     std::vector<double> eigenvectors(reducedHamiltonian);
     std::vector<double> eigenvalues(n+1);
@@ -524,7 +526,7 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
 
     // penalised equation solver here
 
-    profiler.start("Davidson residual");
+    profiler->start("Davidson residual");
     if (compressive) {
       g.set((double)0);
       for (int i=0; i <= n; i++) {
@@ -570,7 +572,7 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
 //      w += factor*g;
       w.axpy(factor,&g);
     }
-    profiler.stop("Davidson residual");
+    profiler->stop("Davidson residual");
     double norm2=w*w;
     gsum(&norm2,1);
     w.distributed=olddistw;
@@ -592,7 +594,7 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
     w *= ((double)1/std::sqrt(norm2));
     if (norm2 >(double) 1e-30 && econv > energyThreshold) continue;
 
-    { profiler.start("Histogram");
+    { profiler->start("Histogram");
       w.set((double)0);
       bool olddist=w.distributed; w.distributed=true;
       for (int i=0; i <= n; i++) {
@@ -622,10 +624,10 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
       SetVariables ("HISTOGRAM_X",&edges[0],(unsigned int)nhist, 0, "");
       SetVariables ("HISTOGRAM_Y",&fcumulative[0],(unsigned int)nhist, 0, "");
 #endif
-      profiler.stop("Histogram"); }
+      profiler->stop("Histogram"); }
     break;
   }
-  profiler.stop("Davidson");
+  profiler->stop("Davidson");
     return e;
 }
 

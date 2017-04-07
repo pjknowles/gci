@@ -3,14 +3,7 @@
 #else
 #define _GNU_SOURCE
 #endif
-// if you want to force MPI mode, uncomment the next line
-//#define PROFILER_MPI
-#if defined(GA_MPI) || defined(MPI2) || defined(GCI_MPI) || defined(GCI_PARALLEL)
-#define PROFILER_MPI
-#endif
-#ifdef PROFILER_MPI
-#include "mpi.h"
-#endif
+
 #include <algorithm>
 #include <sstream>
 #include <iostream>
@@ -21,12 +14,21 @@
 #include <iomanip>
 #include "Profiler.h"
 #include "memory.h"
+#ifdef MOLPRO
+#include "ppidd/ppidd_c.h"
+#endif
 
-Profiler::Profiler()
-{
-}
 
-Profiler::Profiler(std::string name, const int level)
+Profiler::Profiler(std::string name, const int level
+#ifdef PROFILER_MPI
+		   , const MPI_Comm communicator) : m_communicator(communicator
+#ifdef MOLPRO
+								   == MPI_COMM_WORLD ? MPI_Comm_f2c(PPIDD_Worker_comm()) : communicator
+#endif
+								   )
+#else
+		   )
+#endif
 {
   reset(name);
   active(level);
@@ -145,33 +147,33 @@ Profiler::resultMap Profiler::totals() const
   while(thiscopy.results.erase(""));
 #ifdef PROFILER_MPI
   int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+  MPI_Comm_rank(m_communicator,&rank);
   std::string key;
   // use the table on the master node as definitive, since others may be missing entries
   int n=thiscopy.results.size();
-  MPI_Bcast(&n,1,MPI_INT,0,MPI_COMM_WORLD);
+  MPI_Bcast(&n,1,MPI_INT,0,m_communicator);
   for (int i=0; i<n; i++) {
       int l;
       if (rank == 0) {
-          resultMap::iterator s=thiscopy.results.begin(); for (int j=1; j<i; j++) s++;
+          resultMap::iterator s=thiscopy.results.begin(); for (int j=0; j<i; j++) s++;
           key = s->first;
           l=key.size();
         }
-      MPI_Bcast(&l,1,MPI_INT,0,MPI_COMM_WORLD);
+      MPI_Bcast(&l,1,MPI_INT,0,m_communicator);
       key.resize(l);
-      MPI_Bcast(&key[0],l,MPI_CHAR,0,MPI_COMM_WORLD);
+      MPI_Bcast(&key[0],l,MPI_CHAR,0,m_communicator);
       struct Profiler::resources ss = thiscopy.results[key];
-      int type=1, len=1;
+      int len=1;
       double val=ss.wall;
-      MPI_Allreduce(&val,&(ss.wall),len,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
+      MPI_Allreduce(&val,&(ss.wall),len,MPI_DOUBLE,MPI_MAX,m_communicator);
       val=ss.cpu;
-      MPI_Allreduce(&val,&(ss.cpu),len,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+      MPI_Allreduce(&val,&(ss.cpu),len,MPI_DOUBLE,MPI_SUM,m_communicator);
       int calls=ss.calls;
-      MPI_Allreduce(&calls,&(ss.calls),len,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+      MPI_Allreduce(&calls,&(ss.calls),len,MPI_INT,MPI_SUM,m_communicator);
       long operations=ss.operations;
-      MPI_Allreduce(&operations,&(ss.operations),len,MPI_LONG,MPI_SUM,MPI_COMM_WORLD);
+      MPI_Allreduce(&operations,&(ss.operations),len,MPI_LONG,MPI_SUM,m_communicator);
       int64_t stack = ss.stack;
-      MPI_Allreduce(&stack,&(ss.stack),len,MPI_LONG_LONG_INT,MPI_MAX,MPI_COMM_WORLD);
+      MPI_Allreduce(&stack,&(ss.stack),len,MPI_LONG_LONG_INT,MPI_MAX,m_communicator);
       thiscopy.results[key]=ss;
   }
 #endif

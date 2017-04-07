@@ -10,7 +10,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
                                      const StringSet::const_iterator &betaStringsEnd_,
                                      const int parity_, const bool doAlpha, const bool doBeta)
 {
-  profiler.start("TransitionDensity preamble");
+  profiler->start("TransitionDensity preamble");
   this->parity = parity_;
   this->alphaStringsBegin = alphaStringsBegin_;
   this->alphaStringsEnd = alphaStringsEnd_;
@@ -19,7 +19,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
   // first parse the type of transition
   nsa = std::distance(alphaStringsBegin,alphaStringsEnd);
   nsb = std::distance(betaStringsBegin,betaStringsEnd);
-  if (nsa==0 || nsb==0) {profiler.stop();return;}
+  if (nsa==0 || nsb==0) {profiler->stop();return;}
   unsigned int syma = alphaStringsBegin->computed_symmetry();
   unsigned int symb =  betaStringsBegin->computed_symmetry();
   //  xout << "syma="<<syma<<", nsa="<<nsa<<std::endl;
@@ -31,13 +31,13 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
 
   //  xout <<"TransitionDensity "<<symexc<<" "<<nsa*nsb*excitations<<std::endl;
   resize(nsa*nsb*excitations,(double)0);
-  profiler.stop("TransitionDensity preamble",nsa*nsb*excitations);
+  profiler->stop("TransitionDensity preamble",nsa*nsb*excitations);
   if (nsa*nsb*excitations == 0) return;
 
   if (deltaAlpha==0 && deltaBeta==0) { // number of electrons preserved, so one-electron excitation
 
     if (doAlpha) {
-      profiler.start("1-electron alpha excitations");
+      profiler->start("1-electron alpha excitations");
       // alpha excitations
       unsigned int wsymb = symb;
       unsigned int wsyma = w.symmetry^wsymb;
@@ -72,11 +72,11 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       //      xout << (*this)[ab+ij*nsa*nsb] <<" ";
       //    xout <<std::endl;
       //  }
-      profiler.stop("1-electron alpha excitations");
+      profiler->stop("1-electron alpha excitations");
     }
 
     if (doBeta) {
-      profiler.start("1-electron beta excitations");
+      profiler->start("1-electron beta excitations");
       // beta excitations
       unsigned int wsyma = syma;
       unsigned int wsymb = w.symmetry^wsyma;
@@ -100,7 +100,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
         }
         offb ++;
       }
-      profiler.stop("1-electron beta excitations");
+      profiler->stop("1-electron beta excitations");
     }
 
   } else if (deltaAlpha==2) { // wavefunction has 2 more alpha electrons than interacting states

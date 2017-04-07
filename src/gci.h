@@ -19,9 +19,10 @@
 
 
 #include <iostream>
+#include <memory>
 namespace gci {
 
-extern Profiler profiler; // global profiler
+extern std::shared_ptr<Profiler> profiler; // global profiler
 
 extern int parallel_rank, parallel_size;
 
