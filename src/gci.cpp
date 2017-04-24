@@ -9,6 +9,7 @@
 #include "gciRun.h"
 #include "FCIdump.h"
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 #include "memory.h"
 #include <unistd.h>
@@ -51,6 +52,7 @@ int64_t gci::__task_granularity=1;
 #include <errno.h>
 #include <string.h>
 #include <sys/param.h>
+#include "PluginGuest.h"
 std::string get_working_path()
 {
    char temp[MAXPATHLEN];
@@ -66,51 +68,14 @@ int main(int argc, char *argv[])
   MPI_Comm_rank(MPI_COMM_WORLD,&parallel_rank);
   gci::_nextval_counter= new sharedCounter();
   if (parallel_rank > 0) freopen("/dev/null", "w", stdout);
-  MPI_Comm_get_parent(&molpro_plugin_intercomm);
-  if (parallel_rank==0 && molpro_plugin_intercomm != MPI_COMM_NULL) {
-//      xout << "Molpro plugin server detected"<<std::endl;
-      int length;
-      MPI_Status status;
-      // expect plugin server to identify itself
-      MPI_Recv(&length,1,MPI_INT,0,0,molpro_plugin_intercomm,&status);
-      char* id = (char*) malloc(length);
-      MPI_Recv(id,length,MPI_CHAR,0,1,molpro_plugin_intercomm,&status);
-//      printf("Plugin server: %s\n",id); fflush(stdout);
-      molpro_plugin = !strncmp(id,"MOLPRO",6);
-      if (molpro_plugin) {
-          char molpro_version[5];
-          strncpy(molpro_version,&id[7],4);
-          fflush(stdout);
-//          printf("redirecting output to @%s@\n",&id[12]);
-          int n = open(&id[12],O_RDWR|O_CREAT,0600);
-          if (n<0) {
-              printf("cannot redirect output to %s\n",&id[12]);
-              xout << "Working directory: "<<get_working_path()<<std::endl;
-              perror("System message");
-            }
-          dup2(n,1);
-          close(n);
-          printf("Plugin for Molpro version %s\n",molpro_version);
-        }
+  PluginGuest plugin("MOLPRO");
+  if (plugin.active()) {
+      if (!plugin.send("GIVE OPERATOR HAMILTONIAN FCIDUMP GCI")) throw std::logic_error("Unexpected plugin failure");
+      strcpy(fcidumpname,plugin.receive().c_str());
     }
-  MPI_Bcast(&molpro_plugin,1,MPI_INT,0,MPI_COMM_WORLD);
-  if (molpro_plugin && parallel_rank==0) { // communication should be handled by just the root process, exchanging messages with the root process on the server
-      // ask for an FCIDUMP
-      char cmd[]="GIVE OPERATOR HAMILTONIAN FCIDUMP GCI";
-      int length=sizeof(cmd);
-      MPI_Send(&length,1,MPI_INT,0,0,molpro_plugin_intercomm);
-      MPI_Send(cmd,length,MPI_CHAR,0,1,molpro_plugin_intercomm);
-      MPI_Status status;
-      MPI_Recv(&length,1,MPI_INT,0,0,molpro_plugin_intercomm,&status);
-      if (length==0) throw std::logic_error("plugin request has failed");
-      MPI_Recv(fcidumpname,length,MPI_CHAR,0,1,molpro_plugin_intercomm,&status);
-    }
-  int length=strlen(fcidumpname);
-  MPI_Bcast(&length,1,MPI_INT,0,MPI_COMM_WORLD);
-  MPI_Bcast(fcidumpname,length,MPI_CHAR,0,MPI_COMM_WORLD);
   Run run(fcidumpname);
   if (argc<2 || 
-      molpro_plugin) {
+     plugin.active()) {
     run.addParameter("METHOD","DAVIDSON");
     // run.addParameter("PROFILER","0");
   }
@@ -126,26 +91,20 @@ int main(int argc, char *argv[])
   std::vector<double> e=run.run();
   xout << "e after run:"; for (size_t i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;
 
-  if (molpro_plugin && parallel_rank==0) {
+  if (plugin.active()) {
      // send the energy back
-     char cmd[]="TAKE PROPERTY ENERGY";
-     int length=sizeof(cmd);
-     MPI_Send(&length,1,MPI_INT,0,0,molpro_plugin_intercomm);
-     MPI_Send(cmd,length,MPI_CHAR,0,1,molpro_plugin_intercomm);
-     int nstate=e.size();
-     MPI_Send(&nstate,1,MPI_INT,0,2,molpro_plugin_intercomm);
-     MPI_Status status;
-     MPI_Recv(&length,1,MPI_INT,0,0,molpro_plugin_intercomm,&status);
-     if (length) { // 'yes' answer received
-       MPI_Send(&e[0],nstate,MPI_DOUBLE,0,3,molpro_plugin_intercomm);
+      if (plugin.send("TAKE PROPERTY ENERGY")) {
+          std::stringstream ss;
+          ss << std::fixed << std::setprecision(16);
+          for (auto ee=e.begin(); ee!=e.end(); ee++)
+            ss << *ee << " ";
+          plugin.send(ss.str());
      }
    }
 
   xout << "initial memory="<<memory_allocated<<", remaining memory="<<memory_remaining()<<std::endl;
-  if (molpro_plugin && parallel_rank==0) {
-      int signal=0;
-      MPI_Send(&signal,1,MPI_INT,0,0,molpro_plugin_intercomm);
-    }
+  if (plugin.active())
+    plugin.send("");
   delete _nextval_counter;
   MPI_Finalize();
   return 0;
