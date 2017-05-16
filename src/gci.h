@@ -22,7 +22,7 @@
 #include <memory>
 namespace gci {
 
-extern std::shared_ptr<Profiler> profiler; // global profiler
+extern std::unique_ptr<Profiler> profiler; // global profiler
 
 extern int parallel_rank, parallel_size;
 

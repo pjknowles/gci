@@ -142,10 +142,10 @@ Run::Run(std::string fcidump)
   globalFCIdump = new FCIdump(fcidump);
 }
 
-std::shared_ptr<Profiler> gci::profiler=nullptr;
+std::unique_ptr<Profiler> gci::profiler=nullptr;
 std::vector<double> Run::run()
 {
-  if (profiler==nullptr) profiler = std::make_shared<Profiler>("GCI");
+  if (profiler==nullptr) profiler.reset(new Profiler("GCI"));
   profiler->reset("GCI");
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
   MPI_Comm_rank(MPI_COMM_WORLD,&parallel_rank);
