@@ -4,8 +4,17 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 project(gci)
 enable_language(Fortran)
-set (CMAKE_Fortran_FLAGS_RELEASE "-O3 -fdefault-integer-8")
-set (CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -fdefault-integer-8")
+set (CMAKE_Fortran_FLAGS_RELEASE "-O3")
+set (CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g")
+include(CheckFortranCompilerFlag)
+check_fortran_compiler_flag("-fdefault-integer-8" _gnu8)
+if(_gnu8)
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fdefault-integer-8")
+endif()
+check_fortran_compiler_flag("-i8" _i8)
+if(_i8)
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -i8")
+endif()
 
 file (GLOB SRCS src/*.cpp src/*.h src/*.F90 extra/*.cpp extra/*.h
     symmetry_matrix/memory/memory.F90 symmetry_matrix/memory/bytestreamC.cpp symmetry_matrix/memory/bytestreamF.F90
