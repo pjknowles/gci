@@ -15,6 +15,10 @@ check_fortran_compiler_flag("-i8" _i8)
 if(_i8)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -i8")
 endif()
+check_fortran_compiler_flag("-fast" _fast)
+if(_fast)
+  set (CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -fast")
+endif()
 
 file (GLOB SRCS src/*.cpp src/*.h src/*.F90 extra/*.cpp extra/*.h
     symmetry_matrix/memory/memory.F90 symmetry_matrix/memory/bytestreamC.cpp symmetry_matrix/memory/bytestreamF.F90
