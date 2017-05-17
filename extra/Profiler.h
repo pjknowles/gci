@@ -26,18 +26,20 @@ class Profiler
 {
   Profiler();
 public:
+  enum sortMethod { wall, cpu, name };
   /*!
    * \brief Profiler construct a named instance
    * \param name the title of this object
+   * \param sortBy Criterion for sorting printed result table
    * \param level
    * A large value means that data will always be accumulated; zero means that calls to start and stop do nothing.
    * \param communicator The MPI communicator over which statistics should be aggregated.
    */
-  Profiler(std::string name, const int level=INT_MAX
+  Profiler(std::string name, sortMethod sortBy=wall, const int level=INT_MAX
 #ifdef PROFILER_MPI
 	   , const MPI_Comm communicator=MPI_COMM_WORLD
 #endif
-	   );
+           );
   /*!
    * \brief reset the object
    * \param name the title of this object
@@ -80,6 +82,7 @@ public:
  public:
   struct resources {double cpu; double wall; int calls; long operations; std::string name; int64_t stack;
                     struct resources * cumulative;
+                   const Profiler *parent;
                 std::string str(const int width=0, const int verbosity=0, const bool cumulative=false, const int precision=3, const std::string defaultName="") const;
                 struct Profiler::resources& operator+=(const struct Profiler::resources &other);
                 struct Profiler::resources& operator-=(const struct Profiler::resources &other);
@@ -104,12 +107,22 @@ public:
 //      std::cout<<"Compare "<<_left.first<<" and "<<_right.first<<std::endl;
 //      std::cout<<"compare "<<_left.second.wall<<" and "<<_right.second.wall<<std::endl;
 //      std::cout<<"compare "<<_left.second.cumulative->wall<<" and "<<_right.second.cumulative->wall<<std::endl;
-      if (_left.second.cumulative==NULL)
-      return _left.second.wall < _right.second.wall;
-      return _left.second.cumulative->wall < _right.second.cumulative->wall;
+        switch (_left.second.parent->m_sortBy) {
+          case wall:
+            if (_left.second.cumulative==NULL)
+              return _left.second.wall < _right.second.wall;
+            return _left.second.cumulative->wall < _right.second.cumulative->wall;
+          case cpu:
+            if (_left.second.cumulative==NULL)
+              return _left.second.cpu < _right.second.cpu;
+            return _left.second.cumulative->cpu < _right.second.cumulative->cpu;
+          case name:
+            return _left.second.name > _right.second.name;
+          }
     }
   };
 
+  sortMethod m_sortBy;
   std::string Name;
   std::vector<struct resources> resourcesStack, startResources;
   std::vector<int64_t>memoryStack0;

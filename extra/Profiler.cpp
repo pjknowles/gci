@@ -19,7 +19,7 @@
 #endif
 
 
-Profiler::Profiler(std::string name, const int level
+Profiler::Profiler(std::string name, sortMethod sortBy, const int level
 #ifdef PROFILER_MPI
 		   , const MPI_Comm communicator) : m_communicator(communicator
 #ifdef MOLPRO
@@ -29,6 +29,7 @@ Profiler::Profiler(std::string name, const int level
 #else
 		   )
 #endif
+  , m_sortBy(sortBy)
 {
   reset(name);
   active(level);
@@ -56,8 +57,8 @@ void Profiler::start(const std::string name)
 //  std::cout << "Profiler::start level="<<level<<", name="<<name<<std::endl;
   level++;
   if (level>activeLevel) return;
-  assert(level==resourcesStack.size()+1);
-  struct resources now=getResources();now.name=name;now.calls=1;
+  assert(level==(int)resourcesStack.size()+1);
+  struct resources now=getResources();now.name=name;now.calls=1;now.parent=this;
   if (! resourcesStack.empty())
     totalise(now,0,0);
 #ifdef MEMORY_H
@@ -89,6 +90,7 @@ void Profiler::totalise(const struct resources now, const long operations, const
   diff-=resourcesStack.back();
   diff.name=resourcesStack.back().name;
   diff.operations=operations;
+  diff.parent=this;
 #ifdef MEMORY_H
   diff.stack=memory_used(1)-memoryStack0.back();
 #endif
@@ -104,10 +106,10 @@ void Profiler::stop(const std::string name, long operations)
 {
   level--;
   if (level > 0 && level>=activeLevel) return;
-  assert(level==resourcesStack.size()-1);
 //  std::cout << "Profiler::stop level="<<level<<", name="<<name<<", resourcesStack.back().name="<<resourcesStack.back().name<<std::endl;
+  assert(level==(int)resourcesStack.size()-1);
   assert(name=="" || name == resourcesStack.back().name);
-  struct resources now=getResources();now.operations=operations;
+  struct resources now=getResources();now.operations=operations;now.parent=this;
   totalise(now,operations,1);
 
   if (stopPrint_>-1) {
@@ -164,7 +166,7 @@ Profiler::resultMap Profiler::totals() const
       MPI_Bcast(&l,1,MPI_INT,0,m_communicator);
       key.resize(l);
       MPI_Bcast(&key[0],l,MPI_CHAR,0,m_communicator);
-      struct Profiler::resources ss = thiscopy.results[key];
+      struct Profiler::resources ss = thiscopy.results[key]; ss.parent=this;
       int len=1;
       double val=ss.wall;
       MPI_Allreduce(&val,&(ss.wall),len,MPI_DOUBLE,MPI_MAX,m_communicator);
