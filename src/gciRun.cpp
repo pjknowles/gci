@@ -377,6 +377,7 @@ std::vector<double> Run::Davidson(const Operator& hamiltonian,
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;
   solver.m_roots=nState;
+  profiler->stop("Davidson preamble");
   solver.solve(gg,ww);
   profiler->stop("Davidson");
   while (ww.size()>0) { delete ww.back(); ww.pop_back(); }

@@ -163,8 +163,8 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
     //    xout <<parallel_rank<<": "<<(*a).first<<","<<(*a).second<<std::endl;
     //  }
     profiler->stop("StringSet::addByOperators:distribute");
-    profiler->stop("StringSet::addByOperators[]");
     }
+    profiler->stop("StringSet::addByOperators[]");
 }
 
 void StringSet::addByOperators(const StringSet &referenceSpace, int annihilations, int creations, int sym, bool parallel)

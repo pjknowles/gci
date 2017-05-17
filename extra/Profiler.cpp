@@ -53,6 +53,7 @@ void Profiler::active(const int level, const int stopPrint)
 #include <assert.h>
 void Profiler::start(const std::string name)
 {
+//  std::cout << "Profiler::start level="<<level<<", name="<<name<<std::endl;
   level++;
   if (level>activeLevel) return;
   assert(level==resourcesStack.size()+1);
@@ -104,6 +105,7 @@ void Profiler::stop(const std::string name, long operations)
   level--;
   if (level > 0 && level>=activeLevel) return;
   assert(level==resourcesStack.size()-1);
+//  std::cout << "Profiler::stop level="<<level<<", name="<<name<<", resourcesStack.back().name="<<resourcesStack.back().name<<std::endl;
   assert(name=="" || name == resourcesStack.back().name);
   struct resources now=getResources();now.operations=operations;
   totalise(now,operations,1);
