@@ -1,13 +1,3 @@
-[submodule "ppidd"]
-	path = ppidd
-	url = https://bitbucket.org/pjknowles/ppidd
-[submodule "symmetry_matrix"]
-	path = symmetry_matrix
-	url = git@bitbucket.org:pjknowles/symmetry_matrix
-	fetchRecurseSubmodules = false
-[submodule "IterativeSolver"]
-	path = IterativeSolver
-	url = git@bitbucket.org:pjknowles/IterativeSolver
 [submodule "submodules/Profiler"]
 	path = submodules/Profiler
 	url = git@bitbucket.org:pjknowles/Profiler
