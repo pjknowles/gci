@@ -20,49 +20,70 @@
 #endif
 
 /*!
- * \brief The Profiler class: framework for timing code sections
+ * \brief The Profiler class: framework for timing code sections.
+ *
+ * Example of use:
+ * \code
+const size_t repeat=20000000, repeatr=1000000, repeats=10000000;
+{
+  Profiler profiler("A C++ profiling test",Profiler::name);
+
+  // Conventional use with stop/start pairs
+  profiler.start("sqrt");
+  double a=(double)0;
+  for (size_t i=0; i<repeat; i++) a*=std::sqrt(a+i)/std::sqrt(a+i+1);
+  profiler.stop("sqrt",2*repeat);
+
+  // Object approach controlled with scoping
+  {Profiler::Push s(profiler,"gettimeofday-Stack-1"); for (size_t i=0; i<repeats ; i++){ struct timeval time; gettimeofday(&time,NULL); } s+=repeats; }
+  {Profiler::Push s(profiler,"gettimeofday-Stack-2"); for (size_t i=0; i<repeats ; i++){ struct timeval time; gettimeofday(&time,NULL); ++s; } }
+
+  std::cout << profiler << std::endl; // print the results
+}
+ * \endcode
  */
 class Profiler
 {
   Profiler();
 public:
-  enum sortMethod { wall, cpu, name };
   /*!
-   * \brief Profiler construct a named instance
-   * \param name the title of this object
-   * \param sortBy Criterion for sorting printed result table
+   * \brief Sorting criteria for categories in report.
+   */
+  enum sortMethod { wall //!< Sort by real time.
+                    , cpu//!< Sort by CPU time.
+                    , name //!< Sort alphabetically by name.
+                    , calls //!< Sort by number of calls.
+                    , operations //!< Sort by number of operations.
+                  };
+  /*!
+   * \brief Profiler construct a named instance.
+   * \param name the title of this object.
+   * \param sortBy Criterion for sorting printed result table.
    * \param level
    * A large value means that data will always be accumulated; zero means that calls to start and stop do nothing.
    * \param communicator The MPI communicator over which statistics should be aggregated.
    */
-  Profiler(std::string name, sortMethod sortBy=wall, const int level=INT_MAX
+  Profiler(const std::string &name, sortMethod sortBy=wall, const int level=INT_MAX
 #ifdef PROFILER_MPI
-	   , const MPI_Comm communicator=MPI_COMM_WORLD
+           , const MPI_Comm communicator=MPI_COMM_WORLD
 #endif
            );
   /*!
-   * \brief reset the object
-   * \param name the title of this object
+   * \brief Reset the object.
+   * \param name The title of this object.
    */
-  void reset(const std::string name);
+  void reset(const std::string& name);
   /*!
-   * \brief start begin timing a code segment
-   * \param name name of the code segment
+   * \brief Begin timing a code segment.
+   * \param name Name of the code segment.
    */
-  void start(const std::string name);
+  void start(const std::string& name);
   /*!
-   * \brief stop finish timing a code segment
-   * \param name if given, must match the argument of the previous start call
-   * \param operations if given, a count of the number of operations (or whatever you like) carried out
+   * \brief Finish timing a code segment.
+   * \param name If given, must match the argument of the previous start call.
+   * \param operations If given, a count of the number of operations (or whatever you like) carried out.
    */
-  void stop(const std::string name="",long operations=0);
-  /*!
-   * \brief declare Ensure that a code segment is entered into the result table. This used to need to be called for
-   * any code segments for which start/stop is non-collective and therefore might not be called on some processes.
-   * It isn't necessary any more, and the routine is a dummy, provided only for backward compatibility.
-   * \param name name of the code segment
-   */
-  void declare(const std::string name="");
+  void stop(const std::string& name="",long operations=0);
   /*!
    * \brief active set the maximum stack depth at which data collection is done.
    * \param level
@@ -71,13 +92,23 @@ public:
    */
   void active(const int level=INT_MAX, const int stopPrint=-1);
   /*!
-   * \brief Generate a printable representation of the object
-   * \param verbosity how much to print
-   * \param cumulative whether to print cumulative (ie including all children) resources
-   * \param precision how many decimal places for seconds
+   * \brief Generate a printable representation of the object.
+   * Must be called by all MPI processes collectively.
+   * \param verbosity How much to print.
+   * \param cumulative Whether to print cumulative (ie including all children) resources.
+   * \param precision How many decimal places for seconds.
    * \return
    */
   std::string str(const int verbosity=0, const bool cumulative=false, const int precision=3) const;
+public:
+class Push;
+public:
+  /*!
+   * \brief Push to a new level on the stack of a Profiler object.
+   * \param name The name of the code segment to be profiled.
+   * \return An object that when destroyed will call the corresponding Profiler::stop.
+   */
+  Push push(const std::string& name="");
 
  public:
   struct resources {double cpu; double wall; int calls; long operations; std::string name; int64_t stack;
@@ -94,7 +125,8 @@ public:
   typedef std::map<std::string,struct Profiler::resources> resultMap;
 
   /*!
-   * \brief totals
+   * \brief Obtain a summary of the resources used for each category.
+   * Must be called by all MPI processes collectively.
    * \return std::map of \ref resources
    */
   resultMap totals() const;
@@ -104,9 +136,6 @@ public:
   template<class T> struct compareResources : std::binary_function<T,T,bool>
   { inline bool operator () (const T& _left, const T& _right)
     {
-//      std::cout<<"Compare "<<_left.first<<" and "<<_right.first<<std::endl;
-//      std::cout<<"compare "<<_left.second.wall<<" and "<<_right.second.wall<<std::endl;
-//      std::cout<<"compare "<<_left.second.cumulative->wall<<" and "<<_right.second.cumulative->wall<<std::endl;
         switch (_left.second.parent->m_sortBy) {
           case wall:
             if (_left.second.cumulative==NULL)
@@ -116,6 +145,14 @@ public:
             if (_left.second.cumulative==NULL)
               return _left.second.cpu < _right.second.cpu;
             return _left.second.cumulative->cpu < _right.second.cumulative->cpu;
+          case operations:
+            if (_left.second.cumulative==NULL)
+              return _left.second.operations < _right.second.operations;
+            return _left.second.cumulative->operations < _right.second.cumulative->operations;
+          case calls:
+            if (_left.second.cumulative==NULL)
+              return _left.second.calls < _right.second.calls;
+            return _left.second.cumulative->calls < _right.second.cumulative->calls;
           case name:
             return _left.second.name > _right.second.name;
           }
@@ -135,8 +172,40 @@ public:
 #ifdef PROFILER_MPI
 const MPI_Comm m_communicator;
 #endif
+public:
+/*!
+ * \brief An object that will execute Profiler::start on construction, and Profiler::stop on destruction.
+ */
+class Push{
+public:
+  /*!
+   * \brief Push to a new level on the stack of a Profiler object
+   * \param profiler The Profiler object
+   * \param name The name of the code segment to be profiled
+   */
+  Push(Profiler& profiler, const std::string & name)
+    : m_name(name), m_profiler(profiler), m_operations(0) {m_profiler.start(m_name);}
+  ~Push() {m_profiler.stop(m_name,m_operations);}
+  /*!
+   * \brief Advance the counter holding the notional number of operations executed in the code segment.
+   * \param operations The number of additional operations.
+   */
+  void operator+=(const int operations) { m_operations+=operations;}
+  /*!
+   * \brief Advance the counter holding the notional number of operations executed in the code segment.
+   */
+  void operator++() { m_operations++;}
+private:
+  Push();
+  const std::string m_name;
+  Profiler& m_profiler;
+  int m_operations;
 };
-  std::ostream& operator<<(std::ostream& os, Profiler & obj);
+
+};
+std::ostream& operator<<(std::ostream& os, Profiler & obj);
+
+
 
 extern "C" {
 #endif

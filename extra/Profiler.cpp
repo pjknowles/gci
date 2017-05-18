@@ -19,23 +19,24 @@
 #endif
 
 
-Profiler::Profiler(std::string name, sortMethod sortBy, const int level
+Profiler::Profiler(const std::string& name, sortMethod sortBy, const int level
 #ifdef PROFILER_MPI
-		   , const MPI_Comm communicator) : m_communicator(communicator
+		   , const MPI_Comm communicator
+#endif
+		   ) : m_sortBy(sortBy)
+#ifdef PROFILER_MPI
+, m_communicator(communicator
 #ifdef MOLPRO
 								   == MPI_COMM_WORLD ? MPI_Comm_f2c(PPIDD_Worker_comm()) : communicator
 #endif
-								   )
-#else
-		   )
+										       )
 #endif
-  , m_sortBy(sortBy)
 {
   reset(name);
   active(level);
 }
 
-void Profiler::reset(const std::string name)
+void Profiler::reset(const std::string &name)
 {
   Name=name;
   stopall();
@@ -52,9 +53,8 @@ void Profiler::active(const int level, const int stopPrint)
 }
 
 #include <assert.h>
-void Profiler::start(const std::string name)
+void Profiler::start(const std::string& name)
 {
-//  std::cout << "Profiler::start level="<<level<<", name="<<name<<std::endl;
   level++;
   if (level>activeLevel) return;
   assert(level==(int)resourcesStack.size()+1);
@@ -102,11 +102,10 @@ void Profiler::totalise(const struct resources now, const long operations, const
   results[key].calls += calls;
 }
 
-void Profiler::stop(const std::string name, long operations)
+void Profiler::stop(const std::string &name, long operations)
 {
   level--;
   if (level > 0 && level>=activeLevel) return;
-//  std::cout << "Profiler::stop level="<<level<<", name="<<name<<", resourcesStack.back().name="<<resourcesStack.back().name<<std::endl;
   assert(level==(int)resourcesStack.size()-1);
   assert(name=="" || name == resourcesStack.back().name);
   struct resources now=getResources();now.operations=operations;now.parent=this;
@@ -131,11 +130,6 @@ void Profiler::stop(const std::string name, long operations)
   resourcesStack.pop_back();
   startResources.pop_back();
   if (! resourcesStack.empty()) {now.name=resourcesStack.back().name; resourcesStack.back()=now;}
-}
-
-void Profiler::declare(const std::string name)
-{
-  // not very useful now that keys are full path, so abandon
 }
 
 void Profiler::stopall()
@@ -324,6 +318,8 @@ struct Profiler::resources Profiler::resources::operator-(const struct Profiler:
   return result;
 }
 
+Profiler::Push Profiler::push(const std::string &name) {return Push(*this,name);}
+
 // C binding
 extern "C" {
 #include <stdlib.h>
@@ -332,7 +328,6 @@ void* profilerNew(char* name) { return new Profiler(name); }
 void profilerReset(void* profiler, char* name) { Profiler* obj=(Profiler*)profiler; obj->reset(std::string(name)); }
 void profilerActive(void* profiler, int level, int stopPrint) { Profiler* obj=(Profiler*)profiler; obj->active(level,stopPrint); }
 void profilerStart(void* profiler, char* name) { Profiler* obj=(Profiler*)profiler; obj->start(std::string(name)); }
-void profilerDeclare(void* profiler, char* name) { Profiler* obj=(Profiler*)profiler; obj->declare(std::string(name)); }
 void profilerStop(void* profiler, char* name, long operations) { Profiler* obj=(Profiler*)profiler; obj->stop(std::string(name),operations); }
 char* profilerStr(void* profiler, int verbosity, int cumulative, int precision) { Profiler* obj=(Profiler*)profiler; std::string res = obj->str(verbosity,bool(cumulative), precision); char* result = (char*)malloc(res.size()+1); strcpy(result, res.c_str()); return result; }
 void profilerStrSubroutine(void*profiler, char* result, int maxResult, int verbosity, int cumulative, int precision) { strncpy(result, profilerStr(profiler, verbosity, cumulative, precision),maxResult-1);}

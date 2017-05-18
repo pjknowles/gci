@@ -513,26 +513,6 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
       buffer[i] = (double)0;
 
 //  xout <<std::endl<<"w in operatorOnWavefunction="<<w.str(2)<<std::endl;
-  profiler->declare("1-electron TransitionDensity");
-  profiler->declare("1-electron MXM");
-  profiler->declare("aa integrals");
-  profiler->declare("StringSet aa");
-  profiler->declare("aa1 loop");
-  profiler->declare("TransitionDensity aa");
-  profiler->declare("MXM aa");
-  profiler->declare("action aa");
-  profiler->declare("bb integrals");
-  profiler->declare("TransitionDensity bb");
-  profiler->declare("TransitionDensity preamble");
-  profiler->declare("MXM bb");
-  profiler->declare("action bb");
-  profiler->declare("ab integrals");
-  profiler->declare("StringSet iterator loops");
-  profiler->declare("TransitionDensity ab");
-  profiler->declare("MXM ab");
-  profiler->declare("action ab");
-  profiler->declare("1-electron alpha excitations");
-  profiler->declare("1-electron beta excitations");
   DivideTasks(99999999,1,1);
 
 //  xout << "h.bracket_integrals_a "<<h.bracket_integrals_a<<std::endl;
