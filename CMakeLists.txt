@@ -20,8 +20,7 @@ if(_fast)
   set (CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -fast")
 endif()
 
-file (GLOB SRCS src/*.cpp src/*.h src/*.F90 extra/*.cpp extra/*.h
-    submodules/Profiler/Profiler.h
+file (GLOB SRCS src/*.cpp src/*.h src/*.F90
     submodules/Profiler/Profiler.cpp
     submodules/memory/memory.F90 submodules/memory/bytestreamC.cpp submodules/memory/bytestreamF.F90
     submodules/symmetry_matrix/SMat.cpp submodules/symmetry_matrix/SMatfunction.cpp submodules/symmetry_matrix/Operator.cpp submodules/symmetry_matrix/SMatMat.cpp
@@ -38,12 +37,9 @@ file (GLOB SRCS src/*.cpp src/*.h src/*.F90 extra/*.cpp extra/*.h
 add_definitions(-DNOMAIN)
 add_executable(gci.exe ${SRCS})
 
-#find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 find_package (Eigen3 3.3 REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${EIGEN3_INCLUDE_DIR})
-include_directories(src extra submodules/Profiler submodules/FCIdump submodules/IterativeSolver submodules/symmetry_matrix submodules/memory submodules/molpro-plugin)
-
-get_filename_component(COMPILER_NAME  ${CMAKE_CXX_COMPILER} NAME)
+include_directories(src submodules/Profiler submodules/FCIdump submodules/IterativeSolver submodules/symmetry_matrix submodules/memory submodules/molpro-plugin)
 
 find_package(MPI REQUIRED)
 include_directories(${MPI_CXX_INCLUDE_PATH})
