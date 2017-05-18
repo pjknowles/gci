@@ -25,7 +25,7 @@ file (GLOB SRCS src/*.cpp src/*.h src/*.F90 extra/*.cpp extra/*.h
     submodules/Profiler/Profiler.cpp
     submodules/memory/memory.F90 submodules/memory/bytestreamC.cpp submodules/memory/bytestreamF.F90
     symmetry_matrix/SMat.cpp symmetry_matrix/SMatfunction.cpp symmetry_matrix/Operator.cpp symmetry_matrix/SMatMat.cpp
-    FCIdump/FCIdump.cpp
+    submodules/FCIdump/FCIdump.cpp
     IterativeSolver/IterativeSolver/ISDavidson.cpp
     IterativeSolver/IterativeSolver/ISDiis.cpp
     IterativeSolver/IterativeSolver/ISRSPT.cpp
@@ -37,7 +37,7 @@ file (GLOB SRCS src/*.cpp src/*.h src/*.F90 extra/*.cpp extra/*.h
 add_definitions(-DNOMAIN)
 add_executable(gci.exe ${SRCS})
 
-include_directories(src extra submodules/Profiler FCIdump IterativeSolver/IterativeSolver IterativeSolver IterativeSolver/Eigen symmetry_matrix submodules/memory)
+include_directories(src extra submodules/Profiler submodules/FCIdump IterativeSolver/IterativeSolver IterativeSolver IterativeSolver/Eigen symmetry_matrix submodules/memory)
 
 get_filename_component(COMPILER_NAME  ${CMAKE_CXX_COMPILER} NAME)
 
