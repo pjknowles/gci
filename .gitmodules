@@ -13,3 +13,6 @@
 [submodule "submodules/IterativeSolver"]
 	path = submodules/IterativeSolver
 	url = git@bitbucket.org:pjknowles/IterativeSolver
+[submodule "submodules/molpro-plugin"]
+	path = submodules/molpro-plugin
+	url = git@bitbucket.org:pjknowles/molpro-plugin
