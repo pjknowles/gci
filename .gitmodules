@@ -7,3 +7,12 @@
 [submodule "submodules/FCIdump"]
 	path = submodules/FCIdump
 	url = git@bitbucket.org:pjknowles/FCIdump
+[submodule "submodules/symmetry_matrix"]
+	path = submodules/symmetry_matrix
+	url = git@bitbucket.org:pjknowles/symmetry_matrix
+[submodule "submodules/IterativeSolver"]
+	path = submodules/IterativeSolver
+	url = git@bitbucket.org:pjknowles/IterativeSolver
+[submodule "submodules/ppidd"]
+	path = submodules/ppidd
+	url = git@bitbucket.org:pjknowles/ppidd
