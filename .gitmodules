@@ -1,5 +1,5 @@
 [submodule "FCIdump"]
-	path = FCIdump
+	path = submodules/FCIdump
 	url = https://bitbucket.org/pjknowles/FCIdump
 [submodule "ppidd"]
 	path = ppidd
