@@ -14,3 +14,6 @@
 [submodule "submodules/memory"]
 	path = submodules/memory
 	url = git@bitbucket.org:pjknowles/memory
+[submodule "submodules/FCIdump"]
+	path = submodules/FCIdump
+	url = git@bitbucket.org:pjknowles/FCIdump
