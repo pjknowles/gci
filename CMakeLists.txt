@@ -21,6 +21,8 @@ if(_fast)
 endif()
 
 file (GLOB SRCS src/*.cpp src/*.h src/*.F90 extra/*.cpp extra/*.h
+    submodules/Profiler/Profiler.h
+    submodules/Profiler/Profiler.cpp
     symmetry_matrix/memory/memory.F90 symmetry_matrix/memory/bytestreamC.cpp symmetry_matrix/memory/bytestreamF.F90
     symmetry_matrix/SMat.cpp symmetry_matrix/SMatfunction.cpp symmetry_matrix/Operator.cpp symmetry_matrix/SMatMat.cpp
     FCIdump/FCIdump.cpp
@@ -35,7 +37,7 @@ file (GLOB SRCS src/*.cpp src/*.h src/*.F90 extra/*.cpp extra/*.h
 add_definitions(-DNOMAIN)
 add_executable(gci.exe ${SRCS})
 
-include_directories(src extra FCIdump IterativeSolver/IterativeSolver IterativeSolver IterativeSolver/Eigen symmetry_matrix symmetry_matrix/memory)
+include_directories(src extra submodules/Profiler FCIdump IterativeSolver/IterativeSolver IterativeSolver IterativeSolver/Eigen symmetry_matrix symmetry_matrix/memory)
 
 get_filename_component(COMPILER_NAME  ${CMAKE_CXX_COMPILER} NAME)
 

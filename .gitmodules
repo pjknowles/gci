@@ -10,3 +10,6 @@
 [submodule "IterativeSolver"]
 	path = IterativeSolver
 	url = git@bitbucket.org:pjknowles/IterativeSolver
+[submodule "submodules/Profiler"]
+	path = submodules/Profiler
+	url = git@bitbucket.org:pjknowles/Profiler
