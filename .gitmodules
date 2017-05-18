@@ -13,6 +13,3 @@
 [submodule "submodules/IterativeSolver"]
 	path = submodules/IterativeSolver
 	url = git@bitbucket.org:pjknowles/IterativeSolver
-[submodule "submodules/ppidd"]
-	path = submodules/ppidd
-	url = git@bitbucket.org:pjknowles/ppidd
