@@ -30,15 +30,12 @@ extern MPI_Comm molpro_plugin_intercomm;
 extern bool molpro_plugin;
 
 // shared counter
-extern int64_t __nextval_counter;
-extern sharedCounter* _nextval_counter;
+extern std::unique_ptr<sharedCounter> _nextval_counter;
 inline long nextval(int64_t option=parallel_size){
-//  int64_t value; PPIDD_Nxtval(&option,&value); //xout <<std::endl<<"@nextval("<<option<<",rank="<<parallel_rank<<")="<<value<<std::endl;
-//  return value;
-  if (option < 0 ) {_nextval_counter->reset();return 0;}
-//  long value= _nextval_counter->increment();
-//  xout <<"nextval returning "<<value<<std::endl;
-//  return value;
+  if (option < 0 ) {
+      if (_nextval_counter==nullptr) _nextval_counter.reset(new sharedCounter());
+      _nextval_counter->reset();return 0;
+    }
   return _nextval_counter->increment();
 }
 

@@ -42,8 +42,7 @@ int gci::parallel_size=1;
 int gci::parallel_rank=0;
 bool gci::molpro_plugin=false;
 MPI_Comm gci::molpro_plugin_intercomm=MPI_COMM_NULL;
-sharedCounter* gci::_nextval_counter;
-int64_t gci::__nextval_counter=0;
+std::unique_ptr<sharedCounter> gci::_nextval_counter=nullptr;
 int64_t gci::__my_first_task=0;
 int64_t gci::__task=0;
 int64_t gci::__task_granularity=1;
@@ -66,7 +65,6 @@ int main(int argc, char *argv[])
   MPI_Init(&argc,&argv);
   MPI_Comm_size(MPI_COMM_WORLD,&parallel_size);
   MPI_Comm_rank(MPI_COMM_WORLD,&parallel_rank);
-  gci::_nextval_counter= new sharedCounter();
   if (parallel_rank > 0) freopen("/dev/null", "w", stdout);
   PluginGuest plugin("MOLPRO");
   if (plugin.active()) {
@@ -105,7 +103,6 @@ int main(int argc, char *argv[])
   xout << "initial memory="<<memory_allocated<<", remaining memory="<<memory_remaining()<<std::endl;
   if (plugin.active())
     plugin.send("");
-  delete _nextval_counter;
   MPI_Finalize();
   return 0;
 }

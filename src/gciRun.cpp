@@ -146,6 +146,7 @@ std::unique_ptr<Profiler> gci::profiler=nullptr;
 std::vector<double> Run::run()
 {
   if (profiler==nullptr) profiler.reset(new Profiler("GCI"));
+  _nextval_counter.reset(new sharedCounter());
   profiler->reset("GCI");
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
   MPI_Comm_rank(MPI_COMM_WORLD,&parallel_rank);
@@ -262,6 +263,7 @@ std::vector<double> Run::run()
     xout << "Unknown method in GCI, " << method << std::endl;
   }
   xout <<profiler->str(parameter("PROFILER",std::vector<int>(1,-1)).at(0)) <<std::endl;
+  _nextval_counter.reset(nullptr);
   return energies;
 }
 
