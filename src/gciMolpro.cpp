@@ -1,30 +1,54 @@
 #include "gciMolpro.h"
+#include <Eigen/Dense>
 #ifndef MOLPRO
+
+static bool eigen=true;
+using namespace Eigen;
 
 void MxmDrvNN(double *Out, double *A, double *B, uint nRows, uint nLink, uint nCols, bool AddToDest)
 {
-  if (! AddToDest)
-    for (uint s=0; s<nCols; s++)
-      for (uint r=0; r<nRows; r++)
-        Out[r+s*nRows]=(double)0;
-  for (uint s=0; s<nCols; s++)
-    for (uint r=0; r<nRows; r++)
-      for (uint t=0; t<nLink; t++)
-        Out[r+s*nRows] +=
-            A[r+t*nRows] * B[t+s*nLink];
+  if (eigen) {
+      Map<MatrixXd, Unaligned, Stride<Dynamic,Dynamic> > Am(A,nRows,nLink,Stride<Dynamic,Dynamic>(nRows,1));
+      Map<MatrixXd, Unaligned, Stride<Dynamic,Dynamic> > Bm(B,nLink,nCols,Stride<Dynamic,Dynamic>(nCols,1));
+      Map<MatrixXd, Unaligned, Stride<Dynamic,Dynamic> > Outm(Out,nRows,nCols,Stride<Dynamic,Dynamic>(nRows,1));
+      if (AddToDest)
+        Outm += Am * Bm;
+      else
+        Outm = Am * Bm;
+    } else {
+      if (! AddToDest)
+        for (uint s=0; s<nCols; s++)
+          for (uint r=0; r<nRows; r++)
+            Out[r+s*nRows]=(double)0;
+      for (uint s=0; s<nCols; s++)
+        for (uint r=0; r<nRows; r++)
+          for (uint t=0; t<nLink; t++)
+            Out[r+s*nRows] +=
+                A[r+t*nRows] * B[t+s*nLink];
+    }
 }
 
 void MxmDrvTN(double *Out, const double * A, double *B, uint nRows, uint nLink, uint nStrideLink, uint nCols, bool AddToDest)
 {
-  if (! AddToDest)
-    for (uint s=0; s<nCols; s++)
-      for (uint r=0; r<nRows; r++)
-        Out[r+s*nRows]=(double)0;
-  for (uint s=0; s<nCols; s++)
-    for (uint r=0; r<nRows; r++)
-      for (uint t=0; t<nLink; t++)
-        Out[r+s*nRows] +=
-            A[r*nStrideLink+t] * B[t+s*nLink];
+  if (eigen) {
+      Map<MatrixXd, Unaligned, Stride<Dynamic,Dynamic> > Am(const_cast<double*>(A),nRows,nLink,Stride<Dynamic,Dynamic>(1,nStrideLink));
+      Map<MatrixXd, Unaligned, Stride<Dynamic,Dynamic> > Bm(B,nLink,nCols,Stride<Dynamic,Dynamic>(nCols,1));
+      Map<MatrixXd, Unaligned, Stride<Dynamic,Dynamic> > Outm(Out,nRows,nCols,Stride<Dynamic,Dynamic>(nRows,1));
+      if (AddToDest)
+        Outm += Am * Bm;
+      else
+        Outm = Am * Bm;
+    } else {
+      if (! AddToDest)
+        for (uint s=0; s<nCols; s++)
+          for (uint r=0; r<nRows; r++)
+            Out[r+s*nRows]=(double)0;
+      for (uint s=0; s<nCols; s++)
+        for (uint r=0; r<nRows; r++)
+          for (uint t=0; t<nLink; t++)
+            Out[r+s*nRows] +=
+                A[r*nStrideLink+t] * B[t+s*nLink];
+    }
 }
 
 void MxmDrvGen( double *Out, uint nRowStOut, uint nColStOut,
