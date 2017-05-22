@@ -85,6 +85,7 @@ public:
      * \brief Fill this object with the action of an operator on another wavefunction
      * \param h the operator
      * \param w the wavefunction
+     * \param parallel_stringset whether to use parallel algorithm in StringSet construction
      */
   void operatorOnWavefunction(const Operator& h, const Wavefunction &w, bool parallel_stringset=false);
 

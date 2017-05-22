@@ -31,6 +31,7 @@ public:
      * \param annihilations number of annihilations to make
      * \param creations number of creations to make
      * \param sym specify symmetry of String objects; -1 denotes all symmetries
+     * \param parallel whether to use parallel algorithm
      */
   StringSet(const StringSet &referenceSpace, int annihilations, int creations, int sym=-1, bool parallel=false);
   /*!
@@ -39,6 +40,7 @@ public:
      * \param annihilations number of annihilations to make
      * \param creations number of creations to make
      * \param sym specify symmetry of String objects; -1 denotes all symmetries
+     * \param parallel whether to use parallel algorithm
      */
   StringSet(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym=-1,bool parallel=false);
   /*!
@@ -73,6 +75,7 @@ public:
      * \param annihilations
      * \param creations
      * \param sym specify symmetry of String objects; -1 denotes all symmetries
+     * \param parallel whether to use parallel algorithm
      */
   void addByOperators(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym=-1,bool parallel=false);
   /*!
