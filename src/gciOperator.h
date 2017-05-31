@@ -52,7 +52,7 @@ public:
    * - "P" 1-Q
    */
   explicit Operator(const std::string special, const Operator &source, const bool forceSpinUnrestricted=false);
-  ~Operator();
+  virtual ~Operator();
   void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load integrals from FCIDUMP */
   void load(FCIdump* dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */
   void unload(); /**< \brief destroy loaded integrals */

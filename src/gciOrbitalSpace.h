@@ -23,6 +23,7 @@ public:
      \param verbosity : how much to print
     */
   OrbitalSpace(FCIdump* dump, int verbosity=0);
+  virtual ~OrbitalSpace(){}
 
   void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load from FCIDUMP */
   void load(FCIdump* dump, int verbosity=0); /**< \brief load from FCIDUMP */

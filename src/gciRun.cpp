@@ -315,7 +315,7 @@ std::vector<double> Run::DIIS(const Operator &hamiltonian, const State &prototyp
   d.diagonalOperator(h);
   Wavefunction g(d);
   size_t reference = d.minloc();
-  double e0=d.at(reference);
+//  double e0=d.at(reference);
   //  g -= (e0-(double)1e-10);
   //    xout << "Diagonal H: " << g.str(2) << std::endl;
   _preconditioning_diagonals = &d;
