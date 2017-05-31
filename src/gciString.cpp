@@ -9,6 +9,7 @@ size_t gci::String::StringNotFound=(size_t)-1; ///< conventional null value for 
 size_t gci::String::keyUnassigned=(size_t)-1; ///< conventional null value for key
 
 String::String(const State* State, const int Spin)
+  : spin(Spin)
 {
   if (State == NULL) {
     orbitalSpace=NULL;
@@ -16,7 +17,6 @@ String::String(const State* State, const int Spin)
     orbitalSpace=State->orbitalSpace;
   }
   nullify();
-  spin=Spin;
 }
 
 String::String(const std::vector<char> bytestream, const State *State)

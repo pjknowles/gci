@@ -49,6 +49,7 @@ public:
   /*!
      * \brief Genenerate a printable representation of the object
      * \param verbosity How much to print
+     * \param columns Page width
      * \return
      */
   std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
