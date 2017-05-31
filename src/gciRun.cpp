@@ -422,7 +422,7 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
   g -= (e0-(double)1e-10);
   std::vector<double> e;
   //  xout << "Denominators: " << g.str(2) << std::endl;
-  gci::File h0file; h0file.name="H0"; g.put(h0file);
+  gci::File h0file; h0file.name="H0"; g.putw(h0file);
   gci::File wfile; wfile.name="Wavefunction vectors";
   gci::File gfile; gfile.name="Action vectors";
   w.set((double)0); w.set(reference, (double) 1);
@@ -430,12 +430,12 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
   std::vector<double> elast(nState,e0+1);
   profiler->stop("Davidson preamble");
   for (int n=0; n < maxIterations; n++) {
-    w.put(wfile,n);
+    w.putw(wfile,n);
     g.set((double)0);
     profiler->start("Davidson Hc");
     g.operatorOnWavefunction(hamiltonian, w);
     profiler->stop("Davidson Hc");
-    g.put(gfile,n);
+    g.putw(gfile,n);
     reducedHamiltonian.resize((size_t)(n+1)*(n+1));
     profiler->start("Davidson build rH");
     {
@@ -445,7 +445,7 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
     bool olddistw=w.distributed; w.distributed=true;
     bool olddistg=g.distributed; g.distributed=true;
     for (int i=0; i<n+1; i++) {
-      g.get(gfile,i);
+      g.getw(gfile,i);
       reducedHamiltonian[i+n*(n+1)] = g * w;
     }
     gsum(&reducedHamiltonian[n*(n+1)],n+1);
@@ -493,7 +493,7 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
     w.set((double)0);
     for (int i=0; i <= n; i++) {
 //      xout << "alpha "<<alpha[i]<<std::endl;
-      g.get(wfile,i);
+      g.getw(wfile,i);
       w.axpy(alpha[i] , &g);
     } // w contains current wavefunction
     double l2norm = w.norm((double)2);
@@ -514,7 +514,7 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
     std::vector<double> dPdmu(n+1);
     std::vector<double> dalphadmu(n+1);
     for (size_t i=0; i<=(size_t)n; i++){
-      w.get(wfile,i);
+      w.getw(wfile,i);
       dPdmu[i]=g*w;
       //      xout << "dPdmu[] "<<dPdmu[i]<<std::endl;
     }
@@ -537,7 +537,7 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
     if (compressive) {
       g.set((double)0);
       for (int i=0; i <= n; i++) {
-        w.get(wfile,i);
+        w.getw(wfile,i);
         g.axpy(alpha[i] , &w);
       } // g contains the current wavefunction
       w.set((double)0);
@@ -547,18 +547,18 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
     else // !compressive
       w.set((double)0);
     for (int i=0; i <= n; i++) {
-      g.get(wfile,i);
+      g.getw(wfile,i);
 //      w += energy*alpha[i] * g;
       w.axpy(energy*alpha[i] , &g);
-      g.get(gfile,i);
+      g.getw(gfile,i);
 //      w -= alpha[i] * g;
       w.axpy( -alpha[i] , &g);
     }
     // at this point we have the residual
-    g.get(h0file);
+    g.getw(h0file);
     //g -= (energy-e0); // Davidson
     // form update
-    w.put(h0file,1); // save a copy
+    w.putw(h0file,1); // save a copy
     double etruncate = parameter("ETRUNCATE",std::vector<double>(1,-1)).at(0);
 //    xout << "energyThreshold="<<energyThreshold<<std::endl;
     if (etruncate < 0) etruncate = energyThreshold;
@@ -567,13 +567,13 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
     double ePredicted = w.update(g,discarded,etruncate);
     // xout << "discarded="<<discarded<<std::endl;
     for (double etrunc=etruncate*.3; etrunc > 1e-50 && discarded > etruncate; etrunc*=0.3) {
-      w.get(h0file,1); // retrieve original
+      w.getw(h0file,1); // retrieve original
       ePredicted = w.update(g,discarded,etrunc);
       // xout << "etrunc="<<etrunc<<", discarded="<<discarded<<std::endl;
     }
     // orthogonalize to previous expansion vectors
     for (int i=0; i <= n; i++) {
-      g.get(wfile,i);
+      g.getw(wfile,i);
       double factor = -(g*w)/(g*g);
       gsum(&factor,1);
 //      w += factor*g;
@@ -605,7 +605,7 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
       w.set((double)0);
       bool olddist=w.distributed; w.distributed=true;
       for (int i=0; i <= n; i++) {
-        g.get(wfile,i);
+        g.getw(wfile,i);
         w.axpy(alpha[i] , &g);
       }
       w.gather();
@@ -664,16 +664,16 @@ std::vector<double> Run::RSPT(const std::vector<gci::Operator*>& hamiltonians,
   e[0]=g.at(reference);
   g-=e[0];g.set(reference,(double)1);
 //  xout << "Møller-Plesset denominators: " << g.str(2) << std::endl;
-  gci::File h0file; h0file.name="H0"; g.put(h0file);
+  gci::File h0file; h0file.name="H0"; g.putw(h0file);
   w.set((double)0); w.set(reference, (double) 1);
-  gci::File wfile; wfile.name="Wavefunction vectors"; w.put(wfile,0);
+  gci::File wfile; wfile.name="Wavefunction vectors"; w.putw(wfile,0);
   gci::File gfile; gfile.name="Action vectors";
   for (int k=0; k < (int) hamiltonians.size(); k++) {
     g.set((double)0);
 //    xout << "hamiltonian about to be applied to reference: "<< *hamiltonians[k] <<std::endl;
     g.operatorOnWavefunction(*hamiltonians[k],w);
 //    xout << "hamiltonian on reference: " << g.str(2) << std::endl;
-    g.put(gfile,k);
+    g.putw(gfile,k);
   }
   int nmax = maxOrder < maxIterations ? maxOrder : maxIterations+1;
   e.resize(nmax+1);
@@ -701,15 +701,15 @@ std::vector<double> Run::RSPT(const std::vector<gci::Operator*>& hamiltonians,
     bool olddistw=w.distributed; w.distributed=true;
     bool olddistg=g.distributed; g.distributed=true;
     w = -g;
-    g.get(h0file);
+    g.getw(h0file);
 //    xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
     w.set(reference,(double)0);
     w /= g;
 //     xout <<std::endl<< "Perturbed wavefunction, order="<<n<<": " << w.str(2) <<std::endl;
-    w.put(wfile,n);
+    w.putw(wfile,n);
     for (int k=1; k < (int) hamiltonians.size(); k++) {
       if (n+k > maxOrder) break;
-      g.get(gfile,k);
+      g.getw(gfile,k);
 //      xout <<"gfile "<<g.str(2)<<std::endl;
 //      xout <<"contribution from n="<<n<<", k="<<k<<" to E("<<n+k<<")="<<g*w<<std::endl;
       e[n+k]+=g*w;

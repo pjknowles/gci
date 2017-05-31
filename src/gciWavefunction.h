@@ -138,14 +138,14 @@ public:
    * \param f the file
    * \param index where on the file, in units of the size of the object
    */
-  void put(File& f, int index=0) override;
+  void putw(File& f, int index=0);
 
   /*!
    * \brief pull the local part of the object's buffer from a file
    * \param f the file
    * \param index where on the file, in units of the size of the object
    */
-  void get(File& f, int index=0);
+  void getw(File& f, int index=0);
 
   /*!
    * \brief pull the object's buffer from a file

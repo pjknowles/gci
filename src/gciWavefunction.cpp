@@ -749,37 +749,37 @@ SMat Wavefunction::naturalOrbitals()
     return natorb;
 }
 
-void Wavefunction::put(File& f, int index)
+void Wavefunction::putw(File& f, int index)
 {
-  profiler->start("Wavefunction::put");
+  auto p = profiler->push("Wavefunction::putw");
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   size_t offset = chunk*parallel_rank;
   if (chunk+offset > buffer.size()) chunk = buffer.size()-offset;
   if (offset < buffer.size())
     f.write(&buffer[offset],chunk,index*chunk);
-  profiler->stop("Wavefunction::put",chunk);
+  p+=chunk;
 }
 
 
-void Wavefunction::get(File& f, int index)
+void Wavefunction::getw(File& f, int index)
 {
-  profiler->start("Wavefunction::get");
+  auto p = profiler->push("Wavefunction::getw");
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   size_t offset = chunk*parallel_rank;
   if (chunk+offset > buffer.size()) chunk = buffer.size()-offset;
   if (offset < buffer.size())
     f.read(&buffer[offset],chunk,index*chunk);
-  profiler->stop("Wavefunction::get",chunk);
+  p+=chunk;
 }
 
 
 void Wavefunction::getAll(File& f, int index)
 {
-  profiler->start("Wavefunction::getAll");
-  get(f,index);
+  auto p = profiler->push("Wavefunction::getAll");
+  getw(f,index);
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   gather_chunks(&buffer[0],buffer.size(),chunk);
-  profiler->stop("Wavefunction::getAll",buffer.size());
+  p+=buffer.size();
 }
 
 void Wavefunction::gather()
