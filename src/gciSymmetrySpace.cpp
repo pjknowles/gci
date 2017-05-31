@@ -8,7 +8,7 @@ SymmetrySpace::SymmetrySpace(std::string title, int maxrank_) : std::vector<size
   Title=title;
 }
 
-std::string SymmetrySpace::str(int verbosity) const
+std::string SymmetrySpace::str(int verbosity, unsigned int columns) const
 {
   if (verbosity < 0) return std::string("");
   std::ostringstream s;

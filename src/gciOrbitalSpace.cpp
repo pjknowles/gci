@@ -80,7 +80,7 @@ unsigned int OrbitalSpace::orbitalIndex(unsigned int i) const {
   return n;
 }
 
-std::string OrbitalSpace::str(int verbosity) const
+std::string OrbitalSpace::str(int verbosity, unsigned int columns) const
 {
   std::ostringstream o;
   o << SymmetrySpace::str(verbosity);

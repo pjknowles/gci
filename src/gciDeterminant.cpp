@@ -56,7 +56,7 @@ bool Determinant::next()
   return stringAlpha.next();
 }
 
-std::string Determinant::str(int verbosity) const
+std::string Determinant::str(int verbosity, unsigned int columns) const
 {
   return verbosity >= 0 ? stringAlpha.str()+"|"+stringBeta.str() : std::string("");
 }

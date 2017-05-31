@@ -40,7 +40,7 @@ public:
      * \param verbosity how much information to include
      * \return printable representation of the object
      */
-  std::string str(int verbosity=0) const;
+  std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
 
   /*!
      * \brief calculate canonical index of an orbital within its symmetry.

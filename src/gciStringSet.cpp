@@ -314,7 +314,7 @@ void StringSet::insert(String& s)
   //std::cout <<parallel_rank<< "StringSet::insert finished "<<std::endl;std::cout.flush();
 }
 
-std::string StringSet::str(int verbosity) const
+std::string StringSet::str(int verbosity, unsigned int columns) const
 {
   std::ostringstream s;
   if (verbosity >= -1) {

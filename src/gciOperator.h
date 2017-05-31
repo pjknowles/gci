@@ -8,6 +8,7 @@
 #include "SMat.h"
 #include <string>
 #include <vector>
+#include <climits>
 
 namespace gci {
 /**
@@ -61,7 +62,7 @@ public:
      * \param verbosity how much information to include
      * \return printable representation of the operator
      */
-  std::string str(int verbosity=0) const;
+  std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
   bool loaded;  /**< \brief whether the integrals are loaded */
   double coreEnergy; /**< \brief core energy */
   std::vector<double> *integrals_a;  /**< \brief point to aa integrals */

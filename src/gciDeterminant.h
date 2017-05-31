@@ -51,7 +51,7 @@ public:
      * \param verbosity How much to print
      * \return
      */
-  std::string str(int verbosity=0) const;
+  std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
 
 
   String stringAlpha; /*!< The String of alpha-spin orbitals that make up the determinant */

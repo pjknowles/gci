@@ -351,7 +351,7 @@ std::vector<double> TransitionDensity::density(Wavefunction &w)
   return result;
 }
 
-std::string TransitionDensity::str(int verbosity) const
+std::string TransitionDensity::str(int verbosity, unsigned int columns) const
 {
   if (verbosity < 0) return std::string("");
   std::ostringstream s;

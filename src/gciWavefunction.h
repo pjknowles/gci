@@ -121,7 +121,7 @@ public:
 
   size_t blockOffset(const unsigned int syma) const;
 
-  std::string str(int verbosity=0) const;
+  std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
 
   /*!
    * \brief axpy Add a multiple of another Wavefunction object to this one

@@ -127,7 +127,7 @@ std::vector<unsigned int> String::orbitals() const {
   return result;
 }
 
-std::string String::str(int verbosity) const {
+std::string String::str(int verbosity, unsigned int columns) const {
   std::string result;
 //      xout <<"String::str orbitals_[0]" <<orbitals_[0]<<std::endl;
 //  xout << "String::str length of orbitals_="<<orbitals_.size()<<std::endl;

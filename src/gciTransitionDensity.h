@@ -44,7 +44,7 @@ public:
    * \return  the 1-particle density matrix
    */
   std::vector<double> density(Wavefunction& w);
-  std::string str(int verbosity) const;
+  std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
 private:
   size_t nsa; ///< number of alpha strings
   size_t nsb; ///< number of beta strings

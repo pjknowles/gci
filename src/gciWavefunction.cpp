@@ -422,7 +422,7 @@ Wavefunction& gci::Wavefunction::operator -()
   return *this;
 }
 
-std::string Wavefunction::str(int verbosity) const
+std::string gci::Wavefunction::str(int verbosity, unsigned int columns) const
 {
   std::ostringstream s;
   if (verbosity >= 1) {

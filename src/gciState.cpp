@@ -54,7 +54,7 @@ void State::load(FCIdump* dump)
   //    xout << "basisSize=" << orbitalSpace->basisSize <<std::endl;
 }
 
-std::string State::str(int verbosity) const
+std::string State::str(int verbosity, unsigned int columns) const
 {
   //    xout << "State::printable orbitalSpace=" << (orbitalSpace != NULL) << verbosity << std::endl;
   //    xout << "basisSize=" << orbitalSpace->basisSize <<std::endl;

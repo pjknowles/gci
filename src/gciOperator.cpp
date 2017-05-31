@@ -447,7 +447,7 @@ void Operator::unload() {
   loaded=false;
 }
 
-std::string Operator::str(int verbosity) const
+std::string Operator::str(int verbosity, unsigned int columns) const
 {
   std::ostringstream o;
   o << OrbitalSpace::str(verbosity>3 ? verbosity : 0);

@@ -4,6 +4,7 @@
 
 #include "gciState.h"
 #include <vector>
+#include <climits>
 
 namespace gci {
 class StringSet;
@@ -62,7 +63,7 @@ public:
   bool first(int n=0, int sym=-1);
   std::vector<unsigned int> orbitals() const;  /*!< The orbitals that make up the string */
   size_t key; ///< \brief Hash key that can be associated with this object
-  std::string str(int verbosity=0) const;
+  std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
   int spin; ///< \brief spin 1=alpha, -1=beta
   /*!
      * \brief Calculate the spatial symmetry
