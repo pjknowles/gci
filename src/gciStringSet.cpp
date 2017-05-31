@@ -40,7 +40,7 @@ StringSet::StringSet(const std::vector<StringSet>& referenceSpaces, int annihila
 #include <string.h>
 void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym, bool parallel)
 {
-  profiler->start("StringSet::addByOperators[]");
+  auto p = profiler->push("StringSet::addByOperators[]");
   //std::cout <<"referenceSpaces="<<&referenceSpaces<<std::endl;std::cout.flush();
   //std::cout <<"referenceSpaces.size()="<<referenceSpaces.size()<<std::endl;std::cout.flush();
   if (parallel) {
@@ -58,7 +58,7 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
 #ifdef MPI_COMM_COMPUTE
   if (parallel) {
     EndTasks();
-    profiler->start("StringSet::addByOperators:distribute");
+    auto pp = profiler->push("StringSet::addByOperators:distribute");
     std::vector<char> serialised;
     for (StringSet::const_iterator s=begin(); s!=end(); s++) {
         std::vector<char> serialised1=s->serialise();
@@ -163,10 +163,8 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
     //  for (std::map<size_t,size_t> ::const_iterator a=addressMap.begin(); a!=addressMap.end(); a++)
     //    xout <<parallel_rank<<": "<<(*a).first<<","<<(*a).second<<std::endl;
     //  }
-    profiler->stop("StringSet::addByOperators:distribute");
     }
 #endif
-    profiler->stop("StringSet::addByOperators[]");
 }
 
 void StringSet::addByOperators(const StringSet &referenceSpace, int annihilations, int creations, int sym, bool parallel)
@@ -179,7 +177,7 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
   if ((int) referenceSpace.proto.nelec + creations - annihilations < 0
       || (int) referenceSpace.proto.nelec + creations - annihilations > (int) referenceSpace.proto.orbitals_.size())
     return; // null space because not enough electrons or holes left
-  profiler->start("addByOperators");
+  auto p = profiler->push("addByOperators");
   int symexc = (referenceSpace.symmetry>=0 && sym >=0) ? referenceSpace.symmetry ^ sym : -1 ; // use symmetry if we can
   for (StringSet::const_iterator s = referenceSpace.begin(); s != referenceSpace.end(); s++) {
     countall++;
@@ -225,7 +223,6 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
     }
   }
 //  xout << "addByOperators parallel="<<parallel<<", parallel_rank="<<parallel_rank<<", count="<<count<<", countall="<<countall<<std::endl;
-  profiler->stop("addByOperators",count);
 }
 
 void StringSet::setupPartialWeightArray()
@@ -276,7 +273,7 @@ long StringSet::binomial_coefficient(unsigned long n, unsigned long k) {
 
 void StringSet::complete(int sym)
 {
-  profiler->start("StringSet::complete");
+  auto p = profiler->push("StringSet::complete");
 //      xout <<"StringSet::complete prototype"<<proto.str(1)<<std::endl;
   String string(&proto);
   this->erase(this->begin(),this->end());
@@ -290,7 +287,6 @@ void StringSet::complete(int sym)
 //      xout << "in StringSet::complete final list: " <<std::endl ;
 //      for (iterator s=this->begin(); s!=this->end(); s++) xout << s->str()<<std::endl;
 
-  profiler->stop("StringSet::complete");
 }
 
 void StringSet::insert(String& s)

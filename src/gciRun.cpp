@@ -29,19 +29,22 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
     for (size_t k=0; k<psx.size(); k++) {
         const Wavefunction* x=dynamic_cast <const Wavefunction*> (psx[k]);
         Wavefunction* g=dynamic_cast <Wavefunction*> (outputs[k]);
-        profiler->start("density");
-//        SMat natorb=x->naturalOrbitals();
-        //    activeHamiltonian->rotate(&natorb);
-        profiler->stop("density");
-        profiler->start("Hc");
-        if (not append)
-            g->zero();
+        if (false)
+          {
+            auto p = profiler->push("density");
+//            SMat natorb=x->naturalOrbitals();
+//            activeHamiltonian->rotate(&natorb);
+          }
+        {
+          auto p = profiler->push("Hc");
+          if (not append)
+          g->zero();
 //        xout << "x in residual "<<x->str(2)<<std::endl;
 //        xout << "g "<<g->str(2)<<std::endl;
 //        xout <<"g->buffer"<<g->data()<<std::endl;
 //        xout << "activeHamiltonian "<<activeHamiltonian->str(2)<<std::endl;
-        g->operatorOnWavefunction(*activeHamiltonian, *x, parallel_stringset);
-        profiler->stop("Hc");
+          g->operatorOnWavefunction(*activeHamiltonian, *x, parallel_stringset);
+        }
 //        xout << "g=Hc "<<g->str(2)<<std::endl;
         if (_residual_subtract_Energy) {
             double cc = x->dot(x);
@@ -183,8 +186,8 @@ std::vector<double> Run::run()
   size_t referenceLocation;
   Determinant referenceDeterminant;
   State prototype;
-  profiler->start("find reference");
-  { // so that w goes out of scope
+  { // so that p, w go out of scope
+    auto p = profiler->push("find reference");
     Wavefunction w(globalFCIdump);
     w.diagonalOperator(hh);
     referenceLocation = w.minloc();
@@ -194,7 +197,6 @@ std::vector<double> Run::run()
     xout << "Lowest energy determinant " << referenceDeterminant <<" with energy "<<w.at(referenceLocation)<<std::endl;
     prototype = State(&hh,w.nelec,w.symmetry,w.ms2);
   }
-  profiler->stop("find reference");
   if (parameter("EXPLICIT1").at(0)==0 && method != "RSPT") hh.constructBraKet(
         referenceDeterminant.nelec+referenceDeterminant.ms2,
         referenceDeterminant.nelec-referenceDeterminant.ms2
@@ -297,9 +299,8 @@ using namespace itf;
 std::vector<double> Run::DIIS(const Operator &hamiltonian, const State &prototype, double energyThreshold, int maxIterations)
 {
   Operator h(hamiltonian);
-  profiler->start("DIIS");
-  profiler->start("DIIS preamble");
-//  xout << "on entry to Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
+  auto p = profiler->push("DIIS");
+  //  xout << "on entry to Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
   if (maxIterations < 0)
     maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
   xout << "MAXIT="<<maxIterations<<std::endl;
@@ -310,16 +311,16 @@ std::vector<double> Run::DIIS(const Operator &hamiltonian, const State &prototyp
   if (_residual_q>0) {
       xout << "q="<<_residual_q<<std::endl;
       _residual_Q =new Operator("Q",hamiltonian,true);
-//      xout << "Q operator" <<std::endl<<*_residual_Q<<std::endl;
+      //      xout << "Q operator" <<std::endl<<*_residual_Q<<std::endl;
     }
-//  Operator P("P",hamiltonian,true);
-//  xout << "P operator" <<std::endl<<P<<std::endl;
+  //  Operator P("P",hamiltonian,true);
+  //  xout << "P operator" <<std::endl<<P<<std::endl;
   Wavefunction w(prototype);
   Wavefunction d(w);
   d.diagonalOperator(h);
   Wavefunction g(d);
   size_t reference = d.minloc();
-//  double e0=d.at(reference);
+  //  double e0=d.at(reference);
   //  g -= (e0-(double)1e-10);
   //    xout << "Diagonal H: " << g.str(2) << std::endl;
   _preconditioning_diagonals = &d;
@@ -348,7 +349,7 @@ std::vector<double> Run::Davidson(const Operator& hamiltonian,
                                   double energyThreshold, int nState, int maxIterations)
 {
   Operator h(hamiltonian);
-  profiler->start("Davidson");
+  auto p = profiler->push("Davidson");
   profiler->start("Davidson preamble");
   //  xout << "on entry to Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
   if (maxIterations < 0)
@@ -385,7 +386,6 @@ std::vector<double> Run::Davidson(const Operator& hamiltonian,
   solver.m_roots=nState;
   profiler->stop("Davidson preamble");
   solver.solve(gg,ww);
-  profiler->stop("Davidson");
   while (ww.size()>0) { delete ww.back(); ww.pop_back(); }
   while (gg.size()>0) { delete gg.back(); gg.pop_back(); }
   return solver.eigenvalues();
@@ -397,7 +397,7 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
                                   const State &prototype,
                                   double energyThreshold, int nState, int maxIterations)
 {
-  profiler->start("Davidson");
+  auto p = profiler->push("Davidson");
   profiler->start("Davidson preamble");
   // xout << "on entry to Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
   if (nState < 0)
@@ -601,7 +601,7 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
     w *= ((double)1/std::sqrt(norm2));
     if (norm2 >(double) 1e-30 && econv > energyThreshold) continue;
 
-    { profiler->start("Histogram");
+    { auto p = profiler->push("Histogram");
       w.set((double)0);
       bool olddist=w.distributed; w.distributed=true;
       for (int i=0; i <= n; i++) {
@@ -631,10 +631,9 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
       SetVariables ("HISTOGRAM_X",&edges[0],(unsigned int)nhist, 0, "");
       SetVariables ("HISTOGRAM_Y",&fcumulative[0],(unsigned int)nhist, 0, "");
 #endif
-      profiler->stop("Histogram"); }
+    }
     break;
   }
-  profiler->stop("Davidson");
     return e;
 }
 

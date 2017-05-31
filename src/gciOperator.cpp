@@ -166,7 +166,7 @@ void Operator::load(std::string filename, int verbosity) {
 }
 
 void Operator::load(FCIdump* dump, int verbosity) {
-  profiler->start("Operator::load");
+  auto p = profiler->push("Operator::load");
   if (loaded) unload();
   if (verbosity) xout <<"Load hamiltonian from " << dump->fileName() <<std::endl;
   //    State::load(filename);
@@ -229,7 +229,6 @@ void Operator::load(FCIdump* dump, int verbosity) {
   }
   constructBraKet();
   //    xout <<str(3) <<std::endl;exit(0);
-  profiler->stop("Operator::load");
 }
 
 #define del(x) if (x != NULL && x->size()) delete x; x=NULL;
