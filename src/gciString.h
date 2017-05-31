@@ -77,6 +77,10 @@ public:
    */
   const key_type& key() {return m_key;}
   template<class T>
+  /*!
+   * \brief Generate the hash key that can be associated with this object by summing a partial weight array.
+   * \param partialWeightArray The partial weight array.
+   */
   void keygen(const std::vector<std::vector<T> > & partialWeightArray)
   {
     m_key=0;
