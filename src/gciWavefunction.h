@@ -57,7 +57,7 @@ public:
   std::vector<StringSet> betaStrings; ///< The beta-spin strings defining the CI basis
 
   void allocate_buffer(); ///< allocate buffer to full size
-  size_t size(); ///< the size of the space
+  size_t size() const; ///< the size of the space
 
   void diagonalOperator(const Operator& oper); ///< set this object to the diagonal elements of the hamiltonian
 
@@ -138,7 +138,7 @@ public:
    * \param f the file
    * \param index where on the file, in units of the size of the object
    */
-  void put(File& f, int index=0);
+  void put(File& f, int index=0) override;
 
   /*!
    * \brief pull the local part of the object's buffer from a file

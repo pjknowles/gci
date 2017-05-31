@@ -61,7 +61,7 @@ void Wavefunction::buildStrings()
   profiler->stop("buildStrings");
 }
 
-size_t Wavefunction::size()
+size_t Wavefunction::size() const
 {
   return dimension;
 }
