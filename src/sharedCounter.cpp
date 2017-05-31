@@ -2,23 +2,31 @@
 #include <numeric>
 
 sharedCounter::sharedCounter(MPI_Comm communicator)
+  : m_hostrank(0), m_rank(0), m_size(1)
 {
+#ifndef SHAREDCOUNTER_DUMMY
   MPI_Comm_size(communicator,&m_size);
-  m_hostrank=0;
   MPI_Comm_rank(communicator,&m_rank);
+#endif
 
   if (m_rank == m_hostrank) {
       m_data.assign((size_t)m_size,0);
+#ifndef SHAREDCOUNTER_DUMMY
       MPI_Win_create(&m_data[0], m_size * sizeof(int), sizeof(int),
           MPI_INFO_NULL, communicator, &m_win);
+#endif
     } else {
+#ifndef SHAREDCOUNTER_DUMMY
       MPI_Win_create(&m_data[0], 0, sizeof(int),
           MPI_INFO_NULL, communicator, &m_win);
+#endif
     }
 }
 sharedCounter::~sharedCounter()
 {
+#ifndef SHAREDCOUNTER_DUMMY
   MPI_Win_free(&m_win);
+#endif
 }
 
 void sharedCounter::reset()
@@ -32,6 +40,7 @@ void sharedCounter::reset()
 int sharedCounter::increment(int amount) {
   std::vector<int> vals(m_size);
 
+#ifndef SHAREDCOUNTER_DUMMY
   MPI_Win_lock(MPI_LOCK_EXCLUSIVE, m_hostrank, 0, m_win);
 
   for (int i=0; i<m_size; i++) {
@@ -44,6 +53,7 @@ int sharedCounter::increment(int amount) {
     }
 
   MPI_Win_unlock(0, m_win);
+#endif
 
   vals[m_rank] = m_myval;
   m_myval += amount;

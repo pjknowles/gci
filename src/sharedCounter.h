@@ -1,7 +1,15 @@
 #ifndef SHAREDCOUNTER_H
 #define SHAREDCOUNTER_H
+#if !defined(MOLPRO) || defined(GA_MPI) || defined(MPI2)
 #include "mpi.h"
+#else
+#define SHAREDCOUNTER_DUMMY
+#define MPI_Comm int
+#define MPI_Win int
+#define MPI_COMM_WORLD 0
+#endif
 #include <vector>
+#include <cstddef>
 
 
 class sharedCounter

@@ -13,9 +13,12 @@
 #include "gciMolpro.h"
 #endif
 
-#define MPI_COMM_COMPUTE MPI_COMM_WORLD
-
+#if !defined(MOLPRO) || defined(GA_MPI) || defined(MPI2)
 #include "mpi.h"
+#define MPI_COMM_COMPUTE MPI_COMM_WORLD
+#else
+#define MPI_COMM_NULL 0
+#endif
 
 
 #include <iostream>
@@ -85,12 +88,15 @@ inline void gather_chunks(double *buffer, const size_t length, const size_t chun
 //        xout << "nsa="<<nsa<<std::endl;
 //        xout << "displ:"; for (size_t i=0; i<(size_t)parallel_size; i++) xout <<" "<<displs[i]; xout <<std::endl;
 //        xout << "recvcounts:"; for (size_t i=0; i<(size_t)parallel_size; i++) xout <<" "<<recvcounts[i]; xout <<std::endl;
+#ifdef MPI_COMM_COMPUTE
         MPI_Allgatherv(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,buffer,&recvcounts[0],&displs[0],MPI_DOUBLE,MPI_COMM_COMPUTE);
+#endif
       }
 }
 
 void inline gsum(double* buffer, const size_t len)
 {
+#ifdef MPI_COMM_COMPUTE
   std::vector<double>result;
   if (parallel_rank == 0)
     result.resize(len);
@@ -98,6 +104,7 @@ void inline gsum(double* buffer, const size_t len)
   if (parallel_rank == 0)
     std::memcpy(buffer,&result[0],sizeof(double)*len);
   MPI_Bcast(buffer,(int)len,MPI_DOUBLE,0,MPI_COMM_COMPUTE);
+#endif
 }
 
 
