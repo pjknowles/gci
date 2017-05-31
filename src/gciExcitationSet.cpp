@@ -23,7 +23,7 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
         int phase = (annihilations > 0) ? tt.destroy(i+1) : tt.create(i+1);
         if (phase) {
             tt.keygen(to.PartialWeightArray);
-            size_t ti=to.addressMap.find(tt.key)->second;
+            size_t ti=to.addressMap.find(tt.key())->second;
             emplace_back(ti,phase,ii);
         }
         ii++;
@@ -44,7 +44,7 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
             int phase = (annihilations > 1) ? phasea*tt.destroy(i+1) : phasea*tt.create(i+1);
             if (phase) {
                 tt.keygen(to.PartialWeightArray);
-              size_t ti=to.addressMap.find(tt.key)->second;
+              size_t ti=to.addressMap.find(tt.key())->second;
               if (ti>= to.size()) {
                 xout <<"i="<<i+1<<" phase="<<phase<<" ti="<<ti<<" tt="<<tt.str()<<std::endl;
                 throw std::range_error("index error in ExcitationSet");

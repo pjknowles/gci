@@ -71,13 +71,17 @@ public:
    */
   typedef size_t key_type;
   const std::vector<orbital_type> &orbitals() const;  /*!< The orbitals that make up the string */
-  key_type key; ///< \brief Hash key that can be associated with this object
+  /*!
+   * \brief Hash key that can be associated with this object
+   * \return
+   */
+  const key_type& key() {return m_key;}
   template<class T>
   void keygen(const std::vector<std::vector<T> > & partialWeightArray)
   {
-    key=0;
+    m_key=0;
     for (auto k=0; k<m_orbitals.size(); k++)
-      key += partialWeightArray[k][m_orbitals[k]-1];
+      m_key += partialWeightArray[k][m_orbitals[k]-1];
   }
 
   std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
@@ -113,6 +117,7 @@ public:
    */
   std::vector<char> serialise() const;
 private:
+  key_type m_key; ///< \brief Hash key that can be associated with this object
   std::vector<orbital_type> m_orbitals; /*!< The orbitals that make up the string */
   int_least8_t m_spin; ///< \brief spin 1=alpha, -1=beta
 };

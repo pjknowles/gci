@@ -117,7 +117,7 @@ void String::nullify()
   ms2=0;
   nelec=0;
   symmetry=0;
-  key=keyUnassigned;
+  m_key=keyUnassigned;
 }
 
 const std::vector<String::orbital_type> &String::orbitals() const {
@@ -141,7 +141,7 @@ std::string String::str(int verbosity, unsigned int columns) const {
 //      xout << "end of loop occ orbital"<<std::endl;
     std::stringstream ss;
     ss << " [";
-    if (key != keyUnassigned) ss << key << ".";
+    if (m_key != keyUnassigned) ss << m_key << ".";
     ss << computed_symmetry()+1 <<"]"; // internally symmetries are implemented 0-7, but externally as 1-8
     std::string rr;
     ss >> rr;
@@ -213,11 +213,11 @@ String String::exhausted;
 size_t String::index(const StringSet& set) const
 {
   std::map<size_t,size_t>::const_iterator i;
-  i = set.addressMap.find(key);
+  i = set.addressMap.find(m_key);
   return (i == set.addressMap.end()) ? StringNotFound : i->second;
 }
 
 bool String::operator ==(const String& other) const
 {
-  return key == other.key;
+  return m_key == other.m_key;
 }
