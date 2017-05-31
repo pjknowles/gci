@@ -27,7 +27,7 @@ Wavefunction::Wavefunction(const State& state) : State(state) {
   buildStrings();
 }
 
-Wavefunction::Wavefunction(const Wavefunction &other) : State(other)
+Wavefunction::Wavefunction(const Wavefunction &other) : LinearAlgebra::vector<double>(), State(other)
 {
   distributed = false;
   alphaStrings.resize(8); betaStrings.resize(8);
