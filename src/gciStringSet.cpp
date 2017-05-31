@@ -18,11 +18,10 @@ StringSet::StringSet(String prototype, bool all, int sym) : std::vector<String>(
   if (all) complete(sym);
 }
 
+// not actually used?
 void StringSet::makekey(String &s)
 {
-  s.key=0;
-  for (int k=0; k<(int)s.orbitals().size(); k++)
-    s.key+= PartialWeightArray[k][s.orbitals()[k]-1];
+  s.keygen(PartialWeightArray);
 }
 
 StringSet::StringSet(const StringSet &referenceSpace, int annihilations, int creations, int sym, bool parallel)
@@ -293,9 +292,7 @@ void StringSet::insert(String& s)
 {
 //    std::cout <<parallel_rank<< "StringSet::insert "<<s.str()<<std::endl;std::cout.flush();
 //    xout <<parallel_rank<< "addressMap has "<<addressMap.size()<<" entries; size()="<<size()<<std::endl;
-  s.key=0;
-  for (int k=0; k<(int)s.orbitals().size(); k++)
-    s.key+= PartialWeightArray[k][s.orbitals()[k]-1];
+  s.keygen(PartialWeightArray);
 //  xout << "s.key="<<s.key<<", s.orbitals().size()="<<s.orbitals().size()<<std::endl;
   if (addressMap.count(s.key)) {
 //        std::cout <<parallel_rank<<" "<<size()<<" "<<addressMap.count(s.key)<< "StringSet::insert found existing"<<std::endl;std::cout.flush();

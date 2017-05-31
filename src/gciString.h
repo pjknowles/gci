@@ -72,6 +72,14 @@ public:
   typedef size_t key_type;
   const std::vector<orbital_type> &orbitals() const;  /*!< The orbitals that make up the string */
   key_type key; ///< \brief Hash key that can be associated with this object
+  template<class T>
+  void keygen(const std::vector<std::vector<T> > & partialWeightArray)
+  {
+    key=0;
+    for (auto k=0; k<m_orbitals.size(); k++)
+      key += partialWeightArray[k][m_orbitals[k]-1];
+  }
+
   std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
   /*!
      * \brief Calculate the spatial symmetry
