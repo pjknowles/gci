@@ -18,12 +18,6 @@ StringSet::StringSet(String prototype, bool all, int sym) : std::vector<String>(
   if (all) complete(sym);
 }
 
-// not actually used?
-void StringSet::makekey(String &s)
-{
-  s.keygen(PartialWeightArray);
-}
-
 StringSet::StringSet(const StringSet &referenceSpace, int annihilations, int creations, int sym, bool parallel)
 {
   //std::cout<<"crashing"<<std::endl;std::cout.flush();MPI_Abort(MPI_COMM_COMPUTE,12345);

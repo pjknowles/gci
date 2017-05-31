@@ -112,7 +112,6 @@ public:
 private:
   void setupPartialWeightArray();
   static long binomial_coefficient(unsigned long n, unsigned long k) ;
-  void makekey(String &s);
 };
 
 }
