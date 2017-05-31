@@ -5,6 +5,7 @@
 #include "gciState.h"
 #include <vector>
 #include <climits>
+#include <cstdint>
 
 namespace gci {
 class StringSet;
@@ -22,7 +23,7 @@ public:
    * \param State Some State object from which to copy number of electrons etc for bound checking, and to define orbital symmetries
    * \param spin 1=alpha, -1=beta
 */
-  String(const State *State=NULL, const int spin=1);
+  String(const State *State=NULL, const int Spin=1);
   /*!
    * \brief String Construct from a serialised representation of data
    * \param bytestream representation produced by previous invocation of serialise()
@@ -61,10 +62,17 @@ public:
     \return false if it was not possible to make even one string, otherwise true
     */
   bool first(int n=0, int sym=-1);
-  std::vector<unsigned int> orbitals() const;  /*!< The orbitals that make up the string */
-  size_t key; ///< \brief Hash key that can be associated with this object
+  /*!
+   * \brief Holds orbital labels. 8-bit unsigned is fine for up to 511 orbitals
+   */
+  typedef uint8_t orbital_type;
+  /*!
+   * \brief Holds hash keys
+   */
+  typedef size_t key_type;
+  const std::vector<orbital_type> &orbitals() const;  /*!< The orbitals that make up the string */
+  key_type key; ///< \brief Hash key that can be associated with this object
   std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
-  int spin; ///< \brief spin 1=alpha, -1=beta
   /*!
      * \brief Calculate the spatial symmetry
      * \param nocheck If false, check whether the result is equal to the maintained symmetry variable
@@ -74,7 +82,7 @@ public:
   static String exhausted; /*!< returned by next() when we're already on the last string */
 
 
-  static size_t keyUnassigned; ///< conventional null value for key
+  static key_type keyUnassigned; ///< conventional null value for key
   static size_t StringNotFound; ///< conventional null value for index
 
   /*!
@@ -97,8 +105,8 @@ public:
    */
   std::vector<char> serialise() const;
 private:
-  typedef uint8_t orbital_type;
-  std::vector<orbital_type> orbitals_; /*!< The orbitals that make up the string */
+  std::vector<orbital_type> m_orbitals; /*!< The orbitals that make up the string */
+  int_least8_t m_spin; ///< \brief spin 1=alpha, -1=beta
 };
 }
 

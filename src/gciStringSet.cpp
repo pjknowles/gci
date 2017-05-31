@@ -21,8 +21,8 @@ StringSet::StringSet(String prototype, bool all, int sym) : std::vector<String>(
 void StringSet::makekey(String &s)
 {
   s.key=0;
-  for (int k=0; k<(int)s.orbitals_.size(); k++)
-    s.key+= PartialWeightArray[k][s.orbitals_[k]-1];
+  for (int k=0; k<(int)s.orbitals().size(); k++)
+    s.key+= PartialWeightArray[k][s.orbitals()[k]-1];
 }
 
 StringSet::StringSet(const StringSet &referenceSpace, int annihilations, int creations, int sym, bool parallel)
@@ -175,7 +175,7 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
   symmetry = sym;
   //    xout << "in StringSet creator, referenceSpace="<<referenceSpace.str(5)<<std::endl;
   if ((int) referenceSpace.proto.nelec + creations - annihilations < 0
-      || (int) referenceSpace.proto.nelec + creations - annihilations > (int) referenceSpace.proto.orbitals_.size())
+      || (int) referenceSpace.proto.nelec + creations - annihilations > (int) referenceSpace.proto.orbitals().size())
     return; // null space because not enough electrons or holes left
   auto p = profiler->push("addByOperators");
   int symexc = (referenceSpace.symmetry>=0 && sym >=0) ? referenceSpace.symmetry ^ sym : -1 ; // use symmetry if we can
@@ -294,18 +294,18 @@ void StringSet::insert(String& s)
 //    std::cout <<parallel_rank<< "StringSet::insert "<<s.str()<<std::endl;std::cout.flush();
 //    xout <<parallel_rank<< "addressMap has "<<addressMap.size()<<" entries; size()="<<size()<<std::endl;
   s.key=0;
-  for (int k=0; k<(int)s.orbitals_.size(); k++)
-    s.key+= PartialWeightArray[k][s.orbitals_[k]-1];
-//  xout << "s.key="<<s.key<<", s.orbitals_.size()="<<s.orbitals_.size()<<std::endl;
+  for (int k=0; k<(int)s.orbitals().size(); k++)
+    s.key+= PartialWeightArray[k][s.orbitals()[k]-1];
+//  xout << "s.key="<<s.key<<", s.orbitals().size()="<<s.orbitals().size()<<std::endl;
   if (addressMap.count(s.key)) {
 //        std::cout <<parallel_rank<<" "<<size()<<" "<<addressMap.count(s.key)<< "StringSet::insert found existing"<<std::endl;std::cout.flush();
     if (addressMap[s.key] >= size()) throw std::logic_error("something wrong in StringSet reset");
     at(addressMap[s.key]) = s;
   } else {
-//        if (s.orbitals_.size()==0) std::cout <<parallel_rank<< "StringSet::insert found new"<<std::endl;std::cout.flush();
+//        if (s.orbitals().size()==0) std::cout <<parallel_rank<< "StringSet::insert found new"<<std::endl;std::cout.flush();
     addressMap[s.key]=size();
     std::vector<String>::push_back(s);
-//      if (s.orbitals_.size()==0) std::cout <<parallel_rank<<"StringSet::push_back " <<s <<" size()=" <<size()<<std::endl;std::cout.flush();
+//      if (s.orbitals().size()==0) std::cout <<parallel_rank<<"StringSet::push_back " <<s <<" size()=" <<size()<<std::endl;std::cout.flush();
   }
   //std::cout <<parallel_rank<< "StringSet::insert finished "<<std::endl;std::cout.flush();
 }
@@ -343,8 +343,8 @@ std::vector<double> StringSet::occupationNumbers()
     int stringoffset=0;
     for (StringSet::iterator s=this->begin(); s!=this->end(); s++)
     {
-      std::vector<unsigned int> orbitals = s->orbitals();
-      for (std::vector<unsigned int>::iterator i=orbitals.begin(); i !=orbitals.end(); i++) {
+      auto orbitals = s->orbitals();
+      for (auto i=orbitals.begin(); i !=orbitals.end(); i++) {
         //                xout << "StringSet::occupationNumbers stringoffset="<<stringoffset<<" *i="<<*i<<std::endl;
         result[stringoffset+(*i-1)*this->size()]=(double)1;
       }

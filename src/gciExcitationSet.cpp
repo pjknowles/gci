@@ -23,8 +23,8 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
         int phase = (annihilations > 0) ? tt.destroy(i+1) : tt.create(i+1);
         if (phase) {
           tt.key=0;
-          for (int k=0; k<(int)tt.orbitals_.size(); k++)
-            tt.key+= to.PartialWeightArray[k][tt.orbitals_[k]-1];
+          for (int k=0; k<(int)tt.orbitals().size(); k++)
+            tt.key+= to.PartialWeightArray[k][tt.orbitals()[k]-1];
           size_t ti=to.addressMap.find(tt.key)->second;
           push_back(Excitation(ti,phase,ii));
         }
@@ -45,8 +45,8 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
             String tt = a;
             int phase = (annihilations > 1) ? phasea*tt.destroy(i+1) : phasea*tt.create(i+1);
             if (phase) {
-              tt.key=0; for (int k=0; k<(int)tt.orbitals_.size(); k++) // can be speeded
-                tt.key+= to.PartialWeightArray[k][tt.orbitals_[k]-1];
+              tt.key=0; for (int k=0; k<(int)tt.orbitals().size(); k++) // can be speeded
+                tt.key+= to.PartialWeightArray[k][tt.orbitals()[k]-1];
               //                            xout<< "i="<<i+1<<", j="<<j+1<<", phase="<<phase<<", tt="<<tt<<std::endl;
               size_t ti=to.addressMap.find(tt.key)->second;
               if (tt.key == String::keyUnassigned || ti>= to.size()) {

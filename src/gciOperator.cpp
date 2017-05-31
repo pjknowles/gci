@@ -574,8 +574,8 @@ Operator Operator::FockOperator(const Determinant &reference) const
 //  xout << "FockOperator Reference alpha=beta: "<<closed<<std::endl;
   f.spinUnrestricted = spinUnrestricted || ! closed;
 //  xout << "FockOperator spinUnrestricted="<<f.spinUnrestricted<<std::endl;
-  std::vector<unsigned int> refAlphaOrbitals=reference.stringAlpha.orbitals();
-  std::vector<unsigned int> refBetaOrbitals=reference.stringBeta.orbitals();
+  auto refAlphaOrbitals=reference.stringAlpha.orbitals();
+  auto refBetaOrbitals=reference.stringBeta.orbitals();
   f.coreEnergy = coreEnergy;
   f.basisSize = basisSize;
   f.ijklSize = ijklSize;
@@ -585,7 +585,7 @@ Operator Operator::FockOperator(const Determinant &reference) const
   *f.integrals_a = *integrals_a;
   // xout <<"reference.stringAlpha.orbitals ";for (size_t i=0; i < reference.stringAlpha.orbitals().size(); i++) xout <<reference.stringAlpha.orbitals()[i]<<" ";xout <<std::endl;
   // for (std::vector<unsigned int>::const_iterator o=reference.stringAlpha.orbitals().begin(); o != reference.stringAlpha.orbitals().end(); o++)
-  for (std::vector<unsigned int>::const_iterator o=refAlphaOrbitals.begin(); o != refAlphaOrbitals.end(); o++)
+  for (auto o=refAlphaOrbitals.begin(); o != refAlphaOrbitals.end(); o++)
   {
     // xout << "FockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
   // xout<< "f alpha, alpha occ: " <<*o << std::endl;
@@ -595,7 +595,7 @@ Operator Operator::FockOperator(const Determinant &reference) const
         (*f.integrals_a)[int1Index(i,j)] += (*integrals_aa)[int2Index(i,j,*o,*o)] - (*integrals_aa)[int2Index(i,*o,*o,j)];
       }
   }
-  for (std::vector<unsigned int>::const_iterator o=refBetaOrbitals.begin(); o != refBetaOrbitals.end(); o++)
+  for (auto o=refBetaOrbitals.begin(); o != refBetaOrbitals.end(); o++)
   {
     // xout<< "f alpha, beta occ: " <<*o << std::endl;
     for (unsigned int i=1; i<=basisSize; i++)
@@ -615,7 +615,7 @@ Operator Operator::FockOperator(const Determinant &reference) const
   if (f.spinUnrestricted) {
     f.integrals_b = new std::vector<double>(ijSize,0.0);
     *f.integrals_b = *integrals_b;
-    for (std::vector<unsigned int>::const_iterator o=refBetaOrbitals.begin(); o != refBetaOrbitals.end(); o++)
+    for (auto o=refBetaOrbitals.begin(); o != refBetaOrbitals.end(); o++)
     {
       // xout<< "f beta, beta occ: " <<*o << std::endl;
       for (unsigned int i=1; i<=basisSize; i++)
@@ -624,7 +624,7 @@ Operator Operator::FockOperator(const Determinant &reference) const
           (*f.integrals_b)[int1Index(i,j)] += (*integrals_bb)[int2Index(i,j,*o,*o)] - (*integrals_bb)[int2Index(i,*o,*o,j)];
         }
     }
-    for (std::vector<unsigned int>::const_iterator o=refAlphaOrbitals.begin(); o != refAlphaOrbitals.end(); o++)
+    for (auto o=refAlphaOrbitals.begin(); o != refAlphaOrbitals.end(); o++)
     {
       // xout<< "f beta, alpha occ: " <<*o << std::endl;
       for (unsigned int i=1; i<=basisSize; i++)
