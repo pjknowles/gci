@@ -23,7 +23,7 @@ if(_i8)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -i8")
 endif()
 
-file (GLOB SRCS src/*.cpp src/*.h src/*.F90
+file (GLOB SRCS src/*.cpp src/*.F90
     submodules/Profiler/Profiler.cpp
     submodules/memory/memory.F90 submodules/memory/bytestreamC.cpp submodules/memory/bytestreamF.F90
     submodules/symmetry_matrix/SMat.cpp submodules/symmetry_matrix/SMatfunction.cpp submodules/symmetry_matrix/Operator.cpp submodules/symmetry_matrix/SMatMat.cpp
@@ -39,10 +39,10 @@ file (GLOB SRCS src/*.cpp src/*.h src/*.F90
     )
 add_definitions(-DNOMAIN)
 add_executable(gci.exe ${SRCS})
+include_directories(src submodules/Profiler submodules/FCIdump submodules/IterativeSolver submodules/symmetry_matrix submodules/memory submodules/molpro-plugin)
 
 find_package (Eigen3 3.3 REQUIRED)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${EIGEN3_INCLUDE_DIR})
-include_directories(src submodules/Profiler submodules/FCIdump submodules/IterativeSolver submodules/symmetry_matrix submodules/memory submodules/molpro-plugin)
+include_directories(${EIGEN3_INCLUDE_DIR})
 
 find_package(MPI REQUIRED)
 include_directories(${MPI_CXX_INCLUDE_PATH})
