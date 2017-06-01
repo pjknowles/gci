@@ -7,6 +7,7 @@
 #include "gciExcitationSet.h"
 #include "gciOrbitalSpace.h"
 #include "gciRun.h"
+#include "sharedCounter.h"
 #include "FCIdump.h"
 #include <iostream>
 #include <sstream>
@@ -72,7 +73,7 @@ int main(int argc, char *argv[])
       strcpy(fcidumpname,plugin.receive().c_str());
     }
   Run run(fcidumpname);
-  if (argc<2 || 
+  if (argc<2 ||
      plugin.active()) {
     run.addParameter("METHOD","DAVIDSON");
     // run.addParameter("PROFILER","0");

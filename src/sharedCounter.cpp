@@ -1,7 +1,8 @@
+#include "gciMolpro.h"
 #include "sharedCounter.h"
 #include <numeric>
 
-sharedCounter::sharedCounter(MPI_Comm communicator)
+sharedCounter::sharedCounter(const MPI_Comm& communicator)
   : m_hostrank(0), m_rank(0), m_size(1)
 {
 #ifndef SHAREDCOUNTER_DUMMY
@@ -60,4 +61,3 @@ int sharedCounter::increment(int amount) {
 //  std::cout << "vals[m_rank], m_myval"<<vals[m_rank]<<", "<<m_myval<<std::endl;
   return std::accumulate(vals.begin(),vals.end(),0); // first returned value is zero
 }
-

@@ -15,7 +15,7 @@
 class sharedCounter
 {
 public:
-  sharedCounter(MPI_Comm communicator=MPI_COMM_WORLD);
+  sharedCounter(const MPI_Comm& communicator=MPI_COMM_WORLD);
   ~sharedCounter();
   int increment(int amount=1);
   void reset();
