@@ -6,6 +6,7 @@
 #include "gciDeterminant.h"
 #include "gciOrbitalSpace.h"
 #include "SMat.h"
+#include "Operator.h"
 #include <string>
 #include <vector>
 #include <climits>
@@ -19,6 +20,12 @@ namespace gci {
 class OldOperator : public OrbitalSpace
 {
 public:
+
+  /*!
+   * \brief Construct from SymmetryMatrix::Operator
+   * \param source
+   */
+  OldOperator(const SymmetryMatrix::Operator& source);
 
   /*!
  \brief construct Operator object
@@ -153,6 +160,7 @@ public:
   void rotate(SMat const * rota, SMat const * rotb=NULL);
 
 private:
+  const SymmetryMatrix::Operator& m_Operator; ///< reference to the underlying operator
   size_t ijSize;
   size_t ijklSize;
   OldOperator& plusminusOperator(const OldOperator &other, const char operation='+');

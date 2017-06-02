@@ -10,7 +10,16 @@
 #include <iterator>
 #include <cmath>
 
+OldOperator::OldOperator(const SymmetryMatrix::Operator &source)
+  : m_Operator(source)
+{
+
+}
+
+static SymmetryMatrix::Operator dummyOperator{dim_t{},0};
+
 OldOperator::OldOperator(std::string filename) : OrbitalSpace(filename)
+  , m_Operator(dummyOperator)
 {
   bracket_integrals_a=bracket_integrals_b=NULL;
   bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
@@ -19,6 +28,7 @@ OldOperator::OldOperator(std::string filename) : OrbitalSpace(filename)
 }
 
 OldOperator::OldOperator(FCIdump* dump) : OrbitalSpace(dump)
+ , m_Operator(dummyOperator)
 {
   bracket_integrals_a=bracket_integrals_b=NULL;
   bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
@@ -28,6 +38,7 @@ OldOperator::OldOperator(FCIdump* dump) : OrbitalSpace(dump)
 
 OldOperator::OldOperator(const OldOperator &source)
   : OrbitalSpace(source)
+  , m_Operator(dummyOperator)
   ,loaded(source.loaded)
   , coreEnergy(source.coreEnergy)
   , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
@@ -37,6 +48,7 @@ OldOperator::OldOperator(const OldOperator &source)
 
 OldOperator::OldOperator(const OldOperator &source, const bool forceSpinUnrestricted, const bool oneElectron, const bool twoElectron)
   : OrbitalSpace(source)
+  , m_Operator(dummyOperator)
   ,loaded(source.loaded)
   , coreEnergy(source.coreEnergy)
   , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
@@ -46,6 +58,7 @@ OldOperator::OldOperator(const OldOperator &source, const bool forceSpinUnrestri
 
 OldOperator::OldOperator(const std::string special, const OldOperator &source, const bool forceSpinUnrestricted)
   : OrbitalSpace(source)
+  , m_Operator(dummyOperator)
   ,loaded(false)
   , coreEnergy(0)
   , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
