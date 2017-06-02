@@ -22,11 +22,11 @@ public:
      \param dump : if present, call load
      \param verbosity : how much to print
     */
-  OrbitalSpace(FCIdump* dump, int verbosity=0);
+  OrbitalSpace(const FCIdump &dump, int verbosity=0);
   virtual ~OrbitalSpace(){}
 
   void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load from FCIDUMP */
-  void load(FCIdump* dump, int verbosity=0); /**< \brief load from FCIDUMP */
+  void load(const FCIdump &dump, int verbosity=0); /**< \brief load from FCIDUMP */
 
   bool spinUnrestricted; /**< \brief whether alpha and beta spin orbitals are different */
   std::vector<unsigned int> orbital_symmetries;///< \brief spatial symmetry of orbitals (0-7)

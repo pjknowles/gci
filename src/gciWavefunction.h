@@ -30,7 +30,7 @@ public:
      *
      * @param dump points to an FCIdump object. If present, load is called.
      */
-  Wavefunction(FCIdump* dump);
+  Wavefunction(FCIdump &dump);
 
   /*!
      * \brief Construct a Wavefunction object linked to an OrbitalSpace

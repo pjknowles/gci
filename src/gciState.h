@@ -27,7 +27,7 @@ public:
      *
      * @param dump points to an FCIdump object. If present, load is called.
      */
-  State(FCIdump* dump);
+  State(FCIdump &dump);
   /*!
      * \brief Construct a State object linked to a OrbitalSpace
      * \param os The orbital space
@@ -54,7 +54,7 @@ public:
     load number of electrons, spin from FCIDUMP file.
      \param dump is an FCIdump object.
     */
-  void load(FCIdump* dump);
+  void load(const FCIdump &dump);
   /*!
       \brief
        Pointer to orbital basis set, if any

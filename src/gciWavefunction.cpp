@@ -8,7 +8,7 @@
 #include "Profiler.h"
 #include <algorithm>
 
-Wavefunction::Wavefunction(FCIdump *dump) : State(dump) {
+Wavefunction::Wavefunction(FCIdump &dump) : State(dump) {
   distributed = false;
   buildStrings();
 }

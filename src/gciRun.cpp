@@ -141,7 +141,7 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
 #include <memory>
 Run::Run(std::string fcidump)
 {
-  globalFCIdump = new FCIdump(fcidump);
+  globalFCIdump.reset(new FCIdump(fcidump));
 }
 
 std::unique_ptr<Profiler> gci::profiler=nullptr;
@@ -165,7 +165,7 @@ std::vector<double> Run::run()
 
   profiler->start("load Hamiltonian");
   auto hho=Operator::construct(*globalFCIdump);
-  OldOperator hh(globalFCIdump);
+  OldOperator hh(*globalFCIdump);
   parallel_stringset = parameter("PARALLEL_STRINGSET").at(0) != 0;
 
   bool test_rotation_of_hamiltonian=false;
@@ -188,7 +188,7 @@ std::vector<double> Run::run()
   State prototype;
   profiler->start("find reference");
   { // so that w goes out of scope
-    Wavefunction w(globalFCIdump);
+    Wavefunction w(*globalFCIdump);
     w.diagonalOperator(hh);
     referenceLocation = w.minloc();
     referenceDeterminant = w.determinantAt(referenceLocation);
@@ -791,7 +791,7 @@ std::vector<std::string> Run::parameter(std::string key, std::vector<std::string
   std::string r = GetOptionS(key.c_str(),"GCI");
   if (r != std::string("")) return std::vector<std::string>(1,r);
 #endif
-  if (globalFCIdump != NULL) return globalFCIdump->parameter(key,def);
+  if (globalFCIdump != nullptr) return globalFCIdump->parameter(key,def);
   return def;
 }
 
@@ -803,7 +803,7 @@ std::vector<int> Run::parameter(std::string key, std::vector<int> def)
 //  xout << "GetOptionI gives "<<r<<std::endl;
   if (r != (FORTINT) -1) return std::vector<int>(1,(int) r);
 #endif
-  if (globalFCIdump != NULL) return globalFCIdump->parameter(key,def);
+  if (globalFCIdump != nullptr) return globalFCIdump->parameter(key,def);
 //  xout <<"dropped through"<<std::endl;
   return def;
 }
@@ -814,6 +814,6 @@ std::vector<double> Run::parameter(std::string key, std::vector<double> def)
   FORTDBL r = GetOptionF(key.c_str(),"GCI");
   if (r != (FORTDBL) -1) return std::vector<double>(1,(double) r);
 #endif
-  if (globalFCIdump != NULL) return globalFCIdump->parameter(key,def);
+  if (globalFCIdump != nullptr) return globalFCIdump->parameter(key,def);
   return def;
 }

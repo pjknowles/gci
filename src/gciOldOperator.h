@@ -37,7 +37,7 @@ public:
      \brief construct Operator object
 
      \param dump : if present, call load
-    */   OldOperator(FCIdump* dump);
+    */   OldOperator(FCIdump& dump);
   /*!
    * \brief copy constructor
    * \param source
@@ -62,7 +62,7 @@ public:
   explicit OldOperator(const std::string special, const OldOperator &source, const bool forceSpinUnrestricted=false);
   virtual ~OldOperator();
   void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load integrals from FCIDUMP */
-  void load(FCIdump* dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */
+  void load(FCIdump &dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */
   void unload(); /**< \brief destroy loaded integrals */
   /*!
      * \brief Construct a printable representation of the operator

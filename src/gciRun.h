@@ -116,7 +116,7 @@ private:
      */
   std::vector<std::string> parameter(std::string key, std::vector<std::string> def);
 
-  FCIdump* globalFCIdump; // the FCIdump
+  std::unique_ptr<FCIdump> globalFCIdump; // the FCIdump
 };
 }
 

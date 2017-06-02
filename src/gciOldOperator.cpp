@@ -27,7 +27,7 @@ OldOperator::OldOperator(std::string filename) : OrbitalSpace(filename)
   if (filename != "") load(filename);
 }
 
-OldOperator::OldOperator(FCIdump* dump) : OrbitalSpace(dump)
+OldOperator::OldOperator(FCIdump &dump) : OrbitalSpace(dump)
  , m_Operator(dummyOperator)
 {
   bracket_integrals_a=bracket_integrals_b=NULL;
@@ -175,16 +175,16 @@ OldOperator::~OldOperator() {
 
 void OldOperator::load(std::string filename, int verbosity) {
   FCIdump d(filename);
-  load(&d, verbosity);
+  load(d, verbosity);
 }
 
-void OldOperator::load(FCIdump* dump, int verbosity) {
+void OldOperator::load(FCIdump& dump, int verbosity) {
   auto p = profiler->push("Operator::load");
   if (loaded) unload();
-  if (verbosity) xout <<"Load hamiltonian from " << dump->fileName() <<std::endl;
+  if (verbosity) xout <<"Load hamiltonian from " << dump.fileName() <<std::endl;
   //    State::load(filename);
 
-  basisSize = dump->parameter("NORB").at(0);
+  basisSize = dump.parameter("NORB").at(0);
 
   ijSize = total(0,1);
   ijklSize = pairSpace[1].total(0);
@@ -204,14 +204,14 @@ void OldOperator::load(FCIdump* dump, int verbosity) {
 
 
   {
-    dump->rewind();
+    dump.rewind();
 //  std::ifstream s;
-//  s.open(dump->fileName().c_str());
+//  s.open(dump.fileName().c_str());
 //  std::string ss;
   double value;
   FCIdump::integralType type;
   int i,j,k,l;
-  while ((type=dump->nextIntegral(i,j,k,l,value))!=FCIdump::endOfFile) {
+  while ((type=dump.nextIntegral(i,j,k,l,value))!=FCIdump::endOfFile) {
     if (type == FCIdump::I2aa) {
       if (verbosity>2) xout << "aa("<< i << j <<"|"<< k << l <<") [" << int2Index(i,j,k,l) << "]= " << value <<std::endl;
       if (verbosity>2) xout << "aa("<< k << l <<"|"<< i << j <<") [" << int2Index(k,l,i,j) << "]= " << value <<std::endl;
