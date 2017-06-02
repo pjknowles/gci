@@ -12,6 +12,7 @@
 #include "IterativeSolver/ISDiis.h"
 #include "IterativeSolver/ISRSPT.h"
 #include "IterativeSolver/ISDavidson.h"
+#include "gciOperator.h"
 using namespace gci;
 
 
@@ -163,7 +164,7 @@ std::vector<double> Run::run()
   xout << "METHOD="<<method<<std::endl;
 
   profiler->start("load Hamiltonian");
-//  SymmetryMatrix::Operator hho(globalFCIdump);
+  SymmetryMatrix::Operator hho=makeOperator(*globalFCIdump);
   OldOperator hh(globalFCIdump);
   parallel_stringset = parameter("PARALLEL_STRINGSET").at(0) != 0;
 
