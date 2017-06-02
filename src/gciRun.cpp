@@ -164,7 +164,7 @@ std::vector<double> Run::run()
   xout << "METHOD="<<method<<std::endl;
 
   profiler->start("load Hamiltonian");
-  SymmetryMatrix::Operator hho=makeOperator(*globalFCIdump);
+  auto hho=Operator::construct(*globalFCIdump);
   OldOperator hh(globalFCIdump);
   parallel_stringset = parameter("PARALLEL_STRINGSET").at(0) != 0;
 

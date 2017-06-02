@@ -21,7 +21,7 @@ public:
   /*!
    * \brief String Construct a vacuum object
    * \param State Some State object from which to copy number of electrons etc for bound checking, and to define orbital symmetries
-   * \param spin 1=alpha, -1=beta
+   * \param Spin 1=alpha, -1=beta
 */
   String(const State *State=NULL, const int Spin=1);
   /*!
