@@ -59,7 +59,7 @@ public:
   void allocate_buffer(); ///< allocate buffer to full size
   size_t size() const; ///< the size of the space
 
-  void diagonalOperator(const Operator& oper); ///< set this object to the diagonal elements of the hamiltonian
+  void diagonalOperator(const OldOperator& oper); ///< set this object to the diagonal elements of the hamiltonian
 
   /*!
      * \brief find the index of the smallest component
@@ -87,7 +87,7 @@ public:
      * \param w the wavefunction
      * \param parallel_stringset whether to use parallel algorithm in StringSet construction
      */
-  void operatorOnWavefunction(const Operator& h, const Wavefunction &w, bool parallel_stringset=false);
+  void operatorOnWavefunction(const OldOperator& h, const Wavefunction &w, bool parallel_stringset=false);
 
   /*!
    * \brief construct 1- and 2-particle density matrices

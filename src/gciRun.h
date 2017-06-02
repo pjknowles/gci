@@ -48,12 +48,12 @@ private:
    * \param maxIterations The maximum number of iterations to perform
    * \return the energies order by order
    */
-  std::vector<double> RSPT(const std::vector<Operator *> &hamiltonians,
+  std::vector<double> RSPT(const std::vector<OldOperator *> &hamiltonians,
          const State &prototype,
          int maxOrder=-1,
          double energyThreshold=-1,
          int maxIterations=-1);
-  std::vector<double> ISRSPT(const Operator &hamiltonian, const Operator &hamiltonian0,
+  std::vector<double> ISRSPT(const OldOperator &hamiltonian, const OldOperator &hamiltonian0,
          const State &prototype,
          int maxOrder=-1,
          double energyThreshold=-1,
@@ -69,10 +69,10 @@ private:
    * \param maxIterations The maximum number of iterations to perform
    * \return the energies for each state. Note that only the first nState energies are considered converged
    */
-  std::vector<double> Davidson(const Operator &hamiltonian,
+  std::vector<double> Davidson(const OldOperator &hamiltonian,
                                const State& prototype,
                                double energyThreshold=(double)-1, int nState=-1, int maxIterations=-1);
-  std::vector<double> CSDavidson(const Operator &hamiltonian,
+  std::vector<double> CSDavidson(const OldOperator &hamiltonian,
                                const State& prototype,
                                double energyThreshold=(double)-1, int nState=-1, int maxIterations=-1);
   /*!
@@ -84,11 +84,11 @@ private:
    * \param maxIterations The maximum number of iterations to perform
    * \return the energy of the state.
    */
-  std::vector<double> DIIS(const Operator &hamiltonian,
+  std::vector<double> DIIS(const OldOperator &hamiltonian,
                                const State& prototype,
                                double energyThreshold=(double)-1, int maxIterations=-1);
 
-  void HamiltonianMatrixPrint (Operator& hamiltonian, const State &prototype, int verbosity=0);
+  void HamiltonianMatrixPrint (OldOperator& hamiltonian, const State &prototype, int verbosity=0);
 
 public:
   /*!

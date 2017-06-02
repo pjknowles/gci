@@ -16,7 +16,7 @@ namespace gci {
  * Class holds hamiltonian or other operator for FCI or other calculation
  *
  */
-class Operator : public OrbitalSpace
+class OldOperator : public OrbitalSpace
 {
 public:
 
@@ -25,17 +25,17 @@ public:
 
  \param filename : if present, call load
 */
-  Operator(std::string filename="");
+  OldOperator(std::string filename="");
   /*!
      \brief construct Operator object
 
      \param dump : if present, call load
-    */   Operator(FCIdump* dump);
+    */   OldOperator(FCIdump* dump);
   /*!
    * \brief copy constructor
    * \param source
    */
-  Operator(const Operator& source);
+  OldOperator(const OldOperator& source);
   /*!
    * \brief general copy constructor
    * \param source
@@ -43,7 +43,7 @@ public:
    * \param oneElectron whether to copy the 1-electron part of source
    * \param twoElectron whether to copy the 2-electron part of source
    */
-  explicit Operator(const Operator &source, const bool forceSpinUnrestricted, const bool oneElectron=true, const bool twoElectron=true);
+  explicit OldOperator(const OldOperator &source, const bool forceSpinUnrestricted, const bool oneElectron=true, const bool twoElectron=true);
   /*!
    * \brief Construct an operator templated on another, but with a special specification
    * \param source
@@ -52,8 +52,8 @@ public:
    * - "Q" projector onto space containing satellite orbital
    * - "P" 1-Q
    */
-  explicit Operator(const std::string special, const Operator &source, const bool forceSpinUnrestricted=false);
-  virtual ~Operator();
+  explicit OldOperator(const std::string special, const OldOperator &source, const bool forceSpinUnrestricted=false);
+  virtual ~OldOperator();
   void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load integrals from FCIDUMP */
   void load(FCIdump* dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */
   void unload(); /**< \brief destroy loaded integrals */
@@ -123,18 +123,18 @@ public:
      * \param reference the reference Slater determinant
      * \return  the Fock operator
      */
-  Operator FockOperator(const Determinant& reference) const;
+  OldOperator FockOperator(const Determinant& reference) const;
 
-  Operator& operator+=(const Operator &other); ///< add another Operator
-  Operator& operator-=(const Operator &other); ///< subtract another Operator
-  Operator& operator*=(const double factor); ///< scale by a factor
-  Operator& operator=(const Operator &h1); ///< assignment overload
+  OldOperator& operator+=(const OldOperator &other); ///< add another Operator
+  OldOperator& operator-=(const OldOperator &other); ///< subtract another Operator
+  OldOperator& operator*=(const double factor); ///< scale by a factor
+  OldOperator& operator=(const OldOperator &h1); ///< assignment overload
   /*!
    * \brief Construct the same-spin perturbed Operator
    * \param reference the zero-order Slater determinant
    * \return  the same-spin Operator
    */
-  Operator sameSpinOperator(const Determinant &reference) const;
+  OldOperator sameSpinOperator(const Determinant &reference) const;
 
   /*!
    * \brief construct the BraKet form of the Operator
@@ -155,7 +155,7 @@ public:
 private:
   size_t ijSize;
   size_t ijklSize;
-  Operator& plusminusOperator(const Operator &other, const char operation='+');
+  OldOperator& plusminusOperator(const OldOperator &other, const char operation='+');
   void plusminusEqualsHelper(std::vector<double>*& me, std::vector<double> * const &other, const char operation='+');
   void starEqualsHelper(std::vector<double> *&me, const double factor);
   /*!
@@ -165,11 +165,11 @@ private:
    * \param oneElectron whether to copy the 1-electron part of source
    * \param twoElectron whether to copy the 2-electron part of source
    */
-  void _copy(const Operator &source, const bool forceSpinUnrestricted=false, const bool oneElectron=true, const bool twoElectron=true);
+  void _copy(const OldOperator &source, const bool forceSpinUnrestricted=false, const bool oneElectron=true, const bool twoElectron=true);
 };
-Operator operator+(const Operator &h1, const Operator &h2); ///< add two Operator objects
-Operator operator-(const Operator &h1, const Operator &h2); ///< subtract two Operator objects
-Operator operator*(const Operator &h1, const double factor); ///< return a factor times the Operator object
+OldOperator operator+(const OldOperator &h1, const OldOperator &h2); ///< add two Operator objects
+OldOperator operator-(const OldOperator &h1, const OldOperator &h2); ///< subtract two Operator objects
+OldOperator operator*(const OldOperator &h1, const double factor); ///< return a factor times the Operator object
 
 }
 

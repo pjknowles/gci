@@ -82,7 +82,7 @@ void Wavefunction::set(const double value)
   for (std::vector<double>::iterator b=buffer.begin(); b != buffer.end(); b++) *b=value;
 }
 
-void Wavefunction::diagonalOperator(const Operator &oper)
+void Wavefunction::diagonalOperator(const OldOperator &oper)
 {
   profiler->start("diagonalOperator");
   std::vector<double> ha=oper.int1(1);
@@ -502,7 +502,7 @@ size_t Wavefunction::blockOffset(const unsigned int syma) const
 using namespace itf;
 #endif
 
-void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction &w, bool parallel_stringset)
+void Wavefunction::operatorOnWavefunction(const OldOperator &h, const Wavefunction &w, bool parallel_stringset)
 {
   profiler->start("operatorOnWavefunction");
   if (parallel_rank == 0)

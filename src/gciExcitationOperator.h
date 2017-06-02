@@ -17,7 +17,7 @@ public:
      * \param hamiltonian the hamiltonian defining orbital spaces
      * \param ranks Ranks of operator
      */
-  ExcitationOperator(Operator &hamiltonian, std::vector<int> ranks);
+  ExcitationOperator(OldOperator &hamiltonian, std::vector<int> ranks);
   /*!
      \brief
     Ranks of operator
@@ -30,7 +30,7 @@ public:
      hamiltonian object that defines the second-quantised spaces for the operator
      \return std::string
     */
-  Operator hamiltonian;
+  OldOperator hamiltonian;
 };
 }
 

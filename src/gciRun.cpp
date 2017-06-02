@@ -18,12 +18,12 @@ using namespace gci;
 
 using namespace LinearAlgebra;
 
-const static Operator* activeHamiltonian;
+const static OldOperator* activeHamiltonian;
 static Wavefunction* _preconditioning_diagonals;
 static double _lastEnergy;
 static double _mu;
 static bool _residual_subtract_Energy;
-static Operator* _residual_Q;
+static OldOperator* _residual_Q;
 static double _residual_q;
 static bool parallel_stringset;
 static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<double> shift=std::vector<double>(), bool append=false) {
@@ -163,7 +163,7 @@ std::vector<double> Run::run()
   xout << "METHOD="<<method<<std::endl;
 
   profiler->start("load Hamiltonian");
-  Operator hh(globalFCIdump);
+  OldOperator hh(globalFCIdump);
   parallel_stringset = parameter("PARALLEL_STRINGSET").at(0) != 0;
 
   bool test_rotation_of_hamiltonian=false;
@@ -207,23 +207,23 @@ std::vector<double> Run::run()
     double scs_same = parameter("SCS_SAME",std::vector<double>(1,(double)1)).at(0);
     xout << "First-order hamiltonian contains " << scs_opposite<<" of opposite-spin and "<< scs_same <<" of same spin"<<std::endl;
     xout << "Second-order hamiltonian contains " << 1-scs_opposite<<" of opposite-spin and "<< 1-scs_same <<" of same spin"<<std::endl;
-    Operator h0 = hh.FockOperator(referenceDeterminant);
+    OldOperator h0 = hh.FockOperator(referenceDeterminant);
 //    xout <<"h0.spinUnrestricted="<<h0.spinUnrestricted<<std::endl;
 //    xout <<"h0="<<h0<<std::endl;
-    Operator ssh = hh.sameSpinOperator(referenceDeterminant);
+    OldOperator ssh = hh.sameSpinOperator(referenceDeterminant);
 //    xout <<"ssh.spinUnrestricted="<<ssh.spinUnrestricted<<std::endl;
 //    xout <<"ssh="<<ssh<<std::endl;
-    Operator osh(hh,true); osh -= ssh; osh-=h0;
+    OldOperator osh(hh,true); osh -= ssh; osh-=h0;
 //    xout <<"osh.spinUnrestricted="<<osh.spinUnrestricted<<std::endl;
 //    xout <<"osh="<<osh<<std::endl;
-    Operator h1 = osh*scs_opposite + ssh*scs_same;
+    OldOperator h1 = osh*scs_opposite + ssh*scs_same;
 //    xout <<"h1.spinUnrestricted="<<h1.spinUnrestricted<<std::endl;
 //    xout <<"h1="<<h1<<std::endl;
-    Operator h2(hh,true); // spinUnrestricted not yet optimised
+    OldOperator h2(hh,true); // spinUnrestricted not yet optimised
     h2-=h1; h2-=h0;
 //    xout <<"h2.spinUnrestricted="<<h2.spinUnrestricted<<std::endl;
 //    xout <<"h2="<<h2<<std::endl;
-    std::vector<gci::Operator*> hamiltonians;
+    std::vector<gci::OldOperator*> hamiltonians;
     hamiltonians.push_back(&h0);
     hamiltonians.push_back(&h1);
     if (scs_opposite != (double) 1 || scs_same != (double) 1) hamiltonians.push_back(&h2);
@@ -239,7 +239,7 @@ std::vector<double> Run::run()
 #endif
   } else  if (method == "ISRSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
-    Operator h0 = hh.FockOperator(referenceDeterminant);
+    OldOperator h0 = hh.FockOperator(referenceDeterminant);
     std::vector<double> emp = ISRSPT(hh, h0, prototype);
     xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
@@ -295,9 +295,9 @@ using namespace itf;
 #endif
 
 #include <cmath>
-std::vector<double> Run::DIIS(const Operator &hamiltonian, const State &prototype, double energyThreshold, int maxIterations)
+std::vector<double> Run::DIIS(const OldOperator &hamiltonian, const State &prototype, double energyThreshold, int maxIterations)
 {
-  Operator h(hamiltonian);
+  OldOperator h(hamiltonian);
   profiler->start("DIIS");
   profiler->start("DIIS preamble");
 //  xout << "on entry to Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
@@ -310,7 +310,7 @@ std::vector<double> Run::DIIS(const Operator &hamiltonian, const State &prototyp
   _residual_q = parameter("CHARGE",std::vector<double>{0}).at(0);
   if (_residual_q>0) {
       xout << "q="<<_residual_q<<std::endl;
-      _residual_Q =new Operator("Q",hamiltonian,true);
+      _residual_Q =new OldOperator("Q",hamiltonian,true);
 //      xout << "Q operator" <<std::endl<<*_residual_Q<<std::endl;
     }
 //  Operator P("P",hamiltonian,true);
@@ -344,12 +344,12 @@ std::vector<double> Run::DIIS(const Operator &hamiltonian, const State &prototyp
   return std::vector<double>{_lastEnergy};
 }
 
-std::vector<double> Run::Davidson(const Operator& hamiltonian,
+std::vector<double> Run::Davidson(const OldOperator& hamiltonian,
                                   const State &prototype,
                                   double energyThreshold, int nState, int maxIterations)
 {
-  Operator h(hamiltonian);
-  profiler->start("Davidson");
+  OldOperator h(hamiltonian);
+  auto p = profiler->push("Davidson");
   profiler->start("Davidson preamble");
   //  xout << "on entry to Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
   if (maxIterations < 0)
@@ -394,7 +394,7 @@ std::vector<double> Run::Davidson(const Operator& hamiltonian,
 
 
 
-std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
+std::vector<double> Run::CSDavidson(const OldOperator& hamiltonian,
                                   const State &prototype,
                                   double energyThreshold, int nState, int maxIterations)
 {
@@ -639,7 +639,7 @@ std::vector<double> Run::CSDavidson(const Operator& hamiltonian,
     return e;
 }
 
-std::vector<double> Run::RSPT(const std::vector<gci::Operator*>& hamiltonians,
+std::vector<double> Run::RSPT(const std::vector<gci::OldOperator*>& hamiltonians,
                               const State &prototype,
             int maxOrder,
                               double energyThreshold,
@@ -725,8 +725,8 @@ std::vector<double> Run::RSPT(const std::vector<gci::Operator*>& hamiltonians,
 }
 
 std::vector<double> Run::ISRSPT(
-        const gci::Operator& hamiltonian,
-        const gci::Operator& hamiltonian0,
+        const gci::OldOperator& hamiltonian,
+        const gci::OldOperator& hamiltonian0,
                               const State &prototype,
             int maxOrder,
                               double energyThreshold,
@@ -764,7 +764,7 @@ std::vector<double> Run::ISRSPT(
 }
 
 #include <cmath>
-void Run::HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity)
+void Run::HamiltonianMatrixPrint(OldOperator &hamiltonian, const State &prototype, int verbosity)
 {
   Wavefunction w(&hamiltonian,prototype.nelec,prototype.symmetry,prototype.ms2);
   Wavefunction g(w);
