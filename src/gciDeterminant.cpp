@@ -41,20 +41,20 @@ int Determinant::destroy(int orbital) {
 
 }
 
-void Determinant::first()
-{
-  //    xout <<"Determiant::first nelec="<<nelec<<", ms2="<<ms2<<(nelec+ms2)/2<<(nelec-ms2)/2<<std::endl;
-  stringAlpha.first((nelec+ms2)/2);
-  stringBeta.first((nelec-ms2)/2);
-}
+//void Determinant::first()
+//{
+//  //    xout <<"Determiant::first nelec="<<nelec<<", ms2="<<ms2<<(nelec+ms2)/2<<(nelec-ms2)/2<<std::endl;
+//  stringAlpha.first((nelec+ms2)/2);
+//  stringBeta.first((nelec-ms2)/2);
+//}
 
-bool Determinant::next()
-{
-  if (stringBeta.next()) return true;
-  //    xout << "Determinant::next needs to make a new alpha string"<<std::endl;
-  stringBeta.first((nelec-ms2)/2);
-  return stringAlpha.next();
-}
+//bool Determinant::next()
+//{
+//  if (stringBeta.next()) return true;
+//  //    xout << "Determinant::next needs to make a new alpha string"<<std::endl;
+//  stringBeta.first((nelec-ms2)/2);
+//  return stringAlpha.next();
+//}
 
 std::string Determinant::str(int verbosity, unsigned int columns) const
 {
