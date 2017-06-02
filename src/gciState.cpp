@@ -10,7 +10,7 @@ State::State(std::string filename)
   if (filename!="") load(filename);
 }
 
-State::State(FCIdump& dump)
+State::State(const FCIdump& dump)
 {
   orbitalSpace=NULL;
   load(dump);

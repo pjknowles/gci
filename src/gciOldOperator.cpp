@@ -27,7 +27,7 @@ OldOperator::OldOperator(std::string filename) : OrbitalSpace(filename)
   if (filename != "") load(filename);
 }
 
-OldOperator::OldOperator(FCIdump &dump) : OrbitalSpace(dump)
+OldOperator::OldOperator(const FCIdump &dump) : OrbitalSpace(dump)
  , m_Operator(dummyOperator)
 {
   bracket_integrals_a=bracket_integrals_b=NULL;
@@ -178,7 +178,7 @@ void OldOperator::load(std::string filename, int verbosity) {
   load(d, verbosity);
 }
 
-void OldOperator::load(FCIdump& dump, int verbosity) {
+void OldOperator::load(const FCIdump& dump, int verbosity) {
   auto p = profiler->push("Operator::load");
   if (loaded) unload();
   if (verbosity) xout <<"Load hamiltonian from " << dump.fileName() <<std::endl;

@@ -27,7 +27,7 @@ public:
      *
      * @param dump points to an FCIdump object. If present, load is called.
      */
-  State(FCIdump &dump);
+  State(const FCIdump &dump);
   /*!
      * \brief Construct a State object linked to a OrbitalSpace
      * \param os The orbital space
