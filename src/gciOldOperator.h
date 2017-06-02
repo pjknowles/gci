@@ -1,5 +1,5 @@
-#ifndef GCIOPERATOR_H
-#define GCIOPERATOR_H
+#ifndef GCIOLDOPERATOR_H
+#define GCIOLDOPERATOR_H
 #include "gci.h"
 #include "FCIdump.h"
 #include "gciSymmetrySpace.h"
@@ -183,4 +183,4 @@ OldOperator operator*(const OldOperator &h1, const double factor); ///< return a
 
 using namespace gci;
 
-#endif // GCIOPERATOR_H
+#endif // GCIOLDOPERATOR_H

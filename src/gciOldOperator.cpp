@@ -1,4 +1,4 @@
-#include "gciOperator.h"
+#include "gciOldOperator.h"
 #include "FCIdump.h"
 #include <iostream>
 #include <sstream>

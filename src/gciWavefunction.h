@@ -2,7 +2,7 @@
 #define GCIWAVEFUNCTION_H
 #include <vector>
 #include "gci.h"
-#include "gciOperator.h"
+#include "gciOldOperator.h"
 #include "gciState.h"
 #include "gciStringSet.h"
 #include "gciPrintable.h"

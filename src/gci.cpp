@@ -1,6 +1,6 @@
 #include "gci.h"
 #include "gciFile.h"
-#include "gciOperator.h"
+#include "gciOldOperator.h"
 #include "gciDeterminant.h"
 #include "gciWavefunction.h"
 #include "gciStringSet.h"

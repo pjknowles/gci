@@ -1,7 +1,7 @@
 #ifndef GCIEXCITATIONOPERATOR_H
 #define GCIEXCITATIONOPERATOR_H
 
-#include "gciOperator.h"
+#include "gciOldOperator.h"
 
 namespace gci {
 /**
