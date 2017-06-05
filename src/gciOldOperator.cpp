@@ -10,13 +10,13 @@
 #include <iterator>
 #include <cmath>
 
-OldOperator::OldOperator(const SymmetryMatrix::Operator &source)
+OldOperator::OldOperator(const gci::Operator &source)
   : m_Operator(source)
 {
-
+  OldOperator(*source.m_fcidump);
 }
 
-static SymmetryMatrix::Operator dummyOperator{dim_t{},0};
+static gci::Operator dummyOperator{dim_t{},0};
 
 OldOperator::OldOperator(std::string filename) : OrbitalSpace(filename)
   , m_Operator(dummyOperator)

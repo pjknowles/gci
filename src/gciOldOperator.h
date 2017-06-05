@@ -7,6 +7,7 @@
 #include "gciOrbitalSpace.h"
 #include "SMat.h"
 #include "Operator.h"
+#include "gciOperator.h"
 #include <string>
 #include <vector>
 #include <climits>
@@ -22,10 +23,10 @@ class OldOperator : public OrbitalSpace
 public:
 
   /*!
-   * \brief Construct from SymmetryMatrix::Operator
+   * \brief Construct from gci::Operator
    * \param source
    */
-  OldOperator(const SymmetryMatrix::Operator& source);
+  OldOperator(const gci::Operator& source);
 
   /*!
  \brief construct Operator object
@@ -161,7 +162,7 @@ public:
   void rotate(SMat const * rota, SMat const * rotb=NULL);
 
 private:
-  const SymmetryMatrix::Operator& m_Operator; ///< reference to the underlying operator
+  const gci::Operator& m_Operator; ///< reference to the underlying operator
   size_t ijSize;
   size_t ijklSize;
   OldOperator& plusminusOperator(const OldOperator &other, const char operation='+');

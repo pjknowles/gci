@@ -3,7 +3,7 @@
 
 gci::Operator gci::Operator::construct(const FCIdump &dump)
 {
-  int verbosity=1;
+  int verbosity=0;
   std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
   dim_t dim(8);
   for (auto& s : orbital_symmetries)
@@ -11,6 +11,7 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
 
   Operator result(dims_t(4,dim),2,dump.parameter("IUHF")[0]>0,{1,1},{-1,-1},0,"Hamiltonian");
   result.m_orbital_symmetries = orbital_symmetries;
+  result.m_fcidump = &dump;
 //  for (auto i=0; i<orbital_symmetries.size(); i++)
 //      xout << "i="<<i+1<<", symmetry="<<orbital_symmetries[i]<<", offset="<<result.offset(i+1)<<std::endl;;
 
@@ -41,8 +42,8 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
 //      xout << "ijkl "<<i<<j<<k<<l<<std::endl;
 //      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
-      if (si>sj || (si==sj && oi < oj)) { std::swap(oi,oj); std::swap(si,sj);}
-      if (sk>sl || (sk==sl && ok < ol)) { std::swap(ok,ol); std::swap(sk,sl);}
+      if (si<sj || (si==sj && oi < oj)) { std::swap(oi,oj); std::swap(si,sj);}
+      if (sk<sl || (sk==sl && ok < ol)) { std::swap(ok,ol); std::swap(sk,sl);}
       unsigned int sij = si^sj;
 //      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
@@ -52,11 +53,11 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
           if (verbosity>2) xout << "aa("<< k << l <<"|"<< i << j <<") = " << value <<std::endl;
           (sij ? integrals_aa.smat(sij,si,oi,oj)->blockM(sk)(ok,ol) : integrals_aa.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) = value;
           (sij ? integrals_aa.smat(sij,sk,ok,ol)->blockM(si)(oi,oj) : integrals_aa.smat(sij,sk,ok,ol)->block(si)[oi*(oi+1)/2+oj]) = value;
-          if (sij)
-           xout << "aa("<< i << j <<"|"<< k << l <<") = " << value
-                <<" "<< integrals_aa.smat(sij,si,oi,oj)->blockM(sk)(ok,ol)
-                <<" "<< &integrals_aa.smat(sij,si,oi,oj)->blockM(sk)(ok,ol)
-                <<std::endl;
+//          if (sij)
+//           xout << "aa("<< i << j <<"|"<< k << l <<") = " << value
+//                <<" "<< integrals_aa.smat(sij,si,oi,oj)->blockM(sk)(ok,ol)
+//                <<" "<< &integrals_aa.smat(sij,si,oi,oj)->blockM(sk)(ok,ol)
+//                <<std::endl;
         } else if (type == FCIdump::I2ab) {
           if (verbosity>2) xout << "ab("<< i << j <<"|"<< k << l <<") = " << value <<std::endl;
           sij ? integrals_ab.smat(sij,si,oi,oj)->blockM(sk)(ok,ol) : integrals_ab.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol] = value;

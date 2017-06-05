@@ -51,6 +51,8 @@ namespace gci {
     size_t offset(unsigned int i) const {
       return i < 1 ? 0 : std::count(m_orbital_symmetries.begin(),m_orbital_symmetries.begin()+i-1,m_orbital_symmetries[i-1]);
     }
+  public:
+    const FCIdump* m_fcidump; // temporary, to support migration
   };
 
 }

@@ -166,6 +166,7 @@ std::vector<double> Run::run()
   profiler->start("load Hamiltonian");
   auto hho=Operator::construct(*globalFCIdump);
   OldOperator hh(*globalFCIdump);
+//  OldOperator hh(hho);
   parallel_stringset = parameter("PARALLEL_STRINGSET").at(0) != 0;
 
   bool test_rotation_of_hamiltonian=false;
