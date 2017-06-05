@@ -389,7 +389,6 @@ std::vector<double> Run::Davidson(const OldOperator& hamiltonian,
   solver.m_roots=nState;
   profiler->stop("Davidson preamble");
   solver.solve(gg,ww);
-  profiler->stop("Davidson");
   while (ww.size()>0) { delete ww.back(); ww.pop_back(); }
   while (gg.size()>0) { delete gg.back(); gg.pop_back(); }
   return solver.eigenvalues();

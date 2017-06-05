@@ -22,7 +22,7 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
         String tt = from;
         int phase = (annihilations > 0) ? tt.destroy(i+1) : tt.create(i+1);
         if (phase) {
-            tt.keygen(to.PartialWeightArray);
+            tt.gci::String::keygen(to.PartialWeightArray);
             size_t ti=to.addressMap.find(tt.key())->second;
             emplace_back(ti,phase,ii);
         }

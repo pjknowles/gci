@@ -84,7 +84,7 @@ public:
   void keygen(const std::vector<std::vector<T> > & partialWeightArray)
   {
     m_key=0;
-    for (auto k=0; k<m_orbitals.size(); k++)
+    for (size_t k=0; k<m_orbitals.size(); k++)
       m_key += partialWeightArray[k][m_orbitals[k]-1];
   }
 
