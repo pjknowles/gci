@@ -9,14 +9,17 @@
 #include <iomanip>
 #include <iterator>
 #include <cmath>
+static gci::Operator dummyOperator{dim_t{},0};
 
 OldOperator::OldOperator(const gci::Operator &source)
-  : m_Operator(source)
+  : OrbitalSpace(*source.m_fcidump), m_Operator(source)
 {
-  OldOperator(*source.m_fcidump);
+  bracket_integrals_a=bracket_integrals_b=NULL;
+  bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
+  loaded = false;
+  load(*m_Operator.m_fcidump,0);
 }
 
-static gci::Operator dummyOperator{dim_t{},0};
 
 OldOperator::OldOperator(std::string filename) : OrbitalSpace(filename)
   , m_Operator(dummyOperator)
@@ -27,14 +30,14 @@ OldOperator::OldOperator(std::string filename) : OrbitalSpace(filename)
   if (filename != "") load(filename);
 }
 
-OldOperator::OldOperator(const FCIdump &dump) : OrbitalSpace(dump)
- , m_Operator(dummyOperator)
-{
-  bracket_integrals_a=bracket_integrals_b=NULL;
-  bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
-  loaded = false;
-  load(dump,0);
-}
+//OldOperator::OldOperator(const FCIdump &dump) : OrbitalSpace(dump)
+// , m_Operator(dummyOperator)
+//{
+//  bracket_integrals_a=bracket_integrals_b=NULL;
+//  bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
+//  loaded = false;
+//  load(dump,0);
+//}
 
 OldOperator::OldOperator(const OldOperator &source)
   : OrbitalSpace(source)

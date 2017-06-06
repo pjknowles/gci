@@ -34,12 +34,12 @@ public:
  \param filename : if present, call load
 */
   OldOperator(std::string filename="");
-  /*!
-     \brief construct Operator object
+//  /*!
+//     \brief construct Operator object
 
-     \param dump : if present, call load
-    */
-  OldOperator(const FCIdump &dump);
+//     \param dump : if present, call load
+//    */
+//  OldOperator(const FCIdump &dump);
   /*!
    * \brief copy constructor
    * \param source
