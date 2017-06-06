@@ -7,7 +7,7 @@
 
 namespace gci {
 
-  class Operator : SymmetryMatrix::Operator
+  class Operator : public SymmetryMatrix::Operator
   {
   public:
     using SymmetryMatrix::Operator::Operator;
