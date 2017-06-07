@@ -26,7 +26,8 @@ OldOperator::OldOperator(const gci::Operator &source)
   std::cout << "OldOperator:"<<integrals_aa->size();
   for (auto& i : *integrals_aa) std::cout << "\n" << i;
   std::cout << std::endl;
-  for (auto i=0; i<integrals_aa->size();i++) std::cout <<(*source.O2(true,true).data())[i]<<(*integrals_aa)[i]<<std::endl;
+  for (auto i=0; i<integrals_aa->size();i++)
+    std::cout <<(*source.O2(true,true).data())[i]<<(*integrals_aa)[i]<<std::endl;
 //  std::copy(source.O2(true,true).data()->begin(),source.O2(true,true).data()->end(),integrals_aa->begin());
 //  std::copy(source.O2(true,true).data()->begin(),source.O2(true,true).data()->end(),integrals_aa->begin());
 //  std::copy(source.O2(true,false).data()->begin(),source.O2(true,false).data()->end(),integrals_ab->begin());

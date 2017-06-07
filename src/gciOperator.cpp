@@ -45,19 +45,21 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
       if (si<sj || (si==sj && oi < oj)) { std::swap(oi,oj); std::swap(si,sj);}
       if (sk<sl || (sk==sl && ok < ol)) { std::swap(ok,ol); std::swap(sk,sl);}
       unsigned int sij = si^sj;
-//      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
-//      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
+      xout << "\nvalue: "<<value<<std::endl;
+      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
+      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
 
       if (type == FCIdump::I2aa) {
           if (verbosity>2) xout << "aa("<< i << j <<"|"<< k << l <<") = " << value <<std::endl;
           if (verbosity>2) xout << "aa("<< k << l <<"|"<< i << j <<") = " << value <<std::endl;
           (sij ? integrals_aa.smat(sij,si,oi,oj)->blockM(sk)(ok,ol) : integrals_aa.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) = value;
           (sij ? integrals_aa.smat(sij,sk,ok,ol)->blockM(si)(oi,oj) : integrals_aa.smat(sij,sk,ok,ol)->block(si)[oi*(oi+1)/2+oj]) = value;
-//          if (sij)
-//           xout << "aa("<< i << j <<"|"<< k << l <<") = " << value
-//                <<" "<< integrals_aa.smat(sij,si,oi,oj)->blockM(sk)(ok,ol)
-//                <<" "<< &integrals_aa.smat(sij,si,oi,oj)->blockM(sk)(ok,ol)
-//                <<std::endl;
+          if (sij)
+           xout << "aa("<< i << j <<"|"<< k << l <<") = " << value
+                <<" "<< integrals_aa.smat(sij,si,oi,oj)->blockM(sk)(ok,ol)
+                <<" "<< &integrals_aa.smat(sij,si,oi,oj)->blockM(sk)(ok,ol)
+                 -&integrals_aa.smat(0,0,0,0)->block(0)[0]
+                <<std::endl;
         } else if (type == FCIdump::I2ab) {
           if (verbosity>2) xout << "ab("<< i << j <<"|"<< k << l <<") = " << value <<std::endl;
           sij ? integrals_ab.smat(sij,si,oi,oj)->blockM(sk)(ok,ol) : integrals_ab.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol] = value;
