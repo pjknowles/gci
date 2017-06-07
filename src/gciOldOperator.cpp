@@ -20,18 +20,17 @@ OldOperator::OldOperator(const gci::Operator &source)
   load(*m_Operator.m_fcidump,0);
   std::copy(source.O1(true).data()->begin(),source.O1(true).data()->end(),integrals_a->begin());
   std::copy(source.O1(false).data()->begin(),source.O1(false).data()->end(),integrals_b->begin());
-  std::cout << "Operator:"<<source.O2(true,true).data()->size();
-  for (auto& i : *source.O2(true,true).data()) std::cout << "\n" << i;
-  std::cout << std::endl;
-  std::cout << "OldOperator:"<<integrals_aa->size();
-  for (auto& i : *integrals_aa) std::cout << "\n" << i;
-  std::cout << std::endl;
-  for (auto i=0; i<integrals_aa->size();i++)
-    std::cout <<(*source.O2(true,true).data())[i]<<(*integrals_aa)[i]<<std::endl;
-//  std::copy(source.O2(true,true).data()->begin(),source.O2(true,true).data()->end(),integrals_aa->begin());
-//  std::copy(source.O2(true,true).data()->begin(),source.O2(true,true).data()->end(),integrals_aa->begin());
-//  std::copy(source.O2(true,false).data()->begin(),source.O2(true,false).data()->end(),integrals_ab->begin());
-//  std::copy(source.O2(false,false).data()->begin(),source.O2(false,false).data()->end(),integrals_bb->begin());
+//  std::cout << "Operator:"<<source.O2(true,true).data()->size();
+//  for (auto& i : *source.O2(true,true).data()) std::cout << "\n" << i;
+//  std::cout << std::endl;
+//  std::cout << "OldOperator:"<<integrals_aa->size();
+//  for (auto& i : *integrals_aa) std::cout << "\n" << i;
+//  std::cout << std::endl;
+//  for (auto i=0; i<integrals_aa->size();i++)
+//    std::cout <<(*source.O2(true,true).data())[i]<<(*integrals_aa)[i]<<std::endl;
+  std::copy(source.O2(true,true).data()->begin(),source.O2(true,true).data()->end(),integrals_aa->begin());
+  std::copy(source.O2(true,false).data()->begin(),source.O2(true,false).data()->end(),integrals_ab->begin());
+  std::copy(source.O2(false,false).data()->begin(),source.O2(false,false).data()->end(),integrals_bb->begin());
 
   constructBraKet();
 }
