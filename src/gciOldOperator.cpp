@@ -13,7 +13,8 @@
 static gci::Operator dummyOperator{dim_t{},0};
 
 OldOperator::OldOperator(const gci::Operator &source)
-  : OrbitalSpace(*source.m_fcidump), m_Operator(source)
+  : OrbitalSpace(*source.m_fcidump) //FIXME
+  , m_Operator(source)
 {
   basisSize = std::accumulate(m_Operator.m_dimensions[0].begin(),m_Operator.m_dimensions[0].end(),0);
   ijSize = total(0,1);
