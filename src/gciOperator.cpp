@@ -50,8 +50,8 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
 
       if (type == FCIdump::I2aa) {
-          if (verbosity>-2) xout << "aa("<< i << j <<"|"<< k << l <<") = " << value <<std::endl;
-          if (verbosity>-2) xout << "aa("<< k << l <<"|"<< i << j <<") = " << value <<std::endl;
+          if (verbosity>2) xout << "aa("<< i << j <<"|"<< k << l <<") = " << value <<std::endl;
+          if (verbosity>2) xout << "aa("<< k << l <<"|"<< i << j <<") = " << value <<std::endl;
           (sij ? integrals_aa.smat(sij,si,oi,oj)->blockM(sk)(ok,ol) : integrals_aa.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) = value;
           (sij ? integrals_aa.smat(sij,sk,ok,ol)->blockM(si)(oi,oj) : integrals_aa.smat(sij,sk,ok,ol)->block(si)[oi*(oi+1)/2+oj]) = value;
 //          if (sij)
@@ -61,13 +61,19 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
 //                 -&integrals_aa.smat(0,0,0,0)->block(0)[0]
 //                <<std::endl;
         } else if (type == FCIdump::I2ab) {
-          if (verbosity>-2) xout << "ab("<< i << j <<"|"<< k << l <<") = " << value <<std::endl;
-          sij ? integrals_ab.smat(sij,si,oi,oj)->blockM(sk)(ok,ol) : integrals_ab.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol] = value;
+          if (verbosity>2) xout << "ab("<< i << j <<"|"<< k << l <<") = " << value <<std::endl;
+          (sij ? integrals_ab.smat(sij,si,oi,oj)->blockM(sk)(ok,ol) : integrals_ab.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) = value;
+//          if (sij)
+//           xout << "ab("<< i << j <<"|"<< k << l <<") = " << value
+//                <<" "<< integrals_ab.smat(sij,si,oi,oj)->blockM(sk)(ok,ol)
+//                <<" "<< &integrals_ab.smat(sij,si,oi,oj)->blockM(sk)(ok,ol)
+//                 -&integrals_ab.smat(0,0,0,0)->block(0)[0]
+//                <<std::endl;
         } else if (type == FCIdump::I2bb) {
-          if (verbosity>-2) xout << "bb("<< i << j <<"|"<< k << l <<") = " << value <<std::endl;
-          if (verbosity>-2) xout << "bb("<< k << l <<"|"<< i << j <<") = " << value <<std::endl;
-          sij ? integrals_bb.smat(sij,si,oi,oj)->blockM(sk)(ok,ol) : integrals_bb.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol] = value;
-          sij ? integrals_bb.smat(sij,sk,ok,ol)->blockM(si)(oi,oj) : integrals_bb.smat(sij,sk,ok,ol)->block(si)[oi*(oi+1)/2+oj] = value;
+          if (verbosity>2) xout << "bb("<< i << j <<"|"<< k << l <<") = " << value <<std::endl;
+          if (verbosity>2) xout << "bb("<< k << l <<"|"<< i << j <<") = " << value <<std::endl;
+          (sij ? integrals_bb.smat(sij,si,oi,oj)->blockM(sk)(ok,ol) : integrals_bb.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) = value;
+          (sij ? integrals_bb.smat(sij,sk,ok,ol)->blockM(si)(oi,oj) : integrals_bb.smat(sij,sk,ok,ol)->block(si)[oi*(oi+1)/2+oj]) = value;
         } else if (type == FCIdump::I1a) {
           if (verbosity>1) xout << "ha("<< i <<","<< j <<") = " << value <<std::endl;
           integrals_a.block(si).at(oi*(oi+1)/2+oj)=value;
