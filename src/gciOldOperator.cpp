@@ -18,16 +18,19 @@ OldOperator::OldOperator(const gci::Operator &source)
   bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
   loaded = false;
   load(*m_Operator.m_fcidump,0);
-  std::copy(source.O1(true).data()->begin(),source.O1(true).data()->end(),integrals_a->begin());
-  std::copy(source.O1(false).data()->begin(),source.O1(false).data()->end(),integrals_b->begin());
+  for (auto i=0; i<integrals_a->size();i++)
+    std::cout <<(*source.O1(true).data())[i]<<(*integrals_a)[i]<<std::endl;
+//  std::copy(source.O1(true).data()->begin(),source.O1(true).data()->end(),integrals_a->begin());
+//  std::copy(source.O1(false).data()->begin(),source.O1(false).data()->end(),integrals_b->begin());
 //  std::cout << "Operator:"<<source.O2(true,true).data()->size();
 //  for (auto& i : *source.O2(true,true).data()) std::cout << "\n" << i;
 //  std::cout << std::endl;
 //  std::cout << "OldOperator:"<<integrals_aa->size();
 //  for (auto& i : *integrals_aa) std::cout << "\n" << i;
 //  std::cout << std::endl;
-//  for (auto i=0; i<integrals_aa->size();i++)
-//    std::cout <<(*source.O2(true,true).data())[i]<<(*integrals_aa)[i]<<std::endl;
+  std::cout << "ab integrals"<<std::endl;
+  for (auto i=0; i<integrals_ab->size();i++)
+    std::cout <<(*source.O2(true,false).data())[i]<<(*integrals_ab)[i]<<std::endl;
   std::copy(source.O2(true,true).data()->begin(),source.O2(true,true).data()->end(),integrals_aa->begin());
   std::copy(source.O2(true,false).data()->begin(),source.O2(true,false).data()->end(),integrals_ab->begin());
   std::copy(source.O2(false,false).data()->begin(),source.O2(false,false).data()->end(),integrals_bb->begin());
@@ -230,6 +233,7 @@ void OldOperator::load(const FCIdump& dump, int verbosity) {
   FCIdump::integralType type;
   int i,j,k,l;
   while ((type=dump.nextIntegral(i,j,k,l,value))!=FCIdump::endOfFile) {
+//      xout << "integral "<<i<<j<<k<<l<<" value="<<value<<" type="<<type<<std::endl;
     if (type == FCIdump::I2aa) {
       if (verbosity>2) xout << "aa("<< i << j <<"|"<< k << l <<") [" << int2Index(i,j,k,l) << "]= " << value <<std::endl;
       if (verbosity>2) xout << "aa("<< k << l <<"|"<< i << j <<") [" << int2Index(k,l,i,j) << "]= " << value <<std::endl;
@@ -244,10 +248,10 @@ void OldOperator::load(const FCIdump& dump, int verbosity) {
       integrals_bb->at(int2Index(i,j,k,l))=value;
       integrals_bb->at(int2Index(k,l,i,j))=value;
     } else if (type == FCIdump::I1a) {
-      if (verbosity>1) xout << "ha("<< i <<","<< j <<") = " << value <<std::endl;
+      if (verbosity>-1) xout << "ha("<< i <<","<< j <<") = " << value <<std::endl;
       integrals_a->at(int1Index(i,j))=value;
     } else if (type == FCIdump::I1b) {
-      if (verbosity>1) xout << "hb("<< i <<","<< j <<") = " << value <<std::endl;
+      if (verbosity>-1) xout << "hb("<< i <<","<< j <<") = " << value <<std::endl;
       integrals_b->at(int1Index(i,j))=value;
     } else if (type == FCIdump::I0)
       coreEnergy = value;
