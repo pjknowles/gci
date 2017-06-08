@@ -9,32 +9,37 @@
 #include <iomanip>
 #include <iterator>
 #include <cmath>
+#include <numeric>
 static gci::Operator dummyOperator{dim_t{},0};
 
 OldOperator::OldOperator(const gci::Operator &source)
   : OrbitalSpace(*source.m_fcidump), m_Operator(source)
 {
-  bracket_integrals_a=bracket_integrals_b=NULL;
-  bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
-  loaded = false;
-  load(*m_Operator.m_fcidump,0);
-//  for (auto i=0; i<integrals_a->size();i++)
-//    std::cout <<(*source.O1(true).data())[i]<<(*integrals_a)[i]<<std::endl;
-//  std::copy(source.O1(true).data()->begin(),source.O1(true).data()->end(),integrals_a->begin());
-//  std::copy(source.O1(false).data()->begin(),source.O1(false).data()->end(),integrals_b->begin());
-//  std::cout << "Operator:"<<source.O2(true,true).data()->size();
-//  for (auto& i : *source.O2(true,true).data()) std::cout << "\n" << i;
-//  std::cout << std::endl;
-//  std::cout << "OldOperator:"<<integrals_aa->size();
-//  for (auto& i : *integrals_aa) std::cout << "\n" << i;
-//  std::cout << std::endl;
-//  std::cout << "ab integrals"<<source.O2(true,false).data()->size()<<integrals_ab->size()<<std::endl;
-//  for (auto i=0; i<integrals_ab->size();i++)
-//    std::cout <<(*source.O2(true,false).data())[i]<<(*integrals_ab)[i]<<std::endl;
+  basisSize = std::accumulate(m_Operator.m_dimensions[0].begin(),m_Operator.m_dimensions[0].end(),0);
+  ijSize = total(0,1);
+  ijklSize = pairSpace[1].total(0);
+  integrals_a = new std::vector<double>(ijSize,0.0);
+  integrals_aa = new std::vector<double>(ijklSize,0.0);
+  if (spinUnrestricted) {
+      integrals_b = new std::vector<double>(ijSize,0.0);
+      integrals_ab = new std::vector<double>(ijklSize,0.0);
+      integrals_bb = new std::vector<double>(ijklSize,0.0);
+    } else {
+      integrals_b = integrals_a;
+      integrals_ab = integrals_aa;
+      integrals_bb = integrals_aa;
+    }
+
+  std::copy(source.O1(true).data()->begin(),source.O1(true).data()->end(),integrals_a->begin());
+  std::copy(source.O1(false).data()->begin(),source.O1(false).data()->end(),integrals_b->begin());
   std::copy(source.O2(true,true).data()->begin(),source.O2(true,true).data()->end(),integrals_aa->begin());
   std::copy(source.O2(true,false).data()->begin(),source.O2(true,false).data()->end(),integrals_ab->begin());
   std::copy(source.O2(false,false).data()->begin(),source.O2(false,false).data()->end(),integrals_bb->begin());
+  coreEnergy = m_Operator.m_O0;
 
+  loaded=true;
+  bracket_integrals_a=bracket_integrals_b=NULL;
+  bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
   constructBraKet();
 }
 
