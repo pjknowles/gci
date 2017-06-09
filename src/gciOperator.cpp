@@ -9,11 +9,10 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
   for (auto& s : orbital_symmetries)
     dim.at(--s)++;
 
-  Operator result(dims_t(4,dim),2,dump.parameter("IUHF")[0]>0,{1,1},{-1,-1},0,"Hamiltonian");
-  result.m_orbital_symmetries = orbital_symmetries;
+  gci::Operator result(dims_t(4,dim),2,dump.parameter("IUHF")[0]>0,{1,1},{-1,-1},0,"Hamiltonian");
+  for (auto& s : orbital_symmetries ) result.m_orbital_symmetries.push_back(s);
   result.m_fcidump = &dump;
-//  for (auto i=0; i<orbital_symmetries.size(); i++)
-//      xout << "i="<<i+1<<", symmetry="<<orbital_symmetries[i]<<", offset="<<result.offset(i+1)<<std::endl;;
+//  for (auto i=0; i<orbital_symmetries.size(); i++) xout << "i="<<i+1<<", symmetry="<<orbital_symmetries[i]<<", offset="<<result.offset(i+1)<<std::endl;;
 
   dump.rewind();
   double value;

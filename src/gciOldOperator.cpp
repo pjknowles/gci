@@ -13,10 +13,12 @@
 static gci::Operator dummyOperator{dim_t{},0};
 
 OldOperator::OldOperator(const gci::Operator &source)
-  : OrbitalSpace(*source.m_fcidump) //FIXME
-  , m_Operator(source)
+  : m_Operator(source)
 {
-  basisSize = std::accumulate(m_Operator.m_dimensions[0].begin(),m_Operator.m_dimensions[0].end(),0);
+  std::vector<int> syms;
+  for (auto& s : source.orbital_symmetries()) syms.push_back(s+1);
+  OrbitalSpace::load(syms,source.m_uhf);
+  basisSize = std::accumulate(source.m_dimensions[0].begin(),source.m_dimensions[0].end(),0);
   ijSize = total(0,1);
   ijklSize = pairSpace[1].total(0);
   integrals_a = new std::vector<double>(ijSize,0.0);
@@ -36,7 +38,7 @@ OldOperator::OldOperator(const gci::Operator &source)
   std::copy(source.O2(true,true).data()->begin(),source.O2(true,true).data()->end(),integrals_aa->begin());
   std::copy(source.O2(true,false).data()->begin(),source.O2(true,false).data()->end(),integrals_ab->begin());
   std::copy(source.O2(false,false).data()->begin(),source.O2(false,false).data()->end(),integrals_bb->begin());
-  coreEnergy = m_Operator.m_O0;
+  coreEnergy = source.m_O0;
 
   loaded=true;
   bracket_integrals_a=bracket_integrals_b=NULL;
@@ -44,15 +46,22 @@ OldOperator::OldOperator(const gci::Operator &source)
   constructBraKet();
 }
 
-
-OldOperator::OldOperator(std::string filename) : OrbitalSpace(filename)
-  , m_Operator(dummyOperator)
+OldOperator::OldOperator()
+  : m_Operator(dummyOperator)
 {
   bracket_integrals_a=bracket_integrals_b=NULL;
   bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
   loaded = false;
-  if (filename != "") load(filename);
 }
+
+//OldOperator::OldOperator(std::string filename) : OrbitalSpace(filename)
+//  , m_Operator(dummyOperator)
+//{
+//  bracket_integrals_a=bracket_integrals_b=NULL;
+//  bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
+//  loaded = false;
+//  if (filename != "") load(filename);
+//}
 
 //OldOperator::OldOperator(const FCIdump &dump) : OrbitalSpace(dump)
 // , m_Operator(dummyOperator)

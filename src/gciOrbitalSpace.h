@@ -25,6 +25,7 @@ public:
   OrbitalSpace(const FCIdump &dump, int verbosity=0);
   virtual ~OrbitalSpace(){}
 
+  void load(const std::vector<int> syms, bool uhf=false, int verbosity=0);
   void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load from FCIDUMP */
   void load(const FCIdump &dump, int verbosity=0); /**< \brief load from FCIDUMP */
 

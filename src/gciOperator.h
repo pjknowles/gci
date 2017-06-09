@@ -40,8 +40,10 @@ namespace gci {
        */
     Eigen::MatrixXd intK(int spin) const;
 
+    std::vector<unsigned int> orbital_symmetries() const { return m_orbital_symmetries;}
+
   private:
-  std::vector<int> m_orbital_symmetries;
+  std::vector<unsigned int> m_orbital_symmetries;
 
     /*!
      * \brief offset Return the number of orbitals of the same symmetry before the given one.

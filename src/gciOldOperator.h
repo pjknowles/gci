@@ -27,13 +27,14 @@ public:
    * \param source
    */
   OldOperator(const gci::Operator& source);
+  OldOperator();
 
   /*!
  \brief construct Operator object
 
- \param filename : if present, call load
+ \param filename : call load
 */
-  OldOperator(std::string filename="");
+  OldOperator(std::string filename);
 //  /*!
 //     \brief construct Operator object
 
