@@ -12,6 +12,13 @@
 #include <numeric>
 static gci::Operator dummyOperator{dim_t{},0};
 
+template <class T>
+std::vector<double>* vecdup(const T& source) {
+  std::vector<double>* result = new std::vector<double>(source.size());
+  std::copy(source.begin(), source.end(),result->begin());
+  return result;
+}
+
 OldOperator::OldOperator(const gci::Operator &source)
   : m_Operator(source)
 {
@@ -44,6 +51,11 @@ OldOperator::OldOperator(const gci::Operator &source)
   bracket_integrals_a=bracket_integrals_b=NULL;
   bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
   constructBraKet();
+//  std::cout << "bracket_integrals_aa:\n"; for(auto& s : *bracket_integrals_aa) std::cout << " "<<s ; std::cout << std::endl;
+//  bracket_integrals_aa = vecdup(*source.O2(true,true,false).data());
+//  std::cout << "bracket_integrals_aa:\n"; for(auto& s : *bracket_integrals_aa) std::cout << " "<<s ; std::cout << std::endl;
+//  bracket_integrals_ab = vecdup(*source.O2(true,false,false).data());
+//  bracket_integrals_bb = vecdup(*source.O2(false,false,false).data());
 }
 
 OldOperator::OldOperator()
@@ -54,27 +66,9 @@ OldOperator::OldOperator()
   loaded = false;
 }
 
-//OldOperator::OldOperator(std::string filename) : OrbitalSpace(filename)
-//  , m_Operator(dummyOperator)
-//{
-//  bracket_integrals_a=bracket_integrals_b=NULL;
-//  bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
-//  loaded = false;
-//  if (filename != "") load(filename);
-//}
-
-//OldOperator::OldOperator(const FCIdump &dump) : OrbitalSpace(dump)
-// , m_Operator(dummyOperator)
-//{
-//  bracket_integrals_a=bracket_integrals_b=NULL;
-//  bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
-//  loaded = false;
-//  load(dump,0);
-//}
-
 OldOperator::OldOperator(const OldOperator &source)
   : OrbitalSpace(source)
-  , m_Operator(dummyOperator)
+  , m_Operator(source.m_Operator)
   ,loaded(source.loaded)
   , coreEnergy(source.coreEnergy)
   , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
@@ -84,7 +78,7 @@ OldOperator::OldOperator(const OldOperator &source)
 
 OldOperator::OldOperator(const OldOperator &source, const bool forceSpinUnrestricted, const bool oneElectron, const bool twoElectron)
   : OrbitalSpace(source)
-  , m_Operator(dummyOperator)
+  , m_Operator(source.m_Operator)
   ,loaded(source.loaded)
   , coreEnergy(source.coreEnergy)
   , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
@@ -94,7 +88,7 @@ OldOperator::OldOperator(const OldOperator &source, const bool forceSpinUnrestri
 
 OldOperator::OldOperator(const std::string special, const OldOperator &source, const bool forceSpinUnrestricted)
   : OrbitalSpace(source)
-  , m_Operator(dummyOperator)
+  , m_Operator(source.m_Operator)
   ,loaded(false)
   , coreEnergy(0)
   , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
@@ -207,78 +201,6 @@ void OldOperator::_copy(const OldOperator &source, const bool forceSpinUnrestric
 
 OldOperator::~OldOperator() {
   deconstructBraKet();
-}
-
-void OldOperator::load(std::string filename, int verbosity) {
-  FCIdump d(filename);
-  load(d, verbosity);
-}
-
-void OldOperator::load(const FCIdump& dump, int verbosity) {
-  auto p = profiler->push("Operator::load");
-  if (loaded) unload();
-  if (verbosity) xout <<"Load hamiltonian from " << dump.fileName() <<std::endl;
-  //    State::load(filename);
-
-  basisSize = dump.parameter("NORB").at(0);
-
-  ijSize = total(0,1);
-  ijklSize = pairSpace[1].total(0);
-  integrals_a = new std::vector<double>(ijSize,0.0);
-  if (spinUnrestricted)
-    integrals_b = new std::vector<double>(ijSize,0.0);
-  else
-    integrals_b = integrals_a;
-  integrals_aa = new std::vector<double>(ijklSize,0.0);
-  if (spinUnrestricted) {
-    integrals_ab = new std::vector<double>(ijklSize,0.0);
-    integrals_bb = new std::vector<double>(ijklSize,0.0);
-  } else {
-    integrals_ab = integrals_aa;
-    integrals_bb = integrals_aa;
-  }
-
-
-  {
-    dump.rewind();
-//  std::ifstream s;
-//  s.open(dump.fileName().c_str());
-//  std::string ss;
-  double value;
-  FCIdump::integralType type;
-  int i,j,k,l;
-  while ((type=dump.nextIntegral(i,j,k,l,value))!=FCIdump::endOfFile) {
-//      xout << "integral "<<i<<j<<k<<l<<" value="<<value<<" type="<<type<<std::endl;
-    if (type == FCIdump::I2aa) {
-      if (verbosity>2) xout << "aa("<< i << j <<"|"<< k << l <<") [" << int2Index(i,j,k,l) << "]= " << value <<std::endl;
-      if (verbosity>2) xout << "aa("<< k << l <<"|"<< i << j <<") [" << int2Index(k,l,i,j) << "]= " << value <<std::endl;
-      integrals_aa->at(int2Index(i,j,k,l))=value;
-      integrals_aa->at(int2Index(k,l,i,j))=value;
-    } else if (type == FCIdump::I2ab) {
-      if (verbosity>2) xout << "ab("<< i << j <<"|"<< k << l <<") [" << int2Index(i,j,k,l) << "]= " << value <<std::endl;
-      integrals_ab->at(int2Index(i,j,k,l))=value;
-    } else if (type == FCIdump::I2bb) {
-      if (verbosity>2) xout << "bb("<< i << j <<"|"<< k << l <<") [" << int2Index(i,j,k,l) << "]= " << value <<std::endl;
-      if (verbosity>2) xout << "bb("<< k << l <<"|"<< i << j <<") [" << int2Index(k,l,i,j) << "]= " << value <<std::endl;
-      integrals_bb->at(int2Index(i,j,k,l))=value;
-      integrals_bb->at(int2Index(k,l,i,j))=value;
-    } else if (type == FCIdump::I1a) {
-      if (verbosity>1) xout << "ha("<< i <<","<< j <<") = " << value <<std::endl;
-      integrals_a->at(int1Index(i,j))=value;
-    } else if (type == FCIdump::I1b) {
-      if (verbosity>1) xout << "hb("<< i <<","<< j <<") = " << value <<std::endl;
-      integrals_b->at(int1Index(i,j))=value;
-    } else if (type == FCIdump::I0)
-      coreEnergy = value;
-  }
-  }
-  loaded=true;
-  if (verbosity>3) {
-    xout << "integrals_a: ";copy(integrals_a->begin(), integrals_a->end(), std::ostream_iterator<double>(xout, ", "));xout <<std::endl;
-    xout << "integrals_aa: ";copy(integrals_aa->begin(), integrals_aa->end(), std::ostream_iterator<double>(xout, ", "));xout <<std::endl;
-  }
-  constructBraKet();
-  //    xout <<str(3) <<std::endl;exit(0);
 }
 
 #define del(x) if (x != NULL && x->size()) delete x; x=NULL;

@@ -30,18 +30,6 @@ public:
   OldOperator();
 
   /*!
- \brief construct Operator object
-
- \param filename : call load
-*/
-  OldOperator(std::string filename);
-//  /*!
-//     \brief construct Operator object
-
-//     \param dump : if present, call load
-//    */
-//  OldOperator(const FCIdump &dump);
-  /*!
    * \brief copy constructor
    * \param source
    */
@@ -56,11 +44,11 @@ public:
   explicit OldOperator(const OldOperator &source, const bool forceSpinUnrestricted, const bool oneElectron=true, const bool twoElectron=true);
   /*!
    * \brief Construct an operator templated on another, but with a special specification
-   * \param source
    * \param special
-   * \param forceSpinUnrestricted whether to force conversion to a UHF object
    * - "Q" projector onto space containing satellite orbital
    * - "P" 1-Q
+   * \param source
+   * \param forceSpinUnrestricted whether to force conversion to a UHF object
    */
   explicit OldOperator(const std::string special, const OldOperator &source, const bool forceSpinUnrestricted=false);
   virtual ~OldOperator();
