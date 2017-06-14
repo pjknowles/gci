@@ -24,6 +24,7 @@ OldOperator::OldOperator(const gci::Operator &source)
 {
   std::vector<int> syms;
   for (auto& s : source.orbital_symmetries()) syms.push_back(s+1);
+  xout << "OldOperator from Operator: syms ="; for (auto& s: syms) xout << " "<<s; xout <<std::endl;
   OrbitalSpace::load(syms,source.m_uhf);
   basisSize = std::accumulate(source.m_dimensions[0].begin(),source.m_dimensions[0].end(),0);
   ijSize = total(0,1);

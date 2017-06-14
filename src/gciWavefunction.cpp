@@ -736,9 +736,9 @@ void Wavefunction::density(memory::vector<double>& den1, memory::vector<double>&
 SMat Wavefunction::naturalOrbitals()
 {
 //    xout <<"naturalOrbitals"<<std::endl;
-  SMat natorb(std::vector<std::vector<size_t> >{*orbitalSpace,*orbitalSpace},0,0,"Natural orbitals");
-    SMat dens1(std::vector<std::vector<size_t> >{*orbitalSpace,*orbitalSpace},1,0,"Density");
-    SMat ee({*orbitalSpace},0,-1,"Occupation numbers");
+  SMat natorb(std::vector<std::vector<size_t> >{*orbitalSpace,*orbitalSpace},parityNone,0,"Natural orbitals");
+    SMat dens1(std::vector<std::vector<size_t> >{*orbitalSpace,*orbitalSpace},parityEven,0,"Density");
+    SMat ee({*orbitalSpace},parityNone,-1,"Occupation numbers");
     density(*dens1.data());
     // at this point, the off-diagonal elements of the density are twice what they should be, so sort that out.
     dens1 *=0.5; for (int k=0; k<dens1.max_symmetry(); k++) for (size_t l=0;l<dens1.dimension(k);l++) dens1.block(k)[(l+2)*(l+1)/2-1]*=2;
