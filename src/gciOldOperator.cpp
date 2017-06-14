@@ -52,9 +52,9 @@ OldOperator::OldOperator(const gci::Operator &source)
   bracket_integrals_a=bracket_integrals_b=NULL;
   bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
   constructBraKet();
-//  std::cout << "bracket_integrals_aa:\n"; for(auto& s : *bracket_integrals_aa) std::cout << " "<<s ; std::cout << std::endl;
-//  bracket_integrals_aa = vecdup(*source.O2(true,true,false).data());
-//  std::cout << "bracket_integrals_aa:\n"; for(auto& s : *bracket_integrals_aa) std::cout << " "<<s ; std::cout << std::endl;
+  std::cout << "bracket_integrals_aa:\n"; for(auto& s : *bracket_integrals_aa) std::cout << " "<<s ; std::cout << std::endl;
+  bracket_integrals_aa = vecdup(*source.O2(true,true,false).data());
+  std::cout << "bracket_integrals_aa:\n"; for(auto& s : *bracket_integrals_aa) std::cout << " "<<s ; std::cout << std::endl;
 //  bracket_integrals_ab = vecdup(*source.O2(true,false,false).data());
 //  bracket_integrals_bb = vecdup(*source.O2(false,false,false).data());
 }

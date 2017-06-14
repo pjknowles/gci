@@ -133,9 +133,12 @@ Eigen::MatrixXd gci::Operator::intK(int spin) const
           ((si < sj) ?
              O2(spin>0,spin>0).smat(si^sj,si,oi,oj)->blockMap(si)(oi,oj)
            :
-             O2(spin>0,spin>0).smat(si^sj,sj,oj,oi)->blockMap(sj)(oj,oi)
-             );
-    }
+             ((si > sj) ?
+                O2(spin>0,spin>0).smat(si^sj,sj,oj,oi)->blockMap(sj)(oj,oi)
+              :
+                O2(spin>0,spin>0).smat(0,si,oi,oi)->block(sj)[(oj+2)*(oj+1)/2-1]
+             ));
+      }
   }
   return result;
 }
