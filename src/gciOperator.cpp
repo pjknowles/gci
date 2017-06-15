@@ -18,11 +18,11 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
   double value;
   FCIdump::integralType type;
   int i,j,k,l;
-  SMat& integrals_a = result.O1(true); integrals_a.assign(0);
-  SMat& integrals_b = result.O1(false);integrals_b.assign(0);
-  SMatMat& integrals_aa = result.O2(true,true);
-  SMatMat& integrals_ab = result.O2(true,false);
-  SMatMat& integrals_bb = result.O2(false,false);
+  auto& integrals_a = result.O1(true); integrals_a.assign(0);
+  auto& integrals_b = result.O1(false);integrals_b.assign(0);
+  auto& integrals_aa = result.O2(true,true);
+  auto& integrals_ab = result.O2(true,false);
+  auto& integrals_bb = result.O2(false,false);
   if (verbosity>0) {
       xout << "integral addresses "<< &integrals_a<<" "<<&integrals_b<<std::endl;
       xout << "integral addresses "<< &integrals_a.block(0)[0]<<" "<<&integrals_b.block(0)[0]<<std::endl;
