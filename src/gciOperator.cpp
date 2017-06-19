@@ -84,9 +84,9 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
     }
 //  exit(0);
   if (verbosity>0) xout << result << std::endl;
-  if (verbosity>-1) xout << "int1:\n" <<result.int1(1)<< std::endl;
-  if (verbosity>-1) xout << "intJ:\n" <<result.intJ(1,1)<< std::endl;
-  if (verbosity>-1) xout << "intK:\n" <<result.intK(1)<< std::endl;
+  if (verbosity>1) xout << "int1:\n" <<result.int1(1)<< std::endl;
+  if (verbosity>1) xout << "intJ:\n" <<result.intJ(1,1)<< std::endl;
+  if (verbosity>1) xout << "intK:\n" <<result.intK(1)<< std::endl;
 
   return result;
 }

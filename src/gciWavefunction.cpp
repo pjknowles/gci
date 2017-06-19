@@ -642,31 +642,31 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
         if (aa.size()==0) continue;
         unsigned int symexc = symb^syma^w.symmetry;
 //        size_t nexc = h.pairSpace.find(0)->second[symexc];
-        size_t nexc = h.O2(true,false).block_size(symexc);
+        size_t nexc = h.O2(true,false,false).block_size(symexc);
         profiler->start("StringSet iterator loops");
         for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
           size_t nsa = aa1-aa0;
           for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
             size_t nsb = bb1-bb0;
             if (!NextTask()) continue;
-          profiler->start("TransitionDensity ab");
+            profiler->start("TransitionDensity ab");
             TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
-          profiler->stop("TransitionDensity ab");
+            profiler->stop("TransitionDensity ab");
             TransitionDensity e(d);
-            // if (false) {
-            //   xout << "AB integral block" <<std::endl;
-            //   for (size_t j=0; j<nexc; j++) {
-            // 	for (size_t i=0; i<nexc; i++)
-            // 	  xout <<
-      // 	    (*h.bracket_integrals_ab)[h.pairSpace.find(0)->second.offset(0,symexc,0)+i+j*nexc]
-            // 	       << " ";
-            // 	xout <<std::endl;
-            //   }
-            //}
+             if (false) {
+                 xout << "AB integral block new" <<std::endl;
+                 for (size_t j=0; j<nexc; j++) {
+                     for (size_t i=0; i<nexc; i++)
+                       xout <<
+                               h.O2(true,false,false).block(symexc)[i+j*nexc]
+                           << " ";
+                xout <<std::endl;
+               }
+            }
           profiler->start("MXM ab");
             MxmDrvNN(&e[0],&d[0],
 //                     &(*h.bracket_integrals_ab)[h.pairSpace.find(0)->second.offset(0,symexc,0)],
-              &h.O2(true,false).block(symexc)[0],
+              &h.O2(true,false,false).block(symexc)[0],
                 nsa*nsb,nexc,nexc,false);
           profiler->stop("MXM ab",2*nsa*nsb*nexc*nexc);
           profiler->start("action ab");
@@ -836,16 +836,16 @@ void Wavefunction::operatorOnWavefunction(const OldOperator &h, const Wavefuncti
             TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
           profiler->stop("TransitionDensity ab");
             TransitionDensity e(d);
-            // if (false) {
-            //   xout << "AB integral block" <<std::endl;
-            //   for (size_t j=0; j<nexc; j++) {
-            // 	for (size_t i=0; i<nexc; i++)
-            // 	  xout <<
-      // 	    (*h.bracket_integrals_ab)[h.pairSpace.find(0)->second.offset(0,symexc,0)+i+j*nexc]
-            // 	       << " ";
-            // 	xout <<std::endl;
-            //   }
-            //}
+             if (false) {
+               xout << "AB integral block old" <<std::endl;
+               for (size_t j=0; j<nexc; j++) {
+                for (size_t i=0; i<nexc; i++)
+                  xout <<
+            (*h.bracket_integrals_ab)[h.pairSpace.find(0)->second.offset(0,symexc,0)+i+j*nexc]
+                       << " ";
+                xout <<std::endl;
+               }
+            }
           profiler->start("MXM ab");
             MxmDrvNN(&e[0],&d[0],
                      &(*h.bracket_integrals_ab)[h.pairSpace.find(0)->second.offset(0,symexc,0)],

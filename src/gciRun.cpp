@@ -44,8 +44,11 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
 //        xout <<"g->buffer"<<g->data()<<std::endl;
 //        xout << "activeHamiltonian "<<activeHamiltonian->str(2)<<std::endl;
         // HERE!!
-//        g->operatorOnWavefunction(*activeHamiltonian, *x, parallel_stringset);
-        g->operatorOnWavefunction(*currentHamiltonian, *x, parallel_stringset);
+//          g->operatorOnWavefunction(*activeHamiltonian, *x, parallel_stringset);
+//        xout << "g "<<g->str(2)<<std::endl;
+//        g->zero();
+          g->operatorOnWavefunction(*currentHamiltonian, *x, parallel_stringset);
+//        xout << "g "<<g->str(2)<<std::endl;
         profiler->stop("Hc");
 //        xout << "g=Hc "<<g->str(2)<<std::endl;
         if (_residual_subtract_Energy) {
