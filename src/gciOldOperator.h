@@ -52,9 +52,11 @@ public:
    */
   explicit OldOperator(const std::string special, const OldOperator &source, const bool forceSpinUnrestricted=false);
   virtual ~OldOperator();
-  void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load integrals from FCIDUMP */
-  void load(const FCIdump &dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */
+//  void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load integrals from FCIDUMP */
+//  void load(const FCIdump &dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */
+private:
   void unload(); /**< \brief destroy loaded integrals */
+public:
   /*!
      * \brief Construct a printable representation of the operator
      * \param verbosity how much information to include
@@ -62,7 +64,9 @@ public:
      * \return printable representation of the operator
      */
   std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
+private:
   bool loaded;  /**< \brief whether the integrals are loaded */
+public:
   double coreEnergy; /**< \brief core energy */
   std::vector<double> *integrals_a;  /**< \brief point to aa integrals */
   std::vector<double> *integrals_b; /**< \brief point to bb integrals */
@@ -77,6 +81,7 @@ public:
   std::vector<double> *bracket_integrals_ab; /**< \brief point to abab integrals in bra-ket form */
   std::vector<double> *bracket_integrals_bb; /**< \brief point to bbbb integrals in bra-ket form, antisymmetrised */
   size_t basisSize;///< \brief size of orbital basis set
+private:
   /*!
      * \brief calculate canonical index of a pair of orbitals.
      * \param i Absolute number (starting with 1) of first orbital.
@@ -94,6 +99,7 @@ public:
      */
   size_t int2Index (unsigned int i, unsigned int j, unsigned int k, unsigned int l) const;
 
+ public:
   /*!
      * \brief int1 Generate array of diagonal one-electron integrals
      * \param spin positive for alpha, negative for beta

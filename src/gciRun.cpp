@@ -170,19 +170,19 @@ std::vector<double> Run::run()
   addParameter("EXPLICIT1","1"); // because Operator no longer supports embedding 1-electron in 2-electron
   parallel_stringset = parameter("PARALLEL_STRINGSET").at(0) != 0;
 
-  bool test_rotation_of_hamiltonian=false;
-  if (test_rotation_of_hamiltonian) {
-    std::vector<double> rot(hh.total(0,0));
-    double theta=std::acos(-1.0)/4;
-    for (std::vector<double>::iterator i=rot.begin(); i!=rot.end(); i++) *i=(double)0;
-    for (unsigned int i=0; i<hh.basisSize; i++) rot[hh.pairIndex(i+1,i+1,0)]=(double)1;
-    rot[0]=rot[3]=std::cos(theta);
-    rot[2]=-std::sin(theta);
-    rot[1]=std::sin(theta);
-    xout << "rotation matrix"; for (std::vector<double>::const_iterator i=rot.begin(); i!=rot.end(); i++) xout <<" "<< *i; xout <<std::endl;
-    for (unsigned int i=0; i<hh.total(); i++)  rot[hh.int1Index(i+1,i+1)]=(double)1;
-    hh.rotate(&rot);
-  }
+//  bool test_rotation_of_hamiltonian=false;
+//  if (test_rotation_of_hamiltonian) {
+//    std::vector<double> rot(hh.total(0,0));
+//    double theta=std::acos(-1.0)/4;
+//    for (std::vector<double>::iterator i=rot.begin(); i!=rot.end(); i++) *i=(double)0;
+//    for (unsigned int i=0; i<hh.basisSize; i++) rot[hh.pairIndex(i+1,i+1,0)]=(double)1;
+//    rot[0]=rot[3]=std::cos(theta);
+//    rot[2]=-std::sin(theta);
+//    rot[1]=std::sin(theta);
+//    xout << "rotation matrix"; for (std::vector<double>::const_iterator i=rot.begin(); i!=rot.end(); i++) xout <<" "<< *i; xout <<std::endl;
+//    for (unsigned int i=0; i<hh.total(); i++)  rot[hh.int1Index(i+1,i+1)]=(double)1;
+//    hh.rotate(&rot);
+//  }
 
   profiler->stop("load Hamiltonian");
   size_t referenceLocation;
