@@ -59,7 +59,7 @@ public:
   void allocate_buffer(); ///< allocate buffer to full size
   size_t size() const; ///< the size of the space
 
-  void diagonalOperator(const OldOperator& oper); ///< set this object to the diagonal elements of the hamiltonian
+  void diagonalOperator(const Operator& op, const OldOperator& oper); ///< set this object to the diagonal elements of the hamiltonian
 
   /*!
      * \brief find the index of the smallest component

@@ -191,7 +191,7 @@ std::vector<double> Run::run()
   profiler->start("find reference");
   { // so that w goes out of scope
     Wavefunction w(*globalFCIdump);
-    w.diagonalOperator(hh);
+    w.diagonalOperator(hho,hh);
     referenceLocation = w.minloc();
     referenceDeterminant = w.determinantAt(referenceLocation);
     xout.precision(8);
@@ -227,12 +227,15 @@ std::vector<double> Run::run()
     h2-=h1; h2-=h0;
 //    xout <<"h2.spinUnrestricted="<<h2.spinUnrestricted<<std::endl;
 //    xout <<"h2="<<h2<<std::endl;
+    std::vector<gci::Operator*> hams;
+    hams.push_back(&hho); //FIXME should be H0
+    hams.push_back(&hho);//FIXME should be H1
     std::vector<gci::OldOperator*> hamiltonians;
     hamiltonians.push_back(&h0);
     hamiltonians.push_back(&h1);
     if (scs_opposite != (double) 1 || scs_same != (double) 1) hamiltonians.push_back(&h2);
 //    xout << "hamiltonians.size()" << hamiltonians.size() << std::endl;
-    std::vector<double> emp = RSPT(hamiltonians, prototype);
+    std::vector<double> emp = RSPT(hams, hamiltonians, prototype);
 //    std::vector<double> emp = ISRSPT(hh, h0, prototype);
     xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
@@ -244,7 +247,8 @@ std::vector<double> Run::run()
   } else  if (method == "ISRSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
     OldOperator h0 = hh.FockOperator(referenceDeterminant);
-    std::vector<double> emp = ISRSPT(hh, h0, prototype);
+    Operator ham0 = hho; // FIXME .FockOperator(referenceDeterminant);
+    std::vector<double> emp = ISRSPT(hho, ham0, hh, h0, prototype);
     xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(emp[i]=totalEnergy+=emp[i]); xout <<std::endl;
@@ -253,14 +257,14 @@ std::vector<double> Run::run()
     itf::SetVariables( "ENERGY_MP", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
   } else if (method == "DAVIDSON") {
-    energies = Davidson(hh, prototype);
+    energies = Davidson(hho, hh, prototype);
   } else if (method == "CS") {
-    energies = CSDavidson(hh, prototype);
+    energies = CSDavidson(hho, hh, prototype);
 #ifdef MOLPRO
 //    itf::SetVariables( "ENERGY_METHOD", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
   } else if (method=="DIIS") {
-    energies = DIIS(hh, prototype);
+    energies = DIIS(hho, hh, prototype);
   } else if (method=="HAMILTONIAN")
      HamiltonianMatrixPrint(hh,prototype);
   else if (method=="PROFILETEST") {
@@ -299,7 +303,7 @@ using namespace itf;
 #endif
 
 #include <cmath>
-std::vector<double> Run::DIIS(const OldOperator &hamiltonian, const State &prototype, double energyThreshold, int maxIterations)
+std::vector<double> Run::DIIS(const Operator &ham, const OldOperator &hamiltonian, const State &prototype, double energyThreshold, int maxIterations)
 {
   OldOperator h(hamiltonian);
   profiler->start("DIIS");
@@ -321,7 +325,7 @@ std::vector<double> Run::DIIS(const OldOperator &hamiltonian, const State &proto
 //  xout << "P operator" <<std::endl<<P<<std::endl;
   Wavefunction w(prototype);
   Wavefunction d(w);
-  d.diagonalOperator(h);
+  d.diagonalOperator(ham,h);
   Wavefunction g(d);
   size_t reference = d.minloc();
 //  double e0=d.at(reference);
@@ -348,9 +352,11 @@ std::vector<double> Run::DIIS(const OldOperator &hamiltonian, const State &proto
   return std::vector<double>{_lastEnergy};
 }
 
-std::vector<double> Run::Davidson(const OldOperator& hamiltonian,
-                                  const State &prototype,
-                                  double energyThreshold, int nState, int maxIterations)
+std::vector<double> Run::Davidson(
+    const Operator& ham,
+    const OldOperator& hamiltonian,
+    const State &prototype,
+    double energyThreshold, int nState, int maxIterations)
 {
   OldOperator h(hamiltonian);
   auto p = profiler->push("Davidson");
@@ -367,7 +373,7 @@ std::vector<double> Run::Davidson(const OldOperator& hamiltonian,
   xout << "; energy threshold="<<std::scientific<<std::setprecision(1)<<energyThreshold<<std::endl;
   xout <<std::fixed<<std::setprecision(8);
   Wavefunction d(prototype);
-  d.diagonalOperator(h);
+  d.diagonalOperator(ham,h);
   _preconditioning_diagonals = &d;
   activeHamiltonian = &h;
   _residual_subtract_Energy=false;
@@ -397,9 +403,10 @@ std::vector<double> Run::Davidson(const OldOperator& hamiltonian,
 
 
 
-std::vector<double> Run::CSDavidson(const OldOperator& hamiltonian,
-                                  const State &prototype,
-                                  double energyThreshold, int nState, int maxIterations)
+std::vector<double> Run::CSDavidson(const Operator& ham,
+                                    const OldOperator& hamiltonian,
+                                    const State &prototype,
+                                    double energyThreshold, int nState, int maxIterations)
 {
   profiler->start("Davidson");
   profiler->start("Davidson preamble");
@@ -420,7 +427,7 @@ std::vector<double> Run::CSDavidson(const OldOperator& hamiltonian,
     xout << "Compressive sampling algorithm, k="<<compressionK<<", l="<<compressionL<<", epsilon="<<energyThreshold<<std::endl;
   Wavefunction w(prototype);
   Wavefunction g(w);
-  g.diagonalOperator(hamiltonian);
+  g.diagonalOperator(ham,hamiltonian);
   size_t reference = g.minloc();
   double e0=g.at(reference);
   g -= (e0-(double)1e-10);
@@ -642,7 +649,7 @@ std::vector<double> Run::CSDavidson(const OldOperator& hamiltonian,
     return e;
 }
 
-std::vector<double> Run::RSPT(const std::vector<gci::OldOperator*>& hamiltonians,
+std::vector<double> Run::RSPT(const std::vector<Operator *> &hams, const std::vector<gci::OldOperator*>& hamiltonians,
                               const State &prototype,
             int maxOrder,
                               double energyThreshold,
@@ -663,7 +670,7 @@ std::vector<double> Run::RSPT(const std::vector<gci::OldOperator*>& hamiltonians
   Wavefunction w(prototype);
   xout <<"RSPT wavefunction size="<<w.size()<<std::endl;
   Wavefunction g(w);
-  g.diagonalOperator(*hamiltonians[0]);
+  g.diagonalOperator(*hams[0],*hamiltonians[0]);
   size_t reference = g.minloc();
   e[0]=g.at(reference);
   g-=e[0];g.set(reference,(double)1);
@@ -728,6 +735,8 @@ std::vector<double> Run::RSPT(const std::vector<gci::OldOperator*>& hamiltonians
 }
 
 std::vector<double> Run::ISRSPT(
+        const gci::Operator& ham,
+        const gci::Operator& ham0,
         const gci::OldOperator& hamiltonian,
         const gci::OldOperator& hamiltonian0,
                               const State &prototype,
@@ -745,7 +754,7 @@ std::vector<double> Run::ISRSPT(
   Wavefunction w(prototype);
   xout <<"RSPT wavefunction size="<<w.size()<<std::endl;
   Wavefunction d(w);
-  d.diagonalOperator(hamiltonian0);
+  d.diagonalOperator(ham0,hamiltonian0);
   Wavefunction g(d);
   _preconditioner_subtractDiagonal=true;
   size_t reference = d.minloc();

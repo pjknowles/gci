@@ -82,7 +82,7 @@ void Wavefunction::set(const double value)
   for (std::vector<double>::iterator b=buffer.begin(); b != buffer.end(); b++) *b=value;
 }
 
-void Wavefunction::diagonalOperator(const OldOperator &oper)
+void Wavefunction::diagonalOperator(const Operator &op, const OldOperator &oper)
 {
   profiler->start("diagonalOperator");
   std::vector<double> ha=oper.int1(1);
@@ -112,7 +112,7 @@ void Wavefunction::diagonalOperator(const OldOperator &oper)
   //        xout <<std::endl;
   //    }
   size_t offset=0;
-  set(oper.coreEnergy);
+  set(op.m_O0);
   for (unsigned int syma=0; syma<8; syma++) {
     unsigned int symb = syma ^ symmetry;
     size_t nsa = alphaStrings[syma].size();
