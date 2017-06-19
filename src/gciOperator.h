@@ -3,6 +3,7 @@
 #include "Operator.h"
 #include "FCIdump.h"
 #include "Eigen/Dense"
+#include "gciDeterminant.h"
 
 
 namespace gci {
@@ -41,6 +42,12 @@ namespace gci {
     Eigen::MatrixXd intK(int spin) const;
 
     std::vector<unsigned int> orbital_symmetries() const { return m_orbital_symmetries;}
+
+    /*!
+     * \brief Build a Fock operator from the density arising from a single Slater determinant
+     * \param reference The Slater determinant
+     */
+    Operator fockOperator(const Determinant& reference, const std::string description="Fock") const;
 
   private:
   std::vector<unsigned int> m_orbital_symmetries;
