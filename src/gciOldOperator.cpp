@@ -24,7 +24,6 @@ OldOperator::OldOperator(const gci::Operator &source)
 {
   std::vector<int> syms;
   for (auto& s : source.orbital_symmetries()) syms.push_back(s+1);
-  xout << "OldOperator from Operator: syms ="; for (auto& s: syms) xout << " "<<s; xout <<std::endl;
   OrbitalSpace::load(syms,source.m_uhf);
   basisSize = std::accumulate(source.m_dimensions[0].begin(),source.m_dimensions[0].end(),0);
   ijSize = total(0,1);
@@ -51,12 +50,20 @@ OldOperator::OldOperator(const gci::Operator &source)
   loaded=true;
   bracket_integrals_a=bracket_integrals_b=NULL;
   bracket_integrals_aa=bracket_integrals_ab=bracket_integrals_bb=NULL;
-  constructBraKet();
-  std::cout << "bracket_integrals_aa:\n"; for(auto& s : *bracket_integrals_aa) std::cout << " "<<s ; std::cout << std::endl;
+//  constructBraKet();
+//  std::cout << "bracket_integrals_aa:\n"; for(auto& s : *bracket_integrals_aa) std::cout << " "<<s ; std::cout << std::endl;
+  bracket_integrals_a = vecdup(*source.O1(true).data());
   bracket_integrals_aa = vecdup(*source.O2(true,true,false).data());
+  bracket_integrals_ab = vecdup(*source.O2(true,false,false).data());
+  if (spinUnrestricted) {
+      bracket_integrals_b = vecdup(*source.O1(false).data());
+      bracket_integrals_bb = vecdup(*source.O2(false,false,false).data());
+    }
+  else {
+      bracket_integrals_bb = bracket_integrals_aa;
+      bracket_integrals_b = bracket_integrals_a;
+    }
   std::cout << "bracket_integrals_aa:\n"; for(auto& s : *bracket_integrals_aa) std::cout << " "<<s ; std::cout << std::endl;
-//  bracket_integrals_ab = vecdup(*source.O2(true,false,false).data());
-//  bracket_integrals_bb = vecdup(*source.O2(false,false,false).data());
 }
 
 OldOperator::OldOperator()
@@ -208,6 +215,7 @@ OldOperator::~OldOperator() {
 #define del2(x,y) if (x != y) del(x); del(y); del(x);
 void OldOperator::constructBraKet(int neleca, int nelecb)
 {
+  throw std::logic_error("OldOperator::constructBraKet obsolete");
   deconstructBraKet();
   // construct <ik||jl> = (ij|kl) - (il|kj)
   bracket_integrals_aa = new std::vector<double>(pairSpace[-1].total(0,0),0.0);

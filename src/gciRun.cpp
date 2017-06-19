@@ -167,6 +167,7 @@ std::vector<double> Run::run()
   auto hho=Operator::construct(*globalFCIdump);
 //  OldOperator hh(*globalFCIdump);
   OldOperator hh{hho};
+  addParameter("EXPLICIT1","1"); // because Operator no longer supports embedding 1-electron in 2-electron
   parallel_stringset = parameter("PARALLEL_STRINGSET").at(0) != 0;
 
   bool test_rotation_of_hamiltonian=false;
