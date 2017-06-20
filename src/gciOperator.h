@@ -55,6 +55,7 @@ namespace gci {
     /*!
      * \brief Build a Fock operator from the density arising from a single Slater determinant
      * \param reference The Slater determinant
+     * \param description Descriptive text
      */
     Operator fockOperator(const Determinant& reference, const std::string description="Fock") const;
 

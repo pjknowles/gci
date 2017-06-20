@@ -20,7 +20,7 @@ using namespace gci;
 using namespace LinearAlgebra;
 
 const static gci::Operator* currentHamiltonian;
-const static OldOperator* activeHamiltonian;
+//const static OldOperator* activeHamiltonian;
 static Wavefunction* _preconditioning_diagonals;
 static double _lastEnergy;
 static double _mu;
@@ -275,7 +275,7 @@ std::vector<double> Run::run()
 //    itf::SetVariables( "ENERGY_METHOD", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
   } else if (method=="DIIS") {
-    energies = DIIS(hho, hh, prototype);
+    energies = DIIS(hho, prototype);
   } else if (method=="HAMILTONIAN")
      HamiltonianMatrixPrint(hho,prototype);
   else if (method=="PROFILETEST") {
@@ -314,9 +314,9 @@ using namespace itf;
 #endif
 
 #include <cmath>
-std::vector<double> Run::DIIS(const Operator &ham, const OldOperator &hamiltonian, const State &prototype, double energyThreshold, int maxIterations)
+std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, double energyThreshold, int maxIterations)
 {
-  OldOperator h(hamiltonian);
+  OldOperator h(ham);
   profiler->start("DIIS");
   profiler->start("DIIS preamble");
 //  xout << "on entry to Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
@@ -345,7 +345,7 @@ std::vector<double> Run::DIIS(const Operator &ham, const OldOperator &hamiltonia
   //    xout << "Diagonal H: " << g.str(2) << std::endl;
   _preconditioning_diagonals = &d;
   currentHamiltonian = &ham;
-  activeHamiltonian = &h;
+//  activeHamiltonian = &h;
   _residual_subtract_Energy=true;
   _preconditioner_subtractDiagonal=true;
   LinearAlgebra::DIIS solver(&_residual,&_preconditioner);
@@ -389,7 +389,7 @@ std::vector<double> Run::Davidson(
   d.diagonalOperator(ham,h);
   _preconditioning_diagonals = &d;
   currentHamiltonian = &ham;
-  activeHamiltonian = &h;
+//  activeHamiltonian = &h;
   _residual_subtract_Energy=false;
   _preconditioner_subtractDiagonal=false;
   LinearAlgebra::Davidson solver(&_residual,&_preconditioner);
@@ -774,7 +774,7 @@ std::vector<double> Run::ISRSPT(
   size_t reference = d.minloc();
   _preconditioning_diagonals = &d;
   currentHamiltonian=&ham;
-  activeHamiltonian=&hamiltonian;
+//  activeHamiltonian=&hamiltonian;
   _residual_subtract_Energy=false;
   _preconditioner_subtractDiagonal=false;
   LinearAlgebra::RSPT solver(&_residual,&_preconditioner);

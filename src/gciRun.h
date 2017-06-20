@@ -40,6 +40,7 @@ public:
 private:
   /*!
    * \brief Perform a Rayleigh-Schroedinger perturbation theory calculation
+   * \param hams A vector of pointers to the zero, first, second... order hamiltonians
    * \param hamiltonians A vector of pointers to the zero, first, second... order hamiltonians
    * \param prototype A State object specifying number of electrons, symmetry, spin
    * If it is a Wavefunction , then that will be used also for specifying the configuration space, otherwise the default FCI
@@ -61,6 +62,7 @@ private:
 
   /*!
    * \brief Perform a variational calculation using the Davidson algorithm
+   * \param ham The Hamiltonian
    * \param hamiltonian The Hamiltonian
    * \param prototype A State object specifying number of electrons, symmetry, spin
    * If it is a Wavefunction , then that will be used also for specifying the configuration space, otherwise the default FCI
@@ -77,14 +79,14 @@ private:
                                double energyThreshold=(double)-1, int nState=-1, int maxIterations=-1);
   /*!
    * \brief Perform a variational calculation using the preconditioned stepest descent algorithm
-   * \param hamiltonian The Hamiltonian
+   * \param ham The Hamiltonian
    * \param prototype A State object specifying number of electrons, symmetry, spin
    * If it is a Wavefunction , then that will be used also for specifying the configuration space, otherwise the default FCI
    * \param energyThreshold Convergence threshold for energy
    * \param maxIterations The maximum number of iterations to perform
    * \return the energy of the state.
    */
-  std::vector<double> DIIS(const Operator &ham, const OldOperator &hamiltonian,
+  std::vector<double> DIIS(const Operator &ham,
                                const State& prototype,
                                double energyThreshold=(double)-1, int maxIterations=-1);
 
