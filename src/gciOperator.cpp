@@ -7,12 +7,15 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
   std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
   dim_t dim(8);
   for (auto& s : orbital_symmetries)
-    dim.at(--s)++;
+    dim.at(s-1)++;
 
-  gci::Operator result(dims_t(4,dim),2,dump.parameter("IUHF")[0]>0,{1,1},{-1,-1},0,"Hamiltonian");
-  for (auto& s : orbital_symmetries ) result.m_orbital_symmetries.push_back(s);
+  bool uhf = dump.parameter("IUHF")[0]>0;
+  gci::Operator result(dims_t(4,dim),2,uhf,{1,1},{-1,-1},0,"Hamiltonian");
+  for (auto i=0; i<4; i++) result.m_orbitalSpaces.push_back(OrbitalSpace(orbital_symmetries,uhf)); // in this implementation, all four orbital spaces are the same
+  for (auto& s : orbital_symmetries ) result.m_orbital_symmetries.push_back(--s);
   result.m_fcidump = &dump;
 //  for (auto i=0; i<orbital_symmetries.size(); i++) xout << "i="<<i+1<<", symmetry="<<orbital_symmetries[i]<<", offset="<<result.offset(i+1)<<std::endl;;
+//  for (auto i=0; i<orbital_symmetries.size(); i++) xout << "i="<<i+1<<", symmetry="<<result.m_orbital_symmetries[i]<<std::endl;;
 
   dump.rewind();
   double value;

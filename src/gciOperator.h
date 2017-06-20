@@ -4,6 +4,7 @@
 #include "FCIdump.h"
 #include "Eigen/Dense"
 #include "gciDeterminant.h"
+#include "gciOrbitalSpace.h"
 
 
 namespace gci {
@@ -60,6 +61,7 @@ namespace gci {
     Operator fockOperator(const Determinant& reference, const std::string description="Fock") const;
 
   private:
+   std::vector<OrbitalSpace> m_orbitalSpaces;
   std::vector<unsigned int> m_orbital_symmetries;
 
     /*!

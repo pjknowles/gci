@@ -23,6 +23,9 @@ public:
      \param verbosity : how much to print
     */
   OrbitalSpace(const FCIdump &dump, int verbosity=0);
+  OrbitalSpace(const std::vector<int> syms, bool uhf=false, int verbosity=0) {
+    load(syms, uhf, verbosity);
+  }
   virtual ~OrbitalSpace(){}
 
   void load(const std::vector<int> syms, bool uhf=false, int verbosity=0);
