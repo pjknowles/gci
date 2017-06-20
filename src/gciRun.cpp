@@ -218,7 +218,7 @@ std::vector<double> Run::run()
     double scs_same = parameter("SCS_SAME",std::vector<double>(1,(double)1)).at(0);
     xout << "First-order hamiltonian contains " << scs_opposite<<" of opposite-spin and "<< scs_same <<" of same spin"<<std::endl;
     xout << "Second-order hamiltonian contains " << 1-scs_opposite<<" of opposite-spin and "<< 1-scs_same <<" of same spin"<<std::endl;
-    OldOperator h0 = hh.FockOperator(referenceDeterminant);
+//    OldOperator h0 = hh.FockOperator(referenceDeterminant);
     Operator ham0 = hho.fockOperator(referenceDeterminant);
 //    xout <<"h0.spinUnrestricted="<<h0.spinUnrestricted<<std::endl;
 //    xout <<"h0="<<h0<<std::endl;
@@ -258,7 +258,7 @@ std::vector<double> Run::run()
 #endif
   } else  if (method == "ISRSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
-    OldOperator h0 = hh.FockOperator(referenceDeterminant);
+//    OldOperator h0 = hh.FockOperator(referenceDeterminant);
     Operator ham0 = hho.fockOperator(referenceDeterminant);
     std::vector<double> emp = ISRSPT(hho, ham0, prototype);
     xout <<std::fixed << std::setprecision(8);
@@ -317,7 +317,7 @@ using namespace itf;
 #include <cmath>
 std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, double energyThreshold, int maxIterations)
 {
-  OldOperator h(ham);
+//  OldOperator h(ham);
   profiler->start("DIIS");
   profiler->start("DIIS preamble");
 //  xout << "on entry to Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
@@ -790,8 +790,8 @@ std::vector<double> Run::ISRSPT(
 #include <cmath>
 void Run::HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity)
 {
-  OldOperator h(hamiltonian);
-  Wavefunction w(&h,prototype.nelec,prototype.symmetry,prototype.ms2);
+//  OldOperator h(hamiltonian);
+  Wavefunction w(&hamiltonian.m_orbitalSpaces[0],prototype.nelec,prototype.symmetry,prototype.ms2);
   Wavefunction g(w);
   xout << std::endl << "Full Hamiltonian matrix"<<std::endl;
   if (verbosity >= 0) {
