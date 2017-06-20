@@ -371,7 +371,7 @@ std::vector<double> Run::Davidson(
     const State &prototype,
     double energyThreshold, int nState, int maxIterations)
 {
-  OldOperator h(hamiltonian);
+//  OldOperator h(hamiltonian);
   auto p = profiler->push("Davidson");
   profiler->start("Davidson preamble");
   //  xout << "on entry to Run::Davidson energyThreshold="<<energyThreshold<<std::endl;

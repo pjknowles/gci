@@ -1,7 +1,7 @@
 #ifndef GCIEXCITATIONOPERATOR_H
 #define GCIEXCITATIONOPERATOR_H
 
-#include "gciOldOperator.h"
+#include "gciOperator.h"
 
 namespace gci {
 /**
@@ -17,7 +17,7 @@ public:
      * \param hamiltonian the hamiltonian defining orbital spaces
      * \param ranks Ranks of operator
      */
-  ExcitationOperator(OldOperator &hamiltonian, std::vector<int> ranks);
+  ExcitationOperator(Operator &hamiltonian, std::vector<int> ranks);
   /*!
      \brief
     Ranks of operator
@@ -30,7 +30,7 @@ public:
      hamiltonian object that defines the second-quantised spaces for the operator
      \return std::string
     */
-  OldOperator hamiltonian;
+  Operator hamiltonian;
 };
 }
 
