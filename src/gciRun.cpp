@@ -20,7 +20,6 @@ using namespace gci;
 using namespace LinearAlgebra;
 
 const static gci::Operator* currentHamiltonian;
-//const static OldOperator* activeHamiltonian;
 static Wavefunction* _preconditioning_diagonals;
 static double _lastEnergy;
 static double _mu;
@@ -171,8 +170,6 @@ std::vector<double> Run::run()
 
   profiler->start("load Hamiltonian");
   auto hho=Operator::construct(*globalFCIdump);
-//  OldOperator hh(*globalFCIdump);
-//  OldOperator hh{hho};
   addParameter("EXPLICIT1","1"); // because Operator no longer supports embedding 1-electron in 2-electron
   parallel_stringset = parameter("PARALLEL_STRINGSET").at(0) != 0;
 
@@ -218,35 +215,21 @@ std::vector<double> Run::run()
     double scs_same = parameter("SCS_SAME",std::vector<double>(1,(double)1)).at(0);
     xout << "First-order hamiltonian contains " << scs_opposite<<" of opposite-spin and "<< scs_same <<" of same spin"<<std::endl;
     xout << "Second-order hamiltonian contains " << 1-scs_opposite<<" of opposite-spin and "<< 1-scs_same <<" of same spin"<<std::endl;
-//    OldOperator h0 = hh.FockOperator(referenceDeterminant);
-    Operator ham0 = hho.fockOperator(referenceDeterminant);
-//    xout <<"h0.spinUnrestricted="<<h0.spinUnrestricted<<std::endl;
+    Operator h0 = hho.fockOperator(referenceDeterminant);
 //    xout <<"h0="<<h0<<std::endl;
     Operator ssh = hho.sameSpinOperator(referenceDeterminant);
-//    xout <<"ssh.spinUnrestricted="<<ssh.spinUnrestricted<<std::endl;
 //    xout <<"ssh="<<ssh<<std::endl;
-    Operator osh=hho; //osh -= ssh; osh-=ham0; // spinUnrestricted not yet implemented
-//    xout <<"osh.spinUnrestricted="<<osh.spinUnrestricted<<std::endl;
+    Operator osh=hho; osh -= ssh; osh-=h0; // spinUnrestricted not yet implemented
 //    xout <<"osh="<<osh<<std::endl;
     Operator h1 = osh*scs_opposite ;//+ ssh*scs_same;
-//    xout <<"h1.spinUnrestricted="<<h1.spinUnrestricted<<std::endl;
 //    xout <<"h1="<<h1<<std::endl;
     Operator h2(hho); // spinUnrestricted not yet implemented
-    h2-=h1; h2-=ham0;
-//    xout <<"h2.spinUnrestricted="<<h2.spinUnrestricted<<std::endl;
+    h2-=h1; h2-=h0;
 //    xout <<"h2="<<h2<<std::endl;
-    Operator ham1( hho );
-    Operator ham2( hho );
-//    ham1-=ham0; // FIXME should do h1, h2
     std::vector<gci::Operator*> hams;
-    hams.push_back(&ham0); //FIXME should be H0
-    hams.push_back(&ham1);//FIXME should be H1
-    if (scs_opposite != (double) 1 || scs_same != (double) 1) hams.push_back(&ham2);
-//    std::vector<gci::OldOperator*> hamiltonians;
-//    hamiltonians.push_back(&h0);
-//    hamiltonians.push_back(&h1);
-//    if (scs_opposite != (double) 1 || scs_same != (double) 1) hamiltonians.push_back(&h2);
-//    xout << "hamiltonians.size()" << hamiltonians.size() << std::endl;
+    hams.push_back(&h0);
+    hams.push_back(&h1);
+    if (scs_opposite != (double) 1 || scs_same != (double) 1) hams.push_back(&h2);
     std::vector<double> emp = RSPT(hams, prototype);
 //    std::vector<double> emp = ISRSPT(hh, h0, prototype);
     xout <<std::fixed << std::setprecision(8);
@@ -258,9 +241,8 @@ std::vector<double> Run::run()
 #endif
   } else  if (method == "ISRSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
-//    OldOperator h0 = hh.FockOperator(referenceDeterminant);
-    Operator ham0 = hho.fockOperator(referenceDeterminant);
-    std::vector<double> emp = ISRSPT(hho, ham0, prototype);
+    Operator h0 = hho.fockOperator(referenceDeterminant);
+    std::vector<double> emp = ISRSPT(hho, h0, prototype);
     xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(emp[i]=totalEnergy+=emp[i]); xout <<std::endl;
@@ -317,7 +299,6 @@ using namespace itf;
 #include <cmath>
 std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, double energyThreshold, int maxIterations)
 {
-//  OldOperator h(ham);
   profiler->start("DIIS");
   profiler->start("DIIS preamble");
 //  xout << "on entry to Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
@@ -330,7 +311,6 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
   _residual_q = parameter("CHARGE",std::vector<double>{0}).at(0);
   if (_residual_q>0) {
       xout << "q="<<_residual_q<<std::endl;
-//      _residual_Q =new OldOperator("Q",hamiltonian,true);
       _residual_Q =ham.projector("Q",true);
 //      xout << "Q operator" <<std::endl<<*_residual_Q<<std::endl;
     }
@@ -346,7 +326,6 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
   //    xout << "Diagonal H: " << g.str(2) << std::endl;
   _preconditioning_diagonals = &d;
   currentHamiltonian = &ham;
-//  activeHamiltonian = &h;
   _residual_subtract_Energy=true;
   _preconditioner_subtractDiagonal=true;
   LinearAlgebra::DIIS solver(&_residual,&_preconditioner);
@@ -371,7 +350,6 @@ std::vector<double> Run::Davidson(
     const State &prototype,
     double energyThreshold, int nState, int maxIterations)
 {
-//  OldOperator h(hamiltonian);
   auto p = profiler->push("Davidson");
   profiler->start("Davidson preamble");
   //  xout << "on entry to Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
@@ -389,7 +367,6 @@ std::vector<double> Run::Davidson(
   d.diagonalOperator(ham);
   _preconditioning_diagonals = &d;
   currentHamiltonian = &ham;
-//  activeHamiltonian = &h;
   _residual_subtract_Energy=false;
   _preconditioner_subtractDiagonal=false;
   LinearAlgebra::Davidson solver(&_residual,&_preconditioner);
@@ -771,7 +748,6 @@ std::vector<double> Run::ISRSPT(
   size_t reference = d.minloc();
   _preconditioning_diagonals = &d;
   currentHamiltonian=&ham;
-//  activeHamiltonian=&hamiltonian;
   _residual_subtract_Energy=false;
   _preconditioner_subtractDiagonal=false;
   LinearAlgebra::RSPT solver(&_residual,&_preconditioner);
@@ -790,7 +766,6 @@ std::vector<double> Run::ISRSPT(
 #include <cmath>
 void Run::HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity)
 {
-//  OldOperator h(hamiltonian);
   Wavefunction w(&hamiltonian.m_orbitalSpaces[0],prototype.nelec,prototype.symmetry,prototype.ms2);
   Wavefunction g(w);
   xout << std::endl << "Full Hamiltonian matrix"<<std::endl;

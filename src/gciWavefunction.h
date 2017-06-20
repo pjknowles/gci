@@ -88,7 +88,6 @@ public:
      * \param parallel_stringset whether to use parallel algorithm in StringSet construction
      */
   void operatorOnWavefunction(const Operator &h, const Wavefunction &w, bool parallel_stringset=false);
-//  void operatorOnWavefunction(const OldOperator &h, const Wavefunction &w, bool parallel_stringset=false);
 
   /*!
    * \brief construct 1- and 2-particle density matrices
