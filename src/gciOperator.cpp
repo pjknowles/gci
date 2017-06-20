@@ -91,6 +91,41 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
   return result;
 }
 
+gci::Operator* gci::Operator::projector(const std::string special, const bool forceSpinUnrestricted) const
+{
+  auto result = new gci::Operator({m_dimensions[0]},1,m_uhf>0||forceSpinUnrestricted,m_hermiticity,m_exchange,0,special+" projector");
+  result->m_orbital_symmetries = m_orbital_symmetries;
+  result->m_O0=0;
+
+  if (special=="P" || special=="Q") {
+      if (special=="P")
+        result->O1(true).setIdentity();
+      else
+        result->O1(true).assign(0);
+      if (m_uhf)
+        result->O1(false) = result->O1(true);
+      // determine the uncoupled orbital
+      size_t uncoupled_orbital=0;
+      unsigned int uncoupled_orbital_symmetry=0;
+      double min_rowsum=1e50;
+      for (unsigned int sym=0; sym<8; sym++) {
+          for (size_t k=0; k<m_dimensions[0][sym]; k++) {
+              double rowsum=0;
+              for (size_t l=0; l<m_dimensions[0][sym]; l++)
+                rowsum+=O1(true).block(sym)[k>l ? k*(k+1)/2+l : l*(l+1)/2+k];
+              if (std::fabs(rowsum) < min_rowsum) {
+                  min_rowsum=std::fabs(rowsum);
+                  uncoupled_orbital=k;
+                  uncoupled_orbital_symmetry=sym;
+                }
+            }
+        }
+      xout << "non-interacting orbital is "<<uncoupled_orbital<<"."<<uncoupled_orbital_symmetry<<std::endl;
+      result->O1(false).block(uncoupled_orbital_symmetry)[(uncoupled_orbital+2)*(uncoupled_orbital+1)/2-1]=(special=="P" ? 1:0);
+    }
+  return result;
+}
+
 Eigen::VectorXd gci::Operator::int1(int spin) const
 {
   size_t basisSize = m_orbital_symmetries.size();

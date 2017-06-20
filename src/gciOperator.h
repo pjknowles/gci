@@ -20,6 +20,8 @@ namespace gci {
      */
     static Operator construct(const FCIdump& dump);
 
+    Operator* projector(const std::string special, const bool forceSpinUnrestricted) const;
+
     /*!
        * \brief int1 Generate array of diagonal one-electron integrals
        * \param spin positive for alpha, negative for beta

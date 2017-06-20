@@ -25,7 +25,7 @@ static Wavefunction* _preconditioning_diagonals;
 static double _lastEnergy;
 static double _mu;
 static bool _residual_subtract_Energy;
-static OldOperator* _residual_Q;
+static gci::Operator* _residual_Q;
 static double _residual_q;
 static bool parallel_stringset;
 static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<double> shift=std::vector<double>(), bool append=false) {
@@ -277,7 +277,7 @@ std::vector<double> Run::run()
   } else if (method=="DIIS") {
     energies = DIIS(hho, hh, prototype);
   } else if (method=="HAMILTONIAN")
-     HamiltonianMatrixPrint(hh,prototype);
+     HamiltonianMatrixPrint(hho,prototype);
   else if (method=="PROFILETEST") {
     double a=1.234;
     for (int i=0; i<100000000; i++) a=(a+1/std::sqrt(a));
@@ -329,7 +329,8 @@ std::vector<double> Run::DIIS(const Operator &ham, const OldOperator &hamiltonia
   _residual_q = parameter("CHARGE",std::vector<double>{0}).at(0);
   if (_residual_q>0) {
       xout << "q="<<_residual_q<<std::endl;
-      _residual_Q =new OldOperator("Q",hamiltonian,true);
+//      _residual_Q =new OldOperator("Q",hamiltonian,true);
+      _residual_Q =ham.projector("Q",true);
 //      xout << "Q operator" <<std::endl<<*_residual_Q<<std::endl;
     }
 //  Operator P("P",hamiltonian,true);
@@ -457,7 +458,7 @@ std::vector<double> Run::CSDavidson(const Operator& ham,
     w.putw(wfile,n);
     g.set((double)0);
     profiler->start("Davidson Hc");
-    g.operatorOnWavefunction(hamiltonian, w);
+    g.operatorOnWavefunction(ham, w);
     profiler->stop("Davidson Hc");
     g.putw(gfile,n);
     reducedHamiltonian.resize((size_t)(n+1)*(n+1));
@@ -678,7 +679,7 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams, const std::ve
 //  for (int k=0; k<(int)hamiltonians.size(); k++)
 //    HamiltonianMatrixPrint(*hamiltonians[k],prototype);
 //  return e;
-  if (hamiltonians.size() < 1) throw std::logic_error("not enough hamiltonians");
+  if (hams.size() < 1) throw std::logic_error("not enough hamiltonians");
 //  for (int k=0; k<(int)hamiltonians.size(); k++) xout << "H("<<k<<"): " << *hamiltonians[k] << std::endl;
   Wavefunction w(prototype);
   xout <<"RSPT wavefunction size="<<w.size()<<std::endl;
@@ -692,10 +693,10 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams, const std::ve
   w.set((double)0); w.set(reference, (double) 1);
   gci::File wfile; wfile.name="Wavefunction vectors"; w.putw(wfile,0);
   gci::File gfile; gfile.name="Action vectors";
-  for (int k=0; k < (int) hamiltonians.size(); k++) {
+  for (int k=0; k < (int) hams.size(); k++) {
     g.set((double)0);
-//    xout << "hamiltonian about to be applied to reference: "<< *hamiltonians[k] <<std::endl;
-    g.operatorOnWavefunction(*hamiltonians[k],w);
+//    xout << "hamiltonian about to be applied to reference: "<< *hams[k] <<std::endl;
+    g.operatorOnWavefunction(*hams[k],w);
 //    xout << "hamiltonian on reference: " << g.str(2) << std::endl;
     g.putw(gfile,k);
   }
@@ -708,9 +709,9 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams, const std::ve
 //            xout <<std::endl<< "g after set 0: " << g.str(2) <<std::endl;
     for (int k=n; k>0; k--) {
       w.getAll(wfile,n-k);
-      if (k < (int) hamiltonians.size()) {
+      if (k < (int) hams.size()) {
 //            xout <<"k="<<k<< " g before H.w: " << g.str(2) <<std::endl;
-        g.operatorOnWavefunction(*hamiltonians[k], w);
+        g.operatorOnWavefunction(*hams[k], w);
 //            xout << "g after H.w: " << g.str(2) <<std::endl;
         if (n == k) e[n]+=g.at(reference);
 //        if (n == k) xout << "k, E:"<<k<<" "<<e[k]<<std::endl;
@@ -731,14 +732,14 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams, const std::ve
     w /= g;
 //     xout <<std::endl<< "Perturbed wavefunction, order="<<n<<": " << w.str(2) <<std::endl;
     w.putw(wfile,n);
-    for (int k=1; k < (int) hamiltonians.size(); k++) {
+    for (int k=1; k < (int) hams.size(); k++) {
       if (n+k > maxOrder) break;
       g.getw(gfile,k);
 //      xout <<"gfile "<<g.str(2)<<std::endl;
 //      xout <<"contribution from n="<<n<<", k="<<k<<" to E("<<n+k<<")="<<g*w<<std::endl;
       e[n+k]+=g*w;
     }
-    gsum(&e[n+1],(size_t)(hamiltonians.size()-1));
+    gsum(&e[n+1],(size_t)(hams.size()-1));
     w.distributed=olddistw; g.distributed=olddistg;
   }
     xout << "n="<<n<<", E(n+1)="<<e[n+1]<<std::endl;
@@ -790,9 +791,10 @@ std::vector<double> Run::ISRSPT(
 }
 
 #include <cmath>
-void Run::HamiltonianMatrixPrint(OldOperator &hamiltonian, const State &prototype, int verbosity)
+void Run::HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity)
 {
-  Wavefunction w(&hamiltonian,prototype.nelec,prototype.symmetry,prototype.ms2);
+  OldOperator h(hamiltonian);
+  Wavefunction w(&h,prototype.nelec,prototype.symmetry,prototype.ms2);
   Wavefunction g(w);
   xout << std::endl << "Full Hamiltonian matrix"<<std::endl;
   if (verbosity >= 0) {

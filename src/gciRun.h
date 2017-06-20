@@ -88,7 +88,7 @@ private:
                                const State& prototype,
                                double energyThreshold=(double)-1, int maxIterations=-1);
 
-  void HamiltonianMatrixPrint (OldOperator& hamiltonian, const State &prototype, int verbosity=0);
+  void HamiltonianMatrixPrint (Operator &hamiltonian, const State &prototype, int verbosity=0);
 
 public:
   /*!
