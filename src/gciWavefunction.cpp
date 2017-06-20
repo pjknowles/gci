@@ -82,35 +82,16 @@ void Wavefunction::set(const double value)
   for (std::vector<double>::iterator b=buffer.begin(); b != buffer.end(); b++) *b=value;
 }
 
-void Wavefunction::diagonalOperator(const Operator &op, const OldOperator &oper)
+void Wavefunction::diagonalOperator(const Operator &op)
 {
   profiler->start("diagonalOperator");
-  std::vector<double> ha=oper.int1(1);
-  std::vector<double> hbb=oper.int1(-1);
-  std::vector<double> Jaa, Jab, Jbb, Kaa, Kbb;
-  if (oper.integrals_aa != NULL) {
-    Jaa=oper.intJ(1,1);
-    Jab=oper.intJ(1,-1);
-    Jbb=oper.intJ(1,1);
-    Kaa=oper.intK(1);
-    Kbb=oper.intK(-1);
-  }
-  //    xout << "ha" <<std::endl;
-  //        for (size_t i=0; i<oper->basisSize; i++)
-  //            xout << ha[i] << " ";
-  //        xout <<std::endl;
-  //    xout << "Jaa" <<std::endl;
-  //    for (size_t j=0; j<oper->basisSize; j++) {
-  //        for (size_t i=0; i<oper->basisSize; i++)
-  //            xout << Jaa[i+j*oper->basisSize] << " ";
-  //        xout <<std::endl;
-  //    }
-  //    xout << "Kaa" <<std::endl;
-  //    for (size_t j=0; j<oper->basisSize; j++) {
-  //        for (size_t i=0; i<oper->basisSize; i++)
-  //            xout << Kaa[i+j*oper->basisSize] << " ";
-  //        xout <<std::endl;
-  //    }
+  auto ha=op.int1(true);
+  auto hbb=op.int1(false);
+  auto Jaa=op.intJ(true,true);
+  auto Jab=op.intJ(true,false);
+  auto Jbb=op.intJ(false,false);
+  auto Kaa=op.intK(true);
+  auto Kbb=op.intK(false);
   size_t offset=0;
   set(op.m_O0);
   for (unsigned int syma=0; syma<8; syma++) {
@@ -134,10 +115,10 @@ void Wavefunction::diagonalOperator(const Operator &op, const OldOperator &oper)
         for (size_t i=0; i<nact; i++)
           for (size_t ib=0; ib < nsb; ib++)
             buffer[offset+ia*nsb+ib] += on[ib+i*nsb] * ha[i];
-        if (oper.integrals_aa != NULL) {
+         if (op.m_rank>1){
           for (size_t i=0; i<nact; i++) {
             for (size_t j=0; j<=i; j++) {
-              double zz = Jaa[j+i*nact] - (double)0.5 * Kaa[j+i*nact];
+              double zz = Jaa(j,i) - (double)0.5 * Kaa(j,i);
               if (i == j) zz *= (double)0.5;
               for (size_t ib=0; ib < nsb; ib++)
                 buffer[offset+ia*nsb+ib] += on[ib+i*nsb] * on[ib+j*nsb] * zz;
@@ -156,11 +137,11 @@ void Wavefunction::diagonalOperator(const Operator &op, const OldOperator &oper)
             f[ib] = (vv-f[ib]) / (f[ib]*(f[ib]-(double)1));
           for (size_t i=0; i<nact; i++) {
             for (size_t j=0; j<i; j++) {
-              double zz = -(double)0.5 * Kaa[i*nact+j];
+              double zz = -(double)0.5 * Kaa(i,j);
               for (size_t ib=0; ib < nsb; ib++)
                 buffer[offset+ia*nsb+ib] += f[ib] * on[ib+i*nsb] * on[ib+j*nsb] * zz;
             }
-            double zz = -(double)0.25 * Kaa[i*nact+i];
+            double zz = -(double)0.25 * Kaa(i,i);
             for (size_t ib=0; ib < nsb; ib++)
               buffer[offset+ia*nsb+ib] += on[ib+i*nsb] * zz;
           }

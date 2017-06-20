@@ -197,7 +197,7 @@ std::vector<double> Run::run()
   profiler->start("find reference");
   { // so that w goes out of scope
     Wavefunction w(*globalFCIdump);
-    w.diagonalOperator(hho,hh);
+    w.diagonalOperator(hho);
     referenceLocation = w.minloc();
     referenceDeterminant = w.determinantAt(referenceLocation);
     xout.precision(8);
@@ -337,7 +337,7 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
 //  xout << "P operator" <<std::endl<<P<<std::endl;
   Wavefunction w(prototype);
   Wavefunction d(w);
-  d.diagonalOperator(ham,h);
+  d.diagonalOperator(ham);
   Wavefunction g(d);
   size_t reference = d.minloc();
 //  double e0=d.at(reference);
@@ -386,7 +386,7 @@ std::vector<double> Run::Davidson(
   xout << "; energy threshold="<<std::scientific<<std::setprecision(1)<<energyThreshold<<std::endl;
   xout <<std::fixed<<std::setprecision(8);
   Wavefunction d(prototype);
-  d.diagonalOperator(ham,h);
+  d.diagonalOperator(ham);
   _preconditioning_diagonals = &d;
   currentHamiltonian = &ham;
 //  activeHamiltonian = &h;
@@ -441,7 +441,7 @@ std::vector<double> Run::CSDavidson(const Operator& ham,
     xout << "Compressive sampling algorithm, k="<<compressionK<<", l="<<compressionL<<", epsilon="<<energyThreshold<<std::endl;
   Wavefunction w(prototype);
   Wavefunction g(w);
-  g.diagonalOperator(ham,hamiltonian);
+  g.diagonalOperator(ham);
   size_t reference = g.minloc();
   double e0=g.at(reference);
   g -= (e0-(double)1e-10);
@@ -684,7 +684,7 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams, const std::ve
   Wavefunction w(prototype);
   xout <<"RSPT wavefunction size="<<w.size()<<std::endl;
   Wavefunction g(w);
-  g.diagonalOperator(*hams[0],*hamiltonians[0]);
+  g.diagonalOperator(*hams[0]);
   size_t reference = g.minloc();
   e[0]=g.at(reference);
   g-=e[0];g.set(reference,(double)1);
@@ -768,7 +768,7 @@ std::vector<double> Run::ISRSPT(
   Wavefunction w(prototype);
   xout <<"RSPT wavefunction size="<<w.size()<<std::endl;
   Wavefunction d(w);
-  d.diagonalOperator(ham0,hamiltonian0);
+  d.diagonalOperator(ham0);
   Wavefunction g(d);
   _preconditioner_subtractDiagonal=true;
   size_t reference = d.minloc();
