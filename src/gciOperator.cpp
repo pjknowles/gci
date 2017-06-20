@@ -260,3 +260,33 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
     }
   return f;
 }
+
+
+gci::Operator gci::Operator::sameSpinOperator(const Determinant &reference, const std::string description) const
+{
+  Operator result(m_dimensions,
+             m_rank,
+             true,
+             m_hermiticity,
+             m_exchange,
+             m_symmetry,
+             description);
+  {
+  Determinant ra = reference; ra.stringBeta.nullify();
+  auto f = this->fockOperator(ra);
+  for (size_t i=0; i<O1(true).size(); i++)
+      (*result.O1(true).data())[i] = (*O1(true).data())[i] - (*f.O1(true).data())[i];
+  }
+  {
+  Determinant ra = reference; ra.stringAlpha.nullify();
+  auto f = this->fockOperator(ra);
+  for (size_t i=0; i<O1(false).size(); i++)
+      (*result.O1(false).data())[i] = (*O1(false).data())[i] - (*f.O1(false).data())[i];
+  }
+
+  *result.O2(true,true).data() = *O2(true,true).data();
+  *result.O2(false,false).data() = *O2(false,false).data();
+  for (auto& s : *result.O2(true,false).data()) s=0;
+  result.m_dirac_out_of_date=true;
+  return result;
+}

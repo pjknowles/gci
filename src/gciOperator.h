@@ -60,6 +60,13 @@ namespace gci {
      */
     Operator fockOperator(const Determinant& reference, const std::string description="Fock") const;
 
+    /*!
+     * \brief Build a same-spin operator from the density arising from a single Slater determinant
+     * \param reference The Slater determinant
+     * \param description Descriptive text
+     */
+    Operator sameSpinOperator(const Determinant &reference, const std::string description="Same Spin Hamiltonian") const;
+
    std::vector<OrbitalSpace> m_orbitalSpaces;
   private:
   std::vector<unsigned int> m_orbital_symmetries;

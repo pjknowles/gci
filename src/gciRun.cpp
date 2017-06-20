@@ -222,17 +222,17 @@ std::vector<double> Run::run()
     Operator ham0 = hho.fockOperator(referenceDeterminant);
 //    xout <<"h0.spinUnrestricted="<<h0.spinUnrestricted<<std::endl;
 //    xout <<"h0="<<h0<<std::endl;
-    OldOperator ssh = hh.sameSpinOperator(referenceDeterminant);
+    Operator ssh = hho.sameSpinOperator(referenceDeterminant);
 //    xout <<"ssh.spinUnrestricted="<<ssh.spinUnrestricted<<std::endl;
 //    xout <<"ssh="<<ssh<<std::endl;
-    OldOperator osh(hh,true); osh -= ssh; osh-=h0;
+    Operator osh=hho; //osh -= ssh; osh-=ham0; // spinUnrestricted not yet implemented
 //    xout <<"osh.spinUnrestricted="<<osh.spinUnrestricted<<std::endl;
 //    xout <<"osh="<<osh<<std::endl;
-    OldOperator h1 = osh*scs_opposite + ssh*scs_same;
+    Operator h1 = osh*scs_opposite ;//+ ssh*scs_same;
 //    xout <<"h1.spinUnrestricted="<<h1.spinUnrestricted<<std::endl;
 //    xout <<"h1="<<h1<<std::endl;
-    OldOperator h2(hh,true); // spinUnrestricted not yet optimised
-    h2-=h1; h2-=h0;
+    Operator h2(hho); // spinUnrestricted not yet implemented
+    h2-=h1; h2-=ham0;
 //    xout <<"h2.spinUnrestricted="<<h2.spinUnrestricted<<std::endl;
 //    xout <<"h2="<<h2<<std::endl;
     Operator ham1( hho );
