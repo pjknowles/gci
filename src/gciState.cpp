@@ -24,6 +24,14 @@ State::State(OrbitalSpace *h, int n, int s, int m2)
   ms2 = m2;
 }
 
+State::State(OrbitalSpace& h, int n, int s, int m2)
+{
+  orbitalSpace=&h;
+  nelec = n;
+  symmetry = s;
+  ms2 = m2;
+}
+
 State::State(State *s)
 {
   orbitalSpace = s->orbitalSpace;

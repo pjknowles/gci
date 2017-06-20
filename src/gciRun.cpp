@@ -203,13 +203,14 @@ std::vector<double> Run::run()
     xout.precision(8);
     xout <<std::fixed;
     xout << "Lowest energy determinant " << referenceDeterminant <<" with energy "<<w.at(referenceLocation)<<std::endl;
-    prototype = State(&hh,w.nelec,w.symmetry,w.ms2);
+    prototype = State(hho.m_orbitalSpaces[0],w.nelec,w.symmetry,w.ms2);
   }
   profiler->stop("find reference");
-  if (parameter("EXPLICIT1").at(0)==0 && method != "RSPT") hh.constructBraKet(
-        referenceDeterminant.nelec+referenceDeterminant.ms2,
-        referenceDeterminant.nelec-referenceDeterminant.ms2
-        );
+  if (parameter("EXPLICIT1").at(0)==0 && method != "RSPT") throw std::runtime_error("EXPLICIT1 has been retired");
+  //hh.constructBraKet(
+//        referenceDeterminant.nelec+referenceDeterminant.ms2,
+//        referenceDeterminant.nelec-referenceDeterminant.ms2
+//        );
 
   if (method == "RSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
@@ -246,7 +247,7 @@ std::vector<double> Run::run()
     hamiltonians.push_back(&h1);
     if (scs_opposite != (double) 1 || scs_same != (double) 1) hamiltonians.push_back(&h2);
 //    xout << "hamiltonians.size()" << hamiltonians.size() << std::endl;
-    std::vector<double> emp = RSPT(hams, hamiltonians, prototype);
+    std::vector<double> emp = RSPT(hams, prototype);
 //    std::vector<double> emp = ISRSPT(hh, h0, prototype);
     xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
@@ -259,7 +260,7 @@ std::vector<double> Run::run()
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
     OldOperator h0 = hh.FockOperator(referenceDeterminant);
     Operator ham0 = hho.fockOperator(referenceDeterminant);
-    std::vector<double> emp = ISRSPT(hho, ham0, hh, h0, prototype);
+    std::vector<double> emp = ISRSPT(hho, ham0, prototype);
     xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(emp[i]=totalEnergy+=emp[i]); xout <<std::endl;
@@ -663,7 +664,7 @@ std::vector<double> Run::CSDavidson(const Operator& ham,
     return e;
 }
 
-std::vector<double> Run::RSPT(const std::vector<Operator *> &hams, const std::vector<gci::OldOperator*>& hamiltonians,
+std::vector<double> Run::RSPT(const std::vector<Operator *> &hams,
                               const State &prototype,
             int maxOrder,
                               double energyThreshold,
@@ -751,8 +752,6 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams, const std::ve
 std::vector<double> Run::ISRSPT(
         const gci::Operator& ham,
         const gci::Operator& ham0,
-        const gci::OldOperator& hamiltonian,
-        const gci::OldOperator& hamiltonian0,
                               const State &prototype,
             int maxOrder,
                               double energyThreshold,

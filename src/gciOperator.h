@@ -60,8 +60,8 @@ namespace gci {
      */
     Operator fockOperator(const Determinant& reference, const std::string description="Fock") const;
 
-  private:
    std::vector<OrbitalSpace> m_orbitalSpaces;
+  private:
   std::vector<unsigned int> m_orbital_symmetries;
 
     /*!
