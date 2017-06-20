@@ -242,10 +242,10 @@ std::vector<double> Run::run()
     hams.push_back(&ham0); //FIXME should be H0
     hams.push_back(&ham1);//FIXME should be H1
     if (scs_opposite != (double) 1 || scs_same != (double) 1) hams.push_back(&ham2);
-    std::vector<gci::OldOperator*> hamiltonians;
-    hamiltonians.push_back(&h0);
-    hamiltonians.push_back(&h1);
-    if (scs_opposite != (double) 1 || scs_same != (double) 1) hamiltonians.push_back(&h2);
+//    std::vector<gci::OldOperator*> hamiltonians;
+//    hamiltonians.push_back(&h0);
+//    hamiltonians.push_back(&h1);
+//    if (scs_opposite != (double) 1 || scs_same != (double) 1) hamiltonians.push_back(&h2);
 //    xout << "hamiltonians.size()" << hamiltonians.size() << std::endl;
     std::vector<double> emp = RSPT(hams, prototype);
 //    std::vector<double> emp = ISRSPT(hh, h0, prototype);
@@ -269,9 +269,9 @@ std::vector<double> Run::run()
     itf::SetVariables( "ENERGY_MP", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
   } else if (method == "DAVIDSON") {
-    energies = Davidson(hho, hh, prototype);
+    energies = Davidson(hho,  prototype);
   } else if (method == "CS") {
-    energies = CSDavidson(hho, hh, prototype);
+    energies = CSDavidson(hho,  prototype);
 #ifdef MOLPRO
 //    itf::SetVariables( "ENERGY_METHOD", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
@@ -368,7 +368,6 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
 
 std::vector<double> Run::Davidson(
     const Operator& ham,
-    const OldOperator& hamiltonian,
     const State &prototype,
     double energyThreshold, int nState, int maxIterations)
 {
@@ -419,7 +418,6 @@ std::vector<double> Run::Davidson(
 
 
 std::vector<double> Run::CSDavidson(const Operator& ham,
-                                    const OldOperator& hamiltonian,
                                     const State &prototype,
                                     double energyThreshold, int nState, int maxIterations)
 {

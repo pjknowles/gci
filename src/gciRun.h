@@ -63,7 +63,6 @@ private:
   /*!
    * \brief Perform a variational calculation using the Davidson algorithm
    * \param ham The Hamiltonian
-   * \param hamiltonian The Hamiltonian
    * \param prototype A State object specifying number of electrons, symmetry, spin
    * If it is a Wavefunction , then that will be used also for specifying the configuration space, otherwise the default FCI
    * \param energyThreshold Convergence threshold for energy
@@ -71,10 +70,10 @@ private:
    * \param maxIterations The maximum number of iterations to perform
    * \return the energies for each state. Note that only the first nState energies are considered converged
    */
-  std::vector<double> Davidson(const Operator &ham, const OldOperator &hamiltonian,
+  std::vector<double> Davidson(const Operator &ham,
                                const State& prototype,
                                double energyThreshold=(double)-1, int nState=-1, int maxIterations=-1);
-  std::vector<double> CSDavidson(const Operator &ham, const OldOperator &hamiltonian,
+  std::vector<double> CSDavidson(const Operator &ham,
                                const State& prototype,
                                double energyThreshold=(double)-1, int nState=-1, int maxIterations=-1);
   /*!
