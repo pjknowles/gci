@@ -95,61 +95,61 @@ OldOperator::OldOperator(const OldOperator &source, const bool forceSpinUnrestri
   this->_copy(source,forceSpinUnrestricted,oneElectron,twoElectron);
 }
 
-OldOperator::OldOperator(const std::string special, const OldOperator &source, const bool forceSpinUnrestricted)
-  : OrbitalSpace(source)
-  , m_Operator(source.m_Operator)
-  ,loaded(false)
-  , coreEnergy(0)
-  , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
-{
-  this->_copy(source,forceSpinUnrestricted,false,false);
-  if (special=="P" || special=="Q") {
-      double fill=(special=="Q"? 0 : 1);
-      integrals_a = new std::vector<double>(ijSize,0.0);
-      if (spinUnrestricted)
-        integrals_b = new std::vector<double>(ijSize,0.0);
-      else
-        integrals_b = integrals_a;
-      for (auto aa=integrals_b->begin(); aa!= integrals_b->end(); aa++) *aa=0;
-      for (auto aa=integrals_a->begin(); aa!= integrals_a->end(); aa++) *aa=0;
-      for (unsigned int sym=0; sym<8; sym++) {
-          for (size_t k=0; k<this->at(sym); k++)
-            integrals_a->at(int1Index(offset(sym)+1+k,offset(sym)+1+k))=
-            integrals_b->at(int1Index(offset(sym)+1+k,offset(sym)+1+k))=fill;
-        }
-      integrals_aa = NULL;
-      integrals_ab = NULL;
-      integrals_bb = NULL;
-      bracket_integrals_aa = NULL;
-      bracket_integrals_ab = NULL;
-      bracket_integrals_bb = NULL;
-//      constructBraKet(0,1);
-      // determine the uncoupled orbital
-      size_t uncoupled_orbital=0;
-      double min_rowsum=1e50;
-      for (unsigned int sym=0; sym<8; sym++) {
-          for (size_t k=0; k<this->at(sym); k++) {
-              double rowsum=0;
-              for (size_t l=0; l<this->at(sym); l++)
-                rowsum+=source.integrals_a->at(int1Index(k+offset(sym)+1,l+offset(sym)+1));
-//              xout << "k="<<k<<", rowsum="<<rowsum<<std::endl;
-              if (std::fabs(rowsum) < min_rowsum) {
-                  min_rowsum=std::fabs(rowsum);
-                  uncoupled_orbital=k+offset(sym)+1;
-                }
-            }
-        }
-      xout << "non-interacting orbital is "<<uncoupled_orbital<<std::endl;
-      integrals_b->at(int1Index(uncoupled_orbital,uncoupled_orbital))=1-fill;
-      loaded=true;
-      bracket_integrals_a = new std::vector<double>(*integrals_a) ;
-      bracket_integrals_b = new std::vector<double>(*integrals_b) ;
-//        xout << "integrals_b"<<std::endl;
-//        for (size_t k=0; k<6; k++) xout <<integrals_b->at(k)<<std::endl;
-//        xout << "bracket_integrals_b"<<std::endl;
-//        for (size_t k=0; k<6; k++) xout <<bracket_integrals_b->at(k)<<std::endl;
-    }
-}
+//OldOperator::OldOperator(const std::string special, const OldOperator &source, const bool forceSpinUnrestricted)
+//  : OrbitalSpace(source)
+//  , m_Operator(source.m_Operator)
+//  ,loaded(false)
+//  , coreEnergy(0)
+//  , basisSize(source.basisSize), ijSize(source.ijSize), ijklSize(source.ijklSize)
+//{
+//  this->_copy(source,forceSpinUnrestricted,false,false);
+//  if (special=="P" || special=="Q") {
+//      double fill=(special=="Q"? 0 : 1);
+//      integrals_a = new std::vector<double>(ijSize,0.0);
+//      if (spinUnrestricted)
+//        integrals_b = new std::vector<double>(ijSize,0.0);
+//      else
+//        integrals_b = integrals_a;
+//      for (auto aa=integrals_b->begin(); aa!= integrals_b->end(); aa++) *aa=0;
+//      for (auto aa=integrals_a->begin(); aa!= integrals_a->end(); aa++) *aa=0;
+//      for (unsigned int sym=0; sym<8; sym++) {
+//          for (size_t k=0; k<this->at(sym); k++)
+//            integrals_a->at(int1Index(offset(sym)+1+k,offset(sym)+1+k))=
+//            integrals_b->at(int1Index(offset(sym)+1+k,offset(sym)+1+k))=fill;
+//        }
+//      integrals_aa = NULL;
+//      integrals_ab = NULL;
+//      integrals_bb = NULL;
+//      bracket_integrals_aa = NULL;
+//      bracket_integrals_ab = NULL;
+//      bracket_integrals_bb = NULL;
+////      constructBraKet(0,1);
+//      // determine the uncoupled orbital
+//      size_t uncoupled_orbital=0;
+//      double min_rowsum=1e50;
+//      for (unsigned int sym=0; sym<8; sym++) {
+//          for (size_t k=0; k<this->at(sym); k++) {
+//              double rowsum=0;
+//              for (size_t l=0; l<this->at(sym); l++)
+//                rowsum+=source.integrals_a->at(int1Index(k+offset(sym)+1,l+offset(sym)+1));
+////              xout << "k="<<k<<", rowsum="<<rowsum<<std::endl;
+//              if (std::fabs(rowsum) < min_rowsum) {
+//                  min_rowsum=std::fabs(rowsum);
+//                  uncoupled_orbital=k+offset(sym)+1;
+//                }
+//            }
+//        }
+//      xout << "non-interacting orbital is "<<uncoupled_orbital<<std::endl;
+//      integrals_b->at(int1Index(uncoupled_orbital,uncoupled_orbital))=1-fill;
+//      loaded=true;
+//      bracket_integrals_a = new std::vector<double>(*integrals_a) ;
+//      bracket_integrals_b = new std::vector<double>(*integrals_b) ;
+////        xout << "integrals_b"<<std::endl;
+////        for (size_t k=0; k<6; k++) xout <<integrals_b->at(k)<<std::endl;
+////        xout << "bracket_integrals_b"<<std::endl;
+////        for (size_t k=0; k<6; k++) xout <<bracket_integrals_b->at(k)<<std::endl;
+//    }
+//}
 
 OldOperator& OldOperator::operator=(const OldOperator &source)
 {

@@ -20,6 +20,13 @@ namespace gci {
      */
     static Operator construct(const FCIdump& dump);
 
+    /*!
+     * \brief Construct an operator templated on this, but with a special specification
+     * \param special
+     * - "Q" projector onto space containing satellite orbital
+     * - "P" 1-Q
+     * \param forceSpinUnrestricted whether to force conversion to a UHF object
+     */
     Operator* projector(const std::string special, const bool forceSpinUnrestricted) const;
 
     /*!

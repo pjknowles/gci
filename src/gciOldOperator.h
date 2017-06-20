@@ -50,7 +50,7 @@ public:
    * \param source
    * \param forceSpinUnrestricted whether to force conversion to a UHF object
    */
-  explicit OldOperator(const std::string special, const OldOperator &source, const bool forceSpinUnrestricted=false);
+//  explicit OldOperator(const std::string special, const OldOperator &source, const bool forceSpinUnrestricted=false);
   virtual ~OldOperator();
 //  void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load integrals from FCIDUMP */
 //  void load(const FCIdump &dump, int verbosity=0); /**< \brief load integrals from FCIDUMP */
