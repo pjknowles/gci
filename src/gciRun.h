@@ -2,7 +2,7 @@
 #define GCIRUN_H
 #include <vector>
 #include "gci.h"
-#include "gciOldOperator.h"
+#include "gciOperator.h"
 #include "gciState.h"
 #include <stdint.h>
 
