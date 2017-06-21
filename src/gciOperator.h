@@ -14,6 +14,80 @@ namespace gci {
   public:
     using SymmetryMatrix::Operator::Operator;
     /*!
+     * \brief Construct an operator from its symmetry-block dimensions.
+     * \param dimensions Numbers of one-particle functions in each symmetry block
+     * for each of the four two-particle indices (bra, bra, ket, ket).
+     * \param rank The rank (0, 1 or 2) of the operator.
+     * \param uhf Whether the underlying 1-particle spaces are different for alpha and beta spin.
+     * \param hermiticity Conjugation symmetry, [ai] -> [ia], [bj] -> [jb]: 0=none, 1=symmetric, -1=antisymmetric, default 0.
+     * \param exchange For each of bra, ket, whether there is an interchange symmetry between two
+     * indices in the two-particle part of the operator: [abij] -> [baij]: 0=none, 1=symmetric, -1=antisymmetric, default -1.
+     * \param symmetry Overall symmetry of operator (0-7).
+     * \param description A string describing the object.
+     */
+    explicit Operator(const dims_t dimensions,
+                      int rank=2,
+                      bool uhf=false,
+                      const std::vector<int> hermiticity={1,1},
+                      const std::vector<int> exchange={-1,-1},
+                      unsigned int symmetry=0,
+                      std::string description="")
+      : SymmetryMatrix::Operator(dimensions,rank,uhf,hermiticity,exchange,symmetry,description)
+    {
+
+    }
+    /*!
+     * \brief Construct a real hermitian fermionic operator
+     * \param dimension Numbers of orbitals in each symmetry block.
+     * \param rank The rank (0, 1 or 2) of the operator.
+     * \param uhf Whether the underlying 1-particle spaces are different for alpha and beta spin.
+     * \param symmetry Overall symmetry of operator (0-7).
+     * \param description A string describing the object.
+     */
+    explicit Operator(const dim_t dimension,
+                      int rank=2,
+                      bool uhf=false,
+                      unsigned int symmetry=0,
+                      std::string description="")
+      :  Operator(dims_t{dimension,dimension,dimension,dimension}, rank, uhf, std::vector<int>{1,1}, std::vector<int>{-1,-1}, symmetry, description) { }
+
+    /*!
+     * \brief Copy constructor. A complete (deep) copy is made.
+     * \param source Object to be copied.
+     */
+    Operator(const Operator& source) : SymmetryMatrix::Operator(source) {}
+
+    /*!
+     * \brief Assigment operator
+     * \param source Object to be copied.
+     * \return A reference to this.
+     */
+    Operator& operator=(const Operator& source)
+    {
+      SymmetryMatrix::Operator::operator =(source);
+      return *this;
+    }
+
+    /*!
+     * \brief Construct an object from what is produced by bytestream(). If the bytestream
+     * contains data, it will be loaded, otherwise the contents of the object are undefined,
+     * and only the dimensions and parameters are loaded.
+     * \param dump The raw buffer of a bytestream produced by bytestream()
+     */
+    static Operator construct(const char *dump);
+    /*!
+     * \brief Construct an object from what is produced by bytestream(). If the bytestream
+     * contains data, it will be loaded, otherwise the contents of the object are undefined,
+     * and only the dimensions and parameters are loaded.
+     * \param bs The bytestream produced by bytestream()
+     */
+    static Operator construct(const class bytestream& bs) { return construct((const char*)&(bs.data()[0])); }
+    /*!
+     * \brief Obtain a reference to 1-particle matrix elements.
+     * \param spinUp alpha or beta spin.
+     * \return
+     */
+    /*!
      * \brief Construct an object from an FCIdump. If the FCIdump
      * contains data, it will be loaded, otherwise the contents of the object are undefined,
      * and only the dimensions and parameters are loaded.
