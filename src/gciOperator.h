@@ -125,6 +125,15 @@ namespace gci {
     Operator sameSpinOperator(const Determinant &reference, const std::string description="Same Spin Hamiltonian") const;
 
    std::vector<OrbitalSpace> m_orbitalSpaces;
+
+  void zero();
+  const Operator& operator+=(const Operator& other);
+  const Operator& operator-=(const Operator& other);
+  const Operator& operator*=(double other);
+  const Operator operator+(const Operator& other) {Operator copy(*this); return copy+=other;}
+  const Operator operator-(const Operator& other) {Operator copy(*this); return copy-=other;}
+  const Operator operator*(double other) {Operator copy(*this); return copy*=other;}
+
   private:
 
     /*!

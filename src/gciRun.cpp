@@ -215,15 +215,15 @@ std::vector<double> Run::run()
     double scs_same = parameter("SCS_SAME",std::vector<double>(1,(double)1)).at(0);
     xout << "First-order hamiltonian contains " << scs_opposite<<" of opposite-spin and "<< scs_same <<" of same spin"<<std::endl;
     xout << "Second-order hamiltonian contains " << 1-scs_opposite<<" of opposite-spin and "<< 1-scs_same <<" of same spin"<<std::endl;
-    Operator h0 = hho.fockOperator(referenceDeterminant);
+    gci::Operator h0 = hho.fockOperator(referenceDeterminant);
 //    xout <<"h0="<<h0<<std::endl;
-    Operator ssh = hho.sameSpinOperator(referenceDeterminant);
+    gci::Operator ssh = hho.sameSpinOperator(referenceDeterminant);
 //    xout <<"ssh="<<ssh<<std::endl;
-    Operator osh=hho; osh -= ssh; osh-=h0; // spinUnrestricted not yet implemented
+    gci::Operator osh=hho; osh -= ssh; osh-=h0; // spinUnrestricted not yet implemented
 //    xout <<"osh="<<osh<<std::endl;
-    Operator h1 = osh*scs_opposite ;//+ ssh*scs_same;
+    gci::Operator h1 = osh*scs_opposite ;//+ ssh*scs_same;
 //    xout <<"h1="<<h1<<std::endl;
-    Operator h2(hho); // spinUnrestricted not yet implemented
+    gci::Operator h2(hho); // spinUnrestricted not yet implemented
     h2-=h1; h2-=h0;
 //    xout <<"h2="<<h2<<std::endl;
     std::vector<gci::Operator*> hams;
