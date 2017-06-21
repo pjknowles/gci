@@ -354,7 +354,8 @@ std::vector<double> TransitionDensity::density(Wavefunction &w)
 SymmetryMatrix::Operator TransitionDensity::density(const Wavefunction &w)
 {
   dim_t dimension; for (auto i=0; i<8; i++) dimension[i]=w[i];
-  gci::Operator result(dimension, 1, !(m_hasAlpha&&m_hasBeta), symexc );
+  std::vector<int> symmetries; for (const auto& s : w.orbitalSpace->orbital_symmetries) symmetries.push_back(s+1);
+  gci::Operator result(dimension, symmetries, 1, !(m_hasAlpha&&m_hasBeta), symexc );
 
   unsigned int syma = alphaStringsBegin->computed_symmetry();
   unsigned int symb = betaStringsBegin->computed_symmetry();

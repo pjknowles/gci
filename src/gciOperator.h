@@ -11,7 +11,6 @@ namespace gci {
 
   class Operator : public SymmetryMatrix::Operator
   {
-    using SymmetryMatrix::Operator::Operator;
   public:
     /*!
      * \brief Construct a real hermitian fermionic operator
@@ -126,13 +125,9 @@ namespace gci {
 
    std::vector<OrbitalSpace> m_orbitalSpaces;
 
-  void zero();
-  const Operator& operator+=(const Operator& other);
-  const Operator& operator-=(const Operator& other);
-  const Operator& operator*=(double other);
-  const Operator operator+(const Operator& other) {Operator copy(*this); return copy+=other;}
-  const Operator operator-(const Operator& other) {Operator copy(*this); return copy-=other;}
-  const Operator operator*(double other) {Operator copy(*this); return copy*=other;}
+  const Operator operator+(const Operator& other) { Operator copy(*this); copy+=other; return copy;}
+  const Operator operator-(const Operator& other) { Operator copy(*this); copy-=other; return copy;}
+  const Operator operator*(double other) { Operator copy(*this); copy*=other; return copy;}
 
   private:
 
