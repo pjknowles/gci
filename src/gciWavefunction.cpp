@@ -551,7 +551,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
             auto praa = profiler->push("aa1 loop");
             unsigned int symexc = syma^symb^w.symmetry;
             //size_t nexc = h.pairSpace.find(-1)->second[symexc];
-            size_t nexc = h.O2(true,true).block_size(symexc);
+            size_t nexc = h.O2(true,true,false).block_size(symexc);
             size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
             for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsbbMax > aa.end() ? aa.end() : aa0+nsbbMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
                 size_t nsa = aa1-aa0;
@@ -560,7 +560,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                 profiler->stop("TransitionDensity aa");
                 TransitionDensity e(d);
                 { auto pr1 = profiler->push("MXM aa");
-                  MxmDrvNN(&e[0],&d[0], &h.O2(true,true).block(symexc)[0], nsa*nsb,nexc,nexc,false);
+                  MxmDrvNN(&e[0],&d[0], &h.O2(true,true,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
                 }
                 { auto pr1 = profiler->push("action aa"); e.action(*this); }
               }
@@ -578,7 +578,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
           for (unsigned int syma=0; syma<8; syma++) {
               if (!NextTask()) continue;
               unsigned int symexc = symb^syma^w.symmetry;
-              size_t nexc = h.O2(false,false).block_size(symexc);
+              size_t nexc = h.O2(false,false,false).block_size(symexc);
               size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
               for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
                   size_t nsb = bb1-bb0;
@@ -587,7 +587,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                   profiler->stop("TransitionDensity bb");
                   TransitionDensity e(d);
                   { auto pr1 = profiler->push("MXM bb");
-                    MxmDrvNN(&e[0],&d[0], &h.O2(false,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
+                    MxmDrvNN(&e[0],&d[0], &h.O2(false,false,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
                   }
                   {auto pr1 = profiler->push("action bb"); e.action(*this);}
                 }
@@ -606,7 +606,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
             StringSet aa(w.alphaStrings,1,0,syma,parallel_stringset);
             if (aa.size()==0) continue;
             unsigned int symexc = symb^syma^w.symmetry;
-            size_t nexc = h.O2(true,false,false).block_size(symexc);
+            size_t nexc = h.O2(true,false,true).block_size(symexc);
             {
               auto pro = profiler->push("StringSet iterator loops");
               for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
@@ -619,7 +619,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                       profiler->stop("TransitionDensity ab");
                       TransitionDensity e(d);
                       { auto pr1 = profiler->push("MXM ab");
-                        MxmDrvNN(&e[0],&d[0], &h.O2(true,false,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
+                        MxmDrvNN(&e[0],&d[0], &h.O2(true,false,true).block(symexc)[0], nsa*nsb,nexc,nexc,false);
                       }
                       { auto pr1 = profiler->push("action ab"); e.action(*this);}
                     }
