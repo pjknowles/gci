@@ -133,7 +133,6 @@ namespace gci {
      * \return
      */
     size_t offset(unsigned int i) const {
-      std::cout << "m_orbitalSpaces[0].orbital_symmetries: "; for (auto s=m_orbitalSpaces[0].orbital_symmetries.begin(); s!=m_orbitalSpaces[0].orbital_symmetries.end(); s++) std::cout << *s ; std::cout <<std::endl;
       return i < 1 ? 0 : std::count(m_orbitalSpaces[0].orbital_symmetries.begin(),m_orbitalSpaces[0].orbital_symmetries.begin()+i-1,m_orbitalSpaces[0].orbital_symmetries[i-1]);
     }
   };
