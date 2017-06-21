@@ -34,7 +34,8 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
   if (nsa*nsb*excitations == 0) return;
 
   if (deltaAlpha==0 && deltaBeta==0) { // number of electrons preserved, so one-electron excitation
-
+      m_hasAlpha=doAlpha;
+      m_hasBeta=doBeta;
     if (doAlpha) {
       auto p = profiler->push("1-electron alpha excitations");
       // alpha excitations
@@ -100,6 +101,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
     }
 
   } else if (deltaAlpha==2) { // wavefunction has 2 more alpha electrons than interacting states
+      m_hasAlpha=true; m_hasBeta=false;
     unsigned int wsymb = symb;
     unsigned int wsyma = w.symmetry^wsymb;
     size_t wnsb = w.betaStrings[wsymb].size();
@@ -128,6 +130,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       offa += nsb;
     }
   } else if (deltaBeta==2) { // wavefunction has 2 more beta electrons than interacting states
+      m_hasAlpha=false; m_hasBeta=true;
     unsigned int wsyma = syma;
     unsigned int wsymb = w.symmetry^wsyma;
     size_t wnsb = w.betaStrings[wsymb].size();
@@ -152,6 +155,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
     }
   } else if (deltaAlpha==1 && deltaBeta==1) { // wavefunction has 1 more alpha and beta electrons than interacting states
     if (parity) throw std::logic_error("wrong parity in alpha-beta");
+    m_hasAlpha=true; m_hasBeta=true;
     for (unsigned int wsyma=0; wsyma<8; wsyma++) {
       unsigned int wsymb = w.symmetry^wsyma;
       unsigned int symexca = wsyma ^ syma;
@@ -344,6 +348,19 @@ std::vector<double> TransitionDensity::density(Wavefunction &w)
   if (nsa*nsb != (w.blockOffset(syma+1)-w.blockOffset(syma))) throw std::range_error("Wrong dimensions, TransitionDensity::density"); // present implementation only for complete space in TransitionDensity
   std::vector<double> result(excitations,(double)0);
   MxmDrvTN(&result[0],&this->at(0),&(w.buffer[w.blockOffset(syma)]),excitations,nsa*nsb,1,1);
+  return result;
+}
+
+SymmetryMatrix::Operator TransitionDensity::density(const Wavefunction &w)
+{
+  dim_t dimension; for (auto i=0; i<8; i++) dimension[i]=w[i];
+  gci::Operator result(dimension, 1, !(m_hasAlpha&&m_hasBeta), symexc );
+
+  unsigned int syma = alphaStringsBegin->computed_symmetry();
+  unsigned int symb = betaStringsBegin->computed_symmetry();
+  if ((syma^symb) != w.symmetry) throw std::runtime_error("Symmetry mismatch, TransitionDensity::density");
+  if (nsa*nsb != (w.blockOffset(syma+1)-w.blockOffset(syma))) throw std::range_error("Wrong dimensions, TransitionDensity::density"); // present implementation only for complete space in TransitionDensity
+  MxmDrvTN(&((*result.O1(true).data())[0]),&this->at(0),&(w.buffer[w.blockOffset(syma)]),excitations,nsa*nsb,1,1);
   return result;
 }
 

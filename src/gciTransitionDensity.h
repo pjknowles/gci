@@ -3,6 +3,7 @@
 #include <vector>
 #include "gciStringSet.h"
 #include "gciOrbitalSpace.h"
+#include "Operator.h"
 #include "gciWavefunction.h"
 #include "gciPrintable.h"
 
@@ -44,6 +45,8 @@ public:
    * \return  the 1-particle density matrix
    */
   std::vector<double> density(Wavefunction& w);
+  SymmetryMatrix::Operator density(const Wavefunction &w);
+
   std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
 private:
   size_t nsa; ///< number of alpha strings
@@ -55,6 +58,8 @@ private:
   StringSet::const_iterator betaStringsBegin;
   StringSet::const_iterator betaStringsEnd;
   int parity;
+  bool m_hasAlpha;
+  bool m_hasBeta;
 };
 }
 
