@@ -682,6 +682,161 @@ void Wavefunction::density(memory::vector<double>& den1, memory::vector<double>&
 
 }
 
+gci::Operator Wavefunction::density(int rank, bool uhf, const Wavefunction *bra, std::string description, bool parallel_stringset)
+{
+  if (bra==nullptr) bra=this;
+  auto prof = profiler->push("density");
+
+  std::vector<int> symmetries; for (const auto& s : orbitalSpace->orbital_symmetries) symmetries.push_back(s+1); // only a common orbital space is implemented
+  dim_t dim; for (const auto s: *orbitalSpace) dim.push_back(s);
+  Operator result(dim,
+                  symmetries,
+             rank,
+             uhf,
+             symmetry^bra->symmetry,
+             description);
+  result.zero();
+
+//  xout <<std::endl<<"w in density="<<w.str(2)<<std::endl;
+  DivideTasks(99999999,1,1);
+
+  {
+  auto p = profiler->push("1-electron");
+  size_t offset=0, nsa=0, nsb=0;
+  for (unsigned int syma=0; syma<8; syma++) {
+    offset += nsa*nsb;
+    unsigned int symb = symmetry^syma;
+    nsa = alphaStrings[syma].size();
+    nsb = betaStrings[symb].size();
+    if (!NextTask()) continue;
+    {
+      profiler->start("1-electron TransitionDensity");
+      TransitionDensity d(*this,
+                          alphaStrings[syma].begin(),
+                          alphaStrings[syma].end(),
+                          betaStrings[symb].begin(),
+                          betaStrings[symb].end(),
+                          1,true, !result.m_uhf);
+      profiler->stop("1-electron TransitionDensity");
+      profiler->start("1-electron MXM");
+//      MxmDrvNN(&buffer[offset],&d[0], &(*h.O1(true).data())[0],
+//          nsa*nsb,w.orbitalSpace->total(0,1),1,true);
+      MxmDrvTN(&((*result.O1(true).data())[0]),&d[0],&buffer[offset],orbitalSpace->total(0,1),nsa*nsb,1,1);
+      profiler->stop("1-electron MXM",2*nsa*nsb*orbitalSpace->total(0,1));
+    }
+    if (result.m_uhf) {
+      profiler->start("1-electron TransitionDensity");
+      TransitionDensity d(*this,
+                          alphaStrings[syma].begin(),
+                          alphaStrings[syma].end(),
+                          betaStrings[symb].begin(),
+                          betaStrings[symb].end(),
+                          1,false, true);
+      profiler->stop("1-electron TransitionDensity");
+      profiler->start("1-electron MXM");
+      MxmDrvTN(&((*result.O1(false).data())[0]),&d[0],&buffer[offset],orbitalSpace->total(0,1),nsa*nsb,1,1);
+      profiler->stop("1-electron MXM",2*nsa*nsb*orbitalSpace->total(0,1));
+    }
+  }
+
+  }
+//  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
+
+  { // two-electron contribution, alpha-alpha
+    auto p = profiler->push("aa integrals");
+    size_t nsbbMax = 64; // temporary static
+    for (unsigned int syma=0; syma<8; syma++) {
+        profiler->start("StringSet aa");
+        StringSet aa(alphaStrings,2,0,syma,parallel_stringset);
+        profiler->stop("StringSet aa");
+        if (aa.size()==0) continue;
+        for (unsigned int symb=0; symb<8; symb++) {
+            if (!NextTask()) continue;
+            auto praa = profiler->push("aa1 loop");
+            unsigned int symexc = syma^symb^symmetry;
+            //size_t nexc = h.pairSpace.find(-1)->second[symexc];
+            size_t nexc = result.O2(true,true).block_size(symexc);
+            size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
+            for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsbbMax > aa.end() ? aa.end() : aa0+nsbbMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
+                size_t nsa = aa1-aa0;
+                profiler->start("TransitionDensity aa");
+                TransitionDensity d(*this,aa0,aa1,betaStrings[symb].begin(),betaStrings[symb].end(),-1,false,false);
+                TransitionDensity e(*bra,aa0,aa1,betaStrings[symb].begin(),betaStrings[symb].end(),-1,false,false);
+                profiler->stop("TransitionDensity aa");
+                { auto pr1 = profiler->push("MXM aa");
+                  MxmDrvTN(&result.O2(true,true).block(symexc)[0], &d[0],&e[0], nexc, nsa*nsb, nsa*nsb, nexc, false); // not yet right for non-symmetric tdm
+                }
+              }
+          }
+      }
+  }
+
+  if (result.m_uhf) { // two-electron contribution, beta-beta
+      auto p = profiler->push("bb integrals");
+      size_t nsbbMax = 64; // temporary static
+      for (unsigned int symb=0; symb<8; symb++) {
+          StringSet bb(betaStrings,2,0,symb,parallel_stringset);
+          if (bb.size()==0) continue;
+          for (unsigned int syma=0; syma<8; syma++) {
+              if (!NextTask()) continue;
+              unsigned int symexc = symb^syma^symmetry;
+              size_t nexc = result.O2(false,false).block_size(symexc);
+              size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
+              for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
+                  size_t nsb = bb1-bb0;
+                  profiler->start("TransitionDensity bb");
+                  TransitionDensity d(*this,alphaStrings[syma].begin(),alphaStrings[syma].end(),bb0,bb1,-1,false,false);
+                  TransitionDensity e(*bra,alphaStrings[syma].begin(),alphaStrings[syma].end(),bb0,bb1,-1,false,false);
+                  profiler->stop("TransitionDensity bb");
+                  { auto pr1 = profiler->push("MXM bb");
+                    MxmDrvTN(&result.O2(false,false).block(symexc)[0], &d[0],&e[0], nexc, nsa*nsb, nsa*nsb, nexc, false); // not yet right for non-symmetric tdm
+                  }
+                }
+            }
+        }
+    }
+
+  { // two-electron contribution, alpha-beta
+    auto p = profiler->push("ab integrals");
+    size_t nsaaMax = 640; // temporary static
+    size_t nsbbMax = 640; // temporary static
+    for (unsigned int symb=0; symb<8; symb++) {
+        StringSet bb(betaStrings,1,0,symb,parallel_stringset);
+        if (bb.size()==0) continue;
+        for (unsigned int syma=0; syma<8; syma++) {
+            StringSet aa(alphaStrings,1,0,syma,parallel_stringset);
+            if (aa.size()==0) continue;
+            unsigned int symexc = symb^syma^symmetry;
+            size_t nexc = result.O2(true,false,false).block_size(symexc);
+            {
+              auto pro = profiler->push("StringSet iterator loops");
+              for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
+                  size_t nsa = aa1-aa0;
+                  for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
+                      size_t nsb = bb1-bb0;
+                      if (!NextTask()) continue;
+                      profiler->start("TransitionDensity ab");
+                      TransitionDensity d(*this,aa0,aa1, bb0,bb1,0,false,false);
+                      TransitionDensity e(*bra,aa0,aa1, bb0,bb1,0,false,false);
+                      profiler->stop("TransitionDensity ab");
+                      { auto pr1 = profiler->push("MXM ab");
+                        MxmDrvTN(&result.O2(true,false,false).block(symexc)[0], &d[0],&e[0], nexc, nsa*nsb, nsa*nsb, nexc, false); // not yet right for non-symmetric tdm
+                      }
+                    }
+                }
+            }
+          }
+      }
+  }
+
+  EndTasks();
+
+  //FIXME implement gsum
+//  gsum(&buffer[0],buffer.size());
+  std::cout << "Density:\n"<<result<<std::endl;
+  return result;
+}
+
 SMat Wavefunction::naturalOrbitals()
 {
 //    xout <<"naturalOrbitals"<<std::endl;
