@@ -11,31 +11,8 @@ namespace gci {
 
   class Operator : public SymmetryMatrix::Operator
   {
-  public:
     using SymmetryMatrix::Operator::Operator;
-    /*!
-     * \brief Construct an operator from its symmetry-block dimensions.
-     * \param dimensions Numbers of one-particle functions in each symmetry block
-     * for each of the four two-particle indices (bra, bra, ket, ket).
-     * \param rank The rank (0, 1 or 2) of the operator.
-     * \param uhf Whether the underlying 1-particle spaces are different for alpha and beta spin.
-     * \param hermiticity Conjugation symmetry, [ai] -> [ia], [bj] -> [jb]: 0=none, 1=symmetric, -1=antisymmetric, default 0.
-     * \param exchange For each of bra, ket, whether there is an interchange symmetry between two
-     * indices in the two-particle part of the operator: [abij] -> [baij]: 0=none, 1=symmetric, -1=antisymmetric, default -1.
-     * \param symmetry Overall symmetry of operator (0-7).
-     * \param description A string describing the object.
-     */
-    explicit Operator(const dims_t dimensions,
-                      int rank=2,
-                      bool uhf=false,
-                      const std::vector<int> hermiticity={1,1},
-                      const std::vector<int> exchange={-1,-1},
-                      unsigned int symmetry=0,
-                      std::string description="")
-      : SymmetryMatrix::Operator(dimensions,rank,uhf,hermiticity,exchange,symmetry,description)
-    {
-
-    }
+  public:
     /*!
      * \brief Construct a real hermitian fermionic operator
      * \param dimension Numbers of orbitals in each symmetry block.
@@ -45,17 +22,22 @@ namespace gci {
      * \param description A string describing the object.
      */
     explicit Operator(const dim_t dimension,
+                      const std::vector<int> orbital_symmetries,
                       int rank=2,
                       bool uhf=false,
                       unsigned int symmetry=0,
                       std::string description="")
-      :  Operator(dims_t{dimension,dimension,dimension,dimension}, rank, uhf, std::vector<int>{1,1}, std::vector<int>{-1,-1}, symmetry, description) { }
+      :  SymmetryMatrix::Operator(dims_t{dimension,dimension,dimension,dimension}, rank, uhf, std::vector<int>{1,1}, std::vector<int>{-1,-1}, symmetry, description) {
+      for (auto i=0; i<4; i++) m_orbitalSpaces.push_back(OrbitalSpace(orbital_symmetries,uhf)); // in this implementation, all four orbital spaces are the same
+    }
 
     /*!
      * \brief Copy constructor. A complete (deep) copy is made.
      * \param source Object to be copied.
      */
-    Operator(const Operator& source) : SymmetryMatrix::Operator(source) {}
+    Operator(const gci::Operator& source) : SymmetryMatrix::Operator(source) {
+      m_orbitalSpaces = source.m_orbitalSpaces;
+    }
 
     /*!
      * \brief Assigment operator
@@ -65,23 +47,24 @@ namespace gci {
     Operator& operator=(const Operator& source)
     {
       SymmetryMatrix::Operator::operator =(source);
+      m_orbitalSpaces = source.m_orbitalSpaces;
       return *this;
     }
 
-    /*!
-     * \brief Construct an object from what is produced by bytestream(). If the bytestream
-     * contains data, it will be loaded, otherwise the contents of the object are undefined,
-     * and only the dimensions and parameters are loaded.
-     * \param dump The raw buffer of a bytestream produced by bytestream()
-     */
-    static Operator construct(const char *dump);
-    /*!
-     * \brief Construct an object from what is produced by bytestream(). If the bytestream
-     * contains data, it will be loaded, otherwise the contents of the object are undefined,
-     * and only the dimensions and parameters are loaded.
-     * \param bs The bytestream produced by bytestream()
-     */
-    static Operator construct(const class bytestream& bs) { return construct((const char*)&(bs.data()[0])); }
+//    /*!
+//     * \brief Construct an object from what is produced by bytestream(). If the bytestream
+//     * contains data, it will be loaded, otherwise the contents of the object are undefined,
+//     * and only the dimensions and parameters are loaded.
+//     * \param dump The raw buffer of a bytestream produced by bytestream()
+//     */
+//    static Operator construct(const char *dump);
+//    /*!
+//     * \brief Construct an object from what is produced by bytestream(). If the bytestream
+//     * contains data, it will be loaded, otherwise the contents of the object are undefined,
+//     * and only the dimensions and parameters are loaded.
+//     * \param bs The bytestream produced by bytestream()
+//     */
+//    static Operator construct(const class bytestream& bs) { return construct((const char*)&(bs.data()[0])); }
     /*!
      * \brief Obtain a reference to 1-particle matrix elements.
      * \param spinUp alpha or beta spin.
@@ -125,7 +108,7 @@ namespace gci {
        */
     Eigen::MatrixXd intK(int spin) const;
 
-    std::vector<unsigned int> orbital_symmetries() const { return m_orbital_symmetries;}
+    std::vector<unsigned int> orbital_symmetries() const { return m_orbitalSpaces[0].orbital_symmetries;}
 
     /*!
      * \brief Build a Fock operator from the density arising from a single Slater determinant
@@ -143,7 +126,6 @@ namespace gci {
 
    std::vector<OrbitalSpace> m_orbitalSpaces;
   private:
-  std::vector<unsigned int> m_orbital_symmetries;
 
     /*!
      * \brief offset Return the number of orbitals of the same symmetry before the given one.
@@ -151,10 +133,9 @@ namespace gci {
      * \return
      */
     size_t offset(unsigned int i) const {
-      return i < 1 ? 0 : std::count(m_orbital_symmetries.begin(),m_orbital_symmetries.begin()+i-1,m_orbital_symmetries[i-1]);
+      std::cout << "m_orbitalSpaces[0].orbital_symmetries: "; for (auto s=m_orbitalSpaces[0].orbital_symmetries.begin(); s!=m_orbitalSpaces[0].orbital_symmetries.end(); s++) std::cout << *s ; std::cout <<std::endl;
+      return i < 1 ? 0 : std::count(m_orbitalSpaces[0].orbital_symmetries.begin(),m_orbitalSpaces[0].orbital_symmetries.begin()+i-1,m_orbitalSpaces[0].orbital_symmetries[i-1]);
     }
-  public:
-    const FCIdump* m_fcidump; // temporary, to support migration
   };
 
 }

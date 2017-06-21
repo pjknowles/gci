@@ -9,13 +9,8 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
   for (auto& s : orbital_symmetries)
     dim.at(s-1)++;
 
-  bool uhf = dump.parameter("IUHF")[0]>0;
-  gci::Operator result(dims_t(4,dim),2,uhf,{1,1},{-1,-1},0,"Hamiltonian");
-  for (auto i=0; i<4; i++) result.m_orbitalSpaces.push_back(OrbitalSpace(orbital_symmetries,uhf)); // in this implementation, all four orbital spaces are the same
-  for (auto& s : orbital_symmetries ) result.m_orbital_symmetries.push_back(--s);
-  result.m_fcidump = &dump;
+  gci::Operator result(dim, orbital_symmetries, 2, dump.parameter("IUHF")[0]>0, 0, "Hamiltonian");
 //  for (auto i=0; i<orbital_symmetries.size(); i++) xout << "i="<<i+1<<", symmetry="<<orbital_symmetries[i]<<", offset="<<result.offset(i+1)<<std::endl;;
-//  for (auto i=0; i<orbital_symmetries.size(); i++) xout << "i="<<i+1<<", symmetry="<<result.m_orbital_symmetries[i]<<std::endl;;
 
   dump.rewind();
   double value;
@@ -37,10 +32,10 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
       auto oj = result.offset(j);
       auto ok = result.offset(k);
       auto ol = result.offset(l);
-      auto si = i<1 ? 0 : orbital_symmetries[i-1];
-      auto sj = j<1 ? 0 : orbital_symmetries[j-1];
-      auto sk = k<1 ? 0 : orbital_symmetries[k-1];
-      auto sl = l<1 ? 0 : orbital_symmetries[l-1];
+      auto si = i<1 ? 0 : result.m_orbitalSpaces[0].orbital_symmetries[i-1];
+      auto sj = j<1 ? 0 : result.m_orbitalSpaces[0].orbital_symmetries[j-1];
+      auto sk = k<1 ? 0 : result.m_orbitalSpaces[0].orbital_symmetries[k-1];
+      auto sl = l<1 ? 0 : result.m_orbitalSpaces[0].orbital_symmetries[l-1];
 //      xout << "ijkl "<<i<<j<<k<<l<<std::endl;
 //      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
@@ -96,8 +91,8 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
 
 gci::Operator* gci::Operator::projector(const std::string special, const bool forceSpinUnrestricted) const
 {
-  auto result = new gci::Operator({m_dimensions[0]},1,m_uhf>0||forceSpinUnrestricted,m_hermiticity,m_exchange,0,special+" projector");
-  result->m_orbital_symmetries = m_orbital_symmetries;
+  std::vector<int> symmetries; for (const auto& s : m_orbitalSpaces[0].orbital_symmetries) symmetries.push_back(s+1);
+  auto result = new gci::Operator(m_dimensions[0],symmetries,1,m_uhf>0||forceSpinUnrestricted,0,special+" projector");
   result->m_O0=0;
 
   if (special=="P" || special=="Q") {
@@ -131,10 +126,10 @@ gci::Operator* gci::Operator::projector(const std::string special, const bool fo
 
 Eigen::VectorXd gci::Operator::int1(int spin) const
 {
-  size_t basisSize = m_orbital_symmetries.size();
+  size_t basisSize = m_orbitalSpaces[0].orbital_symmetries.size();
   Eigen::VectorXd result(basisSize);
   for (unsigned int i=0; i < basisSize; i++) {
-    result[i] = O1(spin>0).block(m_orbital_symmetries[i])[(offset(i+1)+1)*(offset(i+1)+2)/2-1];
+    result[i] = O1(spin>0).block(m_orbitalSpaces[0].orbital_symmetries[i])[(offset(i+1)+1)*(offset(i+1)+2)/2-1];
   }
   return result;
 }
@@ -143,12 +138,12 @@ Eigen::VectorXd gci::Operator::int1(int spin) const
 Eigen::MatrixXd gci::Operator::intJ(int spini, int spinj) const
 {
   if (spinj > spini) return intJ(spinj,spini).transpose();
-  size_t basisSize = m_orbital_symmetries.size();
+  size_t basisSize = m_orbitalSpaces[0].orbital_symmetries.size();
   Eigen::MatrixXd result(basisSize,basisSize);
   for (unsigned int j=0; j < basisSize; j++) {
     for (unsigned int i=0; i < basisSize; i++) {
-      auto si = m_orbital_symmetries[i];
-      auto sj = m_orbital_symmetries[j];
+      auto si = m_orbitalSpaces[0].orbital_symmetries[i];
+      auto sj = m_orbitalSpaces[0].orbital_symmetries[j];
       auto oi = offset(i+1);
       auto oj = offset(j+1);
       result(i,j) = O2(spini>0,spinj>0).smat(0,si,oi,oi)->block(sj)[(oj+2)*(oj+1)/2-1];
@@ -159,12 +154,12 @@ Eigen::MatrixXd gci::Operator::intJ(int spini, int spinj) const
 
 Eigen::MatrixXd gci::Operator::intK(int spin) const
 {
-  size_t basisSize = m_orbital_symmetries.size();
+  size_t basisSize = m_orbitalSpaces[0].orbital_symmetries.size();
   Eigen::MatrixXd result(basisSize,basisSize);
   for (unsigned int j=0; j < basisSize; j++) {
     for (unsigned int i=0; i < basisSize; i++) {
-      auto si = m_orbital_symmetries[i];
-      auto sj = m_orbital_symmetries[j];
+      auto si = m_orbitalSpaces[0].orbital_symmetries[i];
+      auto sj = m_orbitalSpaces[0].orbital_symmetries[j];
       auto oi = offset(i+1);
       auto oj = offset(j+1);
       result(i,j) =
@@ -185,11 +180,11 @@ Eigen::MatrixXd gci::Operator::intK(int spin) const
 
 gci::Operator gci::Operator::fockOperator(const Determinant &reference, const std::string description) const
 {
-  Operator f({m_dimensions[0]},
+  std::vector<int> symmetries; for (const auto& s : m_orbitalSpaces[0].orbital_symmetries) symmetries.push_back(s+1);
+  Operator f(m_dimensions[0],
+      symmetries,
              1,
              m_uhf,
-             m_hermiticity,
-             m_exchange,
              m_symmetry,
              description);
   // xout << "gci::Operator::fockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
@@ -201,60 +196,60 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
   f.m_O0 = m_O0;
   f.O1(true) = O1(true);
   if (m_uhf) f.O1(false) = O1(false);
-  f.m_orbital_symmetries = m_orbital_symmetries;
-  unsigned int basisSize=m_orbital_symmetries.size();
+  f.m_orbitalSpaces[0].orbital_symmetries = m_orbitalSpaces[0].orbital_symmetries;
+  unsigned int basisSize=m_orbitalSpaces[0].orbital_symmetries.size();
   // xout <<"reference.stringAlpha.orbitals ";for (size_t i=0; i < reference.stringAlpha.orbitals().size(); i++) xout <<reference.stringAlpha.orbitals()[i]<<" ";xout <<std::endl;
   // for (std::vector<unsigned int>::const_iterator o=reference.stringAlpha.orbitals().begin(); o != reference.stringAlpha.orbitals().end(); o++)
   for (auto o=refAlphaOrbitals.begin(); o != refAlphaOrbitals.end(); o++)
     {
       // xout << "gci::Operator::fockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
       // xout<< "f alpha, alpha occ: " <<*o << std::endl;
-      unsigned int os=m_orbital_symmetries[*o];
+      unsigned int os=m_orbitalSpaces[0].orbital_symmetries[*o];
       unsigned int oo=offset(*o);
       for (unsigned int i=1; i<=basisSize; i++)
         for (unsigned int j=1; j<=i; j++) {
-            if (m_orbital_symmetries[i-1]!=m_orbital_symmetries[j-1]) continue;
-            f.element(offset(i),m_orbital_symmetries[i],offset(j),m_orbital_symmetries[j],true) +=
-                element(offset(i),m_orbital_symmetries[i],offset(j),m_orbital_symmetries[j],oo,os,oo,os,true,true)-
-                element(offset(i),m_orbital_symmetries[i],oo,os,oo,os,offset(j),m_orbital_symmetries[j],true,true);
+            if (m_orbitalSpaces[0].orbital_symmetries[i-1]!=m_orbitalSpaces[0].orbital_symmetries[j-1]) continue;
+            f.element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],true) +=
+                element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],oo,os,oo,os,true,true)-
+                element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],oo,os,oo,os,offset(j),m_orbitalSpaces[0].orbital_symmetries[j],true,true);
           }
     }
   for (auto o=refBetaOrbitals.begin(); o != refBetaOrbitals.end(); o++)
     {
       // xout<< "f alpha, beta occ: " <<*o << std::endl;
-      unsigned int os=m_orbital_symmetries[*o];
+      unsigned int os=m_orbitalSpaces[0].orbital_symmetries[*o];
       unsigned int oo=offset(*o);
       for (unsigned int i=1; i<=basisSize; i++)
         for (unsigned int j=1; j<=i; j++) {
-            if (m_orbital_symmetries[i-1]!=m_orbital_symmetries[j-1]) continue;
-            f.element(offset(i),m_orbital_symmetries[i],offset(j),m_orbital_symmetries[j],true) +=
-                element(offset(i),m_orbital_symmetries[i],offset(j),m_orbital_symmetries[j],oo,os,oo,os,true,false);
+            if (m_orbitalSpaces[0].orbital_symmetries[i-1]!=m_orbitalSpaces[0].orbital_symmetries[j-1]) continue;
+            f.element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],true) +=
+                element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],oo,os,oo,os,true,false);
           }
     }
   if (f.m_uhf) {
       for (auto o=refBetaOrbitals.begin(); o != refBetaOrbitals.end(); o++)
         {
           // xout<< "f beta, beta occ: " <<*o << std::endl;
-          unsigned int os=m_orbital_symmetries[*o];
+          unsigned int os=m_orbitalSpaces[0].orbital_symmetries[*o];
           unsigned int oo=offset(*o);
           for (unsigned int i=1; i<=basisSize; i++)
             for (unsigned int j=1; j<=i; j++) {
-                if (m_orbital_symmetries[i-1]!=m_orbital_symmetries[j-1]) continue;
-                f.element(offset(i),m_orbital_symmetries[i],offset(j),m_orbital_symmetries[j],false) +=
-                    element(offset(i),m_orbital_symmetries[i],offset(j),m_orbital_symmetries[j],oo,os,oo,os,false,false)-
-                    element(offset(i),m_orbital_symmetries[i],oo,os,oo,os,offset(j),m_orbital_symmetries[j],false,false);
+                if (m_orbitalSpaces[0].orbital_symmetries[i-1]!=m_orbitalSpaces[0].orbital_symmetries[j-1]) continue;
+                f.element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],false) +=
+                    element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],oo,os,oo,os,false,false)-
+                    element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],oo,os,oo,os,offset(j),m_orbitalSpaces[0].orbital_symmetries[j],false,false);
               }
         }
       for (auto o=refAlphaOrbitals.begin(); o != refAlphaOrbitals.end(); o++)
         {
           // xout<< "f beta, alpha occ: " <<*o << std::endl;
-          unsigned int os=m_orbital_symmetries[*o];
+          unsigned int os=m_orbitalSpaces[0].orbital_symmetries[*o];
           unsigned int oo=offset(*o);
           for (unsigned int i=1; i<=basisSize; i++)
             for (unsigned int j=1; j<=i; j++) {
-                if (m_orbital_symmetries[i-1]!=m_orbital_symmetries[j-1]) continue;
-                f.element(offset(i),m_orbital_symmetries[i],offset(j),m_orbital_symmetries[j],false) +=
-                    element(oo,os,oo,os,offset(i),m_orbital_symmetries[i],offset(j),m_orbital_symmetries[j],true,false);
+                if (m_orbitalSpaces[0].orbital_symmetries[i-1]!=m_orbitalSpaces[0].orbital_symmetries[j-1]) continue;
+                f.element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],false) +=
+                    element(oo,os,oo,os,offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],true,false);
               }
         }
     }
@@ -264,11 +259,11 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
 
 gci::Operator gci::Operator::sameSpinOperator(const Determinant &reference, const std::string description) const
 {
-  Operator result(m_dimensions,
+  std::vector<int> symmetries; for (const auto& s : m_orbitalSpaces[0].orbital_symmetries) symmetries.push_back(s+1);
+  Operator result(m_dimensions[0],
+                  symmetries,
              m_rank,
              true,
-             m_hermiticity,
-             m_exchange,
              m_symmetry,
              description);
   {
