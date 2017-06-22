@@ -537,7 +537,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
   }
 
   }
-//  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
+  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
 
   { // two-electron contribution, alpha-alpha
     auto p = profiler->push("aa integrals");
@@ -588,7 +588,11 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                   profiler->stop("TransitionDensity bb");
                   TransitionDensity e(d);
                   { auto pr1 = profiler->push("MXM bb");
+//                        xout << "Dbb\n"<<Eigen::Map<Eigen::MatrixXd>(&d[0],nsa*nsb,nexc)<<std::endl;
+//                        xout << "Ibb\n"<<Eigen::Map<Eigen::MatrixXd>(&h.O2(false,false,false).block(symexc)[0],nexc,nexc)<<std::endl;
                     MxmDrvNN(&e[0],&d[0], &h.O2(false,false,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
+//                        MxmDrvNN(&e[0],&d[0], &h.O2(true,false,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
+//                        xout << "Ebb\n"<<Eigen::Map<Eigen::MatrixXd>(&e[0],nsa*nsb,nexc)<<std::endl;
                   }
                   {auto pr1 = profiler->push("action bb"); e.action(*this);}
                 }
@@ -635,7 +639,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
             }
           }
       }
-//      xout <<"residual after alpha-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
+      xout <<"residual after alpha-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
   }
 
   EndTasks();
