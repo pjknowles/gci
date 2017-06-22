@@ -492,7 +492,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
   else
     for (size_t i=0; i<buffer.size(); i++)
       buffer[i] = (double)0;
-  xout <<"residual after 0-electron:"<<std::endl<<str(2)<<std::endl;
+//  xout <<"residual after 0-electron:"<<std::endl<<str(2)<<std::endl;
 
 //  xout <<std::endl<<"w in operatorOnWavefunction="<<w.str(2)<<std::endl;
   DivideTasks(99999999,1,1);
@@ -537,7 +537,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
   }
 
   }
-  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
+//  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
 
   { // two-electron contribution, alpha-alpha
     auto p = profiler->push("aa integrals");
@@ -568,7 +568,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
           }
       }
   }
-  xout <<"residual after alpha-alpha on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
+//  xout <<"residual after alpha-alpha on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
 
   if (true || h.m_uhf) { // two-electron contribution, beta-beta
       auto p = profiler->push("bb integrals");
@@ -594,13 +594,15 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                 }
             }
         }
-      xout <<"residual after beta-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
+//      xout <<"residual after beta-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
     }
 
   { // two-electron contribution, alpha-beta
     auto p = profiler->push("ab integrals");
     size_t nsaaMax = 640; // temporary static
     size_t nsbbMax = 640; // temporary static
+//    xout << "h.O2(true,false,true) "<< h.O2(true,false,true) <<std::endl;
+//    xout << "h.O2(true,false,false) "<< h.O2(true,false,false) <<std::endl;
     for (unsigned int symb=0; symb<8; symb++) {
         StringSet bb(w.betaStrings,1,0,symb,parallel_stringset);
         if (bb.size()==0) continue;
@@ -610,6 +612,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
             unsigned int symexc = symb^syma^w.symmetry;
             size_t nexc = h.O2(true,false,false).block_size(symexc);
             {
+//              xout << "syma="<<syma<<", symb="<<symb<<", symexc="<<symexc<<std::endl;
               auto pro = profiler->push("StringSet iterator loops");
               for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
                   size_t nsa = aa1-aa0;
@@ -621,10 +624,10 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                       profiler->stop("TransitionDensity ab");
                       TransitionDensity e(d);
                       { auto pr1 = profiler->push("MXM ab");
-                        xout << "Dab\n"<<Eigen::Map<Eigen::MatrixXd>(&d[0],nsa*nsb,nexc)<<std::endl;
-                        xout << "Iab\n"<<Eigen::Map<Eigen::MatrixXd>(&h.O2(true,false,false).block(symexc)[0],nexc,nexc)<<std::endl;
+//                        xout << "Dab\n"<<Eigen::Map<Eigen::MatrixXd>(&d[0],nsa*nsb,nexc)<<std::endl;
+//                        xout << "Iab\n"<<Eigen::Map<Eigen::MatrixXd>(&h.O2(true,false,false).block(symexc)[0],nexc,nexc)<<std::endl;
                         MxmDrvNN(&e[0],&d[0], &h.O2(true,false,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
-                        xout << "Eab\n"<<Eigen::Map<Eigen::MatrixXd>(&e[0],nsa*nsb,nexc)<<std::endl;
+//                        xout << "Eab\n"<<Eigen::Map<Eigen::MatrixXd>(&e[0],nsa*nsb,nexc)<<std::endl;
                       }
                       { auto pr1 = profiler->push("action ab"); e.action(*this);}
                     }
@@ -632,7 +635,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
             }
           }
       }
-      xout <<"residual after alpha-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
+//      xout <<"residual after alpha-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
   }
 
   EndTasks();
