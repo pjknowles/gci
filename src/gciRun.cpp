@@ -94,7 +94,7 @@ static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet &
             cw->times(gw,diag);
         }
         else {
-            shifts[state]+=std::numeric_limits<scalar>::epsilon();
+            shifts[state]+=std::numeric_limits<scalar>::epsilon()*std::fmax(1,std::fabs(diag->at(diag->minloc(state+1)))); // to guard against zero
 //                xout << "initial gw  in preconditioner"<<gw->str(2)<<std::endl;
 //                xout << "initial cw  in preconditioner"<<cw->str(2)<<std::endl;
 //                xout << "diag  in preconditioner"<<diag->str(2)<<std::endl;

@@ -537,7 +537,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
   }
 
   }
-  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
+//  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
 
   { // two-electron contribution, alpha-alpha
     auto p = profiler->push("aa integrals");
@@ -639,7 +639,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
             }
           }
       }
-      xout <<"residual after alpha-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
+//      xout <<"residual after alpha-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
   }
 
   EndTasks();
