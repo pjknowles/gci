@@ -492,6 +492,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
   else
     for (size_t i=0; i<buffer.size(); i++)
       buffer[i] = (double)0;
+  xout <<"residual after 0-electron:"<<std::endl<<str(2)<<std::endl;
 
 //  xout <<std::endl<<"w in operatorOnWavefunction="<<w.str(2)<<std::endl;
   DivideTasks(99999999,1,1);
@@ -536,7 +537,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
   }
 
   }
-//  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
+  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
 
   { // two-electron contribution, alpha-alpha
     auto p = profiler->push("aa integrals");
@@ -567,7 +568,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
           }
       }
   }
-//  xout <<"residual after alpha-alpha on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
+  xout <<"residual after alpha-alpha on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
 
   if (h.m_uhf) { // two-electron contribution, beta-beta
       auto p = profiler->push("bb integrals");
@@ -593,6 +594,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                 }
             }
         }
+      xout <<"residual after beta-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
     }
 
   { // two-electron contribution, alpha-beta
@@ -606,7 +608,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
             StringSet aa(w.alphaStrings,1,0,syma,parallel_stringset);
             if (aa.size()==0) continue;
             unsigned int symexc = symb^syma^w.symmetry;
-            size_t nexc = h.O2(true,false,true).block_size(symexc);
+            size_t nexc = h.O2(true,false,false).block_size(symexc);
             {
               auto pro = profiler->push("StringSet iterator loops");
               for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
@@ -627,6 +629,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
             }
           }
       }
+      xout <<"residual after alpha-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
   }
 
   EndTasks();
