@@ -492,7 +492,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
   else
     for (size_t i=0; i<buffer.size(); i++)
       buffer[i] = (double)0;
-  xout <<"residual after 0-electron:"<<std::endl<<str(2)<<std::endl;
+//  xout <<"residual after 0-electron:"<<std::endl<<str(2)<<std::endl;
 
 //  xout <<std::endl<<"w in operatorOnWavefunction="<<w.str(2)<<std::endl;
   DivideTasks(99999999,1,1);
@@ -537,7 +537,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
   }
 
   }
-  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
+//  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
 
   { // two-electron contribution, alpha-alpha
     auto p = profiler->push("aa integrals");
@@ -568,9 +568,9 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
           }
       }
   }
-  xout <<"residual after alpha-alpha on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
+//  xout <<"residual after alpha-alpha on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
 
-  if (h.m_uhf) { // two-electron contribution, beta-beta
+  if (true || h.m_uhf) { // two-electron contribution, beta-beta
       auto p = profiler->push("bb integrals");
       size_t nsbbMax = 64; // temporary static
       for (unsigned int symb=0; symb<8; symb++) {
@@ -594,7 +594,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                 }
             }
         }
-      xout <<"residual after beta-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
+//      xout <<"residual after beta-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
     }
 
   { // two-electron contribution, alpha-beta
@@ -621,7 +621,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                       profiler->stop("TransitionDensity ab");
                       TransitionDensity e(d);
                       { auto pr1 = profiler->push("MXM ab");
-                        MxmDrvNN(&e[0],&d[0], &h.O2(true,false,true).block(symexc)[0], nsa*nsb,nexc,nexc,false);
+                        MxmDrvNN(&e[0],&d[0], &h.O2(true,false,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
                       }
                       { auto pr1 = profiler->push("action ab"); e.action(*this);}
                     }
@@ -629,7 +629,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
             }
           }
       }
-      xout <<"residual after alpha-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
+//      xout <<"residual after alpha-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
   }
 
   EndTasks();
