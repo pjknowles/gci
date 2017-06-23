@@ -485,12 +485,23 @@ using namespace itf;
 
 void MXM(double *Out, const double * A, const double *B, uint nRows, uint nLink, uint nCols, bool AddToDest, int nStrideLink=-1)
 {
+  const bool debug=false;
   auto prof = profiler->push("MXM");
   prof += 2*nLink*nCols*nRows;
-  if (nStrideLink < 0 )
-    MxmDrvNN(Out, A, B, nRows, nLink, nCols, AddToDest);
-  else
-    MxmDrvTN(Out, A, B, nRows, nLink, static_cast<int>(-nStrideLink), nCols, AddToDest);
+  if (nStrideLink < 0 ) {
+      if (debug)
+        xout << "MXM A\n"<<Eigen::Map<const Eigen::MatrixXd>(A,nRows,nLink)<<std::endl;
+      MxmDrvNN(Out, A, B, nRows, nLink, nCols, AddToDest);
+    }
+  else {
+//      if (debug) // how to make const and Stride work together?
+//        xout << "MXM A\n"<<Eigen::Map<const Eigen::MatrixXd>(A,nRows,nLink, Eigen::Stride<Eigen::Dynamic,Eigen::Dynamic>(1, -nStrideLink))<<std::endl;
+      MxmDrvTN(Out, A, B, nRows, nLink, static_cast<int>(-nStrideLink), nCols, AddToDest);
+    }
+  if (debug) {
+      xout << "MXM B\n"<<Eigen::Map<const Eigen::MatrixXd>(B,nLink,nCols )<<std::endl;
+      xout << "MXM Out\n"<<Eigen::Map<Eigen::MatrixXd>(Out,nRows,nCols)<<std::endl;
+    }
 }
 
 void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction &w, bool parallel_stringset)
@@ -523,8 +534,6 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                           w.betaStrings[symb].begin(),
                           w.betaStrings[symb].end(),
                           1,true, !h.m_uhf);
-//      xout << "D1\n"<<Eigen::Map<Eigen::MatrixXd>(&d[0],nsa*nsb,w.orbitalSpace->total(0,1))<<std::endl;
-//      xout << "I1\n"<<Eigen::Map<Eigen::MatrixXd>(&(*h.O1(true).data())[0],w.orbitalSpace->total(0,1),1)<<std::endl;
       MXM(&buffer[offset],&d[0], &(*h.O1(true).data())[0],
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
     }
@@ -562,10 +571,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                 size_t nsa = aa1-aa0;
                 TransitionDensity d(w,aa0,aa1,w.betaStrings[symb].begin(),w.betaStrings[symb].end(),-1,false,false);
                 TransitionDensity e(d);
-//                        xout << "Daa\n"<<Eigen::Map<Eigen::MatrixXd>(&d[0],nsa*nsb,nexc)<<std::endl;
-//                        xout << "Iaa\n"<<Eigen::Map<Eigen::MatrixXd>(&h.O2(true,true,false).block(symexc)[0],nexc,nexc)<<std::endl;
                 MXM(&e[0],&d[0], &h.O2(true,true,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
-//                        xout << "Eaa\n"<<Eigen::Map<Eigen::MatrixXd>(&e[0],nsa*nsb,nexc)<<std::endl;
                 e.action(*this);
               }
           }
@@ -588,11 +594,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                   size_t nsb = bb1-bb0;
                   TransitionDensity d(w,w.alphaStrings[syma].begin(),w.alphaStrings[syma].end(),bb0,bb1,-1,false,false);
                   TransitionDensity e(d);
-//                        xout << "Dbb\n"<<Eigen::Map<Eigen::MatrixXd>(&d[0],nsa*nsb,nexc)<<std::endl;
-//                        xout << "Ibb\n"<<Eigen::Map<Eigen::MatrixXd>(&h.O2(false,false,false).block(symexc)[0],nexc,nexc)<<std::endl;
                   MXM(&e[0],&d[0], &h.O2(false,false,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
-//                        MxmDrvNN(&e[0],&d[0], &h.O2(true,false,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
-//                        xout << "Ebb\n"<<Eigen::Map<Eigen::MatrixXd>(&e[0],nsa*nsb,nexc)<<std::endl;
                   e.action(*this);
                 }
             }
@@ -622,10 +624,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                       if (!NextTask()) continue;
                       TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
                       TransitionDensity e(d);
-//                        xout << "Dab\n"<<Eigen::Map<Eigen::MatrixXd>(&d[0],nsa*nsb,nexc)<<std::endl;
-//                        xout << "Iab\n"<<Eigen::Map<Eigen::MatrixXd>(&h.O2(true,false,false).block(symexc)[0],nexc,nexc)<<std::endl;
                       MXM(&e[0],&d[0], &h.O2(true,false,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
-//                        xout << "Eab\n"<<Eigen::Map<Eigen::MatrixXd>(&e[0],nsa*nsb,nexc)<<std::endl;
                       e.action(*this);
                     }
                 }
@@ -640,54 +639,6 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
   gsum(&buffer[0],buffer.size());
 }
 
-
-void Wavefunction::density(memory::vector<double>& den1)
-{
-  memory::vector<double> den2(0);
-  density(den1,den2,true,false,*this);
-}
-void Wavefunction::density(memory::vector<double>& den1,memory::vector<double>& den2)
-{
-  density(den1,den2,true,true,*this);
-}
-void Wavefunction::density(memory::vector<double>& den1,const Wavefunction& bra)
-{
-  memory::vector<double> den2(0);
-  density(den1,den2,true,false,bra);
-}
-void Wavefunction::density(memory::vector<double>& den1,memory::vector<double>& den2,const Wavefunction& bra)
-{
-  density(den1,den2,true,true,bra);
-}
-void Wavefunction::density(memory::vector<double>& den1, memory::vector<double>& den2, bool d1, bool d2, const Wavefunction &bra)
-{
-  profiler->start("1-electron");
-  size_t offset=0, nsa=0, nsb=0;
-  unsigned int symdens=symmetry^bra.symmetry;
-//  den1.resize(orbitalSpace->total(symdens,1),(double)0);
-  den1.assign(0);
-  for (unsigned int syma=0; syma<8; syma++) {
-    offset += nsa*nsb;
-    unsigned int symb = bra.symmetry^syma;
-    nsa = bra.alphaStrings[syma].size();
-    nsb = bra.betaStrings[symb].size();
-    if (!NextTask()) continue;
-    profiler->start("1-electron TransitionDensity");
-    TransitionDensity d(*this,
-                        bra.alphaStrings[syma].begin(),
-                        bra.alphaStrings[syma].end(),
-                        bra.betaStrings[symb].begin(),
-                        bra.betaStrings[symb].end(),
-                        1,true, true);
-    profiler->stop("1-electron TransitionDensity");
-    profiler->start("1-electron MXM");
-      MxmDrvTN(&(den1[0]),&(bra.buffer[offset]),&d[0],
-          1,nsa*nsb,1,orbitalSpace->total(symdens,1),true);
-      profiler->stop("1-electron MXM",2*nsa*nsb*bra.orbitalSpace->total(0,1));
-    }
-  profiler->stop("1-electron");
-
-}
 
 gci::Operator Wavefunction::density(int rank, bool uhf, const Wavefunction *bra, std::string description, bool parallel_stringset)
 {
@@ -710,15 +661,13 @@ gci::Operator Wavefunction::density(int rank, bool uhf, const Wavefunction *bra,
     nsa = alphaStrings[syma].size();
     nsb = betaStrings[symb].size();
     if (!NextTask()) continue;
-    {
-      TransitionDensity d(*this,
+    { TransitionDensity d(*this,
                           alphaStrings[syma].begin(),
                           alphaStrings[syma].end(),
                           betaStrings[symb].begin(),
                           betaStrings[symb].end(),
                           1,true, !result.m_uhf);
-      profiler->start("1-electron MXM");
-      MXM(&((*result.O1(true).data())[0]),&d[0],&buffer[offset],orbitalSpace->total(0,1),nsa*nsb,1,true,1);
+      MXM(&((*result.O1(true).data())[0]),&d[0],&buffer[offset],orbitalSpace->total(0,1),nsa*nsb,1,true,nsa*nsb);
     }
     if (result.m_uhf) {
       TransitionDensity d(*this,
@@ -727,12 +676,11 @@ gci::Operator Wavefunction::density(int rank, bool uhf, const Wavefunction *bra,
                           betaStrings[symb].begin(),
                           betaStrings[symb].end(),
                           1,false, true);
-      MXM(&((*result.O1(false).data())[0]),&d[0],&buffer[offset],orbitalSpace->total(0,1),nsa*nsb,1,true,1);
+      MXM(&((*result.O1(false).data())[0]),&d[0],&buffer[offset],orbitalSpace->total(0,1),nsa*nsb,1,true,nsa*nsb);
     }
   }
 
   }
-//  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
 
   { // two-electron contribution, alpha-alpha
     auto p = profiler->push("aa density");
@@ -819,18 +767,15 @@ gci::Operator Wavefunction::density(int rank, bool uhf, const Wavefunction *bra,
 
 SMat Wavefunction::naturalOrbitals()
 {
-//    xout <<"naturalOrbitals"<<std::endl;
+  //    xout <<"naturalOrbitals"<<std::endl;
   SMat natorb(std::vector<std::vector<size_t> >{*orbitalSpace,*orbitalSpace},parityNone,0,"Natural orbitals");
-    SMat dens1(std::vector<std::vector<size_t> >{*orbitalSpace,*orbitalSpace},parityEven,0,"Density");
-    SMat ee({*orbitalSpace},parityNone,-1,"Occupation numbers");
-    density(*dens1.data());
-    // at this point, the off-diagonal elements of the density are twice what they should be, so sort that out.
-    dens1 *=0.5; for (int k=0; k<dens1.max_symmetry(); k++) for (size_t l=0;l<dens1.dimension(k);l++) dens1.block(k)[(l+2)*(l+1)/2-1]*=2;
+  SMat dens1=density(1).O1();
+  SMat ee({*orbitalSpace},parityNone,-1,"Occupation numbers");
 
-    xout << dens1;
-    dens1.ev(ee,&natorb);
-    xout <<ee<<natorb;
-    return natorb;
+  xout << dens1;
+  dens1.ev(ee,&natorb);
+  xout <<ee<<natorb;
+  return natorb;
 }
 
 void Wavefunction::putw(File& f, int index)

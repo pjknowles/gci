@@ -269,7 +269,7 @@ std::vector<double> Run::run()
   else {
     xout << "Unknown method in GCI, " << method << std::endl;
   }
-  xout <<profiler->str(parameter("PROFILER",std::vector<int>(1,-1)).at(0)) <<std::endl;
+  xout <<profiler->str(parameter("PROFILER",std::vector<int>(1,-1)).at(0),true) <<std::endl;
   _nextval_counter.reset(nullptr);
   return energies;
 }
