@@ -221,7 +221,7 @@ std::vector<double> Run::run()
 //    xout <<"ssh="<<ssh<<std::endl;
     gci::Operator osh=hho; osh -= ssh; osh-=h0; // spinUnrestricted not yet implemented
 //    xout <<"osh="<<osh<<std::endl;
-    gci::Operator h1 = osh*scs_opposite ;//+ ssh*scs_same;
+    gci::Operator h1 = osh*scs_opposite; h1 += ssh*scs_same;
 //    xout <<"h1="<<h1<<std::endl;
     gci::Operator h2(hho); // spinUnrestricted not yet implemented
     h2-=h1; h2-=h0;

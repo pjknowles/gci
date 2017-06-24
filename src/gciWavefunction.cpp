@@ -496,7 +496,7 @@ void MXM(double *Out, const double * A, const double *B, uint nRows, uint nLink,
   else {
 //      if (debug) // how to make const and Stride work together?
 //        xout << "MXM A\n"<<Eigen::Map<const Eigen::MatrixXd>(A,nRows,nLink, Eigen::Stride<Eigen::Dynamic,Eigen::Dynamic>(1, -nStrideLink))<<std::endl;
-      MxmDrvTN(Out, A, B, nRows, nLink, static_cast<int>(-nStrideLink), nCols, AddToDest);
+      MxmDrvTN(Out, A, B, nRows, nLink, static_cast<int>(nStrideLink), nCols, AddToDest);
     }
   if (debug) {
       xout << "MXM B\n"<<Eigen::Map<const Eigen::MatrixXd>(B,nLink,nCols )<<std::endl;
