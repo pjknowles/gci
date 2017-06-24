@@ -648,7 +648,9 @@ gci::Operator Wavefunction::density(int rank, bool uhf, const Wavefunction *bra,
   std::vector<int> symmetries; for (const auto& s : orbitalSpace->orbital_symmetries) symmetries.push_back(s+1); // only a common orbital space is implemented
   dim_t dim; for (const auto s: *orbitalSpace) dim.push_back(s);
   Operator result(dim, symmetries, rank, uhf, symmetry^bra->symmetry, description);
+  std::cout << "result\n"<<result.str("result",3)<<std::endl;
   result.zero();
+  std::cout << "result\n"<<result.str("result",3)<<std::endl;
 
   DivideTasks(99999999,1,1);
 
