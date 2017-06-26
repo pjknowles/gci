@@ -7,6 +7,7 @@
 #include "gciTransitionDensity.h"
 #include "Profiler.h"
 #include <algorithm>
+#include "gciOrbitals.h"
 
 Wavefunction::Wavefunction(const FCIdump &dump) : State(dump) {
   distributed = false;
@@ -767,17 +768,14 @@ gci::Operator Wavefunction::density(int rank, bool uhf, const Wavefunction *bra,
   return result;
 }
 
-SMat Wavefunction::naturalOrbitals()
+Orbitals Wavefunction::naturalOrbitals()
 {
-  //    xout <<"naturalOrbitals"<<std::endl;
-  SMat natorb(std::vector<std::vector<size_t> >{*orbitalSpace,*orbitalSpace},parityNone,0,"Natural orbitals");
+  Orbitals orb(*orbitalSpace);
   SMat dens1=density(1).O1();
-  SMat ee({*orbitalSpace},parityNone,-1,"Occupation numbers");
-
-  xout << dens1;
-  dens1.ev(ee,&natorb);
-  xout <<ee<<natorb;
-  return natorb;
+  dens1.ev(orb.m_occupations,&orb.m_orbitals,NULL,NULL,"lapack","descending");
+  orb.m_orbitals.m_description="Natural orbitals";
+  orb.m_occupations.m_description="Natural orbital occupation numbers";
+  return orb;
 }
 
 void Wavefunction::putw(File& f, int index)

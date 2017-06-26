@@ -11,6 +11,7 @@
 #include "memory.h"
 #include "SMat.h"
 #include "LinearAlgebra.h"
+#include "gciOrbitals.h"
 
 namespace gci {
 /*!
@@ -109,7 +110,7 @@ public:
    * \brief Calculate natural orbitals
    * \return
    */
-  SMat naturalOrbitals();
+  Orbitals naturalOrbitals();
 private:
 //  void density(memory::vector<double>& den1, memory::vector<double>& den2, bool d1, bool d2, const Wavefunction& bra);
 public:
