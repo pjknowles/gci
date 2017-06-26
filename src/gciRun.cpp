@@ -387,10 +387,12 @@ std::vector<double> Run::Davidson(
   solver.m_roots=nState;
   profiler->stop("Davidson preamble");
   solver.solve(gg,ww);
-  std::cout << "Final wavefunction\n"<<dynamic_cast<Wavefunction*>(ww[0])->str(2)<<std::endl;
+//  std::cout << "Final wavefunction\n"<<dynamic_cast<Wavefunction*>(ww[0])->str(2)<<std::endl;
   std::cout << "get density"<<std::endl;
   auto dens1 = dynamic_cast<Wavefunction*>(ww[0])->Wavefunction::density(1);
   xout << "density:\n"<<dens1<<std::endl;
+  auto natorb = dynamic_cast<Wavefunction*>(ww[0])->Wavefunction::naturalOrbitals();
+  xout << "natorb:\n"<<natorb<<std::endl;
   while (ww.size()>0) { delete ww.back(); ww.pop_back(); }
   while (gg.size()>0) { delete gg.back(); gg.pop_back(); }
   return solver.eigenvalues();

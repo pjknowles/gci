@@ -648,9 +648,9 @@ gci::Operator Wavefunction::density(int rank, bool uhf, const Wavefunction *bra,
   std::vector<int> symmetries; for (const auto& s : orbitalSpace->orbital_symmetries) symmetries.push_back(s+1); // only a common orbital space is implemented
   dim_t dim; for (const auto s: *orbitalSpace) dim.push_back(s);
   Operator result(dim, symmetries, rank, uhf, symmetry^bra->symmetry, description);
-  std::cout << "result\n"<<result.str("result",3)<<std::endl;
+//  std::cout << "result\n"<<result.str("result",3)<<std::endl;
   result.zero();
-  std::cout << "result\n"<<result.str("result",3)<<std::endl;
+//  std::cout << "result\n"<<result.str("result",3)<<std::endl;
 
   DivideTasks(99999999,1,1);
 
@@ -684,7 +684,7 @@ gci::Operator Wavefunction::density(int rank, bool uhf, const Wavefunction *bra,
 
   }
 
-  { // two-electron contribution, alpha-alpha
+  if (rank > 1 ){ // two-electron contribution, alpha-alpha
     auto p = profiler->push("aa density");
     size_t nsbbMax = 64; // temporary static
     for (unsigned int syma=0; syma<8; syma++) {
@@ -709,7 +709,7 @@ gci::Operator Wavefunction::density(int rank, bool uhf, const Wavefunction *bra,
       }
   }
 
-  if (result.m_uhf) { // two-electron contribution, beta-beta
+  if (rank > 1 && result.m_uhf) { // two-electron contribution, beta-beta
       auto p = profiler->push("bb density");
       size_t nsbbMax = 64; // temporary static
       for (unsigned int symb=0; symb<8; symb++) {
@@ -730,7 +730,7 @@ gci::Operator Wavefunction::density(int rank, bool uhf, const Wavefunction *bra,
         }
     }
 
-  { // two-electron contribution, alpha-beta
+  if (rank > 1){ // two-electron contribution, alpha-beta
     auto p = profiler->push("ab density");
     size_t nsaaMax = 640; // temporary static
     size_t nsbbMax = 640; // temporary static
