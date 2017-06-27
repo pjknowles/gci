@@ -271,6 +271,19 @@ std::vector<double> Run::run()
   }
   xout <<profiler->str(parameter("PROFILER",std::vector<int>(1,-1)).at(0),true) <<std::endl;
   _nextval_counter.reset(nullptr);
+  { auto reference_energies = parameter("ENERGY",std::vector<double>(0));
+    double diff=0;
+    for (auto i=0; i<reference_energies.size() && i < energies.size(); i++)
+      diff += std::fabs(energies[i]-reference_energies[i]);
+    if (diff > .0000001) {
+        xout << "Disagreement of calculated energies:\n";
+        for (auto r : energies) xout << " "<<r;
+        xout << "\n with reference energies:\n";
+        for (auto r : reference_energies) xout << " "<<r;
+        xout << std::endl;
+        throw std::runtime_error("Disagreement of results with reference energies");
+      }
+  }
   return energies;
 }
 
