@@ -22,6 +22,20 @@ check_fortran_compiler_flag("-i8" _i8)
 if(_i8)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -i8")
 endif()
+include(ProcessorCount)
+ProcessorCount(NPROC)
+if(NPROC EQUAL 0)
+  set(NPROC 1)
+endif()
+message("Number of processors ${NPROC}")
+set(CTEST_BUILD_FLAGS -j${NPROC})
+#set(ctest_test_args ${ctest_test_args} PARALLEL_LEVEL ${NPROC})
+#message(CMAKE_GENERATOR ${CMAKE_GENERATOR})
+#if(${CMAKE_GENERATOR} MATCHES "Unix Makefiles")
+#  set(CMAKE_MAKE_PROGRAM "${CMAKE_MAKE_PROGRAM} -j${NPROC}")
+#endif()
+
+
 
 file (GLOB SRCS src/*.cpp src/*.F90
     submodules/Profiler/Profiler.cpp
@@ -81,3 +95,7 @@ WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 COMMENT "Generating API documentation with Doxygen" VERBATIM
 )
 endif(DOXYGEN_FOUND)
+
+# Add a test:
+enable_testing()
+add_test(SimpleTest ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${NPROC} ${CMAKE_CURRENT_BINARY_DIR}/gci.exe ${CMAKE_CURRENT_SOURCE_DIR}/hevdz.fcidump)

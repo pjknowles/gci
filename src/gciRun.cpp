@@ -31,10 +31,10 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
     for (size_t k=0; k<psx.size(); k++) {
         const Wavefunction* x=dynamic_cast <const Wavefunction*> (psx[k]);
         Wavefunction* g=dynamic_cast <Wavefunction*> (outputs[k]);
-        profiler->start("density");
+//        profiler->start("density");
 //        SMat natorb=x->naturalOrbitals();
         //    activeHamiltonian->rotate(&natorb);
-        profiler->stop("density");
+//        profiler->stop("density");
         profiler->start("Hc");
         if (not append)
             g->zero();

@@ -72,14 +72,15 @@ int main(int argc, char *argv[])
       if (!plugin.send("GIVE OPERATOR HAMILTONIAN FCIDUMP GCI")) throw std::logic_error("Unexpected plugin failure");
       strcpy(fcidumpname,plugin.receive().c_str());
     }
+  if (argc > 1) strcpy(fcidumpname,argv[1]);
   Run run(fcidumpname);
-  if (argc<2 ||
+  if (argc<3 ||
      plugin.active()) {
     run.addParameter("METHOD","DAVIDSON");
     // run.addParameter("PROFILER","0");
   }
   else
-    for (int i=1; i<argc; i++) {
+    for (int i=2; i<argc; i++) {
       std::string s(argv[i]);
       size_t equals = s.find("=");
       if (equals != std::string::npos)
