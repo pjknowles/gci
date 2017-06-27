@@ -96,6 +96,9 @@ COMMENT "Generating API documentation with Doxygen" VERBATIM
 )
 endif(DOXYGEN_FOUND)
 
-# Add a test:
 enable_testing()
-add_test(SimpleTest ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${NPROC} ${CMAKE_CURRENT_BINARY_DIR}/gci.exe ${CMAKE_CURRENT_SOURCE_DIR}/hevdz.fcidump)
+file (GLOB TESTS test/*.fcidump)
+foreach(fil ${TESTS})
+  get_filename_component(nam ${fil} NAME_WE)
+  add_test(${nam} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${NPROC} ${CMAKE_CURRENT_BINARY_DIR}/gci.exe ${fil})
+endforeach()
