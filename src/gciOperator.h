@@ -15,6 +15,7 @@ namespace gci {
     /*!
      * \brief Construct a real hermitian fermionic operator
      * \param dimension Numbers of orbitals in each symmetry block.
+     * \param orbital_symmetries Symmetries of orbitals, in the range 1 to 8
      * \param rank The rank (0, 1 or 2) of the operator.
      * \param uhf Whether the underlying 1-particle spaces are different for alpha and beta spin.
      * \param symmetry Overall symmetry of operator (0-7).
@@ -64,11 +65,11 @@ namespace gci {
 //     * \param bs The bytestream produced by bytestream()
 //     */
 //    static Operator construct(const class bytestream& bs) { return construct((const char*)&(bs.data()[0])); }
-    /*!
-     * \brief Obtain a reference to 1-particle matrix elements.
-     * \param spinUp alpha or beta spin.
-     * \return
-     */
+//    /*!
+//     * \brief Obtain a reference to 1-particle matrix elements.
+//     * \param spinUp alpha or beta spin.
+//     * \return
+//     */
     /*!
      * \brief Construct an object from an FCIdump. If the FCIdump
      * contains data, it will be loaded, otherwise the contents of the object are undefined,
@@ -85,6 +86,8 @@ namespace gci {
      * \param forceSpinUnrestricted whether to force conversion to a UHF object
      */
     Operator* projector(const std::string special, const bool forceSpinUnrestricted) const;
+
+    FCIdump FCIDump(const std::string filename) const;
 
     /*!
        * \brief int1 Generate array of diagonal one-electron integrals

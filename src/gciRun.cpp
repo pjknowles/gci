@@ -404,6 +404,7 @@ std::vector<double> Run::Davidson(
   std::cout << "get density"<<std::endl;
   auto dens1 = dynamic_cast<Wavefunction*>(ww[0])->Wavefunction::density(1);
   xout << "density:\n"<<dens1<<std::endl;
+  dens1.FCIDump("density.fcidump");
   auto natorb = dynamic_cast<Wavefunction*>(ww[0])->Wavefunction::naturalOrbitals();
   xout << "natorb:\n"<<natorb<<std::endl;
   while (ww.size()>0) { delete ww.back(); ww.pop_back(); }

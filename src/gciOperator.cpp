@@ -80,13 +80,86 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
         } else if (type == FCIdump::I0)
         result.m_O0 = value;
     }
-//  exit(0);
   if (verbosity>0) xout << result << std::endl;
   if (verbosity>1) xout << "int1:\n" <<result.int1(1)<< std::endl;
   if (verbosity>1) xout << "intJ:\n" <<result.intJ(1,1)<< std::endl;
   if (verbosity>1) xout << "intK:\n" <<result.intK(1)<< std::endl;
 
   return result;
+}
+
+FCIdump gci::Operator::FCIDump(const std::string filename) const
+{
+  FCIdump dump;
+  int verbosity=1;
+  std::vector<int> orbital_symmetries;
+  for (auto s : m_orbitalSpaces[0].orbital_symmetries) orbital_symmetries.push_back(s+1);
+  size_t n = orbital_symmetries.size();
+  dump.addParameter("IUHF", m_uhf?1:0);
+  dump.addParameter("ORBSYM",orbital_symmetries);
+  dump.addParameter("NORB",int(orbital_symmetries.size()));
+
+  dump.write(filename);
+  dump.rewind();
+  double value;
+  FCIdump::integralType type;
+  int i,j,k,l;
+  const auto& integrals_a = O1(true);
+  const auto& integrals_b = O1(false);
+  const auto& integrals_aa = O2(true,true);
+  const auto& integrals_ab = O2(true,false);
+  const auto& integrals_bb = O2(false,false);
+  if (verbosity>0) {
+      xout << "integral addresses "<< &integrals_a<<" "<<&integrals_b<<std::endl;
+      xout << "integral addresses "<< &integrals_a.block(0)[0]<<" "<<&integrals_b.block(0)[0]<<std::endl;
+      xout << "integral addresses "<< &integrals_aa<<" "<<&integrals_ab<<" "<<&integrals_bb<<std::endl;
+//      xout << "integral sizes "<< integrals_aa.size()<<" "<<integrals_ab.size()<<" "<<integrals_bb.size()<<std::endl;
+      xout << "n="<<n<<std::endl;
+    }
+  if (m_uhf) throw std::logic_error("UHF not supported");
+  if (m_rank>1)
+  for (auto i=0; i<n; i++)
+    for (auto i=0; j<=i; j++)
+      for (auto k=0; k<i; k++)
+        for (auto l=0; l<=(i==k?j:k); l++) {
+      auto oi = offset(i);
+      auto oj = offset(j);
+      auto ok = offset(k);
+      auto ol = offset(l);
+      auto si =  m_orbitalSpaces[0].orbital_symmetries[i-1];
+      auto sj =  m_orbitalSpaces[0].orbital_symmetries[j-1];
+      auto sk =  m_orbitalSpaces[0].orbital_symmetries[k-1];
+      auto sl =  m_orbitalSpaces[0].orbital_symmetries[l-1];
+//      xout << "ijkl "<<i<<j<<k<<l<<std::endl;
+//      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
+//      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
+      if (si<sj || (si==sj && oi < oj)) { std::swap(oi,oj); std::swap(si,sj);}
+      if (sk<sl || (sk==sl && ok < ol)) { std::swap(ok,ol); std::swap(sk,sl);}
+      unsigned int sij = si^sj;
+      unsigned int skl = sk^sl;
+      if ((sij^skl)!=m_symmetry) continue;
+//      xout << "\nvalue: "<<value<<std::endl;
+//      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
+//      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
+      xout << (sij ? integrals_aa.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol) : integrals_aa.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) <<" "<< i << " "<<j<<" "<<k<<" "<<l <<std::endl;;
+      dump.writeIntegral(i,j,k,l, (sij ? integrals_aa.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol) : integrals_aa.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) );
+    }
+  xout << "n="<<n<<std::endl;
+  if (m_rank>0)
+  for (auto i=1; i<=n; i++)
+    for (auto j=1; j<=i; j++) {
+        xout << "i="<<i<<", j="<<j<<std::endl;
+      auto oi = offset(i);
+      auto oj = offset(j);
+      auto si =  m_orbitalSpaces[0].orbital_symmetries[i-1];
+      auto sj =  m_orbitalSpaces[0].orbital_symmetries[j-1];
+      if ((si^sj)==m_symmetry)
+        dump.writeIntegral(i,j,0,0,
+          integrals_a.block(si).at(oi*(oi+1)/2+oj));
+      }
+  dump.writeIntegral(0,0,0,0,m_O0);
+
+  return dump;
 }
 
 gci::Operator* gci::Operator::projector(const std::string special, const bool forceSpinUnrestricted) const

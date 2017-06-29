@@ -41,7 +41,6 @@ private:
   /*!
    * \brief Perform a Rayleigh-Schroedinger perturbation theory calculation
    * \param hams A vector of pointers to the zero, first, second... order hamiltonians
-   * \param hamiltonians A vector of pointers to the zero, first, second... order hamiltonians
    * \param prototype A State object specifying number of electrons, symmetry, spin
    * If it is a Wavefunction , then that will be used also for specifying the configuration space, otherwise the default FCI
    * \param maxOrder The maximum order of perturbation theory
