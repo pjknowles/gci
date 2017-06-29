@@ -91,7 +91,7 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
 FCIdump gci::Operator::FCIDump(const std::string filename) const
 {
   FCIdump dump;
-  int verbosity=1;
+  int verbosity=0;
   std::vector<int> orbital_symmetries;
   for (auto s : m_orbitalSpaces[0].orbital_symmetries) orbital_symmetries.push_back(s+1);
   size_t n = orbital_symmetries.size();
@@ -141,14 +141,14 @@ FCIdump gci::Operator::FCIDump(const std::string filename) const
 //      xout << "\nvalue: "<<value<<std::endl;
 //      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
-      xout << (sij ? integrals_aa.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol) : integrals_aa.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) <<" "<< i << " "<<j<<" "<<k<<" "<<l <<std::endl;;
+//      xout << (sij ? integrals_aa.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol) : integrals_aa.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) <<" "<< i << " "<<j<<" "<<k<<" "<<l <<std::endl;;
       dump.writeIntegral(i,j,k,l, (sij ? integrals_aa.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol) : integrals_aa.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) );
     }
-  xout << "n="<<n<<std::endl;
+//  xout << "n="<<n<<std::endl;
   if (m_rank>0)
   for (auto i=1; i<=n; i++)
     for (auto j=1; j<=i; j++) {
-        xout << "i="<<i<<", j="<<j<<std::endl;
+//        xout << "i="<<i<<", j="<<j<<std::endl;
       auto oi = offset(i);
       auto oj = offset(j);
       auto si =  m_orbitalSpaces[0].orbital_symmetries[i-1];
