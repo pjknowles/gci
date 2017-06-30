@@ -6,6 +6,7 @@
 #include "Profiler.h"
 #include <stdint.h>
 #include "sharedCounter.h"
+#include "memory.h"
 
 #ifndef MOLPRO
 #define xout std::cout
@@ -106,6 +107,9 @@ void inline gsum(double* buffer, const size_t len)
   MPI_Bcast(buffer,(int)len,MPI_DOUBLE,0,MPI_COMM_COMPUTE);
 #endif
 }
+
+void inline gsum(memory::vector<double> v) { gsum(&v[0],v.size()); }
+void inline gsum(std::vector<double> v) { gsum(&v[0],v.size()); }
 
 
 }

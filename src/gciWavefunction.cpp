@@ -762,8 +762,7 @@ gci::Operator Wavefunction::density(int rank, bool uhf, const Wavefunction *bra,
 
   EndTasks();
 
-  //FIXME implement gsum
-//  gsum(&buffer[0],buffer.size());
+  result.gsum();
   std::cout << "Density:\n"<<result<<std::endl;
   return result;
 }

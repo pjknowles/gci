@@ -358,3 +358,22 @@ gci::Operator gci::Operator::sameSpinOperator(const Determinant &reference, cons
   result.m_dirac_out_of_date=true;
   return result;
 }
+
+void gci::Operator::gsum()
+{
+  std::vector<double> O0; O0.push_back(m_O0);
+  ::gci::gsum(O0);
+  m_O0=O0[0];
+  if (m_rank>0) {
+      ::gci::gsum(*O1(true).data());
+      if (m_uhf)
+        ::gci::gsum(*O1(false).data());
+    }
+  if (m_rank>1) {
+      ::gci::gsum(*O2(true,true).data());
+      if (m_uhf) {
+          ::gci::gsum(*O2(true,false).data());
+          ::gci::gsum(*O2(false,false).data());
+        }
+    }
+}
