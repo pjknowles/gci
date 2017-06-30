@@ -271,6 +271,13 @@ std::vector<double> Run::run()
   }
   xout <<profiler->str(parameter("PROFILER",std::vector<int>(1,-1)).at(0),true) <<std::endl;
   _nextval_counter.reset(nullptr);
+
+  if (false) { // just for a test
+      energies.clear();
+      for (auto w: m_wavefunctions)
+        energies.push_back(w->m_properties["ENERGY"]);
+    }
+
   { auto reference_energies = parameter("ENERGY",std::vector<double>(0));
     double diff=0;
     for (auto i=0; i<reference_energies.size() && i < energies.size(); i++)
@@ -284,6 +291,12 @@ std::vector<double> Run::run()
         throw std::runtime_error("Disagreement of results with reference energies");
       }
   }
+
+  if (parameter("DENSITY")[0]>0 && m_wavefunctions.size()>0) {
+      auto dens = m_wavefunctions.back()->density(parameter("DENSITY")[0]);
+      xout << "DENSITY:\n"<<dens<<std::endl;
+    }
+
   return energies;
 }
 
@@ -400,13 +413,19 @@ std::vector<double> Run::Davidson(
   solver.m_roots=nState;
   profiler->stop("Davidson preamble");
   solver.solve(gg,ww);
+  for (auto root=0; root < nState; root++) {
+      m_wavefunctions.push_back(std::make_shared<Wavefunction>(dynamic_cast<Wavefunction*>(ww[root])));
+      m_wavefunctions.back()->m_properties["ENERGY"]=solver.eigenvalues()[root];
+//      if (parameter("DENSITY",0)>0)
+//        m_wavefunctions.back()->density = m_wavefunctions.back()->density(parameter("DENSITY",0));
+    }
 //  std::cout << "Final wavefunction\n"<<dynamic_cast<Wavefunction*>(ww[0])->str(2)<<std::endl;
   std::cout << "get density"<<std::endl;
   auto dens1 = dynamic_cast<Wavefunction*>(ww[0])->Wavefunction::density(1);
   xout << "density:\n"<<dens1<<std::endl;
   dens1.FCIDump("density.fcidump");
-  auto natorb = dynamic_cast<Wavefunction*>(ww[0])->Wavefunction::naturalOrbitals();
-  xout << "natorb:\n"<<natorb<<std::endl;
+//  auto natorb = dynamic_cast<Wavefunction*>(ww[0])->Wavefunction::naturalOrbitals();
+//  xout << "natorb:\n"<<natorb<<std::endl;
   while (ww.size()>0) { delete ww.back(); ww.pop_back(); }
   while (gg.size()>0) { delete gg.back(); gg.pop_back(); }
   return solver.eigenvalues();

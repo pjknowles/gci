@@ -1,6 +1,8 @@
 #ifndef GCIWAVEFUNCTION_H
 #define GCIWAVEFUNCTION_H
 #include <vector>
+#include <map>
+#include <string>
 #include "gci.h"
 #include "gciOperator.h"
 #include "gciState.h"
@@ -221,6 +223,7 @@ public:
    */
   void divide(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b, double shift=0, bool append=false, bool negative=false);
   void zero();
+  std::map<std::string,double> m_properties;
 private:
   void buildStrings(); ///< build alphaStrings and betaStrings
   size_t dimension; ///< the size of the space

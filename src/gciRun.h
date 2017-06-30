@@ -4,6 +4,7 @@
 #include "gci.h"
 #include "gciOperator.h"
 #include "gciState.h"
+#include "gciWavefunction.h"
 #include <stdint.h>
 
 namespace gci {
@@ -117,6 +118,8 @@ private:
   std::vector<std::string> parameter(std::string key, std::vector<std::string> def);
 
   std::unique_ptr<FCIdump> globalFCIdump; // the FCIdump
+
+  std::vector<std::shared_ptr<Wavefunction> > m_wavefunctions;
 };
 }
 

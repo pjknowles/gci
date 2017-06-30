@@ -118,10 +118,10 @@ FCIdump gci::Operator::FCIDump(const std::string filename) const
     }
   if (m_uhf) throw std::logic_error("UHF not supported");
   if (m_rank>1)
-  for (auto i=0; i<n; i++)
-    for (auto i=0; j<=i; j++)
-      for (auto k=0; k<i; k++)
-        for (auto l=0; l<=(i==k?j:k); l++) {
+  for (i=0; i<n; i++)
+    for (i=0; j<=i; j++)
+      for (k=0; k<i; k++)
+        for (l=0; l<=(i==k?j:k); l++) {
       auto oi = offset(i);
       auto oj = offset(j);
       auto ok = offset(k);
