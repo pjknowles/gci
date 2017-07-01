@@ -299,9 +299,12 @@ std::vector<double> Run::run()
       dens.FCIDump("density.fcidump");
     }
 
-  profiler.release();
-  xout << "profiler.reset"<<std::endl;
   return energies;
+}
+
+Run::~Run() {
+  profiler.release();
+  _nextval_counter.release();
 }
 
 void Run::addParameter(const std::string& key, const std::vector<std::string>& values, const bool echo)
@@ -566,7 +569,7 @@ std::vector<double> Run::CSDavidson(const Operator& ham,
         dalphadmu[i]=(double)0;
       for (size_t j=0; j<=(size_t)n; j++){
         dalphadmu[i]-= hamiltonianInverse[j+i*(n+1)]*dPdmu[j];
-	//if (!i) xout << "dPdmu["<<j<<"]="<<dPdmu[j]<<std::endl;
+        //if (!i) xout << "dPdmu["<<j<<"]="<<dPdmu[j]<<std::endl;
       }
       d2Edmu2-=dalphadmu[i]*dPdmu[i];
       //xout << "dalphadmum["<<i<<"]="<<dalphadmu[i]<<std::endl;
@@ -631,12 +634,12 @@ std::vector<double> Run::CSDavidson(const Operator& ham,
     double econv=0;
     for (int i=0; i<(int)e.size(); i++) {
       //if (i != track)
-	econv+=std::fabs(e[i]-elast[i]);
+        econv+=std::fabs(e[i]-elast[i]);
       //else {
-	//econv += std::fabs(ePredicted);
-	//e[i] += ePredicted;
-	xout <<"econv="<<econv << " (ePredicted="<<ePredicted<<", e-elast="<<e[i]-elast[i]<<std::endl;
-	//}
+        //econv += std::fabs(ePredicted);
+        //e[i] += ePredicted;
+        xout <<"econv="<<econv << " (ePredicted="<<ePredicted<<", e-elast="<<e[i]-elast[i]<<std::endl;
+        //}
     }
 
     elast=e;

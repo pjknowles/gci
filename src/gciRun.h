@@ -19,6 +19,7 @@ public:
    * \param fcidump the file name of the FCIdump
    */
   Run(std::string fcidump);
+  ~Run();
   /*!
    * \brief Start the run
    */
