@@ -1,3 +1,4 @@
+#include "sharedCounter.h"
 #include "gci.h"
 #include "gciFile.h"
 #include "gciOperator.h"
@@ -7,7 +8,6 @@
 #include "gciExcitationSet.h"
 #include "gciOrbitalSpace.h"
 #include "gciRun.h"
-#include "sharedCounter.h"
 #include "FCIdump.h"
 #include <iostream>
 #include <sstream>
