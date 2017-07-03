@@ -170,6 +170,7 @@ std::vector<double> Run::run()
 
   profiler->start("load Hamiltonian");
   auto hho=Operator::construct(*globalFCIdump);
+  xout <<hho.str("Hamiltonian loaded",3)<<std::endl;
   addParameter("EXPLICIT1","1"); // because Operator no longer supports embedding 1-electron in 2-electron
   parallel_stringset = parameter("PARALLEL_STRINGSET").at(0) != 0;
 
@@ -294,9 +295,11 @@ std::vector<double> Run::run()
 
   if (parameter("DENSITY")[0]>0 && m_wavefunctions.size()>0) {
       auto dens = m_wavefunctions.back()->density(parameter("DENSITY")[0]);
-//      xout << "DENSITY:\n"<<dens<<std::endl;
+      xout << "DENSITY:\n"<<dens.str("dens",3)<<std::endl;
+      xout << "HAMILTONIAN:\n"<<hho.str("hho",3)<<std::endl;
 //      xout << "DENSITY="<<parameter("DENSITY")[0]<<std::endl;
       dens.FCIDump("density.fcidump");
+      xout << "Density . hamiltonian ="<< (dens & hho) << std::endl;
     }
 
   return energies;

@@ -651,6 +651,7 @@ gci::Operator Wavefunction::density(int rank, bool uhf, const Wavefunction *bra,
   Operator result(dim, symmetries, rank, uhf, symmetry^bra->symmetry, description);
 //  std::cout << "result\n"<<result.str("result",3)<<std::endl;
   result.zero();
+  result.m_O0=1;
 //  std::cout << "result\n"<<result.str("result",3)<<std::endl;
 
   DivideTasks(99999999,1,1);
