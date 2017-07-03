@@ -30,7 +30,7 @@ static double _residual_q;
 static bool parallel_stringset;
 static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<double> shift=std::vector<double>(), bool append=false) {
     for (size_t k=0; k<psx.size(); k++) {
-        const std::shared_ptr<Wavefunction>  x=std::static_pointer_cast<const Wavefunction>(psx[k]);
+        const std::shared_ptr<Wavefunction>  x=std::static_pointer_cast<Wavefunction>(psx[k]);
         std::shared_ptr<Wavefunction>  g=std::static_pointer_cast<Wavefunction>(outputs[k]);
 //        profiler->start("density");
 //        SMat natorb=x->naturalOrbitals();
