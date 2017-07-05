@@ -91,23 +91,18 @@ public:
      * \param parallel_stringset whether to use parallel algorithm in StringSet construction
      */
   void operatorOnWavefunction(const gci::Operator &h, const Wavefunction &w, bool parallel_stringset=false);
-  gci::Operator density(int rank=2, bool uhf=false, const Wavefunction* bra=nullptr, std::string description="", bool parallel_stringset=false);
+  /*!
+   * \brief Construct a density matrix with this wavefunction
+   * \param rank Can be 1 (1-particle density only) or 2 (1- and 2-particle densities)
+   * \param uhf Whether to construct the spin-orbital or spin-summed density matrix
+   * \param hermitian Whether to construct the average of the density and its hermitian conjugate
+   * \param bra If given, the bra state to form a transition density with this as ket; otherwise this is bra and ket
+   * \param description
+   * \param parallel_stringset whether to use parallel algorithm in StringSet construction
+   * \return
+   */
+  gci::Operator density(int rank=2, bool uhf=false, bool hermitian=true, const Wavefunction* bra=nullptr, std::string description="", bool parallel_stringset=false);
 
-  /*!
-   * \brief construct 1- and 2-particle density matrices
-   * \param den1 The 1-particle density matrix
-   * \param den2 The 2-particle density matrix
-   */
-  void density(memory::vector<double>& den1, memory::vector<double>& den2);
-  void density(memory::vector<double>& den1);
-  /*!
-   * \brief construct 1- and 2-particle transition density matrices
-   * \param den1 The 1-particle density matrix
-   * \param den2 The 2-particle density matrix
-   * \param bra Wavefunction defining the bra state (the ket is this)
-   */
-  void density(memory::vector<double>& den1, memory::vector<double>& den2, const Wavefunction& bra);
-  void density(memory::vector<double>& den1, const Wavefunction& bra);
   /*!
    * \brief Calculate natural orbitals
    * \return
