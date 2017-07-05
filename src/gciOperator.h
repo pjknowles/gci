@@ -51,25 +51,20 @@ namespace gci {
       return *this;
     }
 
-//    /*!
-//     * \brief Construct an object from what is produced by bytestream(). If the bytestream
-//     * contains data, it will be loaded, otherwise the contents of the object are undefined,
-//     * and only the dimensions and parameters are loaded.
-//     * \param dump The raw buffer of a bytestream produced by bytestream()
-//     */
-//    static Operator construct(const char *dump);
-//    /*!
-//     * \brief Construct an object from what is produced by bytestream(). If the bytestream
-//     * contains data, it will be loaded, otherwise the contents of the object are undefined,
-//     * and only the dimensions and parameters are loaded.
-//     * \param bs The bytestream produced by bytestream()
-//     */
-//    static Operator construct(const class bytestream& bs) { return construct((const char*)&(bs.data()[0])); }
-//    /*!
-//     * \brief Obtain a reference to 1-particle matrix elements.
-//     * \param spinUp alpha or beta spin.
-//     * \return
-//     */
+    /*!
+     * \brief Construct an object from what is produced by bytestream(). If the bytestream
+     * contains data, it will be loaded, otherwise the contents of the object are undefined,
+     * and only the dimensions and parameters are loaded.
+     * \param dump The raw buffer of a bytestream produced by bytestream()
+     */
+    static Operator construct(const char *dump);
+    /*!
+     * \brief Construct an object from what is produced by bytestream(). If the bytestream
+     * contains data, it will be loaded, otherwise the contents of the object are undefined,
+     * and only the dimensions and parameters are loaded.
+     * \param bs The bytestream produced by bytestream()
+     */
+    static Operator construct(const class bytestream& bs) { return construct((const char*)&(bs.data()[0])); }
     /*!
      * \brief Construct an object from an FCIdump. If the FCIdump
      * contains data, it will be loaded, otherwise the contents of the object are undefined,
