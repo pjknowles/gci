@@ -753,7 +753,10 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
                       if (!NextTask()) continue;
                       TransitionDensity d(*this,aa0,aa1, bb0,bb1,0,false,false);
                       TransitionDensity e(*bra,aa0,aa1, bb0,bb1,0,false,false);
+                      xout <<"D: "<<d.str(2)<<std::endl;
+                      xout <<"E: "<<e.str(2)<<std::endl;
                       MXM(&result.O2(true,false,false).block(symexc)[0], &d[0],&e[0], nexc, nsa*nsb, nexc, false, nsa*nsb); // not yet right for non-symmetric tdm
+                      xout << "result"<<result.O2(true,false,false).str("result",2)<<std::endl;
                     }
                 }
             }
@@ -764,6 +767,7 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
   EndTasks();
 
   result.gsum();
+  result.mulliken_from_dirac();
   std::cout << "Density:\n"<<result<<std::endl;
   return result;
 }

@@ -103,7 +103,7 @@ FCIdump gci::Operator::FCIDump(const std::string filename) const
   dump.rewind();
   double value;
   FCIdump::integralType type;
-  int i,j,k,l;
+  size_t i,j,k,l;
   const auto& integrals_a = O1(true);
   const auto& integrals_b = O1(false);
   const auto& integrals_aa = O2(true,true);
@@ -115,13 +115,14 @@ FCIdump gci::Operator::FCIDump(const std::string filename) const
       xout << "integral addresses "<< &integrals_aa<<" "<<&integrals_ab<<" "<<&integrals_bb<<std::endl;
 //      xout << "integral sizes "<< integrals_aa.size()<<" "<<integrals_ab.size()<<" "<<integrals_bb.size()<<std::endl;
       xout << "n="<<n<<std::endl;
+      xout << "m_rank="<<m_rank<<std::endl;
     }
   if (m_uhf) throw std::logic_error("UHF not supported");
-  if (m_rank>1)
-  for (i=0; i<n; i++)
-    for (i=0; j<=i; j++)
-      for (k=0; k<i; k++)
-        for (l=0; l<=(i==k?j:k); l++) {
+  if (m_rank>1) { // xout << "2 electron"<<std::endl;
+  for (i=1; i<=n; i++)
+    for (j=1; j<=i; j++) { // xout << "j="<<j<<std::endl;
+      for (k=1; k<=i; k++) { // xout << "k="<<k<<std::endl;
+        for (l=1; l<=(i==k?j:k); l++) {
       auto oi = offset(i);
       auto oj = offset(j);
       auto ok = offset(k);
@@ -141,8 +142,12 @@ FCIdump gci::Operator::FCIDump(const std::string filename) const
 //      xout << "\nvalue: "<<value<<std::endl;
 //      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
-//      xout << (sij ? integrals_aa.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol) : integrals_aa.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) <<" "<< i << " "<<j<<" "<<k<<" "<<l <<std::endl;;
-      dump.writeIntegral(i,j,k,l, (sij ? integrals_aa.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol) : integrals_aa.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) );
+//      xout << (sij ? integrals_ab.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol) : integrals_ab.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) <<" "<< i << " "<<j<<" "<<k<<" "<<l <<std::endl;;
+//      xout << (sij ? &integrals_ab.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol) : &integrals_ab.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) <<" "<< i << " "<<j<<" "<<k<<" "<<l <<std::endl;;
+      dump.writeIntegral(i,j,k,l, (sij ? integrals_ab.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol) : integrals_ab.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) );
+    }
+    }
+    }
     }
 //  xout << "n="<<n<<std::endl;
   if (m_rank>0)
