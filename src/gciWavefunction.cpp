@@ -706,14 +706,14 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
                 size_t nsa = aa1-aa0;
                 TransitionDensity d(*this,aa0,aa1,betaStrings[symb].begin(),betaStrings[symb].end(),-1,false,false);
                 TransitionDensity e(*bra,aa0,aa1,betaStrings[symb].begin(),betaStrings[symb].end(),-1,false,false);
-                      xout <<"Daa: "<<d.str(2)<<std::endl;
-                      xout <<"Eaa: "<<e.str(2)<<std::endl;
-                xout << "result goes to "<<&result.O2(true,true).block(symexc)[0]<<std::endl;
-                xout << "result goes to "<<&result.O2(true,true).blockM(symexc)(0,0)<<std::endl;
-                xout << "initial result "<<result.O2(true,true).blockM(symexc)(0,0)<<std::endl;
+//                      xout <<"Daa: "<<d.str(2)<<std::endl;
+//                      xout <<"Eaa: "<<e.str(2)<<std::endl;
+//                xout << "result goes to "<<&result.O2(true,true).block(symexc)[0]<<std::endl;
+//                xout << "result goes to "<<&result.O2(true,true).blockM(symexc)(0,0)<<std::endl;
+//                xout << "initial result "<<result.O2(true,true).blockM(symexc)(0,0)<<std::endl;
                 MXM(&result.O2(true,true,false).block(symexc)[0], &d[0],&e[0], nexc, nsa*nsb, nexc, false, nsa*nsb); // not yet right for non-symmetric tdm
-                xout << "final result "<<result.O2(true,true,false).blockM(symexc)(0,0)<<std::endl;
-                      xout << "result"<<result.O2(true,true,false).blockM(symexc)<<std::endl;
+//                xout << "final result "<<result.O2(true,true,false).blockM(symexc)(0,0)<<std::endl;
+//                      xout << "result"<<result.O2(true,true,false).blockM(symexc)<<std::endl;
               }
           }
       }
@@ -761,10 +761,10 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
                       if (!NextTask()) continue;
                       TransitionDensity d(*this,aa0,aa1, bb0,bb1,0,false,false);
                       TransitionDensity e(*bra,aa0,aa1, bb0,bb1,0,false,false);
-                      xout <<"D: "<<d.str(2)<<std::endl;
-                      xout <<"E: "<<e.str(2)<<std::endl;
+//                      xout <<"D: "<<d.str(2)<<std::endl;
+//                      xout <<"E: "<<e.str(2)<<std::endl;
                       MXM(&result.O2(true,false,false).block(symexc)[0], &d[0],&e[0], nexc, nsa*nsb, nexc, false, nsa*nsb); // not yet right for non-symmetric tdm
-                      xout << "result"<<result.O2(true,false,false).str("result",2)<<std::endl;
+//                      xout << "result"<<result.O2(true,false,false).str("result",2)<<std::endl;
                     }
                 }
             }
@@ -775,9 +775,9 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
   EndTasks();
 
   result.gsum();
-  std::cout << "Density before from_dirac:\n"<<result<<std::endl;
+//  std::cout << "Density before from_dirac:\n"<<result<<std::endl;
   result.mulliken_from_dirac();
-  std::cout << "Density:\n"<<result<<std::endl;
+//  std::cout << "Density:\n"<<result<<std::endl;
   return result;
 }
 
