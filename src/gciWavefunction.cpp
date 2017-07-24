@@ -683,6 +683,20 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
       MXM(&((*result.O1(false).data())[0]),&d[0],&buffer[offset],orbitalSpace->total(0,1),nsa*nsb,1,true,nsa*nsb);
     }
   }
+  std::vector<bool> spincases(1,true); if (result.m_uhf) spincases.push_back(false);
+  for (auto spincase : spincases)
+  if (result.O1(spincase).parity()==parityEven) {
+      if (result.O1(spincase).symmetry()==0) {
+          result.O1(spincase) *=.5;
+          for (uint isym=0; isym<8; isym++)
+            for (uint i=0; i<result.O1(spincase).dimension(isym); i++)
+              result.O1(spincase).block(isym)[(i+2)*(i+1)/2-1]*=2;
+        }
+       else
+        {
+          throw std::runtime_error("non-symmetric density not yet supported");
+        }
+    }
 
   }
 
@@ -775,9 +789,9 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
   EndTasks();
 
   result.gsum();
-//  std::cout << "Density before from_dirac:\n"<<result<<std::endl;
+  std::cout << "Density before from_dirac:\n"<<result<<std::endl;
   result.mulliken_from_dirac();
-//  std::cout << "Density:\n"<<result<<std::endl;
+  std::cout << "Density:\n"<<result<<std::endl;
   return result;
 }
 
