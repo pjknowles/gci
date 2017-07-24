@@ -497,7 +497,7 @@ void MXM(double *Out, const double * A, const double *B, uint nRows, uint nLink,
   else {
 //      if (debug) // how to make const and Stride work together?
 //        xout << "MXM A\n"<<Eigen::Map<const Eigen::MatrixXd>(A,nRows,nLink, Eigen::Stride<Eigen::Dynamic,Eigen::Dynamic>(1, -nStrideLink))<<std::endl;
-      MxmDrvTN(Out, A, B, nRows, nLink, static_cast<int>(nStrideLink), nCols, AddToDest);
+      MxmDrvTN(Out, A, B, nRows, nLink, static_cast<uint>(nStrideLink), nCols, AddToDest);
     }
   if (debug) {
       xout << "MXM B\n"<<Eigen::Map<const Eigen::MatrixXd>(B,nLink,nCols )<<std::endl;
@@ -725,7 +725,7 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
 //                xout << "result goes to "<<&result.O2(true,true).block(symexc)[0]<<std::endl;
 //                xout << "result goes to "<<&result.O2(true,true).blockM(symexc)(0,0)<<std::endl;
 //                xout << "initial result "<<result.O2(true,true).blockM(symexc)(0,0)<<std::endl;
-                MXM(&result.O2(true,true,false).block(symexc)[0], &d[0],&e[0], nexc, nsa*nsb, nexc, false, nsa*nsb); // not yet right for non-symmetric tdm
+                MXM(&result.O2(true,true,false).block(symexc)[0], &d[0],&e[0], nexc, nsa*nsb, nexc, true, nsa*nsb); // not yet right for non-symmetric tdm
 //                xout << "final result "<<result.O2(true,true,false).blockM(symexc)(0,0)<<std::endl;
 //                      xout << "result"<<result.O2(true,true,false).blockM(symexc)<<std::endl;
               }
@@ -748,7 +748,7 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
                   size_t nsb = bb1-bb0;
                   TransitionDensity d(*this,alphaStrings[syma].begin(),alphaStrings[syma].end(),bb0,bb1,-1,false,false);
                   TransitionDensity e(*bra,alphaStrings[syma].begin(),alphaStrings[syma].end(),bb0,bb1,-1,false,false);
-                  MXM(&result.O2(false,false,false).block(symexc)[0], &d[0],&e[0], nexc, nsa*nsb, nexc, false, nsa*nsb); // not yet right for non-symmetric tdm
+                  MXM(&result.O2(false,false,false).block(symexc)[0], &d[0],&e[0], nexc, nsa*nsb, nexc, true, nsa*nsb); // not yet right for non-symmetric tdm
                 }
             }
         }
@@ -775,10 +775,12 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
                       if (!NextTask()) continue;
                       TransitionDensity d(*this,aa0,aa1, bb0,bb1,0,false,false);
                       TransitionDensity e(*bra,aa0,aa1, bb0,bb1,0,false,false);
-//                      xout <<"D: "<<d.str(2)<<std::endl;
-//                      xout <<"E: "<<e.str(2)<<std::endl;
-                      MXM(&result.O2(true,false,false).block(symexc)[0], &d[0],&e[0], nexc, nsa*nsb, nexc, false, nsa*nsb); // not yet right for non-symmetric tdm
-//                      xout << "result"<<result.O2(true,false,false).str("result",2)<<std::endl;
+                      xout <<"D: "<<d.str(2)<<std::endl;
+                      xout <<"E: "<<e.str(2)<<std::endl;
+                      xout << "ab result before MXM"<<result.O2(true,false,false).str("result",2)<<std::endl;
+                      xout << "dimensions "<<nexc<<nsa*nsb<<std::endl;
+                      MXM(&result.O2(true,false,false).block(symexc)[0], &d[0],&e[0], nexc, nsa*nsb, nexc, true, nsa*nsb); // not yet right for non-symmetric tdm
+                      xout << "ab result"<<result.O2(true,false,false).str("result",2)<<std::endl;
                     }
                 }
             }

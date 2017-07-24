@@ -28,16 +28,29 @@ void MxmDrvNN(double *Out, const double *A, const double *B, uint nRows, uint nL
     }
 }
 
+#include <iostream>
 void MxmDrvTN(double *Out, const double * A, const double *B, uint nRows, uint nLink, uint nStrideLink, uint nCols, bool AddToDest)
 {
   if (eigen) {
+//      std::cout << "nStrideLink="<<nStrideLink<<std::endl;
+//      std::cout << "nLink="<<nLink<<std::endl;
+//      std::cout << "nCols="<<nCols<<std::endl;
       Map<MatrixXd, Unaligned, Stride<Dynamic,Dynamic> > Am(const_cast<double*>(A),nRows,nLink,Stride<Dynamic,Dynamic>(1,nStrideLink));
-      Map<MatrixXd, Unaligned, Stride<Dynamic,Dynamic> > Bm(const_cast<double*>(B),nLink,nCols,Stride<Dynamic,Dynamic>(nCols,1));
+      Map<MatrixXd, Unaligned, Stride<Dynamic,Dynamic> > Bm(const_cast<double*>(B),nLink,nCols,Stride<Dynamic,Dynamic>(1,nCols));
       Map<MatrixXd, Unaligned, Stride<Dynamic,Dynamic> > Outm(Out,nRows,nCols,Stride<Dynamic,Dynamic>(nRows,1));
+//      if (nCols*nLink) {
+//      std::cout << "MxmDrvTN Am:\n"<<Am<<std::endl;
+//      std::cout << "B[0] "<<B[0]<<"@"<<&B[0]<<std::endl;
+//      std::cout << "B[3] "<<B[3]<<"@"<<&B[3]<<std::endl;
+//      std::cout << "Bm(0,0) "<<Bm(0,0)<<"@"<<&Bm(0,0)<<std::endl;
+//      std::cout << "Bm(0,"<<nCols-1<<") "<<Bm(0,nCols-1)<<"@"<<&Bm(0,nCols-1)<<std::endl;
+//      std::cout << "MxmDrvTN Bm:\n"<<Bm<<std::endl;
+//        }
       if (AddToDest)
         Outm += Am * Bm;
       else
         Outm = Am * Bm;
+//      std::cout << "MxmDrvTN Outm:\n"<<Outm<<std::endl;
     } else {
       if (! AddToDest)
         for (uint s=0; s<nCols; s++)
