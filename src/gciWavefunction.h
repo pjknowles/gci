@@ -55,6 +55,7 @@ public:
      * \param other The object to be copied
      */
   Wavefunction( const Wavefunction& other);
+  ~Wavefunction() {std::cout << "gci::~Wavefunction()"<<std::endl;}
 
   std::vector<StringSet> alphaStrings; ///< The alpha-spin strings defining the CI basis
   std::vector<StringSet> betaStrings; ///< The beta-spin strings defining the CI basis

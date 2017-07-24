@@ -295,18 +295,20 @@ std::vector<double> Run::run()
   }
 
   if (parameter("DENSITY")[0]>0 && m_wavefunctions.size()>0) {
-      auto dens = m_wavefunctions.back()->density(parameter("DENSITY")[0]);
+      m_densityMatrices.emplace_back(
+       m_wavefunctions.back()->density(parameter("DENSITY")[0]));
 //      xout << "DENSITY:\n"<<dens.str("dens",3)<<std::endl;
 //      xout << "HAMILTONIAN:\n"<<hho.str("hho",3)<<std::endl;
 //      xout << "DENSITY="<<parameter("DENSITY")[0]<<std::endl;
-      dens.FCIDump("density.fcidump");
-      xout << "Density . hamiltonian ="<< (dens & hho) << std::endl;
+      m_densityMatrices.back().FCIDump("density.fcidump");
+      xout << "Density . hamiltonian ="<< (m_densityMatrices.back() & hho) << std::endl;
     }
 
   return energies;
 }
 
 Run::~Run() {
+  while (! m_densityMatrices.empty()) m_densityMatrices.pop_back();
   profiler.release();
   _nextval_counter.release();
 }
