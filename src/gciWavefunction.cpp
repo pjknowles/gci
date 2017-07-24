@@ -687,10 +687,11 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
   for (auto spincase : spincases)
   if (result.O1(spincase).parity()==parityEven) {
       if (result.O1(spincase).symmetry()==0) {
-          result.O1(spincase) *=.5;
-          for (uint isym=0; isym<8; isym++)
-            for (uint i=0; i<result.O1(spincase).dimension(isym); i++)
-              result.O1(spincase).block(isym)[(i+2)*(i+1)/2-1]*=2;
+//          result.O1(spincase) *=.5;
+//          for (uint isym=0; isym<8; isym++)
+//            for (uint i=0; i<result.O1(spincase).dimension(isym); i++)
+//              result.O1(spincase).block(isym)[(i+2)*(i+1)/2-1]*=2;
+          result.O1(spincase).scal(0.5,false);
         }
        else
         {
@@ -775,12 +776,12 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
                       if (!NextTask()) continue;
                       TransitionDensity d(*this,aa0,aa1, bb0,bb1,0,false,false);
                       TransitionDensity e(*bra,aa0,aa1, bb0,bb1,0,false,false);
-                      xout <<"D: "<<d.str(2)<<std::endl;
-                      xout <<"E: "<<e.str(2)<<std::endl;
-                      xout << "ab result before MXM"<<result.O2(true,false,false).str("result",2)<<std::endl;
-                      xout << "dimensions "<<nexc<<nsa*nsb<<std::endl;
+//                      xout <<"D: "<<d.str(2)<<std::endl;
+//                      xout <<"E: "<<e.str(2)<<std::endl;
+//                      xout << "ab result before MXM"<<result.O2(true,false,false).str("result",2)<<std::endl;
+//                      xout << "dimensions "<<nexc<<nsa*nsb<<std::endl;
                       MXM(&result.O2(true,false,false).block(symexc)[0], &d[0],&e[0], nexc, nsa*nsb, nexc, true, nsa*nsb); // not yet right for non-symmetric tdm
-                      xout << "ab result"<<result.O2(true,false,false).str("result",2)<<std::endl;
+//                      xout << "ab result"<<result.O2(true,false,false).str("result",2)<<std::endl;
                     }
                 }
             }
@@ -791,9 +792,16 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
   EndTasks();
 
   result.gsum();
-  std::cout << "Density before from_dirac:\n"<<result<<std::endl;
+//  std::cout << "Density before from_dirac:\n"<<result<<std::endl;
   result.mulliken_from_dirac();
-  std::cout << "Density:\n"<<result<<std::endl;
+  if (result.m_rank>1 && result.m_hermiticity==std::vector<int>{1,1}) {
+      result.O2(true,true).scal(0.5,false);
+      if (result.m_uhf){
+          result.O2(true,false).scal(0.5,false);
+          result.O2(false,false).scal(0.5,false);
+        }
+    }
+//  std::cout << "Density:\n"<<result<<std::endl;
   return result;
 }
 
