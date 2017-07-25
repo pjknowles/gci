@@ -90,7 +90,6 @@ int main(int argc, char *argv[])
   size_t memory_allocated=memory_remaining();
   std::vector<double> e=run.run();
   xout << "e after run:"; for (size_t i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;
-
   if (plugin.active()) {
      // send the energy back
       if (plugin.send("TAKE PROPERTY ENERGY")) {
@@ -101,6 +100,18 @@ int main(int argc, char *argv[])
           plugin.send(ss.str());
      }
    }
+
+  for (size_t state=0; state<run.m_densityMatrices.size(); state++) {
+      std::string densityname(fcidumpname);
+      size_t pos = std::min(densityname.rfind("."),densityname.size());
+      densityname.replace(pos,densityname.size()-pos,".density.");
+      densityname+=std::to_string(state+1)+".fcidump";
+      run.m_densityMatrices[state].FCIDump(densityname);
+      if (plugin.active()) { // send the density back
+          if (plugin.send("TAKE DENSITY FCIDUMP"))
+            plugin.send(densityname);
+        }
+    }
 
   xout << "initial memory="<<memory_allocated<<", remaining memory="<<memory_remaining()<<std::endl;
   if (plugin.active())

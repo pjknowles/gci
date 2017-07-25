@@ -294,21 +294,17 @@ std::vector<double> Run::run()
       }
   }
 
-  if (parameter("DENSITY")[0]>0 && m_wavefunctions.size()>0) {
-      m_densityMatrices.emplace_back(
-       m_wavefunctions.back()->density(parameter("DENSITY")[0]));
-//      xout << "DENSITY:\n"<<dens.str("dens",3)<<std::endl;
-//      xout << "HAMILTONIAN:\n"<<hho.str("hho",3)<<std::endl;
-//      xout << "DENSITY="<<parameter("DENSITY")[0]<<std::endl;
-      m_densityMatrices.back().FCIDump("density.fcidump");
-      xout << "Density . hamiltonian ="<< (m_densityMatrices.back() & hho) << std::endl;
+  if (parameter("DENSITY")[0]>0)
+    for (size_t state=0; state < m_wavefunctions.size(); state++) {
+        m_densityMatrices.emplace_back(
+            m_wavefunctions[state]->density(parameter("DENSITY")[0]));
+        xout << "Density . hamiltonian ="<< (m_densityMatrices[state] & hho) << std::endl;
     }
 
   return energies;
 }
 
 Run::~Run() {
-  while (! m_densityMatrices.empty()) m_densityMatrices.pop_back();
   profiler.release();
   _nextval_counter.release();
 }
@@ -435,9 +431,9 @@ std::vector<double> Run::Davidson(
     }
 //  std::cout << "Final wavefunction\n"<<dynamic_cast<std::shared_ptr<Wavefunction> >(ww[0])->str(2)<<std::endl;
 //  std::cout << "get density"<<std::endl;
-  auto dens1 = std::static_pointer_cast<Wavefunction>(ww[0])->Wavefunction::density(1);
+//  auto dens1 = std::static_pointer_cast<Wavefunction>(ww[0])->Wavefunction::density(1);
 //  xout << "density:\n"<<dens1<<std::endl;
-  dens1.FCIDump("density1.fcidump");
+//  dens1.FCIDump("density1.fcidump");
 //  auto natorb = dynamic_cast<std::shared_ptr<Wavefunction> >(ww[0])->Wavefunction::naturalOrbitals();
 //  xout << "natorb:\n"<<natorb<<std::endl;
   return solver.eigenvalues();

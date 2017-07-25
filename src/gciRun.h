@@ -119,6 +119,7 @@ private:
   std::vector<std::string> parameter(std::string key, std::vector<std::string> def);
 
   std::unique_ptr<FCIdump> globalFCIdump; // the FCIdump
+public:
   std::unique_ptr<Operator> m_densityMatrix; // the (state-averaged) density matrix
   std::vector<Operator> m_densityMatrices; // the individual state density matrices
 

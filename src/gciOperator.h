@@ -31,8 +31,6 @@ namespace gci {
       for (auto i=0; i<4; i++) m_orbitalSpaces.push_back(OrbitalSpace(orbital_symmetries,uhf)); // in this implementation, all four orbital spaces are the same
     }
 
-  virtual ~Operator() {std::cout << "gci::~Operator()"<<std::endl;}
-
     /*!
      * \brief Copy constructor. A complete (deep) copy is made.
      * \param source Object to be copied.
