@@ -144,7 +144,9 @@ FCIdump gci::Operator::FCIDump(const std::string filename) const
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
 //      xout << (sij ? integrals_ab.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol) : integrals_ab.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) <<" "<< i << " "<<j<<" "<<k<<" "<<l <<std::endl;;
 //      xout << (sij ? &integrals_ab.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol) : &integrals_ab.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) <<" "<< i << " "<<j<<" "<<k<<" "<<l <<std::endl;;
-      dump.writeIntegral(i,j,k,l, (sij ? integrals_ab.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol) : integrals_ab.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]) );
+      auto value = (sij ? integrals_ab.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol) : integrals_ab.smat(sij,si,oi,oj)->block(sk)[ok*(ok+1)/2+ol]);
+      if (std::abs(value)>1e-15)
+        dump.writeIntegral(i,j,k,l, value );
     }
     }
     }
@@ -158,9 +160,11 @@ FCIdump gci::Operator::FCIDump(const std::string filename) const
       auto oj = offset(j);
       auto si =  m_orbitalSpaces[0].orbital_symmetries[i-1];
       auto sj =  m_orbitalSpaces[0].orbital_symmetries[j-1];
-      if ((si^sj)==m_symmetry)
-        dump.writeIntegral(i,j,0,0,
-          integrals_a.block(si).at(oi*(oi+1)/2+oj));
+      if ((si^sj)==m_symmetry) {
+          auto value=integrals_a.block(si).at(oi*(oi+1)/2+oj);
+          if (std::abs(value)>1e-15)
+            dump.writeIntegral(i,j,0,0, value);
+        }
       }
   dump.writeIntegral(0,0,0,0,m_O0);
 
