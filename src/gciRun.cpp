@@ -81,6 +81,54 @@ static void _residual(const ParameterVectorSet & psx, ParameterVectorSet & outpu
 //        xout << "final residual "<<g->str(2)<<std::endl;
     }
 }
+static int _meanfield_order;
+static std::vector<gci::Operator> _IPT_Fock;
+static std::vector<double> _IPT_Epsilon;
+static std::vector<double> _IPT_eta;
+static std::vector<std::shared_ptr<Wavefunction> > _IPT_c;
+static std::shared_ptr<Wavefunction> _IPT_b0m;
+static void _meanfield_residual(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<double> shift=std::vector<double>(), bool append=false) {
+    for (size_t k=0; k<psx.size(); k++) {
+        const std::shared_ptr<Wavefunction>  x=std::static_pointer_cast<Wavefunction>(psx[k]);
+        std::shared_ptr<Wavefunction>  g=std::static_pointer_cast<Wavefunction>(outputs[k]);
+        auto p = profiler->push("Mean field residual");
+        if (not append)
+          *g = - *_IPT_b0m;
+        else
+          *g -= *_IPT_b0m;
+        auto dd = g->density(1, false, true, _IPT_c[0].get(), "", parallel_stringset);
+        //2017-08-18
+          g->operatorOnWavefunction(*currentHamiltonian, *x, parallel_stringset);
+        if (_residual_subtract_Energy) {
+            double cc = x->dot(x);
+            double cg = x->dot(g);
+            _lastEnergy=cg/cc;
+            double epsilon=cg/cc;
+            if (_residual_Q != nullptr) {
+//                xout << "@ _residual_Q in _residual"<<std::endl<<*_residual_Q<<std::endl;
+                Wavefunction m(*g);
+                m.zero();
+                m.operatorOnWavefunction(*_residual_Q,*x);
+//                xout << "m "<<m.str(2)<<std::endl;
+                double cm = x->dot(&m);
+                double gm = g->dot(&m);
+                _mu = cm==0 ? 0 : (cg*cm-cc*gm)/(cm*cm-cm*cc);
+                epsilon = (cg-cm*_mu+cc*_mu*_residual_q)/(cc);
+                g->axpy(-_mu,&m);
+//                xout << "cm="<<cm<<std::endl;
+//                xout << "gm="<<gm<<std::endl;
+//                xout << "mu="<<_mu<<std::endl;
+//                xout << "epsilon="<<epsilon<<", cg/cc="<<cg/cc<<std::endl;
+//                xout << "residual after subtracting m "<<g->str(2)<<std::endl;
+                // FIXME idempotency constraint to follow
+                _lastEnergy=epsilon-_mu*_residual_q;
+              }
+//            xout << "_lastEnergy "<<_lastEnergy<<std::endl;
+            g->axpy(-_lastEnergy,x);
+          }
+//        xout << "final residual "<<g->str(2)<<std::endl;
+    }
+}
 
 static bool _preconditioner_subtractDiagonal;
 static void _preconditioner(const ParameterVectorSet & psg, ParameterVectorSet & psc, std::vector<double> shift=std::vector<double>(), bool append=false) {
@@ -241,6 +289,14 @@ std::vector<double> Run::run()
 #ifdef MOLPRO
     itf::SetVariables( "ENERGY_MP", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
+  } else  if (method == "IPT") {
+    xout << "Ionisation perturbation theory" << std::endl;
+//    Operator h0 = hho.fockOperator(referenceDeterminant);
+     IPT(hho, prototype,referenceDeterminant);
+//    xout <<std::fixed << std::setprecision(8);
+//    xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
+//    xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(emp[i]=totalEnergy+=emp[i]); xout <<std::endl;
+//    energies.resize(1); energies[0] = totalEnergy;
   } else  if (method == "ISRSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
     Operator h0 = hho.fockOperator(referenceDeterminant);
@@ -769,6 +825,35 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams,
     if ((e[n+1] < 0 ? -e[n+1] : e[n+1]) < energyThreshold && e[n+1] != (double)0) {e.resize(n+2);break;}
   }
   return e;
+}
+
+void Run::IPT(const gci::Operator& ham, const State &prototype, const Determinant referenceDeterminant )
+{
+  int maxOrder = parameter("MAXORDER",std::vector<int>(1,3)).at(0);
+  std::vector<double> e(maxOrder+1,(double)0);
+  Wavefunction d(prototype);
+  xout <<"RSPT wavefunction size="<<d.size()<<std::endl;
+  Operator ham0=ham.fockOperator(referenceDeterminant);
+  d.diagonalOperator(ham0);
+  size_t reference = d.minloc();
+  for (int order=2; order <=maxOrder; order++) {
+      LinearAlgebra::ParameterVectorSet gg; gg.push_back(std::make_shared<Wavefunction>(prototype));
+      LinearAlgebra::ParameterVectorSet ww; ww.push_back(std::make_shared<Wavefunction>(prototype));
+      std::static_pointer_cast<Wavefunction>(ww.back())->set((double)0);
+      std::static_pointer_cast<Wavefunction>(ww.back())->set(reference, (double) 1);
+      _preconditioner_subtractDiagonal=true;
+      _preconditioning_diagonals = &d;
+      currentHamiltonian=&ham;
+      _residual_subtract_Energy=false;
+      _preconditioner_subtractDiagonal=false;
+      LinearAlgebra::RSPT solver(&_residual,&_preconditioner);
+      solver.m_verbosity=1;
+      solver.m_thresh=parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
+      solver.m_maxIterations=parameter("MAXIT",std::vector<int>(1,1000)).at(0);
+      solver.solve(gg,ww);
+      //      xout << "Final w: "<<w.str(2)<<std::endl;
+      //      xout << "Final g: "<<g.str(2)<<std::endl;
+    }
 }
 
 std::vector<double> Run::ISRSPT(
