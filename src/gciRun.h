@@ -61,7 +61,7 @@ private:
          double energyThreshold=-1,
          int maxIterations=-1);
   void IPT(const gci::Operator &ham,
-         const State &prototype, const Determinant referenceDeterminant);
+         const State &prototype, const size_t referenceLocation);
 
   /*!
    * \brief Perform a variational calculation using the Davidson algorithm

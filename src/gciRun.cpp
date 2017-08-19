@@ -85,8 +85,9 @@ static int _meanfield_order;
 static std::vector<gci::Operator> _IPT_Fock;
 static std::vector<double> _IPT_Epsilon;
 static std::vector<double> _IPT_eta;
-static std::vector<std::shared_ptr<Wavefunction> > _IPT_c;
+static std::vector<Wavefunction> _IPT_c;
 static std::shared_ptr<Wavefunction> _IPT_b0m;
+static std::unique_ptr<gci::Operator> _IPT_Q;
 static void _meanfield_residual(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<double> shift=std::vector<double>(), bool append=false) {
     for (size_t k=0; k<psx.size(); k++) {
         const std::shared_ptr<Wavefunction>  x=std::static_pointer_cast<Wavefunction>(psx[k]);
@@ -294,7 +295,7 @@ std::vector<double> Run::run()
   } else  if (method == "IPT") {
     xout << "Ionisation perturbation theory" << std::endl;
 //    Operator h0 = hho.fockOperator(referenceDeterminant);
-     IPT(hho, prototype,referenceDeterminant);
+     IPT(hho, prototype,referenceLocation);
 //    xout <<std::fixed << std::setprecision(8);
 //    xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
 //    xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(emp[i]=totalEnergy+=emp[i]); xout <<std::endl;
@@ -829,20 +830,31 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams,
   return e;
 }
 
-void Run::IPT(const gci::Operator& ham, const State &prototype, const Determinant referenceDeterminant )
+void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t referenceLocation )
 {
   int maxOrder = parameter("MAXORDER",std::vector<int>(1,3)).at(0);
   std::vector<double> e(maxOrder+1,(double)0);
   Wavefunction d(prototype);
   xout <<"IPT wavefunction size="<<d.size()<<std::endl;
+  _IPT_Q =std::unique_ptr<gci::Operator>(ham.projector("Q",false));
+  xout << "IPT Q operator"<<*_IPT_Q<<std::endl;
+  _IPT_c.clear();
+  _IPT_c.emplace_back(Wavefunction(prototype));
+  _IPT_c[0].set((double)0);
+  _IPT_c[0].set(referenceLocation,(double)1);
+  _IPT_Fock.clear();
+  xout << "gamm00 "<<_IPT_c[0].density(1)<<std::endl;;
+  xout << "F00 "<<ham.fock(_IPT_c[0].density(1))<<std::endl;;
+  _IPT_Fock.emplace_back(ham.fock(_IPT_c[0].density(1)));
+  xout << "F00 "<<_IPT_Fock[0]<<std::endl;
+  auto referenceDeterminant = _IPT_c[0].determinantAt(referenceLocation);
   Operator ham0=ham.fockOperator(referenceDeterminant);
   d.diagonalOperator(ham0);
-  size_t reference = d.minloc();
   for (int order=2; order <=maxOrder; order++) {
       LinearAlgebra::ParameterVectorSet gg; gg.push_back(std::make_shared<Wavefunction>(prototype));
       LinearAlgebra::ParameterVectorSet ww; ww.push_back(std::make_shared<Wavefunction>(prototype));
       std::static_pointer_cast<Wavefunction>(ww.back())->set((double)0);
-      std::static_pointer_cast<Wavefunction>(ww.back())->set(reference, (double) 1);
+      std::static_pointer_cast<Wavefunction>(ww.back())->set(referenceLocation, (double) 1);
       _preconditioner_subtractDiagonal=true;
       _preconditioning_diagonals = &d;
       currentHamiltonian=&ham;
