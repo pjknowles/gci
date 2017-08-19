@@ -39,6 +39,12 @@ namespace gci {
       m_orbitalSpaces = source.m_orbitalSpaces;
     }
 
+    Operator(const SymmetryMatrix::Operator& source, const std::vector<OrbitalSpace>& orbitalSpaces)
+    : SymmetryMatrix::Operator(source)
+    {
+      m_orbitalSpaces = orbitalSpaces;
+    }
+
     /*!
      * \brief Assigment operator
      * \param source Object to be copied.
@@ -113,6 +119,17 @@ namespace gci {
      * \param description Descriptive text
      */
     Operator fockOperator(const Determinant& reference, const std::string description="Fock") const;
+
+  /*!
+   * \brief Construct the Fock operator for this operator with a given density matrix
+   * \param density The density matrix.
+   * \return
+   */
+    Operator fock(const Operator &density) const
+    {
+      Operator result(SymmetryMatrix::Operator::fock(density),m_orbitalSpaces);
+      return result;
+    }
 
     /*!
      * \brief Build a same-spin operator from the density arising from a single Slater determinant

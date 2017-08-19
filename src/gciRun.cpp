@@ -96,9 +96,10 @@ static void _meanfield_residual(const ParameterVectorSet & psx, ParameterVectorS
           *g = - *_IPT_b0m;
         else
           *g -= *_IPT_b0m;
-        auto dd = g->density(1, false, true, _IPT_c[0].get(), "", parallel_stringset);
+        gci::Operator dd = g->density(1, false, true, _IPT_c[0].get(), "", parallel_stringset);
+        gci::Operator f0=currentHamiltonian->fock(dd);
         //2017-08-18
-          g->operatorOnWavefunction(*currentHamiltonian, *x, parallel_stringset);
+          g->operatorOnWavefunction(f0, *x, parallel_stringset);
         if (_residual_subtract_Energy) {
             double cc = x->dot(x);
             double cg = x->dot(g);
@@ -832,7 +833,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const Determinan
   int maxOrder = parameter("MAXORDER",std::vector<int>(1,3)).at(0);
   std::vector<double> e(maxOrder+1,(double)0);
   Wavefunction d(prototype);
-  xout <<"RSPT wavefunction size="<<d.size()<<std::endl;
+  xout <<"IPT wavefunction size="<<d.size()<<std::endl;
   Operator ham0=ham.fockOperator(referenceDeterminant);
   d.diagonalOperator(ham0);
   size_t reference = d.minloc();
@@ -846,7 +847,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const Determinan
       currentHamiltonian=&ham;
       _residual_subtract_Energy=false;
       _preconditioner_subtractDiagonal=false;
-      LinearAlgebra::RSPT solver(&_residual,&_preconditioner);
+      LinearAlgebra::DIIS solver(&_meanfield_residual,&_preconditioner);
       solver.m_verbosity=1;
       solver.m_thresh=parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
       solver.m_maxIterations=parameter("MAXIT",std::vector<int>(1,1000)).at(0);
