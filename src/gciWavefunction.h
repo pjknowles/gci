@@ -210,6 +210,9 @@ public:
   double dot(const std::shared_ptr<LinearAlgebra::vector<double> > other) const {
     return dot(other.get());
   }
+  double dot(const std::unique_ptr<LinearAlgebra::vector<double> > other) const {
+    return dot(other.get());
+  }
   /*!
    * \brief this[i] = a[i]*b[i]
    * \param a

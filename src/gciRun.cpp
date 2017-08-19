@@ -86,7 +86,7 @@ static std::vector<gci::Operator> _IPT_Fock;
 static std::vector<double> _IPT_Epsilon;
 static std::vector<double> _IPT_eta;
 static std::vector<Wavefunction> _IPT_c;
-static std::shared_ptr<Wavefunction> _IPT_b0m;
+static std::unique_ptr<Wavefunction> _IPT_b0m;
 static std::unique_ptr<gci::Operator> _IPT_Q;
 static void _meanfield_residual(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<double> shift=std::vector<double>(), bool append=false) {
     for (size_t k=0; k<psx.size(); k++) {
@@ -99,36 +99,13 @@ static void _meanfield_residual(const ParameterVectorSet & psx, ParameterVectorS
           *g -= *_IPT_b0m;
 //        gci::Operator dd = g->density(1, false, true, _IPT_c[0].get(), "", parallel_stringset);
 //        gci::Operator f0=currentHamiltonian->fock(dd);
-        //2017-08-18
-          g->operatorOnWavefunction(_IPT_Fock[0], *x, parallel_stringset);
-          g->axpy(-_IPT_Epsilon[0],x);
-        if (_residual_subtract_Energy) {
-            double cc = x->dot(x);
-            double cg = x->dot(g);
-            _lastEnergy=cg/cc;
-            double epsilon=cg/cc;
-            if (_residual_Q != nullptr) {
-//                xout << "@ _residual_Q in _residual"<<std::endl<<*_residual_Q<<std::endl;
-                Wavefunction m(*g);
-                m.zero();
-                m.operatorOnWavefunction(*_residual_Q,*x);
-//                xout << "m "<<m.str(2)<<std::endl;
-                double cm = x->dot(&m);
-                double gm = g->dot(&m);
-                _mu = cm==0 ? 0 : (cg*cm-cc*gm)/(cm*cm-cm*cc);
-                epsilon = (cg-cm*_mu+cc*_mu*_residual_q)/(cc);
-                g->axpy(-_mu,&m);
-//                xout << "cm="<<cm<<std::endl;
-//                xout << "gm="<<gm<<std::endl;
-//                xout << "mu="<<_mu<<std::endl;
-//                xout << "epsilon="<<epsilon<<", cg/cc="<<cg/cc<<std::endl;
-//                xout << "residual after subtracting m "<<g->str(2)<<std::endl;
-                // FIXME idempotency constraint to follow
-                _lastEnergy=epsilon-_mu*_residual_q;
-              }
-//            xout << "_lastEnergy "<<_lastEnergy<<std::endl;
-            g->axpy(-_lastEnergy,x);
-          }
+        g->operatorOnWavefunction(_IPT_Fock[0], *x, parallel_stringset);
+        g->axpy(-_IPT_Epsilon[0],x);
+        gci::Wavefunction Qc(*g); Qc.set(0); Qc.operatorOnWavefunction(*_IPT_Q,*x);
+        g->axpy(-_IPT_eta[0],&Qc);
+        auto dd = _IPT_c[0] * *g;
+        g->axpy(-dd,&_IPT_c[0]);
+        g->operatorOnWavefunction(currentHamiltonian->fock(x->density(1,false,true,&_IPT_c[0]),false),_IPT_c[0],parallel_stringset);
 //        xout << "final residual "<<g->str(2)<<std::endl;
     }
 }
@@ -833,7 +810,7 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams,
 void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t referenceLocation )
 {
   int maxOrder = parameter("MAXORDER",std::vector<int>(1,3)).at(0);
-  std::vector<double> e(maxOrder+1,(double)0);
+  std::vector<double> energies;
   Wavefunction d(prototype);
   xout <<"IPT wavefunction size="<<d.size()<<std::endl;
   _IPT_Q =std::unique_ptr<gci::Operator>(ham.projector("Q",false));
@@ -859,6 +836,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
   auto referenceDeterminant = _IPT_c[0].determinantAt(referenceLocation);
   d.diagonalOperator(_IPT_Fock[0]);
   _IPT_Epsilon.push_back(d.at(referenceLocation));
+  energies.push_back(0);
   _IPT_Epsilon.push_back(0);
   _IPT_c.emplace_back(Wavefunction(prototype)); // c[1]
   gci::Operator excK(_IPT_Fock[1]);
@@ -869,6 +847,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
   xout << "Continuum orbital "<<continuumOrbitalOffset+1<<"."<<continuumOrbitalSymmetry+1<<std::endl;
   _IPT_eta.clear();
   _IPT_eta.push_back(-_IPT_Fock[0].element(ioo,ios,ioo,ios)); // eta[0]
+  energies.push_back(_IPT_eta[0]);
   _IPT_eta.push_back(0); // eta[1]
   excK.element(ioo,ios,continuumOrbitalOffset,continuumOrbitalSymmetry)=1/std::sqrt(2);
   excK.m_description="Excitor";
@@ -884,8 +863,34 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
 //  xout << "diagonal d"<<d.str(3)<<std::endl;
   for (int m=2; m <=maxOrder; m++) {
       xout << "Start orbital relaxation order m="<<m<<std::endl;
-      xout << "Epsilon:"; for (auto e : _IPT_Epsilon) xout <<" "<<e; xout <<std::endl;
-      xout << "eta:"; for (auto e : _IPT_eta) xout <<" "<<e; xout <<std::endl;
+      // construct F0m*
+      _IPT_Fock.emplace_back(gci::Operator(_IPT_Fock[0]));
+      _IPT_Fock.back().O1()*=0;
+      for (int j=1; j<m; j++) {
+          _IPT_Fock.back() += ham.fock(
+                _IPT_c[j].density(1, false, true, &_IPT_c[m-j], "", parallel_stringset),
+              false)*0.5;
+        }
+      xout << "F0m: "<<_IPT_Fock.back()<<std::endl;
+      // construct b0m
+//      _IPT_b0m = std::unique_ptr<gci::Operator>(new gci::Operator(_IPT_Fock.back()));
+      _IPT_b0m.reset(new Wavefunction(prototype));
+      _IPT_b0m->set(0);
+      _IPT_b0m->operatorOnWavefunction(_IPT_Fock.back(),_IPT_c[0]);
+      for (int k=1; k<m; k++) {
+        _IPT_b0m->operatorOnWavefunction(_IPT_Fock[k],_IPT_c[m-k]);
+        _IPT_b0m->axpy(-_IPT_Epsilon[k],&_IPT_c[m-k]);
+        gci::Wavefunction Qc(prototype); Qc.set(0); Qc.operatorOnWavefunction(*_IPT_Q,_IPT_c[m-k]);
+        _IPT_b0m->axpy(-_IPT_eta[k],&Qc);
+        }
+      for (int k=0; k<m-1; k++)
+        _IPT_b0m->axpy(-_IPT_eta[k],&_IPT_c[m-k-2]);
+      auto b0mc0 = _IPT_c[0] * *_IPT_b0m;
+        _IPT_b0m->axpy(-b0mc0,&_IPT_c[0]);
+
+      xout << "b0m: "<<_IPT_b0m->str(2)<<std::endl;
+      xout << "solve for c0m"<<std::endl;
+      // solve for c0m
       LinearAlgebra::ParameterVectorSet gg; gg.push_back(std::make_shared<Wavefunction>(prototype));
       LinearAlgebra::ParameterVectorSet ww; ww.push_back(std::make_shared<Wavefunction>(prototype));
       std::static_pointer_cast<Wavefunction>(ww.back())->set((double)0);
@@ -900,8 +905,35 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       solver.m_thresh=parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
       solver.m_maxIterations=parameter("MAXIT",std::vector<int>(1,1000)).at(0);
       solver.solve(gg,ww);
-      //      xout << "Final w: "<<w.str(2)<<std::endl;
-      //      xout << "Final g: "<<g.str(2)<<std::endl;
+      xout << "Final g: "<<gg[0]->str(2)<<std::endl;
+      xout << "Final w: "<<ww[0]->str(2)<<std::endl;
+      _IPT_c.push_back(*std::static_pointer_cast<Wavefunction>(ww[0]));
+      xout << "c0m: "<<_IPT_c.back().str(2)<<std::endl;
+      // set reference component of c0m
+      double refc0m=0;
+      for (int k=1; k<m; k++)
+        refc0m -= 0.5 * _IPT_c[k].dot(&_IPT_c[m-k]);
+      _IPT_c.back().set(referenceLocation,refc0m);
+      xout << "c0m after setting reference component: "<<_IPT_c.back().str(2)<<std::endl;
+
+      // evaluate F0m
+      _IPT_Fock.back() += ham.fock(
+                _IPT_c[0].density(1, false, true, &_IPT_c[m], "", parallel_stringset),
+              false);
+      // evaluate E0m
+      energies.push_back(0);
+      for (int k=0; k<=m; k++)
+        for (int j=0; j<=m-k; j++) {
+            Wavefunction g(prototype); g.set(0);
+            g.operatorOnWavefunction(_IPT_Fock[k],_IPT_c[m-j-k],parallel_stringset);
+            energies.back() += g.dot(&_IPT_c[j]);
+          }
+      // evaluate Epsilon0m
+      // evaluate eta0m
+      xout << "Energies:"; for (auto e : energies) xout <<" "<<e; xout <<std::endl;
+      xout << "Energies:"; for (auto e=energies.begin(); e!=energies.end(); e++) xout <<" "<<std::accumulate(energies.begin(),e+1,(double)0); xout <<std::endl;
+      xout << "Epsilon:"; for (auto e : _IPT_Epsilon) xout <<" "<<e; xout <<std::endl;
+      xout << "eta:"; for (auto e : _IPT_eta) xout <<" "<<e; xout <<std::endl;
     }
 }
 

@@ -123,11 +123,12 @@ namespace gci {
   /*!
    * \brief Construct the Fock operator for this operator with a given density matrix
    * \param density The density matrix.
+   * \param oneElectron Whether to use the one-electron part of this operator, or zero
    * \return
    */
-    Operator fock(const Operator &density) const
+    Operator fock(const Operator& density, bool oneElectron=true) const
     {
-      Operator result(SymmetryMatrix::Operator::fock(density),m_orbitalSpaces);
+      Operator result(SymmetryMatrix::Operator::fock(density,oneElectron),m_orbitalSpaces);
       return result;
     }
 
