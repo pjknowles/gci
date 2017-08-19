@@ -85,12 +85,13 @@ public:
   Determinant determinantAt(size_t offset);
 
   /*!
-     * \brief Fill this object with the action of an operator on another wavefunction
+     * \brief Add to this object the action of an operator on another wavefunction
      * \param h the operator
      * \param w the wavefunction
      * \param parallel_stringset whether to use parallel algorithm in StringSet construction
      */
   void operatorOnWavefunction(const gci::Operator &h, const Wavefunction &w, bool parallel_stringset=false);
+
   /*!
    * \brief Construct a density matrix with this wavefunction
    * \param rank Can be 1 (1-particle density only) or 2 (1- and 2-particle densities)

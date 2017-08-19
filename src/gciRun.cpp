@@ -96,10 +96,11 @@ static void _meanfield_residual(const ParameterVectorSet & psx, ParameterVectorS
           *g = - *_IPT_b0m;
         else
           *g -= *_IPT_b0m;
-        gci::Operator dd = g->density(1, false, true, _IPT_c[0].get(), "", parallel_stringset);
-        gci::Operator f0=currentHamiltonian->fock(dd);
+//        gci::Operator dd = g->density(1, false, true, _IPT_c[0].get(), "", parallel_stringset);
+//        gci::Operator f0=currentHamiltonian->fock(dd);
         //2017-08-18
-          g->operatorOnWavefunction(f0, *x, parallel_stringset);
+          g->operatorOnWavefunction(_IPT_Fock[0], *x, parallel_stringset);
+          g->axpy(-_IPT_Epsilon[0],x);
         if (_residual_subtract_Energy) {
             double cc = x->dot(x);
             double cg = x->dot(g);
