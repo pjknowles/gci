@@ -837,20 +837,55 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
   Wavefunction d(prototype);
   xout <<"IPT wavefunction size="<<d.size()<<std::endl;
   _IPT_Q =std::unique_ptr<gci::Operator>(ham.projector("Q",false));
+  int continuumOrbitalSymmetry;
+  int continuumOrbitalOffset;
+  for (continuumOrbitalSymmetry=0; continuumOrbitalSymmetry<8; continuumOrbitalSymmetry++)
+    for (continuumOrbitalOffset=0; continuumOrbitalOffset<_IPT_Q->O1().dimension(continuumOrbitalSymmetry); continuumOrbitalOffset++)
+      if (_IPT_Q->element(continuumOrbitalOffset,continuumOrbitalSymmetry,continuumOrbitalOffset,continuumOrbitalSymmetry)!=0) goto continuumFound ;
+  continuumFound:
   xout << "IPT Q operator"<<*_IPT_Q<<std::endl;
   _IPT_c.clear();
   _IPT_c.emplace_back(Wavefunction(prototype));
   _IPT_c[0].set((double)0);
   _IPT_c[0].set(referenceLocation,(double)1);
   _IPT_Fock.clear();
-  xout << "gamm00 "<<_IPT_c[0].density(1)<<std::endl;;
-  xout << "F00 "<<ham.fock(_IPT_c[0].density(1))<<std::endl;;
+//  xout << "gamma00 "<<_IPT_c[0].density(1)<<std::endl;;
+//  xout << "F00 "<<ham.fock(_IPT_c[0].density(1))<<std::endl;;
   _IPT_Fock.emplace_back(ham.fock(_IPT_c[0].density(1)));
-  xout << "F00 "<<_IPT_Fock[0]<<std::endl;
+//  xout << "F00 "<<_IPT_Fock[0]<<std::endl;
+  _IPT_Fock.emplace_back(gci::Operator(_IPT_Fock[0]));
+  _IPT_Fock[1].O1()*=0;
+  _IPT_Epsilon.clear();
   auto referenceDeterminant = _IPT_c[0].determinantAt(referenceLocation);
-  Operator ham0=ham.fockOperator(referenceDeterminant);
-  d.diagonalOperator(ham0);
-  for (int order=2; order <=maxOrder; order++) {
+  d.diagonalOperator(_IPT_Fock[0]);
+  _IPT_Epsilon.push_back(d.at(referenceLocation));
+  _IPT_Epsilon.push_back(0);
+  _IPT_c.emplace_back(Wavefunction(prototype)); // c[1]
+  gci::Operator excK(_IPT_Fock[1]);
+  double io=parameter("IO",std::vector<double>(1,1.1)).at(0);
+  int ioo = io-1;
+  int ios = 10*(io-ioo-1)-1;
+  xout << "Ionise orbital "<<ioo+1<<"."<<ios+1<<std::endl;
+  xout << "Continuum orbital "<<continuumOrbitalOffset+1<<"."<<continuumOrbitalSymmetry+1<<std::endl;
+  _IPT_eta.clear();
+  _IPT_eta.push_back(-_IPT_Fock[0].element(ioo,ios,ioo,ios)); // eta[0]
+  _IPT_eta.push_back(0); // eta[1]
+  excK.element(ioo,ios,continuumOrbitalOffset,continuumOrbitalSymmetry)=1/std::sqrt(2);
+  excK.m_description="Excitor";
+  xout <<excK<<std::endl;
+  _IPT_c[1].set(0);
+  _IPT_c[1].operatorOnWavefunction(excK,_IPT_c[0],parallel_stringset);
+//  xout << "c[1]: "<<_IPT_c[1].str(2)<<std::endl;
+  {
+    auto g=Wavefunction(prototype);
+    g.set(0);
+    g.operatorOnWavefunction(_IPT_Fock[0],_IPT_c[0]);
+  }
+//  xout << "diagonal d"<<d.str(3)<<std::endl;
+  for (int m=2; m <=maxOrder; m++) {
+      xout << "Start orbital relaxation order m="<<m<<std::endl;
+      xout << "Epsilon:"; for (auto e : _IPT_Epsilon) xout <<" "<<e; xout <<std::endl;
+      xout << "eta:"; for (auto e : _IPT_eta) xout <<" "<<e; xout <<std::endl;
       LinearAlgebra::ParameterVectorSet gg; gg.push_back(std::make_shared<Wavefunction>(prototype));
       LinearAlgebra::ParameterVectorSet ww; ww.push_back(std::make_shared<Wavefunction>(prototype));
       std::static_pointer_cast<Wavefunction>(ww.back())->set((double)0);

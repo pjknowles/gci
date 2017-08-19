@@ -88,11 +88,18 @@ void Wavefunction::diagonalOperator(const Operator &op)
   profiler->start("diagonalOperator");
   auto ha=op.int1(true);
   auto hbb=op.int1(false);
-  auto Jaa=op.intJ(true,true);
-  auto Jab=op.intJ(true,false);
-  auto Jbb=op.intJ(false,false);
-  auto Kaa=op.intK(true);
-  auto Kbb=op.intK(false);
+  Eigen::MatrixXd Jaa;
+  Eigen::MatrixXd Jab;
+  Eigen::MatrixXd Jbb;
+  Eigen::MatrixXd Kaa;
+  Eigen::MatrixXd Kbb;
+  if (op.m_rank>1) {
+      Jaa=op.intJ(true,true);
+      Jab=op.intJ(true,false);
+      Jbb=op.intJ(false,false);
+      Kaa=op.intK(true);
+      Kbb=op.intK(false);
+    }
   size_t offset=0;
   set(op.m_O0);
   for (unsigned int syma=0; syma<8; syma++) {
@@ -553,6 +560,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
   }
 //  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
 
+  if (h.m_rank>1)
   { // two-electron contribution, alpha-alpha
     auto p = profiler->push("aa integrals");
     size_t nsbbMax = 64; // temporary static
@@ -580,6 +588,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
   }
 //  xout <<"residual after alpha-alpha on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
 
+  if (h.m_rank>1)
   if (true || h.m_uhf) { // two-electron contribution, beta-beta
       auto p = profiler->push("bb integrals");
       size_t nsbbMax = 64; // temporary static
@@ -603,6 +612,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
 //      xout <<"residual after beta-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
     }
 
+  if (h.m_rank>1)
   { // two-electron contribution, alpha-beta
     auto p = profiler->push("ab integrals");
     size_t nsaaMax = 640; // temporary static
