@@ -93,9 +93,14 @@ static void _meanfield_residual(const ParameterVectorSet & psx, ParameterVectorS
         const std::shared_ptr<Wavefunction>  x=std::static_pointer_cast<Wavefunction>(psx[k]);
         std::shared_ptr<Wavefunction>  g=std::static_pointer_cast<Wavefunction>(outputs[k]);
         auto p = profiler->push("Mean field residual");
+        xout << "_meanfield_residual: b0m"<<_IPT_b0m->values()<<std::endl;
+//        xout <<&g->buffer[0]<<" "<<&_IPT_b0m->buffer[0]<<std::endl;
         if (not append)
-          *g = - *_IPT_b0m;
-        else
+          g->set(0);
+//          *g = - *IPT_b0m;
+//          for (auto bb=_IPT_b0m->begin(); bb < _IPT_b0m->end(); bb++)
+//            *(g->begin()+bb-_IPT_b0m->begin()) = - (*bb);
+//        else
           *g -= *_IPT_b0m;
 //        gci::Operator dd = g->density(1, false, true, _IPT_c[0].get(), "", parallel_stringset);
 //        gci::Operator f0=currentHamiltonian->fock(dd);
@@ -103,10 +108,14 @@ static void _meanfield_residual(const ParameterVectorSet & psx, ParameterVectorS
         g->axpy(-_IPT_Epsilon[0],x);
         gci::Wavefunction Qc(*g); Qc.set(0); Qc.operatorOnWavefunction(*_IPT_Q,*x);
         g->axpy(-_IPT_eta[0],&Qc);
+        g->operatorOnWavefunction(currentHamiltonian->fock(x->density(1,false,true,&_IPT_c[0]),false),_IPT_c[0],parallel_stringset);
         auto dd = _IPT_c[0] * *g;
         g->axpy(-dd,&_IPT_c[0]);
-        g->operatorOnWavefunction(currentHamiltonian->fock(x->density(1,false,true,&_IPT_c[0]),false),_IPT_c[0],parallel_stringset);
 //        xout << "final residual "<<g->str(2)<<std::endl;
+//        xout << "_meanfield_residual: c00"<<_IPT_c[0].values()<<std::endl;
+        xout << "_meanfield_residual: b0m"<<_IPT_b0m->values()<<std::endl;
+        xout << "_meanfield_residual: x"<<x->values()<<std::endl;
+        xout << "_meanfield_residual: g"<<g->values()<<std::endl;
     }
 }
 
@@ -830,16 +839,15 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
 //  xout << "F00 "<<ham.fock(_IPT_c[0].density(1))<<std::endl;;
   _IPT_Fock.emplace_back(ham.fock(_IPT_c[0].density(1)));
 //  xout << "F00 "<<_IPT_Fock[0]<<std::endl;
-  _IPT_Fock.emplace_back(gci::Operator(_IPT_Fock[0]));
-  _IPT_Fock[1].O1()*=0;
   _IPT_Epsilon.clear();
   auto referenceDeterminant = _IPT_c[0].determinantAt(referenceLocation);
   d.diagonalOperator(_IPT_Fock[0]);
   _IPT_Epsilon.push_back(d.at(referenceLocation));
-  energies.push_back(0);
   _IPT_Epsilon.push_back(0);
   _IPT_c.emplace_back(Wavefunction(prototype)); // c[1]
-  gci::Operator excK(_IPT_Fock[1]);
+  xout << "gamma01 "<<_IPT_c[0].density(1,false,true,&_IPT_c[1])<<std::endl;
+  _IPT_Fock.emplace_back(ham.fock(_IPT_c[0].density(1,false,true,&_IPT_c[1]),false)); // F01
+  gci::Operator excK(_IPT_Fock[1]); excK.O1() *=0;
   double io=parameter("IO",std::vector<double>(1,1.1)).at(0);
   int ioo = io-1;
   int ios = 10*(io-ioo-1)-1;
@@ -847,7 +855,6 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
   xout << "Continuum orbital "<<continuumOrbitalOffset+1<<"."<<continuumOrbitalSymmetry+1<<std::endl;
   _IPT_eta.clear();
   _IPT_eta.push_back(-_IPT_Fock[0].element(ioo,ios,ioo,ios)); // eta[0]
-  energies.push_back(_IPT_eta[0]);
   _IPT_eta.push_back(0); // eta[1]
   excK.element(ioo,ios,continuumOrbitalOffset,continuumOrbitalSymmetry)=1/std::sqrt(2);
   excK.m_description="Excitor";
@@ -860,6 +867,17 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
     g.set(0);
     g.operatorOnWavefunction(_IPT_Fock[0],_IPT_c[0]);
   }
+  auto dnull=_IPT_c[0].density(1); dnull.O1()*=0;
+  auto h=ham.fock(dnull); h.m_description="One-electron hamiltonian";
+  xout << h<<std::endl;
+  energies.push_back(ham.m_O0);
+  { Wavefunction g0(prototype);
+    g0.set(0);
+    g0.operatorOnWavefunction(_IPT_Fock[0],_IPT_c[0]);
+    g0.operatorOnWavefunction(h,_IPT_c[0]);
+    energies[0]+=0.5*g0.dot(&_IPT_c[0]);
+  }
+  energies.push_back(_IPT_eta[0]);
 //  xout << "diagonal d"<<d.str(3)<<std::endl;
   for (int m=2; m <=maxOrder; m++) {
       xout << "Start orbital relaxation order m="<<m<<std::endl;
@@ -888,7 +906,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       auto b0mc0 = _IPT_c[0] * *_IPT_b0m;
         _IPT_b0m->axpy(-b0mc0,&_IPT_c[0]);
 
-      xout << "b0m: "<<_IPT_b0m->str(2)<<std::endl;
+//      xout << "b0m: "<<_IPT_b0m->str(2)<<std::endl;
       xout << "solve for c0m"<<std::endl;
       // solve for c0m
       LinearAlgebra::ParameterVectorSet gg; gg.push_back(std::make_shared<Wavefunction>(prototype));
@@ -922,12 +940,15 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
               false);
       // evaluate E0m
       energies.push_back(0);
-      for (int k=0; k<=m; k++)
-        for (int j=0; j<=m-k; j++) {
-            Wavefunction g(prototype); g.set(0);
-            g.operatorOnWavefunction(_IPT_Fock[k],_IPT_c[m-j-k],parallel_stringset);
-            energies.back() += g.dot(&_IPT_c[j]);
-          }
+      for (int k=0; k<=m; k++) {
+          for (int j=0; j<=m-k; j++) {
+              Wavefunction g(prototype); g.set(0);
+              g.operatorOnWavefunction(_IPT_Fock[k],_IPT_c[m-j-k],parallel_stringset);
+              if (k==0)
+                g.operatorOnWavefunction(h,_IPT_c[m-j-k],parallel_stringset);
+              energies.back() += 0.5*g.dot(&_IPT_c[j]);
+            }
+        }
       // evaluate Epsilon0m
       _IPT_Epsilon.push_back(0);
       for (int k=1; k<=m; k++) {
@@ -952,6 +973,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
         _IPT_eta.back() += _IPT_c[m-k-1].dot(&_IPT_c[1])*_IPT_eta[k];
       xout << "Energies:"; for (auto e : energies) xout <<" "<<e; xout <<std::endl;
       xout << "Energies:"; for (auto e=energies.begin(); e!=energies.end(); e++) xout <<" "<<std::accumulate(energies.begin(),e+1,(double)0); xout <<std::endl;
+      xout << "Energies:"; for (auto e=energies.begin(); e!=energies.end(); e++) xout <<" "<<std::accumulate(energies.begin()+1,e+1,(double)0); xout <<std::endl;
       xout << "Epsilon:"; for (auto e : _IPT_Epsilon) xout <<" "<<e; xout <<std::endl;
       xout << "eta:"; for (auto e : _IPT_eta) xout <<" "<<e; xout <<std::endl;
     }

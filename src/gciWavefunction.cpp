@@ -411,6 +411,13 @@ Wavefunction& gci::Wavefunction::operator -()
   return *this;
 }
 
+std::string gci::Wavefunction::values() const
+{
+  std::ostringstream s;
+  for (auto v : buffer ) s << " "<<v;
+  return s.str();
+}
+
 std::string gci::Wavefunction::str(int verbosity, unsigned int columns) const
 {
   std::ostringstream s;

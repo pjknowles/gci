@@ -123,6 +123,8 @@ public:
 
   std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
 
+  std::string values() const;
+
   /*!
    * \brief axpy Add a multiple of another Wavefunction object to this one
    * \param a the factor defining the multiple
