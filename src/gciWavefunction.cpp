@@ -452,22 +452,22 @@ bool Wavefunction::compatible(const Wavefunction &other) const
   return dimension==other.dimension && buffer.size() == other.buffer.size();
 }
 
-size_t Wavefunction::minloc(size_t n)
+size_t Wavefunction::minloc(size_t n) const
 {
   std::vector<size_t> results;
   for (size_t k=0; k<n; k++) {
-      auto m=begin(); while(std::count(results.begin(),results.end(),m-begin())!=0) m++;
-      for (auto i=begin(); i!=end(); i++) {
-        if (*i < *m && std::count(results.begin(),results.end(),i-begin())==0) m=i;
+      auto m=cbegin(); while(std::count(results.begin(),results.end(),m-cbegin())!=0) m++;
+      for (auto i=cbegin(); i!=cend(); i++) {
+        if (*i < *m && std::count(results.begin(),results.end(),i-cbegin())==0) m=i;
         }
       if (distributed && parallel_size>1)
         throw std::logic_error("Wavefunction::minloc: parallel implementation unfinished"); //FIXME
-      results.push_back(m-begin());
+      results.push_back(m-cbegin());
     }
   return results.back();
 }
 
-double Wavefunction::at(size_t offset)
+double Wavefunction::at(size_t offset) const
 {
   return buffer.at(offset);
 }
@@ -950,4 +950,20 @@ std::vector<double>::iterator Wavefunction::end()
     return buffer.begin() + std::min((size_t)buffer.size(),(size_t)((parallel_rank+1)*((buffer.size()-1)/parallel_size+1)));
   else
     return buffer.end();
+}
+
+std::vector<double>::const_iterator Wavefunction::cbegin() const
+{
+  if (distributed)
+    return buffer.cbegin() + parallel_rank*((buffer.size()-1)/parallel_size+1);
+  else
+    return buffer.cbegin();
+}
+
+std::vector<double>::const_iterator Wavefunction::cend() const
+{
+  if (distributed)
+    return buffer.cbegin() + std::min((size_t)buffer.size(),(size_t)((parallel_rank+1)*((buffer.size()-1)/parallel_size+1)));
+  else
+    return buffer.cend();
 }

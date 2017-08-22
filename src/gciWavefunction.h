@@ -69,14 +69,14 @@ public:
      * \param n the n'th smallest will be found
      * \return offset in buffer
      */
-  size_t minloc(size_t n=1);
+  size_t minloc(size_t n=1) const;
 
   /*!
      * \brief Get a component of the wavefunction
      * \param offset which component to get
      * \return  the value of the component
      */
-  double at(size_t offset);
+  double at(size_t offset) const;
   /*!
      * \brief get the determinant corresponding to a particular component of the wavefunction
      * \param offset which component to get
@@ -238,6 +238,8 @@ private:
   std::vector<double> buffer; ///< buffer to hold coefficients describing the object
   std::vector<double>::iterator begin(); ///< beginning of this processor's data
   std::vector<double>::iterator end(); ///< end of this processor's data
+  std::vector<double>::const_iterator cbegin() const; ///< beginning of this processor's data
+  std::vector<double>::const_iterator cend() const; ///< end of this processor's data
   bool compatible(const Wavefunction &other) const; ///< whether this wavefunction is on the same space as another
   std::vector<size_t> _blockOffset;
 
