@@ -101,7 +101,7 @@ void operator()(const ParameterVectorSet & psx, ParameterVectorSet & outputs, st
         const std::shared_ptr<Wavefunction>  x=std::static_pointer_cast<Wavefunction>(psx[k]);
         std::shared_ptr<Wavefunction>  g=std::static_pointer_cast<Wavefunction>(outputs[k]);
         auto p = profiler->push("Mean field residual");
-        xout << "_meanfield_residual: b0m"<<_IPT_b0m->values()<<std::endl;
+//        xout << "_meanfield_residual: b0m"<<_IPT_b0m->values()<<std::endl;
 //        xout <<&g->buffer[0]<<" "<<&_IPT_b0m->buffer[0]<<std::endl;
         if (not append)
           g->set(0);
@@ -119,9 +119,9 @@ void operator()(const ParameterVectorSet & psx, ParameterVectorSet & outputs, st
         g->axpy(-dd,&_IPT_c[0]);
 //        xout << "final residual "<<g->str(2)<<std::endl;
 //        xout << "_meanfield_residual: c00"<<_IPT_c[0].values()<<std::endl;
-        xout << "_meanfield_residual: b0m"<<_IPT_b0m->values()<<std::endl;
-        xout << "_meanfield_residual: x"<<x->values()<<std::endl;
-        xout << "_meanfield_residual: g"<<g->values()<<std::endl;
+//        xout << "_meanfield_residual: b0m"<<_IPT_b0m->values()<<std::endl;
+//        xout << "_meanfield_residual: x"<<x->values()<<std::endl;
+//        xout << "_meanfield_residual: g"<<g->values()<<std::endl;
     }
 }
 } ;
@@ -852,7 +852,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
   _IPT_c[0].set((double)0);
   _IPT_c[0].set(referenceLocation,(double)1);
   _IPT_Fock.clear();
-//  xout << "gamma00 "<<_IPT_c[0].density(1)<<std::endl;;
+  xout << "gamma00 "<<_IPT_c[0].density(1)<<std::endl;;
 //  xout << "F00 "<<ham.fock(_IPT_c[0].density(1))<<std::endl;;
   _IPT_Fock.emplace_back(ham.fock(_IPT_c[0].density(1)));
 //  xout << "F00 "<<_IPT_Fock[0]<<std::endl;
@@ -862,9 +862,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
   _IPT_Epsilon.push_back(d.at(referenceLocation));
   _IPT_Epsilon.push_back(0);
   _IPT_c.emplace_back(Wavefunction(prototype)); // c[1]
-  xout << "gamma01 "<<_IPT_c[0].density(1,false,true,&_IPT_c[1])<<std::endl;
-  _IPT_Fock.emplace_back(ham.fock(_IPT_c[0].density(1,false,true,&_IPT_c[1]),false)); // F01
-  gci::Operator excK(_IPT_Fock[1]); excK.O1() *=0;
+  gci::Operator excK(_IPT_Fock[0]); excK.O1() *=0; excK.m_description="excK";
   double io=parameter("IO",std::vector<double>(1,1.1)).at(0);
   int ioo = io-1;
   int ios = 10*(io-ioo-1)-1;
@@ -878,7 +876,12 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
   xout <<excK<<std::endl;
   _IPT_c[1].set(0);
   _IPT_c[1].operatorOnWavefunction(excK,_IPT_c[0],parallel_stringset);
-//  xout << "c[1]: "<<_IPT_c[1].str(2)<<std::endl;
+  _IPT_Fock.emplace_back(ham.fock(_IPT_c[0].density(1,false,true,&_IPT_c[1]),false)); // F01
+  xout << "c[0]: "<<_IPT_c[0].values()<<std::endl;
+  xout << "c[1]: "<<_IPT_c[1].values()<<std::endl;
+  xout << "gamma01 "<<_IPT_c[0].density(1,false,true,&_IPT_c[1])<<std::endl;
+      xout << "F00: "<<_IPT_Fock[0]<<std::endl;
+      xout << "F01: "<<_IPT_Fock[1]<<std::endl;
   {
     auto g=Wavefunction(prototype);
     g.set(0);
@@ -906,7 +909,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
                 _IPT_c[j].density(1, false, true, &_IPT_c[m-j], "", parallel_stringset),
               false)*0.5;
         }
-      xout << "F0m: "<<_IPT_Fock.back()<<std::endl;
+      xout << "F0m*: "<<_IPT_Fock.back()<<std::endl;
       // construct b0m
 //      _IPT_b0m = std::unique_ptr<gci::Operator>(new gci::Operator(_IPT_Fock.back()));
       _IPT_b0m.reset(new Wavefunction(prototype));

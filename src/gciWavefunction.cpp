@@ -668,7 +668,7 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
   Operator result(dim, symmetries, rank, uhf, symmetry^bra->symmetry, description);
 //  std::cout << "result\n"<<result.str("result",3)<<std::endl;
   result.zero();
-  result.m_O0=1;
+  result.m_O0=(*this) * (*bra);
 //  std::cout << "@@@ density after zero before construct\n"<<result.str("result",3)<<std::endl;
 
   DivideTasks(99999999,1,1);
@@ -688,7 +688,7 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
                           betaStrings[symb].begin(),
                           betaStrings[symb].end(),
                           1,true, !result.m_uhf);
-      MXM(&((*result.O1(true).data())[0]),&d[0],&buffer[offset],orbitalSpace->total(0,1),nsa*nsb,1,true,nsa*nsb);
+      MXM(&((*result.O1(true).data())[0]),&d[0],&(bra->buffer[offset]),orbitalSpace->total(0,1),nsa*nsb,1,true,nsa*nsb);
     }
     if (result.m_uhf) {
       TransitionDensity d(*this,
@@ -697,7 +697,7 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
                           betaStrings[symb].begin(),
                           betaStrings[symb].end(),
                           1,false, true);
-      MXM(&((*result.O1(false).data())[0]),&d[0],&buffer[offset],orbitalSpace->total(0,1),nsa*nsb,1,true,nsa*nsb);
+      MXM(&((*result.O1(false).data())[0]),&d[0],&(bra->buffer[offset]),orbitalSpace->total(0,1),nsa*nsb,1,true,nsa*nsb);
     }
   }
   std::vector<bool> spincases(1,true); if (result.m_uhf) spincases.push_back(false);
