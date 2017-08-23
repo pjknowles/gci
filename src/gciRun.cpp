@@ -905,6 +905,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       _IPT_Fock.emplace_back(gci::Operator(_IPT_Fock[0]));
       _IPT_Fock.back().O1()*=0;
       for (int j=1; j<m; j++) {
+                xout << "density"<<j<<m-j<<_IPT_c[j].density(1, false, true, &_IPT_c[m-j], "", parallel_stringset) <<std::endl;
           _IPT_Fock.back() += ham.fock(
                 _IPT_c[j].density(1, false, true, &_IPT_c[m-j], "", parallel_stringset),
               false)*0.5;
@@ -926,7 +927,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       auto b0mc0 = _IPT_c[0] * *_IPT_b0m;
         _IPT_b0m->axpy(-b0mc0,&_IPT_c[0]);
 
-//      xout << "b0m: "<<_IPT_b0m->str(2)<<std::endl;
+      xout << "b0m: "<<_IPT_b0m->values()<<std::endl;
       xout << "solve for c0m"<<std::endl;
       // solve for c0m
       LinearAlgebra::ParameterVectorSet gg; gg.push_back(std::make_shared<Wavefunction>(prototype));
@@ -940,16 +941,16 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       solver.m_thresh=parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
       solver.m_maxIterations=parameter("MAXIT",std::vector<int>(1,1000)).at(0);
       solver.solve(gg,ww);
-      xout << "Final g: "<<gg[0]->str(2)<<std::endl;
-      xout << "Final w: "<<ww[0]->str(2)<<std::endl;
+      xout << "Final g: "<<std::static_pointer_cast<Wavefunction>(gg[0])->values()<<std::endl;
+//      xout << "Final w: "<<ww[0]->str(2)<<std::endl;
       _IPT_c.push_back(*std::static_pointer_cast<Wavefunction>(ww[0]));
-      xout << "c0m: "<<_IPT_c.back().str(2)<<std::endl;
+      xout << "c0m: "<<_IPT_c.back().values()<<std::endl;
       // set reference component of c0m
       double refc0m=0;
       for (int k=1; k<m; k++)
         refc0m -= 0.5 * _IPT_c[k].dot(&_IPT_c[m-k]);
       _IPT_c.back().set(referenceLocation,refc0m);
-      xout << "c0m after setting reference component: "<<_IPT_c.back().str(2)<<std::endl;
+      xout << "c0m after setting reference component: "<<_IPT_c.back().values()<<std::endl;
 
       // evaluate F0m
       _IPT_Fock.back() += ham.fock(
