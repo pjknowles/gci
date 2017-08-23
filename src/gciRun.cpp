@@ -897,7 +897,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
     g0.operatorOnWavefunction(h,_IPT_c[0]);
     energies[0]+=0.5*g0.dot(&_IPT_c[0]);
   }
-  energies.push_back(_IPT_eta[0]);
+  energies.push_back(0);
 //  xout << "diagonal d"<<d.str(3)<<std::endl;
   for (int m=2; m <=maxOrder; m++) {
       xout << "Start orbital relaxation order m="<<m<<std::endl;
