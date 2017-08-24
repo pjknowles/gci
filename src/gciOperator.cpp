@@ -200,7 +200,7 @@ gci::Operator* gci::Operator::projector(const std::string special, const bool fo
                 }
             }
         }
-      xout << "non-interacting orbital is "<<uncoupled_orbital<<"."<<uncoupled_orbital_symmetry<<std::endl;
+      xout << "non-interacting orbital is "<<uncoupled_orbital+1<<"."<<uncoupled_orbital_symmetry+1<<std::endl;
       result->O1(false).block(uncoupled_orbital_symmetry)[(uncoupled_orbital+2)*(uncoupled_orbital+1)/2-1]=(special=="P" ? 0:1);
     }
   return result;
