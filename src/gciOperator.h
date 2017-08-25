@@ -126,9 +126,9 @@ namespace gci {
    * \param oneElectron Whether to use the one-electron part of this operator, or zero
    * \return
    */
-    Operator fock(const Operator& density, bool oneElectron=true) const
+    Operator fock(const Operator& density, bool oneElectron=true, std::string description="") const
     {
-      Operator result(SymmetryMatrix::Operator::fock(density,oneElectron),m_orbitalSpaces);
+      Operator result(SymmetryMatrix::Operator::fock(density,oneElectron,description),m_orbitalSpaces);
       return result;
     }
 

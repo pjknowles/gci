@@ -854,9 +854,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
   _IPT_c[0].set(referenceLocation,(double)1);
   _IPT_Fock.clear();
   xout << "gamma00 "<<_IPT_c[0].density(1,true)<<std::endl;;
-//  xout << "F00 "<<ham.fock(_IPT_c[0].density(1))<<std::endl;;
-  _IPT_Fock.emplace_back(ham.fock(_IPT_c[0].density(1,true)));
-//  xout << "F00 "<<_IPT_Fock[0]<<std::endl;
+  _IPT_Fock.emplace_back(ham.fock(_IPT_c[0].density(1,true),true,"F00"));
   _IPT_Epsilon.clear();
   auto referenceDeterminant = _IPT_c[0].determinantAt(referenceLocation);
   d.diagonalOperator(_IPT_Fock[0]);
@@ -877,19 +875,19 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
   xout <<excK<<std::endl;
   _IPT_c[1].set(0);
   _IPT_c[1].operatorOnWavefunction(excK,_IPT_c[0],parallel_stringset);
-  _IPT_Fock.emplace_back(ham.fock(_IPT_c[0].density(1,true,true,&_IPT_c[1]),false)); // F01
+  _IPT_Fock.emplace_back(ham.fock(_IPT_c[0].density(1,true,true,&_IPT_c[1]),false,"F01")); // F01
   xout << "c[0]: "<<_IPT_c[0].values()<<std::endl;
   xout << "c[1]: "<<_IPT_c[1].values()<<std::endl;
   xout << "gamma01 "<<_IPT_c[0].density(1,true,true,&_IPT_c[1])<<std::endl;
-      xout << "F00: "<<_IPT_Fock[0]<<std::endl;
-      xout << "F01: "<<_IPT_Fock[1]<<std::endl;
+  xout << _IPT_Fock[0]<<std::endl;
+  xout << _IPT_Fock[1]<<std::endl;
   {
     auto g=Wavefunction(prototype);
     g.set(0);
     g.operatorOnWavefunction(_IPT_Fock[0],_IPT_c[0]);
   }
   auto dnull=_IPT_c[0].density(1); dnull.O1()*=0;
-  auto h=ham.fock(dnull); h.m_description="One-electron hamiltonian";
+  auto h=ham.fock(dnull,true,"One-electron hamiltonian");
   xout << h<<std::endl;
   energies.push_back(ham.m_O0);
   { Wavefunction g0(prototype);
@@ -905,13 +903,14 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       // construct F0m*
       _IPT_Fock.emplace_back(gci::Operator(_IPT_Fock[0]));
       _IPT_Fock.back().O1()*=0;
+      _IPT_Fock.back().m_description="F0"+std::to_string(m)+"*";
       for (int j=1; j<m; j++) {
-                xout << "density"<<j<<m-j<<_IPT_c[j].density(1, false, true, &_IPT_c[m-j], "", parallel_stringset) <<std::endl;
+                xout << "density"<<j<<m-j<<_IPT_c[j].density(1, true , true, &_IPT_c[m-j], "gamma "+std::to_string(j)+std::to_string(m-j), parallel_stringset) <<std::endl;
           _IPT_Fock.back() += ham.fock(
                 _IPT_c[j].density(1, true, true, &_IPT_c[m-j], "", parallel_stringset),
               false)*0.5;
         }
-      xout << "F0m*: "<<_IPT_Fock.back()<<std::endl;
+      xout <<_IPT_Fock.back()<<std::endl;
       // construct b0m
 //      _IPT_b0m = std::unique_ptr<gci::Operator>(new gci::Operator(_IPT_Fock.back()));
       _IPT_b0m.reset(new Wavefunction(prototype));
@@ -957,6 +956,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       _IPT_Fock.back() += ham.fock(
                 _IPT_c[0].density(1, true, true, &_IPT_c[m], "", parallel_stringset),
               false);
+      _IPT_Fock.back().m_description="F0"+std::to_string(m);
       // evaluate E0m
       energies.push_back(0);
       for (int k=0; k<=m; k++) {
