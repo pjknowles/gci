@@ -902,8 +902,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       xout << "Start orbital relaxation order m="<<m<<std::endl;
       // construct F0m*
       _IPT_Fock.emplace_back(gci::Operator(_IPT_Fock[0]));
-      _IPT_Fock.back().O1(true)*=0;
-      _IPT_Fock.back().O1(false)*=0;
+      _IPT_Fock.back().zero();
       _IPT_Fock.back().m_description="F0"+std::to_string(m)+"*";
       for (int j=1; j<m; j++) {
                 xout << "density"<<j<<m-j<<_IPT_c[j].density(1, true , true, &_IPT_c[m-j], "gamma "+std::to_string(j)+std::to_string(m-j), parallel_stringset) <<std::endl;
@@ -913,23 +912,28 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
         }
       xout <<_IPT_Fock.back()<<std::endl;
       // construct b0m
-//      _IPT_b0m = std::unique_ptr<gci::Operator>(new gci::Operator(_IPT_Fock.back()));
       _IPT_b0m.reset(new Wavefunction(prototype));
       _IPT_b0m->set(0);
       _IPT_b0m->operatorOnWavefunction(_IPT_Fock.back(),_IPT_c[0]);
+      xout << "b0m after F0m*: "<<_IPT_b0m->values()<<std::endl;
       for (int k=1; k<m; k++) {
         _IPT_b0m->operatorOnWavefunction(_IPT_Fock[k],_IPT_c[m-k]);
+      xout << "b0m after F0k: "<<_IPT_b0m->values()<<std::endl;
         _IPT_b0m->axpy(-_IPT_Epsilon[k],&_IPT_c[m-k]);
+      xout << "b0m after epsilon: "<<_IPT_b0m->values()<<std::endl;
         gci::Wavefunction Qc(prototype); Qc.set(0); Qc.operatorOnWavefunction(*_IPT_Q,_IPT_c[m-k]);
         _IPT_b0m->axpy(-_IPT_eta[k],&Qc);
+      xout << "b0m after eta: "<<_IPT_b0m->values()<<std::endl;
         }
       for (int k=0; k<m-1; k++)
-        _IPT_b0m->axpy(-_IPT_eta[k],&_IPT_c[m-k-2]);
+        _IPT_b0m->axpy(_IPT_eta[k],&_IPT_c[m-k-2]);
+      xout << "b0m after eta: "<<_IPT_b0m->values()<<std::endl;
       auto b0mc0 = _IPT_c[0] * *_IPT_b0m;
         _IPT_b0m->axpy(-b0mc0,&_IPT_c[0]);
+      xout << "b0m after project: "<<_IPT_b0m->values()<<std::endl;
 
       xout << "b0m: "<<_IPT_b0m->values()<<std::endl;
-      xout << "solve for c0m"<<std::endl;
+      xout << "solve for c0"+std::to_string(m)<<std::endl;
       // solve for c0m
       LinearAlgebra::ParameterVectorSet gg; gg.push_back(std::make_shared<Wavefunction>(prototype));
       LinearAlgebra::ParameterVectorSet ww; ww.push_back(std::make_shared<Wavefunction>(prototype));
@@ -945,7 +949,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       xout << "Final g: "<<std::static_pointer_cast<Wavefunction>(gg[0])->values()<<std::endl;
 //      xout << "Final w: "<<ww[0]->str(2)<<std::endl;
       _IPT_c.push_back(*std::static_pointer_cast<Wavefunction>(ww[0]));
-      xout << "c0m: "<<_IPT_c.back().values()<<std::endl;
+      xout << "c0"+std::to_string(m) <<_IPT_c.back().values()<<std::endl;
       // set reference component of c0m
       double refc0m=0;
       for (int k=1; k<m; k++)
