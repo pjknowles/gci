@@ -902,7 +902,8 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       xout << "Start orbital relaxation order m="<<m<<std::endl;
       // construct F0m*
       _IPT_Fock.emplace_back(gci::Operator(_IPT_Fock[0]));
-      _IPT_Fock.back().O1()*=0;
+      _IPT_Fock.back().O1(true)*=0;
+      _IPT_Fock.back().O1(false)*=0;
       _IPT_Fock.back().m_description="F0"+std::to_string(m)+"*";
       for (int j=1; j<m; j++) {
                 xout << "density"<<j<<m-j<<_IPT_c[j].density(1, true , true, &_IPT_c[m-j], "gamma "+std::to_string(j)+std::to_string(m-j), parallel_stringset) <<std::endl;
@@ -951,12 +952,14 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
         refc0m -= 0.5 * _IPT_c[k].dot(&_IPT_c[m-k]);
       _IPT_c.back().set(referenceLocation,refc0m);
       xout << "c0m after setting reference component: "<<_IPT_c.back().values()<<std::endl;
+      xout << "density"<<0<<m-0<<_IPT_c[0].density(1, true , true, &_IPT_c[m-0], "gamma "+std::to_string(0)+std::to_string(m-0), parallel_stringset) <<std::endl;
 
       // evaluate F0m
       _IPT_Fock.back() += ham.fock(
                 _IPT_c[0].density(1, true, true, &_IPT_c[m], "", parallel_stringset),
               false);
       _IPT_Fock.back().m_description="F0"+std::to_string(m);
+      xout <<_IPT_Fock.back()<<std::endl;
       // evaluate E0m
       energies.push_back(0);
       for (int k=0; k<=m; k++) {
