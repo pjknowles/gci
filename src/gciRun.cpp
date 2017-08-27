@@ -909,7 +909,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
                 xout << "density"<<j<<m-j<<_IPT_c[j].density(1, true , true, &_IPT_c[m-j], "gamma "+std::to_string(j)+std::to_string(m-j), parallel_stringset) <<std::endl;
           _IPT_Fock.back() += ham.fock(
                 _IPT_c[j].density(1, true, true, &_IPT_c[m-j], "", parallel_stringset),
-              false)*0.5;
+              false);
         }
       xout <<_IPT_Fock.back()<<std::endl;
       // construct b0m
@@ -957,7 +957,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       // evaluate F0m
       _IPT_Fock.back() += ham.fock(
                 _IPT_c[0].density(1, true, true, &_IPT_c[m], "", parallel_stringset),
-              false);
+              false)*2;
       _IPT_Fock.back().m_description="F0"+std::to_string(m);
       xout <<_IPT_Fock.back()<<std::endl;
       // evaluate E0m
