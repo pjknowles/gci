@@ -978,10 +978,14 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
           g.operatorOnWavefunction(_IPT_Fock[k],_IPT_c[m-k],parallel_stringset);
           _IPT_Epsilon.back() += g.dot(&_IPT_c[0]);
           }
+//      xout << "Epsiloon after Fock "<<_IPT_Epsilon.back()<<std::endl;
       for (int k=1; k<m; k++)
         _IPT_Epsilon.back() -= _IPT_c[m-k].dot(&_IPT_c[0])*_IPT_Epsilon[k];
+//      xout << "Epsiloon after Epsilon "<<_IPT_Epsilon.back()<<std::endl;
       for (int k=0; k<m-1; k++)
         _IPT_Epsilon.back() += _IPT_c[m-k-2].dot(&_IPT_c[0])*_IPT_eta[k];
+//      xout << "eta[0] "<<_IPT_eta[0]<<std::endl;
+//      xout << "Epsiloon after eta "<<_IPT_Epsilon.back()<<std::endl;
       // evaluate eta0m
       _IPT_eta.push_back(0);
       for (int k=1; k<=m; k++) {
