@@ -964,7 +964,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
           exit(0);
         }
       std::static_pointer_cast<Wavefunction>(ww.back())->set((double)0);
-      std::static_pointer_cast<Wavefunction>(ww.back())->set(referenceLocation+m, (double) 1);
+      std::static_pointer_cast<Wavefunction>(ww.back())->set(referenceLocation+m%2, (double) 1);
       LinearAlgebra::DIIS solver(resid,precon);
       solver.m_verbosity=1;
       solver.m_thresh=parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
@@ -1044,6 +1044,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       xout << "Epsilon:"; for (auto e : _IPT_Epsilon) xout <<" "<<e; xout <<std::endl;
       xout << "eta:"; for (auto e : _IPT_eta) xout <<" "<<e; xout <<std::endl;
     }
+  Wavefunction ionstate(_IPT_c[1]);
   for (int m=0; m <=maxOrder; m++) {
       if (false) {
       {
@@ -1062,7 +1063,12 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       }
     }
       xout << "c0"+std::to_string(m) <<_IPT_c[m].values()<<std::endl;
+      if (m%2 && m>1) {
+          ionstate += _IPT_c[m];
+          xout << "ionstate" <<ionstate.values()<<std::endl;
+        }
     }
+          xout << "ionstate " <<ionstate * ionstate<<std::endl;
 }
 
 std::vector<double> Run::ISRSPT(
