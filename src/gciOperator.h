@@ -31,31 +31,8 @@ namespace gci {
       for (auto i=0; i<4; i++) m_orbitalSpaces.push_back(OrbitalSpace(orbital_symmetries,uhf)); // in this implementation, all four orbital spaces are the same
     }
 
-    /*!
-     * \brief Copy constructor. A complete (deep) copy is made.
-     * \param source Object to be copied.
-     */
-    Operator(const gci::Operator& source) : SymmetryMatrix::Operator(source) {
-      m_orbitalSpaces = source.m_orbitalSpaces;
-    }
-
     Operator(const SymmetryMatrix::Operator& source, const std::vector<OrbitalSpace>& orbitalSpaces)
-    : SymmetryMatrix::Operator(source)
-    {
-      m_orbitalSpaces = orbitalSpaces;
-    }
-
-    /*!
-     * \brief Assigment operator
-     * \param source Object to be copied.
-     * \return A reference to this.
-     */
-    Operator& operator=(const Operator& source)
-    {
-      SymmetryMatrix::Operator::operator =(source);
-      m_orbitalSpaces = source.m_orbitalSpaces;
-      return *this;
-    }
+    : SymmetryMatrix::Operator(source), m_orbitalSpaces(orbitalSpaces) { }
 
     /*!
      * \brief Construct an object from what is produced by bytestream(). If the bytestream
@@ -124,6 +101,7 @@ namespace gci {
    * \brief Construct the Fock operator for this operator with a given density matrix
    * \param density The density matrix.
    * \param oneElectron Whether to use the one-electron part of this operator, or zero
+   * \param description Descriptive text
    * \return
    */
     Operator fock(const Operator& density, bool oneElectron=true, std::string description="") const
