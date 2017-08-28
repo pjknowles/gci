@@ -877,7 +877,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
   xout << "Continuum orbital "<<continuumOrbitalOffset+1<<"."<<continuumOrbitalSymmetry+1<<std::endl;
   _IPT_eta.clear();
   _IPT_eta.push_back(-_IPT_Fock[0].element(ioo,ios,ioo,ios)); // eta[0]
-  _IPT_eta.push_back(0); // eta[1]
+//  _IPT_eta.push_back(0); // eta[1]
   excK.element(ioo,ios,continuumOrbitalOffset,continuumOrbitalSymmetry,false)=1;
   excK.m_description="Excitor";
   xout <<excK<<std::endl;
@@ -1029,15 +1029,17 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
 //      xout << "Epsiloon after eta "<<_IPT_Epsilon.back()<<std::endl;
       // evaluate eta0m
       _IPT_eta.push_back(0);
-      for (int k=1; k<=m; k++) {
+      for (int k=0; k<=m; k++) {
           Wavefunction g(prototype); g.set(0);
-          g.operatorOnWavefunction(_IPT_Fock[k],_IPT_c[m+1-k],parallel_stringset);
-          _IPT_eta.back() += g.dot(&_IPT_c[1]) - _IPT_c[m+1-k].dot(&_IPT_c[1])*_IPT_Epsilon[k];
+          g.operatorOnWavefunction(_IPT_Fock[k],_IPT_c[m-k],parallel_stringset);
+          _IPT_eta.back() += g.dot(&_IPT_c[1]);
           }
-      for (int k=1; k<m; k++)
-        _IPT_eta.back() -= _IPT_c[m+1-k].dot(&_IPT_c[1])*_IPT_eta[k];
       for (int k=0; k<m; k++)
-        _IPT_eta.back() += _IPT_c[m-k-1].dot(&_IPT_c[1])*_IPT_eta[k];
+          _IPT_eta.back()  -= _IPT_c[m-k].dot(&_IPT_c[1])*_IPT_Epsilon[k];
+      for (int k=0; k<m-1; k++)
+        _IPT_eta.back() -= _IPT_c[m-k].dot(&_IPT_c[1])*_IPT_eta[k];
+      for (int k=0; k<m-1; k++)
+        _IPT_eta.back() += _IPT_c[m-k-2].dot(&_IPT_c[1])*_IPT_eta[k];
       xout << "Energies:"; for (auto e : energies) xout <<" "<<e; xout <<std::endl;
       xout << "Energies:"; for (auto e=energies.begin(); e!=energies.end(); e++) xout <<" "<<std::accumulate(energies.begin(),e+1,(double)0); xout <<std::endl;
       xout << "Energies:"; for (auto e=energies.begin(); e!=energies.end(); e++) xout <<" "<<std::accumulate(energies.begin()+1,e+1,(double)0); xout <<std::endl;
