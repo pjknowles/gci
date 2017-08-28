@@ -980,14 +980,20 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       for (int k=1; k<m; k++)
         refc0m -= 0.5 * _IPT_c[k].dot(&_IPT_c[m-k]);
       _IPT_c.back().set(referenceLocation,refc0m);
+      xout << "c0m after setting reference component: "<<_IPT_c[m].values()<<std::endl;
       // set Koopmans component of c0m
+      {
       double refc1m=0;
-      for (int k=2; k<m; k++)
-        refc1m -= 0.5 * _IPT_c[k].dot(&_IPT_c[m-k]);
-      _IPT_c.back().axpy(refc1m - _IPT_c[m].dot(&_IPT_c[1]),&_IPT_c[1]);
+      for (int k=1; k<m+1; k++) {
+            gci::Wavefunction Qc(_IPT_c[k]); Qc.set(0); Qc.operatorOnWavefunction(*_IPT_Q,_IPT_c[m+1-k]);
+        refc1m -= 0.5* Qc.dot(&_IPT_c[k]);
+        }
+      _IPT_c[m].axpy(refc1m, &_IPT_c[1]);
 //      _IPT_c.back += _IPT_c[1] * (refc1m - _IPT_c[m].dot(&_IPT_c[1]));
-      xout << "c0m after setting reference component: "<<_IPT_c.back().values()<<std::endl;
+      xout << "c0m after setting Koopmans component: "<<_IPT_c[m].values()<<std::endl;
+        }
       xout << "density"<<0<<m-0<<_IPT_c[0].density(1, true , true, &_IPT_c[m-0], "gamma "+std::to_string(0)+std::to_string(m-0), parallel_stringset) <<std::endl;
+
 
       // evaluate F0m
       _IPT_Fock.back() += ham.fock(
@@ -1037,6 +1043,25 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       xout << "Energies:"; for (auto e=energies.begin(); e!=energies.end(); e++) xout <<" "<<std::accumulate(energies.begin()+1,e+1,(double)0); xout <<std::endl;
       xout << "Epsilon:"; for (auto e : _IPT_Epsilon) xout <<" "<<e; xout <<std::endl;
       xout << "eta:"; for (auto e : _IPT_eta) xout <<" "<<e; xout <<std::endl;
+    }
+  for (int m=0; m <=maxOrder; m++) {
+      if (false) {
+      {
+        double norm=0;
+        for (int k=0;k<=m; k++) norm += _IPT_c[k] * _IPT_c[m-k];
+        xout << "check normalisation m="<<m<<" "<<norm<<std::endl;
+      }
+
+      {
+        double norm=0;
+        for (int k=0;k<=m; k++) {
+            gci::Wavefunction Qc(_IPT_c[k]); Qc.set(0); Qc.operatorOnWavefunction(*_IPT_Q,_IPT_c[m-k]);
+            norm += _IPT_c[k] * Qc;
+          }
+        xout << "check charge normalisation m="<<m<<" "<<norm<<std::endl;
+      }
+    }
+      xout << "c0"+std::to_string(m) <<_IPT_c[m].values()<<std::endl;
     }
 }
 
