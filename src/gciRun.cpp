@@ -101,26 +101,34 @@ void operator()(const ParameterVectorSet & psx, ParameterVectorSet & outputs, st
         const std::shared_ptr<Wavefunction>  x=std::static_pointer_cast<Wavefunction>(psx[k]);
         std::shared_ptr<Wavefunction>  g=std::static_pointer_cast<Wavefunction>(outputs[k]);
         auto p = profiler->push("Mean field residual");
+//        xout << "_meanfield_residual: append"<<append<<std::endl;
 //        xout << "_meanfield_residual: b0m"<<_IPT_b0m->values()<<std::endl;
 //        xout <<&g->buffer[0]<<" "<<&_IPT_b0m->buffer[0]<<std::endl;
+//        xout << "_meanfield_residual: b0m"<<_IPT_b0m->values()<<std::endl;
+//        xout << "_meanfield_residual: x"<<x->values()<<std::endl;
         if (not append)
           g->set(0);
-//          *g = - *IPT_b0m;
-//          for (auto bb=_IPT_b0m->begin(); bb < _IPT_b0m->end(); bb++)
-//            *(g->begin()+bb-_IPT_b0m->begin()) = - (*bb);
-//        else
           *g -= *_IPT_b0m;
+//        xout << "_meanfield_residual: g after b0m"<<g->values()<<std::endl;
         g->operatorOnWavefunction(_IPT_Fock[0], *x, parallel_stringset);
+//        xout << "_meanfield_residual: g after fock"<<g->values()<<std::endl;
         g->axpy(-_IPT_Epsilon[0],x);
         gci::Wavefunction Qc(*g); Qc.set(0); Qc.operatorOnWavefunction(*_IPT_Q,*x);
+//        xout << "_meanfield_residual: Qc "<<Qc.values()<<std::endl;
         g->axpy(-_IPT_eta[0],&Qc);
         g->operatorOnWavefunction(m_hamiltonian.fock(x->density(1,false,true,&_IPT_c[0]),false),_IPT_c[0],parallel_stringset);
+        g->operatorOnWavefunction(m_hamiltonian.fock(_IPT_c[0].density(1,false,true,&_IPT_c[0])*(-(*x)*_IPT_c[0]),false),_IPT_c[0],parallel_stringset);
         auto dd = _IPT_c[0] * *g;
         g->axpy(-dd,&_IPT_c[0]);
 //        xout << "final residual "<<g->str(2)<<std::endl;
 //        xout << "_meanfield_residual: c00"<<_IPT_c[0].values()<<std::endl;
-//        xout << "_meanfield_residual: b0m"<<_IPT_b0m->values()<<std::endl;
-//        xout << "_meanfield_residual: x"<<x->values()<<std::endl;
+
+        if (false){
+        // shift away ref and Koopmans to avoid singularities
+        for (int k=0; k<2; k++)
+          g->axpy(_IPT_c[k] * *x, &_IPT_c[k]);
+        }
+
 //        xout << "_meanfield_residual: g"<<g->values()<<std::endl;
     }
 }
@@ -429,7 +437,7 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
   std::static_pointer_cast<Wavefunction>(ww.back())->set(reference, (double) 1);
 //  double e0=d.at(reference);
   //  g -= (e0-(double)1e-10);
-  //    xout << "Diagonal H: " << g.str(2) << std::endl;
+//      xout << "Diagonal H: " << d.str(2) << std::endl;
   preconditioner precon(d,true);
   residual resid(ham,true,residual_Q.get());
   LinearAlgebra::DIIS solver(resid,precon);
@@ -465,7 +473,7 @@ std::vector<double> Run::Davidson(
   xout <<std::fixed<<std::setprecision(8);
   Wavefunction d(prototype);
   d.diagonalOperator(ham);
-  preconditioner precon(d,false);
+  preconditioner precon(d,true);
   residual resid(ham,false);
   LinearAlgebra::Davidson solver(resid,precon);
   LinearAlgebra::ParameterVectorSet gg;
@@ -937,14 +945,31 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       // solve for c0m
       LinearAlgebra::ParameterVectorSet gg; gg.push_back(std::make_shared<Wavefunction>(prototype));
       LinearAlgebra::ParameterVectorSet ww; ww.push_back(std::make_shared<Wavefunction>(prototype));
-      std::static_pointer_cast<Wavefunction>(ww.back())->set((double)0);
-      std::static_pointer_cast<Wavefunction>(ww.back())->set(referenceLocation, (double) 1);
       preconditioner precon(d,false);
       meanfield_residual resid(ham,false);
+      if (false) { // print A
+          _IPT_b0m->set(0);
+          for (int i=0; i<ww.back()->size(); i++) {
+              std::static_pointer_cast<Wavefunction>(ww.back())->set((double)0);
+              std::static_pointer_cast<Wavefunction>(ww.back())->set(i, (double) 1);
+              std::static_pointer_cast<Wavefunction>(gg.back())->set((double)0);
+              std::static_pointer_cast<Wavefunction>(gg.back())->operatorOnWavefunction(_IPT_Fock[0],
+              *std::static_pointer_cast<Wavefunction>(ww.back()));
+              xout << "F0["<<i<<":] = "<<
+                      std::static_pointer_cast<Wavefunction>(gg[0])->values()<<std::endl;
+              resid(ww,gg);
+              xout << "A["<<i<<":] = "<<
+                      std::static_pointer_cast<Wavefunction>(gg[0])->values()<<std::endl;
+            }
+          exit(0);
+        }
+      std::static_pointer_cast<Wavefunction>(ww.back())->set((double)0);
+      std::static_pointer_cast<Wavefunction>(ww.back())->set(referenceLocation+m, (double) 1);
       LinearAlgebra::DIIS solver(resid,precon);
       solver.m_verbosity=1;
       solver.m_thresh=parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
       solver.m_maxIterations=parameter("MAXIT",std::vector<int>(1,1000)).at(0);
+      solver.m_linear=true;
       solver.solve(gg,ww);
       xout << "Final g: "<<std::static_pointer_cast<Wavefunction>(gg[0])->values()<<std::endl;
 //      xout << "Final w: "<<ww[0]->str(2)<<std::endl;
@@ -955,6 +980,12 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       for (int k=1; k<m; k++)
         refc0m -= 0.5 * _IPT_c[k].dot(&_IPT_c[m-k]);
       _IPT_c.back().set(referenceLocation,refc0m);
+      // set Koopmans component of c0m
+      double refc1m=0;
+      for (int k=2; k<m; k++)
+        refc1m -= 0.5 * _IPT_c[k].dot(&_IPT_c[m-k]);
+      _IPT_c.back().axpy(refc1m - _IPT_c[m].dot(&_IPT_c[1]),&_IPT_c[1]);
+//      _IPT_c.back += _IPT_c[1] * (refc1m - _IPT_c[m].dot(&_IPT_c[1]));
       xout << "c0m after setting reference component: "<<_IPT_c.back().values()<<std::endl;
       xout << "density"<<0<<m-0<<_IPT_c[0].density(1, true , true, &_IPT_c[m-0], "gamma "+std::to_string(0)+std::to_string(m-0), parallel_stringset) <<std::endl;
 
