@@ -116,8 +116,8 @@ void operator()(const ParameterVectorSet & psx, ParameterVectorSet & outputs, st
         gci::Wavefunction Qc(*g); Qc.set(0); Qc.operatorOnWavefunction(*_IPT_Q,*x);
 //        xout << "_meanfield_residual: Qc "<<Qc.values()<<std::endl;
         g->axpy(-_IPT_eta[0],&Qc);
-        g->operatorOnWavefunction(m_hamiltonian.fock(x->density(1,false,true,&_IPT_c[0]),false),_IPT_c[0],parallel_stringset);
-        g->operatorOnWavefunction(m_hamiltonian.fock(_IPT_c[0].density(1,false,true,&_IPT_c[0])*(-(*x)*_IPT_c[0]),false),_IPT_c[0],parallel_stringset);
+        g->operatorOnWavefunction(m_hamiltonian.fock(x->density(1,false,true,&_IPT_c[0])*2,false),_IPT_c[0],parallel_stringset);
+        g->operatorOnWavefunction(m_hamiltonian.fock(_IPT_c[0].density(1,false,true,&_IPT_c[0])*(2*(-(*x)*_IPT_c[0])),false),_IPT_c[0],parallel_stringset);
         auto dd = _IPT_c[0] * *g;
         g->axpy(-dd,&_IPT_c[0]);
 //        xout << "final residual "<<g->str(2)<<std::endl;
@@ -929,15 +929,21 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       xout << "b0m after F0k: "<<_IPT_b0m->values()<<std::endl;
         _IPT_b0m->axpy(-_IPT_Epsilon[k],&_IPT_c[m-k]);
       xout << "b0m after epsilon: "<<_IPT_b0m->values()<<std::endl;
+        }
+      for (int k=1; k<m-1; k++) {
         gci::Wavefunction Qc(prototype); Qc.set(0); Qc.operatorOnWavefunction(*_IPT_Q,_IPT_c[m-k]);
+        xout << "eta "<<k<<" "<<_IPT_eta[k]<<std::endl;
         _IPT_b0m->axpy(-_IPT_eta[k],&Qc);
       xout << "b0m after eta: "<<_IPT_b0m->values()<<std::endl;
         }
       for (int k=0; k<m-1; k++)
         _IPT_b0m->axpy(_IPT_eta[k],&_IPT_c[m-k-2]);
       xout << "b0m after eta: "<<_IPT_b0m->values()<<std::endl;
-      auto b0mc0 = _IPT_c[0] * *_IPT_b0m;
-        _IPT_b0m->axpy(-b0mc0,&_IPT_c[0]);
+
+      for (int k=0; k<2; k++) {
+      auto b0mc0 = _IPT_c[k] * *_IPT_b0m;
+        _IPT_b0m->axpy(-b0mc0,&_IPT_c[k]);
+        }
       xout << "b0m after project: "<<_IPT_b0m->values()<<std::endl;
 
       xout << "b0m: "<<_IPT_b0m->values()<<std::endl;
@@ -1047,6 +1053,22 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       xout << "Energies:"; for (auto e=energies.begin(); e!=energies.end(); e++) xout <<" "<<std::accumulate(energies.begin()+1,e+1,(double)0); xout <<std::endl;
       xout << "Epsilon:"; for (auto e : _IPT_Epsilon) xout <<" "<<e; xout <<std::endl;
       xout << "eta:"; for (auto e : _IPT_eta) xout <<" "<<e; xout <<std::endl;
+
+      if (true) { // check residual
+          Wavefunction gcheck(_IPT_c[0]);
+          gcheck.zero();
+          for (int k=0; k<=m; k++) {
+              gcheck.operatorOnWavefunction(_IPT_Fock[k],_IPT_c[m-k]);
+              gcheck.axpy( -_IPT_Epsilon[k] , &_IPT_c[m-k]);
+              if (k<m) {
+                  gci::Wavefunction Qc(_IPT_c[0]); Qc.set(0); Qc.operatorOnWavefunction(*_IPT_Q,_IPT_c[m-k]);
+                  gcheck.axpy(-_IPT_eta[k],&Qc);
+                }
+              if (k<m-1)
+                gcheck.axpy(_IPT_eta[k], &_IPT_c[m-k-2]);
+            }
+          xout << "g0"+std::to_string(m) <<gcheck.values()<<std::endl;
+        }
     }
   Wavefunction neutralstate(_IPT_c[0]);
   Wavefunction ionstate(_IPT_c[1]);
