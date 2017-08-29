@@ -4,7 +4,7 @@
   METHOD=IPT,
   MAXIT=  20,
   NSTATE=    1,
-  MAXORDER=  7,
+  MAXORDER=  5,
   EXPLICIT1=    0,
   PARALLEL_STRINGSET=    0,
   DENSITY=    2,

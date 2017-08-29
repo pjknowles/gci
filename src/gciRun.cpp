@@ -1005,12 +1005,14 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       energies.push_back(0);
       for (int k=0; k<=m; k++) {
           for (int j=0; j<=m-k; j++) {
+//              if (j%2 && (m-j)%2) {
               Wavefunction g(prototype); g.set(0);
               g.operatorOnWavefunction(_IPT_Fock[k],_IPT_c[m-j-k],parallel_stringset);
               if (k==0)
                 g.operatorOnWavefunction(h,_IPT_c[m-j-k],parallel_stringset);
               energies.back() += 0.5*g.dot(&_IPT_c[j]);
-            }
+                }
+//            }
         }
       // evaluate Epsilon0m
       _IPT_Epsilon.push_back(0);
@@ -1046,7 +1048,9 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       xout << "Epsilon:"; for (auto e : _IPT_Epsilon) xout <<" "<<e; xout <<std::endl;
       xout << "eta:"; for (auto e : _IPT_eta) xout <<" "<<e; xout <<std::endl;
     }
+  Wavefunction neutralstate(_IPT_c[0]);
   Wavefunction ionstate(_IPT_c[1]);
+  double eion=0;
   for (int m=0; m <=maxOrder; m++) {
       if (false) {
       {
@@ -1069,6 +1073,22 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
           ionstate += _IPT_c[m];
           xout << "ionstate" <<ionstate.values()<<std::endl;
         }
+      else if (m>1) {
+          neutralstate += _IPT_c[m];
+          xout << "neutralstate" <<neutralstate.values()<<std::endl;
+        }
+      double e=0;
+      double nn=0;
+      for (auto k=1; k<=m; k+=2) {
+          Wavefunction gggg(_IPT_c[0]);
+          gggg.zero();
+          gggg.operatorOnWavefunction(ham,_IPT_c[k]);
+          e+= gggg * _IPT_c[m-k];
+          nn += _IPT_c[k] * _IPT_c[m-k];
+        }
+      xout << "state-summed ion energy contribution: "<<e<<" "<<nn<<std::endl;
+      eion +=e;
+      xout << "state-summed ion energy : "<<eion<<std::endl;
     }
           xout << "ionstate " <<ionstate * ionstate<<std::endl;
 }
