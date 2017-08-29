@@ -174,7 +174,7 @@ FCIdump gci::Operator::FCIDump(const std::string filename) const
 gci::Operator* gci::Operator::projector(const std::string special, const bool forceSpinUnrestricted) const
 {
   std::vector<int> symmetries; for (const auto& s : m_orbitalSpaces[0].orbital_symmetries) symmetries.push_back(s+1);
-  auto result = new gci::Operator(m_dimensions[0],symmetries,1,m_uhf>0||forceSpinUnrestricted,0,special+" projector");
+  auto result = new gci::Operator(m_dimensions[0],symmetries,1,m_uhf>0||forceSpinUnrestricted,0,true,special+" projector");
   result->m_O0=0;
 
   if (special=="P" || special=="Q") {
@@ -265,10 +265,11 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
   std::vector<int> symmetries; for (const auto& s : m_orbitalSpaces[0].orbital_symmetries) symmetries.push_back(s+1);
   Operator f(m_dimensions[0],
       symmetries,
-             1,
-             m_uhf,
-             m_symmetry,
-             description);
+      1,
+      m_uhf,
+      m_symmetry,
+      true,
+      description);
   // xout << "gci::Operator::fockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
   // xout << "gci::Operator::fockOperator Reference beta: "<<reference.stringBeta<<std::endl;
   //  bool closed = reference.stringAlpha==reference.stringBeta;
@@ -343,11 +344,12 @@ gci::Operator gci::Operator::sameSpinOperator(const Determinant &reference, cons
 {
   std::vector<int> symmetries; for (const auto& s : m_orbitalSpaces[0].orbital_symmetries) symmetries.push_back(s+1);
   Operator result(m_dimensions[0],
-                  symmetries,
-             m_rank,
-             true,
-             m_symmetry,
-             description);
+      symmetries,
+      m_rank,
+      true,
+      m_symmetry,
+      true,
+      description);
   {
   Determinant ra = reference; ra.stringBeta.nullify();
   auto f = this->fockOperator(ra);

@@ -19,6 +19,7 @@ namespace gci {
      * \param rank The rank (0, 1 or 2) of the operator.
      * \param uhf Whether the underlying 1-particle spaces are different for alpha and beta spin.
      * \param symmetry Overall symmetry of operator (0-7).
+     * \param covariant Whether the operator transforms like spatial basis functions, rather than like a density matrix
      * \param description A string describing the object.
      */
     explicit Operator(const dim_t dimension,
@@ -26,8 +27,9 @@ namespace gci {
                       int rank=2,
                       bool uhf=false,
                       unsigned int symmetry=0,
+                      bool covariant=true,
                       std::string description="")
-      :  SymmetryMatrix::Operator(dims_t{dimension,dimension,dimension,dimension}, rank, uhf, std::vector<int>{1,1}, std::vector<int>{-1,-1}, symmetry, description) {
+      :  SymmetryMatrix::Operator(dims_t{dimension,dimension,dimension,dimension}, rank, uhf, std::vector<int>{1,1}, std::vector<int>{-1,-1}, symmetry, covariant, description) {
       for (auto i=0; i<4; i++) m_orbitalSpaces.push_back(OrbitalSpace(orbital_symmetries,uhf)); // in this implementation, all four orbital spaces are the same
     }
 
