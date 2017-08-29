@@ -913,7 +913,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       _IPT_Fock.back().zero();
       _IPT_Fock.back().m_description="F0"+std::to_string(m)+"*";
       for (int j=1; j<m; j++) {
-                xout << "density"<<j<<m-j<<_IPT_c[j].density(1, true , true, &_IPT_c[m-j], "gamma "+std::to_string(j)+std::to_string(m-j), parallel_stringset) <<std::endl;
+//                xout << "density"<<j<<m-j<<_IPT_c[j].density(1, true , true, &_IPT_c[m-j], "gamma "+std::to_string(j)+std::to_string(m-j), parallel_stringset) <<std::endl;
           _IPT_Fock.back() += ham.fock(
                 _IPT_c[j].density(1, true, true, &_IPT_c[m-j], "", parallel_stringset),
               false);
@@ -998,7 +998,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
 //      _IPT_c.back += _IPT_c[1] * (refc1m - _IPT_c[m].dot(&_IPT_c[1]));
       xout << "c0m after setting Koopmans component: "<<_IPT_c[m].values()<<std::endl;
         }
-      xout << "density"<<0<<m-0<<_IPT_c[0].density(1, true , true, &_IPT_c[m-0], "gamma "+std::to_string(0)+std::to_string(m-0), parallel_stringset) <<std::endl;
+//      xout << "density"<<0<<m-0<<_IPT_c[0].density(1, true , true, &_IPT_c[m-0], "gamma "+std::to_string(0)+std::to_string(m-0), parallel_stringset) <<std::endl;
 
 
       // evaluate F0m
@@ -1069,10 +1069,30 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
             }
           xout << "g0"+std::to_string(m) <<gcheck.values()<<std::endl;
         }
+
+      if (true) { // check idempotency
+          gci::Operator idem = _IPT_c[0].density(1, true, true, &_IPT_c[0], "", parallel_stringset);
+          idem.zero();
+          for (int k=0; k<m; k++) {
+              idem -=
+                  _IPT_c[k].density(1, true, true, &_IPT_c[m-k], "", parallel_stringset);
+              for (int l=0; l<m-k; l++) {
+                  auto square = idem;
+                  square.zero();
+                  auto d1 = _IPT_c[k].density(1, true, true, &_IPT_c[k], "", parallel_stringset);
+                  auto d2 = _IPT_c[m-l-k].density(1, true, true, &_IPT_c[m], "", parallel_stringset);
+                  square.O1(true) = d1.O1(true) * d2.O1(true);
+                  square.O1(false) = d1.O1(false) * d2.O1(false);
+                  idem += square;
+                }
+            }
+          xout << "idempotency "<<idem<<std::endl;
+        }
     }
   Wavefunction neutralstate(_IPT_c[0]);
   Wavefunction ionstate(_IPT_c[1]);
   double eion=0;
+  double eneutral=0;
   for (int m=0; m <=maxOrder; m++) {
       if (false) {
       {
@@ -1111,6 +1131,19 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       xout << "state-summed ion energy contribution: "<<e<<" "<<nn<<std::endl;
       eion +=e;
       xout << "state-summed ion energy : "<<eion<<std::endl;
+
+      e=0;
+      nn=0;
+      for (auto k=0; k<=m; k+=2) {
+          Wavefunction gggg(_IPT_c[0]);
+          gggg.zero();
+          gggg.operatorOnWavefunction(ham,_IPT_c[k]);
+          e+= gggg * _IPT_c[m-k];
+          nn += _IPT_c[k] * _IPT_c[m-k];
+        }
+      xout << "state-summed neutral energy contribution: "<<e<<" "<<nn<<std::endl;
+      eneutral +=e;
+      xout << "state-summed neutral energy : "<<eneutral<<std::endl;
     }
           xout << "ionstate " <<ionstate * ionstate<<std::endl;
 }
