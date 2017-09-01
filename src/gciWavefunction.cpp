@@ -80,7 +80,7 @@ void Wavefunction::set(size_t offset, const double val)
 void Wavefunction::set(const double value)
 {
   allocate_buffer();
-  for (std::vector<double>::iterator b=buffer.begin(); b != buffer.end(); b++) *b=value;
+  for (auto b=buffer.begin(); b != buffer.end(); b++) *b=value;
 }
 
 void Wavefunction::diagonalOperator(const Operator &op)
@@ -192,9 +192,9 @@ Wavefunction& Wavefunction::operator*=(const double &value)
 {
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   if (distributed)
-    for (std::vector<double>::iterator b=buffer.begin()+parallel_rank*chunk; b != buffer.end() && b < buffer.begin()+(parallel_rank+1)*chunk; b++) *b*=value;
+    for (auto b=buffer.begin()+parallel_rank*chunk; b != buffer.end() && b < buffer.begin()+(parallel_rank+1)*chunk; b++) *b*=value;
   else
-    for (std::vector<double>::iterator b=buffer.begin(); b != buffer.end(); b++) *b*=value;
+    for (auto b=buffer.begin(); b != buffer.end(); b++) *b*=value;
   return *this;
 }
 
@@ -936,7 +936,7 @@ Wavefunction& Wavefunction::addAbsPower(const Wavefunction& c, const double k, c
   return *this;
 }
 
-std::vector<double>::iterator Wavefunction::begin()
+memory::vector<double>::iterator Wavefunction::begin()
 {
   if (distributed)
     return buffer.begin() + parallel_rank*((buffer.size()-1)/parallel_size+1);
@@ -944,7 +944,7 @@ std::vector<double>::iterator Wavefunction::begin()
     return buffer.begin();
 }
 
-std::vector<double>::iterator Wavefunction::end()
+memory::vector<double>::iterator Wavefunction::end()
 {
   if (distributed)
     return buffer.begin() + std::min((size_t)buffer.size(),(size_t)((parallel_rank+1)*((buffer.size()-1)/parallel_size+1)));
@@ -952,7 +952,7 @@ std::vector<double>::iterator Wavefunction::end()
     return buffer.end();
 }
 
-std::vector<double>::const_iterator Wavefunction::cbegin() const
+memory::vector<double>::const_iterator Wavefunction::cbegin() const
 {
   if (distributed)
     return buffer.cbegin() + parallel_rank*((buffer.size()-1)/parallel_size+1);
@@ -960,7 +960,7 @@ std::vector<double>::const_iterator Wavefunction::cbegin() const
     return buffer.cbegin();
 }
 
-std::vector<double>::const_iterator Wavefunction::cend() const
+memory::vector<double>::const_iterator Wavefunction::cend() const
 {
   if (distributed)
     return buffer.cbegin() + std::min((size_t)buffer.size(),(size_t)((parallel_rank+1)*((buffer.size()-1)/parallel_size+1)));

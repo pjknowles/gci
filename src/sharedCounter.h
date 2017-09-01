@@ -1,5 +1,8 @@
 #ifndef SHAREDCOUNTER_H
 #define SHAREDCOUNTER_H
+#ifdef MOLPRO
+#include "common/molpro_config.h"
+#endif
 #if !defined(MOLPRO) || defined(GA_MPI) || defined(MPI2)
 #include "mpi.h"
 #else

@@ -9,6 +9,7 @@ Excitation::Excitation(size_t StringIndex, int Phase, size_t OrbitalAddress)
 }
 
 ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihilations, int creations)
+  : ExcitationSetContainer()
 {
   int symexc=-1;
   From = from;

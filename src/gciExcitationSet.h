@@ -15,6 +15,7 @@ namespace gci {
 class Excitation
 {
 public:
+  Excitation()=delete;
   /*!
      * \brief Constructor
      * \param StringIndex points to the destination of the excitation in a StringSet
@@ -38,12 +39,15 @@ public:
 
 
 class StringSet; // forward declaration
+using ExcitationSetContainer = memory::vector<Excitation>;
 /*!
  * \brief Container for a number of Excitation objects all arising from the same base String
  */
-class ExcitationSet : public std::vector<Excitation>
+class ExcitationSet : public ExcitationSetContainer
 {
 public:
+  ExcitationSet()=delete;
+//  ExcitationSet() : ExcitationSetContainer() {}
   /*!
      * \brief Construct the ExcitationSet containing all excitations
      * from a given String

@@ -235,11 +235,11 @@ public:
 private:
   void buildStrings(); ///< build alphaStrings and betaStrings
   size_t dimension; ///< the size of the space
-  std::vector<double> buffer; ///< buffer to hold coefficients describing the object
-  std::vector<double>::iterator begin(); ///< beginning of this processor's data
-  std::vector<double>::iterator end(); ///< end of this processor's data
-  std::vector<double>::const_iterator cbegin() const; ///< beginning of this processor's data
-  std::vector<double>::const_iterator cend() const; ///< end of this processor's data
+  memory::vector<double> buffer; ///< buffer to hold coefficients describing the object
+  memory::vector<double>::iterator begin(); ///< beginning of this processor's data
+  memory::vector<double>::iterator end(); ///< end of this processor's data
+  memory::vector<double>::const_iterator cbegin() const; ///< beginning of this processor's data
+  memory::vector<double>::const_iterator cend() const; ///< end of this processor's data
   bool compatible(const Wavefunction &other) const; ///< whether this wavefunction is on the same space as another
   std::vector<size_t> _blockOffset;
 

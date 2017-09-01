@@ -3,12 +3,12 @@
 #include <sstream>
 #include <algorithm>
 
-StringSet::StringSet() : std::vector<String>()
+StringSet::StringSet() : memory::vector<String>()
 {
 //      xout <<parallel_rank<<"StringSet default constructor"<<std::endl;
 }
 
-StringSet::StringSet(String prototype, bool all, int sym) : std::vector<String>()
+StringSet::StringSet(String prototype, bool all, int sym) : memory::vector<String>()
 {
 //      xout <<parallel_rank<<"StringSet prototype constructor "<<all<<std::endl;
   // copy prototype
@@ -295,7 +295,7 @@ void StringSet::insert(String& s)
   } else {
 //        if (s.orbitals().size()==0) std::cout <<parallel_rank<< "StringSet::insert found new"<<std::endl;std::cout.flush();
     addressMap[s.key()]=size();
-    std::vector<String>::push_back(s);
+    memory::vector<String>::push_back(s);
 //      if (s.orbitals().size()==0) std::cout <<parallel_rank<<"StringSet::push_back " <<s <<" size()=" <<size()<<std::endl;std::cout.flush();
   }
   //std::cout <<parallel_rank<< "StringSet::insert finished "<<std::endl;std::cout.flush();

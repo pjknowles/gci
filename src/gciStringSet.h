@@ -11,7 +11,7 @@ namespace gci {
 /*!
  * \brief The StringSet class holds a set of String objects, possibly the complete set for a given number of objects and boxes
  */
-class StringSet : public std::vector<String>, public Printable
+class StringSet : public memory::vector<String>, public Printable
 {
 public:
   /*!
