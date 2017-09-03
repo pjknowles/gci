@@ -285,16 +285,16 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
   // for (std::vector<unsigned int>::const_iterator o=reference.stringAlpha.orbitals().begin(); o != reference.stringAlpha.orbitals().end(); o++)
   for (auto o=refAlphaOrbitals.begin(); o != refAlphaOrbitals.end(); o++)
     {
-      // xout << "gci::Operator::fockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
-      // xout<< "f alpha, alpha occ: " <<*o << std::endl;
+//       xout << "gci::Operator::fockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
+//       xout<< "f alpha, alpha occ: " <<*o << std::endl;
       unsigned int os=m_orbitalSpaces[0].orbital_symmetries[*o];
       unsigned int oo=offset(*o);
       for (unsigned int i=1; i<=basisSize; i++)
         for (unsigned int j=1; j<=i; j++) {
             if (m_orbitalSpaces[0].orbital_symmetries[i-1]!=m_orbitalSpaces[0].orbital_symmetries[j-1]) continue;
-            f.element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],true) +=
-                element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],oo,os,oo,os,true,true)-
-                element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],oo,os,oo,os,offset(j),m_orbitalSpaces[0].orbital_symmetries[j],true,true);
+            f.element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i-1],offset(j),m_orbitalSpaces[0].orbital_symmetries[j-1],true) +=
+                element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i-1],offset(j),m_orbitalSpaces[0].orbital_symmetries[j-1],oo,os,oo,os,true,true)-
+                element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i-1],oo,os,oo,os,offset(j),m_orbitalSpaces[0].orbital_symmetries[j-1],true,true);
           }
     }
   for (auto o=refBetaOrbitals.begin(); o != refBetaOrbitals.end(); o++)
@@ -305,8 +305,8 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
       for (unsigned int i=1; i<=basisSize; i++)
         for (unsigned int j=1; j<=i; j++) {
             if (m_orbitalSpaces[0].orbital_symmetries[i-1]!=m_orbitalSpaces[0].orbital_symmetries[j-1]) continue;
-            f.element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],true) +=
-                element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],oo,os,oo,os,true,false);
+            f.element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i-1],offset(j),m_orbitalSpaces[0].orbital_symmetries[j-1],true) +=
+                element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i-1],offset(j),m_orbitalSpaces[0].orbital_symmetries[j-1],oo,os,oo,os,true,false);
           }
     }
   if (f.m_uhf) {
@@ -318,9 +318,9 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
           for (unsigned int i=1; i<=basisSize; i++)
             for (unsigned int j=1; j<=i; j++) {
                 if (m_orbitalSpaces[0].orbital_symmetries[i-1]!=m_orbitalSpaces[0].orbital_symmetries[j-1]) continue;
-                f.element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],false) +=
-                    element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],oo,os,oo,os,false,false)-
-                    element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],oo,os,oo,os,offset(j),m_orbitalSpaces[0].orbital_symmetries[j],false,false);
+                f.element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i-1],offset(j),m_orbitalSpaces[0].orbital_symmetries[j-1],false) +=
+                    element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i-1],offset(j),m_orbitalSpaces[0].orbital_symmetries[j-1],oo,os,oo,os,false,false)-
+                    element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i-1],oo,os,oo,os,offset(j),m_orbitalSpaces[0].orbital_symmetries[j-1],false,false);
               }
         }
       for (auto o=refAlphaOrbitals.begin(); o != refAlphaOrbitals.end(); o++)
@@ -331,8 +331,8 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
           for (unsigned int i=1; i<=basisSize; i++)
             for (unsigned int j=1; j<=i; j++) {
                 if (m_orbitalSpaces[0].orbital_symmetries[i-1]!=m_orbitalSpaces[0].orbital_symmetries[j-1]) continue;
-                f.element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],false) +=
-                    element(oo,os,oo,os,offset(i),m_orbitalSpaces[0].orbital_symmetries[i],offset(j),m_orbitalSpaces[0].orbital_symmetries[j],true,false);
+                f.element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i-1],offset(j),m_orbitalSpaces[0].orbital_symmetries[j-1],false) +=
+                    element(oo,os,oo,os,offset(i),m_orbitalSpaces[0].orbital_symmetries[i-1],offset(j),m_orbitalSpaces[0].orbital_symmetries[j-1],true,false);
               }
         }
     }
