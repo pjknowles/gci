@@ -50,17 +50,11 @@ public:
      */
   Wavefunction(const State& state);
 
-  /*!
-     * \brief Wavefunction copy constructor
-     * \param other The object to be copied
-     */
-  Wavefunction( const Wavefunction& other);
-
   std::vector<StringSet> alphaStrings; ///< The alpha-spin strings defining the CI basis
   std::vector<StringSet> betaStrings; ///< The beta-spin strings defining the CI basis
 
   void allocate_buffer(); ///< allocate buffer to full size
-  size_t size() const; ///< the size of the space
+  size_t size() const { return dimension; } ///< the size of the space
 
   void diagonalOperator(const Operator& op); ///< set this object to the diagonal elements of the hamiltonian
 

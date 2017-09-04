@@ -9,37 +9,19 @@
 #include <algorithm>
 #include "gciOrbitals.h"
 
-Wavefunction::Wavefunction(const FCIdump &dump) : State(dump) {
-  distributed = false;
+Wavefunction::Wavefunction(const FCIdump &dump) : State(dump), distributed(false) {
   buildStrings();
 }
 
-Wavefunction::Wavefunction(std::string filename) : State(filename) {
-  distributed = false;
+Wavefunction::Wavefunction(std::string filename) : State(filename), distributed(false) {
   if (filename!="") buildStrings();
 }
-Wavefunction::Wavefunction(OrbitalSpace* h, int n, int s, int m2) : State(h,n,s,m2) {
-  distributed = false;
+Wavefunction::Wavefunction(OrbitalSpace* h, int n, int s, int m2) : State(h,n,s,m2), distributed(false) {
   buildStrings();
 }
 
-Wavefunction::Wavefunction(const State& state) : State(state) {
-  distributed = false;
+Wavefunction::Wavefunction(const State& state) : State(state), distributed(false) {
   buildStrings();
-}
-
-Wavefunction::Wavefunction(const Wavefunction &other) : LinearAlgebra::vector<double>(), State(other)
-{
-  distributed = false;
-  alphaStrings.resize(8); betaStrings.resize(8);
-  for (int i=0;i<8;i++)
-  {
-    alphaStrings[i] = other.alphaStrings[i];
-    betaStrings[i] = other.betaStrings[i];
-  }
-  dimension = other.dimension;
-  _blockOffset = other._blockOffset;
-  buffer = other.buffer;
 }
 
 void Wavefunction::buildStrings()
@@ -60,11 +42,6 @@ void Wavefunction::buildStrings()
     dimension += alphaStrings[syma].size()*betaStrings[symb].size();
   }
   profiler->stop("buildStrings");
-}
-
-size_t Wavefunction::size() const
-{
-  return dimension;
 }
 
 void Wavefunction::allocate_buffer()
