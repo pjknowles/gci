@@ -23,13 +23,13 @@ public:
    * \param State Some State object from which to copy number of electrons etc for bound checking, and to define orbital symmetries
    * \param Spin 1=alpha, -1=beta
 */
-  String(const State *State=NULL, const int Spin=1);
+  String(const State *State=nullptr, const int Spin=1);
   /*!
    * \brief String Construct from a serialised representation of data
    * \param bytestream representation produced by previous invocation of serialise()
    * \param State Some State object from which to copy number of electrons etc for bound checking, and to define orbital symmetries
    */
-  String(const std::vector<char> bytestream, const State* State=NULL);
+  String(const std::vector<char> bytestream, const State* State=nullptr);
   /*!
      \brief
 

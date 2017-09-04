@@ -11,8 +11,8 @@ size_t gci::String::keyUnassigned=(size_t)-1; ///< conventional null value for k
 String::String(const State* State, const int Spin)
   : m_spin(Spin)
 {
-  if (State == NULL) {
-    orbitalSpace=NULL;
+  if (State == nullptr) {
+    orbitalSpace=nullptr;
   } else {
     orbitalSpace=State->orbitalSpace;
   }
@@ -21,8 +21,8 @@ String::String(const State* State, const int Spin)
 
 String::String(const std::vector<char> bytestream, const State *State)
 {
-  if (State == NULL) {
-    orbitalSpace=NULL;
+  if (State == nullptr) {
+    orbitalSpace=nullptr;
   } else {
     orbitalSpace=State->orbitalSpace;
 //    xout << "assigned orbitalSpace="<<orbitalSpace<<std::endl;
@@ -57,11 +57,11 @@ std::vector<char> String::serialise() const
 int String::create(unsigned int orbital) {
 //      xout << "String::create before="<<str()<<", orbital="<<orbital<<std::endl;
   //        xout  << "create orbital "<<orbital <<" " <<orbitals_.size()<<std::endl;
-  //        xout << "hamiltonian "<<(hamiltonian!=NULL)<<std::endl;
-  if (orbitalSpace==NULL)
+  //        xout << "hamiltonian "<<(hamiltonian!=nullptr)<<std::endl;
+  if (orbitalSpace==nullptr)
     throw std::logic_error("String::create missing orbitalSpace");
   //        xout << "basisSize "<<hamiltonian->total()<<std::endl;
-  if (orbitalSpace==NULL || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total()) throw std::range_error("invalid orbital");
+  if (orbitalSpace==nullptr || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total()) throw std::range_error("invalid orbital");
   //    xout <<"make iterator "<<std::endl;
 //  std::vector<unsigned int>::iterator ilast=orbitals_.begin();
   //    xout <<"iterator OK"<<std::endl;
@@ -91,7 +91,7 @@ int String::create(unsigned int orbital) {
 }
 
 int String::destroy(unsigned int orbital) {
-  if (orbitalSpace==NULL || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total() ) throw std::range_error("invalid orbital");
+  if (orbitalSpace==nullptr || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total() ) throw std::range_error("invalid orbital");
   if (m_orbitals.size() <= 0) return (int) 0; //throw "too few electrons in String";
   //    xout << "String::destroy before="<<str()<<", orbital="<<orbital<<std::endl;
 //  int phase=1;

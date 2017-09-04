@@ -3,25 +3,25 @@
 
 Determinant::Determinant(State* State, String* alpha, String*beta)
 {
-  if (State == NULL) {
+  if (State == nullptr) {
     nelec=999999999;
-    orbitalSpace=NULL;
+    orbitalSpace=nullptr;
     ms2=0;
   } else {
     nelec=State->nelec;
     orbitalSpace=State->orbitalSpace;
     ms2=State->ms2;
   }
-  if (alpha!=NULL) stringAlpha=*alpha;
-  if (beta!=NULL) stringBeta=*beta;
+  if (alpha!=nullptr) stringAlpha=*alpha;
+  if (beta!=nullptr) stringBeta=*beta;
   stringAlpha.orbitalSpace=stringBeta.orbitalSpace=orbitalSpace;
-  //    xout << "determinant constructor, hamiltonian="<<(hamiltonian!=NULL)<<hamiltonian->total()<<std::endl;
+  //    xout << "determinant constructor, hamiltonian="<<(hamiltonian!=nullptr)<<hamiltonian->total()<<std::endl;
 }
 
 int Determinant::create(int orbital) {
   //    xout << "create orbital "<<orbital <<std::endl;
   unsigned int orbabs = orbital > 0 ? orbital : -orbital;
-  if (orbitalSpace==NULL || orbital==(int)0 || orbital > (int) orbitalSpace->total() || orbital < -(int)orbitalSpace->total()) throw std::range_error("invalid orbital");
+  if (orbitalSpace==nullptr || orbital==(int)0 || orbital > (int) orbitalSpace->total() || orbital < -(int)orbitalSpace->total()) throw std::range_error("invalid orbital");
   if (orbital > 0) {
     if (stringAlpha.orbitals().size() >= (nelec+ms2)/2) throw std::range_error("too many electrons in determinant");
     //        xout <<"try to populate stringAlpha"<<std::endl;
@@ -33,7 +33,7 @@ int Determinant::create(int orbital) {
 }
 
 int Determinant::destroy(int orbital) {
-  if (orbitalSpace==NULL || orbital==(int)0 || orbital > (int) orbitalSpace->total() || orbital < -(int)orbitalSpace->total()) throw std::range_error("invalid orbital");
+  if (orbitalSpace==nullptr || orbital==(int)0 || orbital > (int) orbitalSpace->total() || orbital < -(int)orbitalSpace->total()) throw std::range_error("invalid orbital");
   unsigned int orbabs = orbital > 0 ? orbital : -orbital;
   String* string = orbital > 0 ? &stringAlpha : &stringBeta;
 //  if (string->orbitals().size() <= 0) throw std::range_error("too few electrons in determinant");

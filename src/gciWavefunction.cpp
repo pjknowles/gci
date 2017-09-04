@@ -826,7 +826,7 @@ Orbitals Wavefunction::naturalOrbitals()
 {
   Orbitals orb(*orbitalSpace);
   SMat dens1=density(1).O1();
-  dens1.ev(orb.m_occupations,&orb.m_orbitals,NULL,NULL,"lapack","descending");
+  dens1.ev(orb.m_occupations,&orb.m_orbitals,nullptr,nullptr,"lapack","descending");
   orb.m_orbitals.m_description="Natural orbitals";
   orb.m_occupations.m_description="Natural orbital occupation numbers";
   return orb;

@@ -6,13 +6,13 @@
 
 State::State(std::string filename)
 {
-  orbitalSpace=NULL;
+  orbitalSpace=nullptr;
   if (filename!="") load(filename);
 }
 
 State::State(const FCIdump& dump)
 {
-  orbitalSpace=NULL;
+  orbitalSpace=nullptr;
   load(dump);
 }
 
@@ -58,18 +58,18 @@ void State::load(const FCIdump &dump)
   // xout <<"nelec="<<nelec<<std::endl;
   //    xout <<"ms2="<<ms2<<endl;
   orbitalSpace = new OrbitalSpace(dump);
-  //    xout << "State::load orbitalSpace=" << (orbitalSpace != NULL) << std::endl;
+  //    xout << "State::load orbitalSpace=" << (orbitalSpace != nullptr) << std::endl;
   //    xout << "basisSize=" << orbitalSpace->basisSize <<std::endl;
 }
 
 std::string State::str(int verbosity, unsigned int columns) const
 {
-  //    xout << "State::printable orbitalSpace=" << (orbitalSpace != NULL) << verbosity << std::endl;
+  //    xout << "State::printable orbitalSpace=" << (orbitalSpace != nullptr) << verbosity << std::endl;
   //    xout << "basisSize=" << orbitalSpace->basisSize <<std::endl;
   std::ostringstream s;
   if (verbosity >= 0) {
     s<< "nelec="<<nelec<<" ms2="<<ms2<<" symmetry="<<symmetry+1;
-    if (orbitalSpace!=NULL)
+    if (orbitalSpace!=nullptr)
       s << std::endl << "OrbitalSpace: " << orbitalSpace->OrbitalSpace::str(verbosity > 2 ? verbosity-1 : 0);
   }
   //    xout << "basisSize=" << orbitalSpace->basisSize <<std::endl;
