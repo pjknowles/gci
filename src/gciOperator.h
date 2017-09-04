@@ -121,9 +121,9 @@ namespace gci {
 
    std::vector<OrbitalSpace> m_orbitalSpaces;
 
-  const Operator operator+(const Operator& other) { Operator copy(*this); copy+=other; return copy;}
-  const Operator operator-(const Operator& other) { Operator copy(*this); copy-=other; return copy;}
-  const Operator operator*(double other) { Operator copy(*this); copy*=other; return copy;}
+  const Operator operator+(const Operator& other) const { Operator copy(*this); copy+=other; return copy;}
+  const Operator operator-(const Operator& other) const { Operator copy(*this); copy-=other; return copy;}
+  const Operator operator*(double other) const { Operator copy(*this); copy*=other; return copy;}
 
   void gsum();
   void bcast(int rank);

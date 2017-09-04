@@ -287,7 +287,7 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
     {
 //       xout << "gci::Operator::fockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
 //       xout<< "f alpha, alpha occ: " <<*o << std::endl;
-      unsigned int os=m_orbitalSpaces[0].orbital_symmetries[*o];
+      unsigned int os=m_orbitalSpaces[0].orbital_symmetries[(*o)-1];
       unsigned int oo=offset(*o);
       for (unsigned int i=1; i<=basisSize; i++)
         for (unsigned int j=1; j<=i; j++) {
@@ -300,7 +300,7 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
   for (auto o=refBetaOrbitals.begin(); o != refBetaOrbitals.end(); o++)
     {
       // xout<< "f alpha, beta occ: " <<*o << std::endl;
-      unsigned int os=m_orbitalSpaces[0].orbital_symmetries[*o];
+      unsigned int os=m_orbitalSpaces[0].orbital_symmetries[(*o)-1];
       unsigned int oo=offset(*o);
       for (unsigned int i=1; i<=basisSize; i++)
         for (unsigned int j=1; j<=i; j++) {
@@ -313,7 +313,7 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
       for (auto o=refBetaOrbitals.begin(); o != refBetaOrbitals.end(); o++)
         {
           // xout<< "f beta, beta occ: " <<*o << std::endl;
-          unsigned int os=m_orbitalSpaces[0].orbital_symmetries[*o];
+          unsigned int os=m_orbitalSpaces[0].orbital_symmetries[(*o)-1];
           unsigned int oo=offset(*o);
           for (unsigned int i=1; i<=basisSize; i++)
             for (unsigned int j=1; j<=i; j++) {
@@ -326,7 +326,7 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
       for (auto o=refAlphaOrbitals.begin(); o != refAlphaOrbitals.end(); o++)
         {
           // xout<< "f beta, alpha occ: " <<*o << std::endl;
-          unsigned int os=m_orbitalSpaces[0].orbital_symmetries[*o];
+          unsigned int os=m_orbitalSpaces[0].orbital_symmetries[(*o)-1];
           unsigned int oo=offset(*o);
           for (unsigned int i=1; i<=basisSize; i++)
             for (unsigned int j=1; j<=i; j++) {
