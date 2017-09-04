@@ -11,4 +11,4 @@ rsync submodules/memory/memory.h $1/src/global
 rsync submodules/symmetry_matrix/*.{cpp,h} $1/src/global
 rsync submodules/Profiler/Profiler* $1/src/global
 rsync submodules/IterativeSolver/LinearAlgebra.h $1/src/global
-rsync submodules/IterativeSolver/IterativeSolver/*.{cpp,h} $1/src/IterativeSolver
+rsync submodules/IterativeSolver/IterativeSolver/I*.{cpp,h} $1/src/IterativeSolver
