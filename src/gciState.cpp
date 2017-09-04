@@ -5,39 +5,25 @@
 #include <sstream>
 
 State::State(std::string filename)
+  : orbitalSpace(nullptr)
 {
-  orbitalSpace=nullptr;
   if (filename!="") load(filename);
 }
 
 State::State(const FCIdump& dump)
+  : orbitalSpace(nullptr)
 {
-  orbitalSpace=nullptr;
   load(dump);
 }
 
 State::State(OrbitalSpace *h, int n, int s, int m2)
+  : orbitalSpace(h), nelec(n), symmetry(s), ms2(m2)
 {
-  orbitalSpace=h;
-  nelec = n;
-  symmetry = s;
-  ms2 = m2;
 }
 
 State::State(OrbitalSpace& h, int n, int s, int m2)
+  : orbitalSpace(&h), nelec(n), symmetry(s), ms2(m2)
 {
-  orbitalSpace=&h;
-  nelec = n;
-  symmetry = s;
-  ms2 = m2;
-}
-
-State::State(State *s)
-{
-  orbitalSpace = s->orbitalSpace;
-  nelec = s->nelec;
-  symmetry = s->symmetry;
-  ms2 = s->ms2;
 }
 
 State::~State()
