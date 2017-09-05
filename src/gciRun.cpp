@@ -473,7 +473,7 @@ std::vector<double> Run::Davidson(
   xout <<std::fixed<<std::setprecision(8);
   Wavefunction d(prototype);
   d.diagonalOperator(ham);
-  preconditioner precon(d,true);
+  preconditioner precon(d,false);
   residual resid(ham,false);
   LinearAlgebra::Davidson solver(resid,precon);
   LinearAlgebra::ParameterVectorSet gg;
