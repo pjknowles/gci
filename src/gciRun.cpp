@@ -441,7 +441,7 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
   preconditioner precon(d,true);
   residual resid(ham,true,residual_Q.get());
   LinearAlgebra::DIIS solver(resid,precon);
-  solver.m_verbosity=1;
+  solver.m_verbosity = parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;
   solver.solve(gg,ww);
@@ -487,8 +487,7 @@ std::vector<double> Run::Davidson(
       g->allocate_buffer();
       gg.push_back(g);
     }
-  solver.m_verbosity=
-     parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
+  solver.m_verbosity = parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;
   solver.m_roots=nState;
@@ -973,7 +972,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       std::static_pointer_cast<Wavefunction>(ww.back())->set((double)0);
       std::static_pointer_cast<Wavefunction>(ww.back())->set(referenceLocation+m%2, (double) 1);
       LinearAlgebra::DIIS solver(resid,precon);
-      solver.m_verbosity=1;
+      solver.m_verbosity = parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
       solver.m_thresh=parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
       solver.m_maxIterations=parameter("MAXIT",std::vector<int>(1,1000)).at(0);
       solver.m_linear=true;
@@ -1175,7 +1174,7 @@ std::vector<double> Run::ISRSPT(
   preconditioner precon(d,false);
   residual resid(ham,false);
   LinearAlgebra::RSPT solver(resid,precon);
-  solver.m_verbosity=1;
+  solver.m_verbosity = parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;
   solver.solve(gg,ww);
