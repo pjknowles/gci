@@ -487,7 +487,8 @@ std::vector<double> Run::Davidson(
       g->allocate_buffer();
       gg.push_back(g);
     }
-  solver.m_verbosity=1;
+  solver.m_verbosity=
+     parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;
   solver.m_roots=nState;
