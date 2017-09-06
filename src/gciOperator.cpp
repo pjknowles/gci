@@ -101,7 +101,6 @@ FCIdump gci::Operator::FCIDump(const std::string filename) const
 
   dump.write(filename);
   dump.rewind();
-  double value;
   FCIdump::integralType type;
   size_t i,j,k,l;
   const auto& integrals_a = O1(true);
@@ -153,8 +152,8 @@ FCIdump gci::Operator::FCIDump(const std::string filename) const
     }
 //  xout << "n="<<n<<std::endl;
   if (m_rank>0)
-  for (auto i=1; i<=n; i++)
-    for (auto j=1; j<=i; j++) {
+  for (size_t i=1; i<=n; i++)
+    for (size_t j=1; j<=i; j++) {
 //        xout << "i="<<i<<", j="<<j<<std::endl;
       auto oi = offset(i);
       auto oj = offset(j);

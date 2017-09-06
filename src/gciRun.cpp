@@ -85,7 +85,6 @@ void operator() (const ParameterVectorSet & psx, ParameterVectorSet & outputs, s
     }
 }
 };
-static int _meanfield_order;
 static std::vector<gci::Operator> _IPT_Fock;
 static std::vector<double> _IPT_Epsilon;
 static std::vector<double> _IPT_eta;
@@ -345,6 +344,7 @@ std::vector<double> Run::run()
   else {
     xout << "Unknown method in GCI, " << method << std::endl;
   }
+  xout <<profiler->str(parameter("PROFILER",std::vector<int>(1,-1)).at(0),false) <<std::endl;
   xout <<profiler->str(parameter("PROFILER",std::vector<int>(1,-1)).at(0),true) <<std::endl;
   _nextval_counter.reset(nullptr);
 
@@ -356,7 +356,7 @@ std::vector<double> Run::run()
 
   { auto reference_energies = parameter("ENERGY",std::vector<double>(0));
     double diff=0;
-    for (auto i=0; i<reference_energies.size() && i < energies.size(); i++)
+    for (size_t i=0; i<reference_energies.size() && i < energies.size(); i++)
       diff += std::fabs(energies[i]-reference_energies[i]);
     if (diff > .0000001) {
         xout << "Disagreement of calculated energies:\n";
@@ -459,7 +459,7 @@ std::vector<double> Run::Davidson(
     double energyThreshold, int nState, int maxIterations)
 {
   auto p = profiler->push("Davidson");
-  profiler->start("Davidson preamble");
+//  profiler->start("Davidson preamble");
   //  xout << "on entry to Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
   if (maxIterations < 0)
     maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
@@ -491,7 +491,7 @@ std::vector<double> Run::Davidson(
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;
   solver.m_roots=nState;
-  profiler->stop("Davidson preamble");
+//  profiler->stop("Davidson preamble");
   solver.solve(gg,ww);
   for (auto root=0; root < nState; root++) {
       m_wavefunctions.push_back(std::static_pointer_cast<Wavefunction>(ww[root]));
@@ -849,7 +849,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
   xout <<"IPT wavefunction size="<<d.size()<<std::endl;
   _IPT_Q =std::unique_ptr<gci::Operator>(ham.projector("Q",true));
   int continuumOrbitalSymmetry;
-  int continuumOrbitalOffset;
+  size_t continuumOrbitalOffset;
   for (continuumOrbitalSymmetry=0; continuumOrbitalSymmetry<8; continuumOrbitalSymmetry++)
     for (continuumOrbitalOffset=0; continuumOrbitalOffset<_IPT_Q->O1().dimension(continuumOrbitalSymmetry); continuumOrbitalOffset++)
       if (_IPT_Q->element(continuumOrbitalOffset,continuumOrbitalSymmetry,continuumOrbitalOffset,continuumOrbitalSymmetry,false)!=0) goto continuumFound ;

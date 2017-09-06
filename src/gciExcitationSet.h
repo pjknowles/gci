@@ -39,7 +39,7 @@ public:
 
 
 class StringSet; // forward declaration
-using ExcitationSetContainer = memory::vector<Excitation>;
+using ExcitationSetContainer = std::vector<Excitation>;
 /*!
  * \brief Container for a number of Excitation objects all arising from the same base String
  */
