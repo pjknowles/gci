@@ -344,8 +344,12 @@ std::vector<double> Run::run()
   else {
     xout << "Unknown method in GCI, " << method << std::endl;
   }
-  xout <<profiler->str(parameter("PROFILER",std::vector<int>(1,-1)).at(0),false) <<std::endl;
-  xout <<profiler->str(parameter("PROFILER",std::vector<int>(1,-1)).at(0),true) <<std::endl;
+
+  {
+    auto profile = parameter("PROFILER",std::vector<int>(1,-1)).at(0);
+    if (profile>1) xout <<profiler->str(profile,false) <<std::endl;
+    xout <<profiler->str(profile,true) <<std::endl;
+  }
   _nextval_counter.reset(nullptr);
 
   if (false) { // just for a test
