@@ -37,6 +37,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       m_hasAlpha=doAlpha;
       m_hasBeta=doBeta;
     if (doAlpha) {
+        auto prof2=profiler->push("TransitionDensity_alpha");
       // alpha excitations
       unsigned int wsymb = symb;
       unsigned int wsyma = w.symmetry^wsymb;
@@ -50,7 +51,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
         //          xout << "alpha string "<<*s<<std::endl;
         ExcitationSet ee(*s,w.alphaStrings[wsyma],1,1);
         //          xout << "alpha excitations " << ee.str() <<std::endl;
-        prof += ee.size()*nsb*2;
+        prof2 += ee.size()*nsb*2;
         for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
           //        xout << "alpha excitation " << e->orbitalAddress <<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
           if (e->phase < 0)
@@ -75,6 +76,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
     }
 
     if (doBeta) {
+        auto prof2=profiler->push("TransitionDensity_beta");
       // beta excitations
       unsigned int wsyma = syma;
       unsigned int wsymb = w.symmetry^wsyma;
@@ -85,23 +87,34 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       //    xout << "beta wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<", woffset="<<woffset<<std::endl;
       for (StringSet::const_iterator s = betaStringsBegin; s != betaStringsEnd; s++) {
         ExcitationSet ee(*s,w.betaStrings[wsymb],1,1);
-        prof += ee.size()*nsa*2;
+        prof2 += ee.size()*nsa*2;
         for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
           //        xout << "beta excitation " << e->orbitalAddress <<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
+            size_t off =  offb+nsa*nsb*e->orbitalAddress;
+            size_t offw = woffset+e->stringIndex;
           if (e->phase < 0)
-            for (size_t ia=0; ia<nsa; ia++)
-              (*this)[offb+nsa*nsb*e->orbitalAddress+ia*nsb]-=
-                w.buffer[woffset+e->stringIndex+wnsb*ia];
+            for (size_t ia=0; ia<nsa; ia++) {
+//              (*this)[offb+nsa*nsb*e->orbitalAddress+ia*nsb]-=
+//                w.buffer[woffset+e->stringIndex+wnsb*ia];
+              (*this)[off]-= w.buffer[offw];
+                off += nsb;
+                offw += wnsb;
+              }
           else
-            for (size_t ia=0; ia<nsa; ia++)
-              (*this)[offb+nsa*nsb*e->orbitalAddress+ia*nsb]+=
-                w.buffer[woffset+e->stringIndex+wnsb*ia];
+            for (size_t ia=0; ia<nsa; ia++) {
+//              (*this)[offb+nsa*nsb*e->orbitalAddress+ia*nsb]+=
+//                w.buffer[woffset+e->stringIndex+wnsb*ia];
+              (*this)[off]+= w.buffer[offw];
+                off += nsb;
+                offw += wnsb;
+              }
         }
         offb ++;
       }
     }
 
   } else if (deltaAlpha==2) { // wavefunction has 2 more alpha electrons than interacting states
+      auto prof2=profiler->push("TransitionDensity_alpha_alpha");
       m_hasAlpha=true; m_hasBeta=false;
     unsigned int wsymb = symb;
     unsigned int wsyma = w.symmetry^wsymb;
@@ -115,7 +128,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       //          xout << "alpha string "<<*s<<std::endl;
       ExcitationSet ee(*s,w.alphaStrings[wsyma],0,2);
       //          xout << "alpha excitations " << ee.str() <<std::endl;
-      prof += ee.size()*nsb*2;
+      prof2 += ee.size()*nsb*2;
       for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
         //        xout << "alpha excitation " << e->orbitalAddress <<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
         if (e->phase < 0)
@@ -132,6 +145,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       offa += nsb;
     }
   } else if (deltaBeta==2) { // wavefunction has 2 more beta electrons than interacting states
+      auto prof2=profiler->push("TransitionDensity_beta_beta");
       m_hasAlpha=false; m_hasBeta=true;
     unsigned int wsyma = syma;
     unsigned int wsymb = w.symmetry^wsyma;
@@ -142,7 +156,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
     //    xout << "beta wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<", woffset="<<woffset<<std::endl;
     for (StringSet::const_iterator s = betaStringsBegin; s != betaStringsEnd; s++) {
       ExcitationSet ee(*s,w.betaStrings[wsymb],0,2);
-      prof += ee.size()*nsa*2;
+      prof2 += ee.size()*nsa*2;
       for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
         //        xout << "beta excitation " << e->orbitalAddress <<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
         if (e->phase < 0)
@@ -157,6 +171,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       offb ++;
     }
   } else if (deltaAlpha==1 && deltaBeta==1) { // wavefunction has 1 more alpha and beta electrons than interacting states
+      auto prof2=profiler->push("TransitionDensity_alpha_beta");
     if (parity) throw std::logic_error("wrong parity in alpha-beta");
     m_hasAlpha=true; m_hasBeta=true;
     for (unsigned int wsyma=0; wsyma<8; wsyma++) {
@@ -172,7 +187,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       for (StringSet::const_iterator sa = alphaStringsBegin; sa != alphaStringsEnd; sa++) {
         ExcitationSet eea(*sa,w.alphaStrings[wsyma],0,1);
         for (std::vector<ExcitationSet>::const_iterator eebp=eebs.begin(); eebp!=eebs.end(); eebp++) {
-          prof += eea.size()*eebp->size()*2;
+          prof2 += eea.size()*eebp->size()*2;
           for (ExcitationSet::const_iterator ea=eea.begin(); ea!=eea.end(); ea++) {
             for (ExcitationSet::const_iterator eb=eebp->begin(); eb!=eebp->end(); eb++) {
               (*this)[offb + nsa*nsb*(intoff +
