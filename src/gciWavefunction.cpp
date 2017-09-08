@@ -512,7 +512,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
 
   {
   auto p = profiler->push("1-electron");
-  size_t nsaaMax = 64; // temporary static
+  size_t nsaaMax = 640; // temporary static
   size_t nsbbMax = 640; // temporary static
   size_t offset=0, nsa=0, nsb=0;
   for (unsigned int syma=0; syma<8; syma++) {
