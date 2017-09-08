@@ -512,7 +512,8 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
 
   {
   auto p = profiler->push("1-electron");
-  size_t nsbbMax = 64; // temporary static
+  size_t nsaaMax = 64; // temporary static
+  size_t nsbbMax = 640; // temporary static
   size_t offset=0, nsa=0, nsb=0;
   for (unsigned int syma=0; syma<8; syma++) {
     unsigned int symb = w.symmetry^syma;
@@ -520,9 +521,12 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
     nsb = betaStrings[symb].size();
     if (nsa*nsb==0) continue;
     auto& aa = w.alphaStrings[syma];
+    auto& bb = w.betaStrings[symb];
     size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
-    for (StringSet::const_iterator aa1, aa0=aa.begin(); aa1=aa0+nsbbMax > aa.end() ? aa.end() : aa0+nsbbMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
+    for (StringSet::const_iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
+    for (StringSet::const_iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
         size_t nsa = aa1-aa0;
+        size_t nsb = bb1-bb0;
 //        xout << "nsa="<<nsa<<std::endl;
 //        xout << "nsb="<<nsb<<std::endl;
         if (!NextTask()) continue;
@@ -530,8 +534,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
       TransitionDensity d(w,
                           aa0,
                           aa1,
-                          w.betaStrings[symb].begin(),
-                          w.betaStrings[symb].end(),
+                          bb0,bb1,
                           1,true, !h.m_uhf);
       MXM(&buffer[offset],&d[0], &(*h.O1(true).data())[0],
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
@@ -540,13 +543,13 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
       TransitionDensity d(w,
                           aa0,
                           aa1,
-                          w.betaStrings[symb].begin(),
-                          w.betaStrings[symb].end(),
+                          bb0,bb1,
                           1,false, true);
       MXM(&buffer[offset],&d[0], &(*h.O1(false).data())[0],
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
     }
     offset += nsa*nsb;
+  }
   }
   }
 
