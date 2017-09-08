@@ -92,21 +92,23 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
           //        xout << "beta excitation " << e->orbitalAddress <<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
             size_t off =  offb+nsa*nsb*e->orbitalAddress;
             size_t offw = woffset+e->stringIndex;
+            auto di = begin()+offb+nsa*nsb*e->orbitalAddress;
+            auto wi=w.cbegin() + woffset+e->stringIndex;
           if (e->phase < 0)
             for (size_t ia=0; ia<nsa; ia++) {
 //              (*this)[offb+nsa*nsb*e->orbitalAddress+ia*nsb]-=
 //                w.buffer[woffset+e->stringIndex+wnsb*ia];
               (*this)[off]-= w.buffer[offw];
-                off += nsb;
-                offw += wnsb;
+                off += nsb; offw += wnsb;
+//                *di -= *wi; di+=nsb; wi+=wnsb;
               }
           else
             for (size_t ia=0; ia<nsa; ia++) {
 //              (*this)[offb+nsa*nsb*e->orbitalAddress+ia*nsb]+=
 //                w.buffer[woffset+e->stringIndex+wnsb*ia];
               (*this)[off]+= w.buffer[offw];
-                off += nsb;
-                offw += wnsb;
+                off += nsb; offw += wnsb;
+//                *di += *wi; di+=nsb; wi+=wnsb;
               }
         }
         offb ++;
