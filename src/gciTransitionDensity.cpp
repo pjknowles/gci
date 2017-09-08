@@ -9,12 +9,12 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
                                      const StringSet::const_iterator &betaStringsBegin_,
                                      const StringSet::const_iterator &betaStringsEnd_,
                                      const int parity_, const bool doAlpha, const bool doBeta)
+  : parity(parity_)
+  , alphaStringsBegin(alphaStringsBegin_)
+  , alphaStringsEnd(alphaStringsEnd_)
+  , betaStringsBegin(betaStringsBegin_)
+  , betaStringsEnd(betaStringsEnd_)
 {
-  this->parity = parity_;
-  this->alphaStringsBegin = alphaStringsBegin_;
-  this->alphaStringsEnd = alphaStringsEnd_;
-  this->betaStringsBegin = betaStringsBegin_;
-  this->betaStringsEnd = betaStringsEnd_;
   // first parse the type of transition
   nsa = std::distance(alphaStringsBegin,alphaStringsEnd);
   nsb = std::distance(betaStringsBegin,betaStringsEnd);
@@ -48,31 +48,18 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
 
       size_t offa=0;
       for (StringSet::const_iterator s = alphaStringsBegin; s != alphaStringsEnd; s++) {
-        //          xout << "alpha string "<<*s<<std::endl;
         ExcitationSet ee(*s,w.alphaStrings[wsyma],1,1);
-        //          xout << "alpha excitations " << ee.str() <<std::endl;
         prof2 += ee.size()*nsb*2;
         for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
-          //        xout << "alpha excitation " << e->orbitalAddress <<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
           if (e->phase < 0)
             for (size_t ib=0; ib<nsb; ib++)
-              (*this)[offa+nsa*nsb*e->orbitalAddress+ib]-=
-                w.buffer[woffset+e->stringIndex*wnsb+ib];
+              (*this)[offa+nsa*nsb*e->orbitalAddress+ib] -= w.buffer[woffset+e->stringIndex*wnsb+ib];
           else
-            for (size_t ib=0; ib<nsb; ib++) {
-              (*this)[offa+nsa*nsb*e->orbitalAddress+ib]+=
-                  w.buffer[woffset+e->stringIndex*wnsb+ib];
-              //              xout <<"using w.buffer="<<w.buffer[woffset+e->stringIndex*wnsb+ib]<<" "<<woffset<<" "<<e->stringIndex*wnsb<<std::endl;
-            }
+            for (size_t ib=0; ib<nsb; ib++)
+              (*this)[offa+nsa*nsb*e->orbitalAddress+ib ]+= w.buffer[woffset+e->stringIndex*wnsb+ib];
         }
         offa += nsb;
       }
-      //    xout <<"after alpha"<<std::endl;
-      //  for (size_t ij=0; ij < excitations; ij++) {
-      //    for (size_t ab=0; ab < nsa*nsb; ab++)
-      //      xout << (*this)[ab+ij*nsa*nsb] <<" ";
-      //    xout <<std::endl;
-      //  }
     }
 
     if (doBeta) {
@@ -90,25 +77,29 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
         prof2 += ee.size()*nsa*2;
         for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
           //        xout << "beta excitation " << e->orbitalAddress <<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
-            size_t off =  offb+nsa*nsb*e->orbitalAddress;
-            size_t offw = woffset+e->stringIndex;
-            auto di = begin()+offb+nsa*nsb*e->orbitalAddress;
-            auto wi=w.cbegin() + woffset+e->stringIndex;
+//            size_t off =  offb+nsa*nsb*e->orbitalAddress;
+//            size_t offw = woffset+e->stringIndex;
+//            auto di = begin()+offb+nsa*nsb*e->orbitalAddress;
+//            auto wi=w.cbegin() + woffset+e->stringIndex;
           if (e->phase < 0)
+//            for (auto di = begin()+offb+nsa*nsb*e->orbitalAddress; di < begin()+offb+nsa*nsb*(e->orbitalAddress+1); di+=nsb) {
             for (size_t ia=0; ia<nsa; ia++) {
-//              (*this)[offb+nsa*nsb*e->orbitalAddress+ia*nsb]-=
-//                w.buffer[woffset+e->stringIndex+wnsb*ia];
-              (*this)[off]-= w.buffer[offw];
-                off += nsb; offw += wnsb;
-//                *di -= *wi; di+=nsb; wi+=wnsb;
+              (*this)[offb+nsa*nsb*e->orbitalAddress+ia*nsb] -= w.buffer[woffset+e->stringIndex+wnsb*ia];
+//              (*this)[off]-= w.buffer[offw];
+//                off += nsb; offw += wnsb;
+//                *di -= *wi;
+//di+=nsb;
+//wi+=wnsb;
               }
           else
+//            for (auto di = begin()+offb+nsa*nsb*e->orbitalAddress; di < begin()+offb+nsa*nsb*(e->orbitalAddress+1); di+=nsb) {
             for (size_t ia=0; ia<nsa; ia++) {
-//              (*this)[offb+nsa*nsb*e->orbitalAddress+ia*nsb]+=
-//                w.buffer[woffset+e->stringIndex+wnsb*ia];
-              (*this)[off]+= w.buffer[offw];
-                off += nsb; offw += wnsb;
-//                *di += *wi; di+=nsb; wi+=wnsb;
+              (*this)[offb+nsa*nsb*e->orbitalAddress+ia*nsb] += w.buffer[woffset+e->stringIndex+wnsb*ia];
+//              (*this)[off]+= w.buffer[offw];
+//                off += nsb; offw += wnsb;
+//                *di += *wi;
+//di+=nsb;
+//wi+=wnsb;
               }
         }
         offb ++;
