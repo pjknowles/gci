@@ -512,17 +512,24 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
 
   {
   auto p = profiler->push("1-electron");
+  size_t nsbbMax = 64; // temporary static
   size_t offset=0, nsa=0, nsb=0;
   for (unsigned int syma=0; syma<8; syma++) {
-    offset += nsa*nsb;
     unsigned int symb = w.symmetry^syma;
     nsa = alphaStrings[syma].size();
     nsb = betaStrings[symb].size();
-    if (!NextTask()) continue;
+    if (nsa*nsb==0) continue;
+    auto& aa = w.alphaStrings[syma];
+    size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
+    for (StringSet::const_iterator aa1, aa0=aa.begin(); aa1=aa0+nsbbMax > aa.end() ? aa.end() : aa0+nsbbMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
+        size_t nsa = aa1-aa0;
+//        xout << "nsa="<<nsa<<std::endl;
+//        xout << "nsb="<<nsb<<std::endl;
+        if (!NextTask()) continue;
     {
       TransitionDensity d(w,
-                          w.alphaStrings[syma].begin(),
-                          w.alphaStrings[syma].end(),
+                          aa0,
+                          aa1,
                           w.betaStrings[symb].begin(),
                           w.betaStrings[symb].end(),
                           1,true, !h.m_uhf);
@@ -531,14 +538,16 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
     }
     if (h.m_uhf) {
       TransitionDensity d(w,
-                          w.alphaStrings[syma].begin(),
-                          w.alphaStrings[syma].end(),
+                          aa0,
+                          aa1,
                           w.betaStrings[symb].begin(),
                           w.betaStrings[symb].end(),
                           1,false, true);
       MXM(&buffer[offset],&d[0], &(*h.O1(false).data())[0],
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
     }
+    offset += nsa*nsb;
+  }
   }
 
   }
