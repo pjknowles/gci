@@ -481,6 +481,8 @@ void MXM(double *Out, const double * A, const double *B, uint nRows, uint nLink,
   auto prof = profiler->push("MXM");
   prof += 2*nLink*nCols*nRows;
   if (nStrideLink < 0 ) {
+      if (debug && AddToDest)
+        xout << "MXM initial Out\n"<<Eigen::Map<Eigen::MatrixXd>(Out,nRows,nCols)<<std::endl;
       if (debug)
         xout << "MXM A\n"<<Eigen::Map<const Eigen::MatrixXd>(A,nRows,nLink)<<std::endl;
       MxmDrvNN(Out, A, B, nRows, nLink, nCols, AddToDest);
@@ -512,24 +514,22 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
 
   {
   auto p = profiler->push("1-electron");
-  size_t nsaaMax = 640; // temporary static
-  size_t nsbbMax = 640; // temporary static
+  size_t nsaaMax = 362; // temporary static
+  size_t nsbbMax = 361; // temporary static
   size_t offset=0, nsa=0, nsb=0;
   for (unsigned int syma=0; syma<8; syma++) {
     unsigned int symb = w.symmetry^syma;
-    nsa = alphaStrings[syma].size();
-    nsb = betaStrings[symb].size();
-    if (nsa*nsb==0) continue;
+    if (alphaStrings[syma].size()==0 || betaStrings[symb].size()==0) continue;
     auto& aa = w.alphaStrings[syma];
     auto& bb = w.betaStrings[symb];
-    size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
+//    size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
     for (StringSet::const_iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
     for (StringSet::const_iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
-        size_t nsa = aa1-aa0;
-        size_t nsb = bb1-bb0;
-//        xout << "nsa="<<nsa<<std::endl;
-//        xout << "nsb="<<nsb<<std::endl;
+    offset += nsa*nsb;
+        nsa = aa1-aa0;
+        nsb = bb1-bb0;
         if (!NextTask()) continue;
+        xout << "offset="<<offset <<", nsa="<<nsa <<", nsb="<<nsb<<std::endl;
     {
       TransitionDensity d(w,
                           aa0,
@@ -548,7 +548,6 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
       MXM(&buffer[offset],&d[0], &(*h.O1(false).data())[0],
           nsa*nsb,w.orbitalSpace->total(0,1),1,true);
     }
-    offset += nsa*nsb;
   }
   }
   }
