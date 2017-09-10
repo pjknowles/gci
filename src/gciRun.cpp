@@ -489,6 +489,10 @@ std::vector<double> Run::Davidson(
       w->set(d.minloc(root+1), (double) 1);
       std::shared_ptr<Wavefunction>  g=std::make_shared<Wavefunction>(prototype);
       g->allocate_buffer();
+      g->settilesize(
+            parameter("TILESIZE",std::vector<int>(1,-1)).at(0),
+            parameter("ALPHATILESIZE",std::vector<int>(1,-1)).at(0),
+            parameter("BETATILESIZE",std::vector<int>(1,-1)).at(0));
       gg.push_back(g);
     }
   solver.m_verbosity = parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);

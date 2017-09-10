@@ -513,44 +513,65 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
   DivideTasks(99999999,1,1);
 
   {
-  auto p = profiler->push("1-electron");
-  size_t nsaaMax = 362; // temporary static
-  size_t nsbbMax = 361; // temporary static
-  size_t offset=0, nsa=0, nsb=0;
-  for (unsigned int syma=0; syma<8; syma++) {
-    unsigned int symb = w.symmetry^syma;
-    if (alphaStrings[syma].size()==0 || betaStrings[symb].size()==0) continue;
-    auto& aa = w.alphaStrings[syma];
-    auto& bb = w.betaStrings[symb];
-//    size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
-    for (StringSet::const_iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
-    for (StringSet::const_iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
-    offset += nsa*nsb;
-        nsa = aa1-aa0;
-        nsb = bb1-bb0;
-        if (!NextTask()) continue;
-        xout << "offset="<<offset <<", nsa="<<nsa <<", nsb="<<nsb<<std::endl;
-    {
-      TransitionDensity d(w,
-                          aa0,
-                          aa1,
-                          bb0,bb1,
-                          1,true, !h.m_uhf);
-      MXM(&buffer[offset],&d[0], &(*h.O1(true).data())[0],
-          nsa*nsb,w.orbitalSpace->total(0,1),1,true);
-    }
-    if (h.m_uhf) {
-      TransitionDensity d(w,
-                          aa0,
-                          aa1,
-                          bb0,bb1,
-                          1,false, true);
-      MXM(&buffer[offset],&d[0], &(*h.O1(false).data())[0],
-          nsa*nsb,w.orbitalSpace->total(0,1),1,true);
-    }
-  }
-  }
-  }
+    auto p = profiler->push("1-electron");
+    auto tilesize=m_tilesize;
+    auto alphatilesize=m_alphatilesize;
+    auto betatilesize=m_betatilesize;
+//    xout << "object tile sizes "<< m_tilesize<<","<<m_alphatilesize<<","<<m_betatilesize<<std::endl;
+    size_t nsaaMax = 1000000000;
+    size_t nsbbMax = 1000000000;
+    size_t offset=0, nsa=0, nsb=0;
+    for (unsigned int syma=0; syma<8; syma++) {
+        unsigned int symb = w.symmetry^syma;
+        if (alphaStrings[syma].size()==0 || betaStrings[symb].size()==0) continue;
+        auto& aa = w.alphaStrings[syma];
+        auto& bb = w.betaStrings[symb];
+        if (tilesize>0)
+          nsaaMax = tilesize/double(bb.size())+1;
+        if (alphatilesize>0 && betatilesize>0) {
+            nsaaMax = alphatilesize;
+            nsbbMax = betatilesize;
+          }
+        for (StringSet::const_iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
+            for (StringSet::const_iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
+                nsa = aa1-aa0;
+                nsb = bb1-bb0;
+                if (NextTask()) {
+//                    xout << "offset="<<offset <<", nsa="<<nsa <<", nsb="<<nsb<<std::endl;
+                    //        xout << bb0-bb.begin()<<std::endl;
+                    {
+                      TransitionDensity d(w,
+                                          aa0,
+                                          aa1,
+                                          bb0,bb1,
+                                          1,true, !h.m_uhf);
+                      if (nsb == bb.size())
+                        MXM(&buffer[offset],&d[0], &(*h.O1(true).data())[0],
+                            nsa*nsb,w.orbitalSpace->total(0,1),1,true);
+                      else {
+                          memory::vector<double> result(nsa*nsb);
+                          MXM(result.data(),&d[0], &(*h.O1(true).data())[0],
+                              nsa*nsb,w.orbitalSpace->total(0,1),1,false);
+                          for (auto ia=0; ia<nsa; ia++)
+                            for (auto ib=0; ib<nsb; ib++)
+                              buffer[offset+ia*bb.size()+bb0-bb.begin()+ib]
+                                  += result[ia*nsb+ib];
+                        }
+                    }
+                    if (h.m_uhf) {
+                        TransitionDensity d(w,
+                                            aa0,
+                                            aa1,
+                                            bb0,bb1,
+                                            1,false, true);
+                        MXM(&buffer[offset],&d[0], &(*h.O1(false).data())[0],
+                            nsa*nsb,w.orbitalSpace->total(0,1),1,true);
+                      }
+                  }
+              }
+            offset += nsa*bb.size();
+          }
+      }
 
   }
 //  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;

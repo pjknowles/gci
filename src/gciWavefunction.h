@@ -226,6 +226,11 @@ public:
   void divide(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b, double shift=0, bool append=false, bool negative=false);
   void zero();
   std::map<std::string,double> m_properties;
+  void settilesize(int t=-1, int a=-1, int b=-1) {
+    std::cout << "settilesize "<<t<<","<<a<<","<<b<<std::endl;
+    m_tilesize=t; m_alphatilesize=a; m_betatilesize=b;
+  }
+
 private:
   void buildStrings(); ///< build alphaStrings and betaStrings
   size_t dimension; ///< the size of the space
@@ -236,6 +241,7 @@ private:
   memory::vector<double>::const_iterator cend() const; ///< end of this processor's data
   bool compatible(const Wavefunction &other) const; ///< whether this wavefunction is on the same space as another
   std::vector<size_t> _blockOffset;
+  int m_tilesize=-1, m_alphatilesize=-1, m_betatilesize=-1;
 
 };
 double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
