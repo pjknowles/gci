@@ -153,7 +153,7 @@ void operator()(const ParameterVectorSet & psg, ParameterVectorSet & psc, std::v
             cw->times(gw.get(),&m_diagonals);
         }
         else {
-            shifts[state]+=std::numeric_limits<scalar>::epsilon()*std::fmax(1,std::fabs(m_diagonals.at(m_diagonals.minloc(state+1)))); // to guard against zero
+            shifts[state]+=2*std::numeric_limits<scalar>::epsilon()*std::fmax(1,std::fabs(m_diagonals.at(m_diagonals.minloc(state+1)))); // to guard against zero
 //                xout << "initial gw  in preconditioner"<<gw->str(2)<<std::endl;
 //                xout << "initial cw  in preconditioner"<<cw->str(2)<<std::endl;
 //                xout << "diag  in preconditioner"<<diag->str(2)<<std::endl;
