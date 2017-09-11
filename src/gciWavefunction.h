@@ -227,7 +227,7 @@ public:
   void zero();
   std::map<std::string,double> m_properties;
   void settilesize(int t=-1, int a=-1, int b=-1) {
-    std::cout << "settilesize "<<t<<","<<a<<","<<b<<std::endl;
+//    std::cout << "settilesize "<<t<<","<<a<<","<<b<<std::endl;
     m_tilesize=t; m_alphatilesize=a; m_betatilesize=b;
   }
 
