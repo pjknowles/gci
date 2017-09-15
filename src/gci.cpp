@@ -76,17 +76,17 @@ int main(int argc, char *argv[])
   Run run(fcidumpname);
   if (argc<3 ||
      plugin.active()) {
-    run.addParameter("METHOD","DAVIDSON");
-    // run.addParameter("PROFILER","0");
+    run.options.addParameter("METHOD","DAVIDSON");
+    // run.options.addParameter("PROFILER","0");
   }
   else
     for (int i=2; i<argc; i++) {
       std::string s(argv[i]);
       size_t equals = s.find("=");
       if (equals != std::string::npos)
-        run.addParameter(s.substr(0,equals),s.substr(equals+1),true);
+        run.options.addParameter(s.substr(0,equals),s.substr(equals+1),true);
   }
-  memory_initialize(run.parameter("MEMORY",std::vector<int>{100000000})[0]);
+  memory_initialize(run.options.parameter("MEMORY",std::vector<int>{100000000})[0]);
   size_t memory_allocated=memory_remaining();
   std::vector<double> e=run.run();
   xout << "e after run:"; for (size_t i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;

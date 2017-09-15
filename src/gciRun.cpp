@@ -213,6 +213,11 @@ void operator()(const ParameterVectorSet & psg, ParameterVectorSet & psc, std::v
 Run::Run(std::string fcidump)
 {
   globalFCIdump.reset(new FCIdump(fcidump));
+  options = Options(globalFCIdump->data());
+//  xout << "gci::Run::options="<<options.data()<<std::endl;
+//  xout << "IUHF "<< options.parameter("IUHF",std::vector<int>{0})[0]<<std::endl;
+//  xout << "NELEC "<< options.parameter("NELEC",std::vector<int>{0})[0]<<std::endl;
+//  xout << "FUNKY "<< options.parameter("FUNKY",std::vector<int>{999})[0]<<std::endl;
 }
 
 std::unique_ptr<Profiler> gci::profiler=nullptr;
@@ -230,15 +235,15 @@ std::vector<double> Run::run()
   parallel_rank=0; parallel_size=1;
 #endif
   std::vector<double>energies;
-  std::string method = parameter("METHOD",std::vector<std::string>(1,"")).at(0);
+  std::string method = options.parameter("METHOD",std::vector<std::string>(1,"")).at(0);
   if (method == "MBPT" || method == "MOLLER") method="RSPT";
   xout << "METHOD="<<method<<std::endl;
 
   profiler->start("load Hamiltonian");
   auto hho=Operator::construct(*globalFCIdump);
 //  xout <<hho.str("Hamiltonian loaded",3)<<std::endl;
-  addParameter("EXPLICIT1","1"); // because Operator no longer supports embedding 1-electron in 2-electron
-  parallel_stringset = parameter("PARALLEL_STRINGSET").at(0) != 0;
+  options.addParameter("EXPLICIT1","1"); // because Operator no longer supports embedding 1-electron in 2-electron
+  parallel_stringset = options.parameter("PARALLEL_STRINGSET") != 0;
 
 //  bool test_rotation_of_hamiltonian=false;
 //  if (test_rotation_of_hamiltonian) {
@@ -270,7 +275,7 @@ std::vector<double> Run::run()
     prototype = State(hho.m_orbitalSpaces[0],w.nelec,w.symmetry,w.ms2);
   }
   profiler->stop("find reference");
-  if (parameter("EXPLICIT1").at(0)==0 && method != "RSPT") throw std::runtime_error("EXPLICIT1 has been retired");
+  if (options.parameter("EXPLICIT1")==0 && method != "RSPT") throw std::runtime_error("EXPLICIT1 has been retired");
   //hh.constructBraKet(
 //        referenceDeterminant.nelec+referenceDeterminant.ms2,
 //        referenceDeterminant.nelec-referenceDeterminant.ms2
@@ -278,8 +283,8 @@ std::vector<double> Run::run()
 
   if (method == "RSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
-    double scs_opposite = parameter("SCS_OPPOSITE",std::vector<double>(1,(double)1)).at(0);
-    double scs_same = parameter("SCS_SAME",std::vector<double>(1,(double)1)).at(0);
+    double scs_opposite = options.parameter("SCS_OPPOSITE",std::vector<double>(1,(double)1)).at(0);
+    double scs_same = options.parameter("SCS_SAME",std::vector<double>(1,(double)1)).at(0);
     xout << "First-order hamiltonian contains " << scs_opposite<<" of opposite-spin and "<< scs_same <<" of same spin"<<std::endl;
     xout << "Second-order hamiltonian contains " << 1-scs_opposite<<" of opposite-spin and "<< 1-scs_same <<" of same spin"<<std::endl;
     gci::Operator h0 = hho.fockOperator(referenceDeterminant);
@@ -346,7 +351,7 @@ std::vector<double> Run::run()
   }
 
   {
-    auto profile = parameter("PROFILER",std::vector<int>(1,-1)).at(0);
+    auto profile = options.parameter("PROFILER",std::vector<int>(1,-1)).at(0);
     if (profile>1) xout <<profiler->str(profile,false) <<std::endl;
     xout <<profiler->str(profile,true) <<std::endl;
   }
@@ -358,7 +363,7 @@ std::vector<double> Run::run()
         energies.push_back(w->m_properties["ENERGY"]);
     }
 
-  { auto reference_energies = parameter("ENERGY",std::vector<double>(0));
+  { auto reference_energies = options.parameter("ENERGY",std::vector<double>(0));
     double diff=0;
     for (size_t i=0; i<reference_energies.size() && i < energies.size(); i++)
       diff += std::fabs(energies[i]-reference_energies[i]);
@@ -372,10 +377,10 @@ std::vector<double> Run::run()
       }
   }
 
-  if (parameter("DENSITY")[0]>0)
+  if (options.parameter("DENSITY")>0)
     for (size_t state=0; state < m_wavefunctions.size(); state++) {
         m_densityMatrices.emplace_back(
-            m_wavefunctions[state]->density(parameter("DENSITY")[0]));
+            m_wavefunctions[state]->density(options.parameter("DENSITY")));
         xout << "Density . hamiltonian ="<< (m_densityMatrices[state] & hho) << std::endl;
     }
 
@@ -385,23 +390,6 @@ std::vector<double> Run::run()
 Run::~Run() {
   profiler.release();
   _nextval_counter.release();
-}
-
-void Run::addParameter(const std::string& key, const std::vector<std::string>& values, const bool echo)
-{
-  globalFCIdump->addParameter(key,values);
-  if (echo) {
-    xout << "Run::addParameter "<<key<<" = ";
-    for (std::vector<std::string>::const_iterator v =values.begin(); v!=values.end(); v++)
-      xout <<*v<<",";
-    xout <<std::endl;
-  }
-}
-
-void Run::addParameter(const std::string& key, const std::string& value, const bool echo)
-{
-  std::vector<std::string> values(1,value);
-  addParameter(key,values,echo);
 }
 
 #ifdef MOLPRO
@@ -417,12 +405,12 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
   profiler->start("DIIS preamble");
 //  xout << "on entry to Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
   if (maxIterations < 0)
-    maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
+    maxIterations = options.parameter("MAXIT",std::vector<int>(1,1000)).at(0);
   xout << "MAXIT="<<maxIterations<<std::endl;
   if (energyThreshold <= (double)0)
-    energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-12)).at(0);
-  //  xout << "after parameter in Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
-  _residual_q = parameter("CHARGE",std::vector<double>{0}).at(0);
+    energyThreshold = options.parameter("TOL",std::vector<double>(1,(double)1e-12)).at(0);
+  //  xout << "after options.parameter in Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
+  _residual_q = options.parameter("CHARGE",std::vector<double>{0}).at(0);
   if (_residual_q>0) {
       xout << "q="<<_residual_q<<std::endl;
       residual_Q.reset(ham.projector("Q",true));
@@ -445,7 +433,7 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
   preconditioner precon(d,true);
   residual resid(ham,true,residual_Q.get());
   LinearAlgebra::DIIS solver(resid,precon);
-  solver.m_verbosity = parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
+  solver.m_verbosity = options.parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;
   solver.solve(gg,ww);
@@ -466,11 +454,11 @@ std::vector<double> Run::Davidson(
 //  profiler->start("Davidson preamble");
   //  xout << "on entry to Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
   if (maxIterations < 0)
-    maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
+    maxIterations = options.parameter("MAXIT",std::vector<int>(1,1000)).at(0);
   if (nState < 0)
-    nState = parameter("NSTATE",std::vector<int>(1,1)).at(0);
+    nState = options.parameter("NSTATE",std::vector<int>(1,1)).at(0);
   if (energyThreshold <= (double)0)
-    energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-12)).at(0);
+    energyThreshold = options.parameter("TOL",std::vector<double>(1,(double)1e-12)).at(0);
   xout << "Davidson eigensolver, maximum iterations="<<maxIterations;
   if (nState>1) xout << "; number of states="<<nState;
   xout << "; energy threshold="<<std::scientific<<std::setprecision(1)<<energyThreshold<<std::endl;
@@ -490,12 +478,12 @@ std::vector<double> Run::Davidson(
       std::shared_ptr<Wavefunction>  g=std::make_shared<Wavefunction>(prototype);
       g->allocate_buffer();
       g->settilesize(
-            parameter("TILESIZE",std::vector<int>(1,-1)).at(0),
-            parameter("ALPHATILESIZE",std::vector<int>(1,-1)).at(0),
-            parameter("BETATILESIZE",std::vector<int>(1,-1)).at(0));
+            options.parameter("TILESIZE",std::vector<int>(1,-1)).at(0),
+            options.parameter("ALPHATILESIZE",std::vector<int>(1,-1)).at(0),
+            options.parameter("BETATILESIZE",std::vector<int>(1,-1)).at(0));
       gg.push_back(g);
     }
-  solver.m_verbosity = parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
+  solver.m_verbosity = options.parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;
   solver.m_roots=nState;
@@ -504,8 +492,8 @@ std::vector<double> Run::Davidson(
   for (auto root=0; root < nState; root++) {
       m_wavefunctions.push_back(std::static_pointer_cast<Wavefunction>(ww[root]));
       m_wavefunctions.back()->m_properties["ENERGY"]=solver.eigenvalues()[root];
-//      if (parameter("DENSITY",0)>0)
-//        m_wavefunctions.back()->density = m_wavefunctions.back()->density(parameter("DENSITY",0));
+//      if (options.parameter("DENSITY",0)>0)
+//        m_wavefunctions.back()->density = m_wavefunctions.back()->density(options.parameter("DENSITY",0));
     }
 //  std::cout << "Final wavefunction\n"<<dynamic_cast<std::shared_ptr<Wavefunction> >(ww[0])->str(2)<<std::endl;
 //  std::cout << "get density"<<std::endl;
@@ -527,16 +515,16 @@ std::vector<double> Run::CSDavidson(const Operator& ham,
   profiler->start("Davidson preamble");
   // xout << "on entry to Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
   if (nState < 0)
-    nState = parameter("NSTATE",std::vector<int>(1,1)).at(0);
+    nState = options.parameter("NSTATE",std::vector<int>(1,1)).at(0);
   xout << "nState "<<nState<<std::endl;
   if (maxIterations < 0)
-    maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
+    maxIterations = options.parameter("MAXIT",std::vector<int>(1,1000)).at(0);
 //  xout << "MAXIT="<<maxIterations<<std::endl;
   if (energyThreshold <= (double)0)
-    energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
-  // xout << "after parameter in Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
-  double compressionK = parameter("COMPRESSIONK",std::vector<double>(1,2)).at(0);
-  int compressionL = parameter("COMPRESSIONL",std::vector<int>(1,1)).at(0);
+    energyThreshold = options.parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
+  // xout << "after options.parameter in Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
+  double compressionK = options.parameter("COMPRESSIONK",std::vector<double>(1,2)).at(0);
+  int compressionL = options.parameter("COMPRESSIONL",std::vector<int>(1,1)).at(0);
   bool compressive = compressionK != 2; // whether to use compressive sampling penalty
   if (compressive)
     xout << "Compressive sampling algorithm, k="<<compressionK<<", l="<<compressionL<<", epsilon="<<energyThreshold<<std::endl;
@@ -654,7 +642,7 @@ std::vector<double> Run::CSDavidson(const Operator& ham,
       d2Edmu2-=dalphadmu[i]*dPdmu[i];
       //xout << "dalphadmum["<<i<<"]="<<dalphadmu[i]<<std::endl;
     }
-    double mu = d2Edmu2 == (double)0 ? (double) 0 : sqrt(2*energyThreshold/d2Edmu2) * parameter("PENALTY_SCALE",std::vector<double>(1,1)).at(0);
+    double mu = d2Edmu2 == (double)0 ? (double) 0 : sqrt(2*energyThreshold/d2Edmu2) * options.parameter("PENALTY_SCALE",std::vector<double>(1,1)).at(0);
     // xout << "d2Edmu2="<< d2Edmu2<<", mu="<<mu<<std::endl;
 
     // penalised equation solver here
@@ -685,7 +673,7 @@ std::vector<double> Run::CSDavidson(const Operator& ham,
     //g -= (energy-e0); // Davidson
     // form update
     w.putw(h0file,1); // save a copy
-    double etruncate = parameter("ETRUNCATE",std::vector<double>(1,-1)).at(0);
+    double etruncate = options.parameter("ETRUNCATE",std::vector<double>(1,-1)).at(0);
 //    xout << "energyThreshold="<<energyThreshold<<std::endl;
     if (etruncate < 0) etruncate = energyThreshold;
 //    xout << "etruncate="<<etruncate<<std::endl;
@@ -771,11 +759,11 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams,
             int maxIterations)
 {
   if (maxOrder < 0)
-    maxOrder = parameter("MAXORDER",std::vector<int>(1,1000)).at(0);
+    maxOrder = options.parameter("MAXORDER",std::vector<int>(1,1000)).at(0);
   if (maxIterations < 0)
-    maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
+    maxIterations = options.parameter("MAXIT",std::vector<int>(1,1000)).at(0);
   if (energyThreshold < (double)0)
-    energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
+    energyThreshold = options.parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
   std::vector<double> e(maxOrder+1,(double)0);
 //  for (int k=0; k<(int)hamiltonians.size(); k++)
 //    HamiltonianMatrixPrint(*hamiltonians[k],prototype);
@@ -851,7 +839,7 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams,
 
 void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t referenceLocation )
 {
-  int maxOrder = parameter("MAXORDER",std::vector<int>(1,3)).at(0);
+  int maxOrder = options.parameter("MAXORDER",std::vector<int>(1,3)).at(0);
   std::vector<double> energies;
   Wavefunction d(prototype);
   xout <<"IPT wavefunction size="<<d.size()<<std::endl;
@@ -878,7 +866,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
   _IPT_Epsilon.push_back(0);
   _IPT_c.emplace_back(Wavefunction(prototype)); // c[1]
   gci::Operator excK(_IPT_Fock[0]); excK.O1() *=0; excK.O1(false) *=0; excK.m_description="excK";
-  double io=parameter("IO",std::vector<double>(1,1.1)).at(0);
+  double io=options.parameter("IO",std::vector<double>(1,1.1)).at(0);
   int ioo = io-1;
   int ios = 10*(io-ioo-1)-1;
   xout << "Ionise orbital "<<ioo+1<<"."<<ios+1<<std::endl;
@@ -980,9 +968,9 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       std::static_pointer_cast<Wavefunction>(ww.back())->set((double)0);
       std::static_pointer_cast<Wavefunction>(ww.back())->set(referenceLocation+m%2, (double) 1);
       LinearAlgebra::DIIS solver(resid,precon);
-      solver.m_verbosity = parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
-      solver.m_thresh=parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
-      solver.m_maxIterations=parameter("MAXIT",std::vector<int>(1,1000)).at(0);
+      solver.m_verbosity = options.parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
+      solver.m_thresh=options.parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
+      solver.m_maxIterations=options.parameter("MAXIT",std::vector<int>(1,1000)).at(0);
       solver.m_linear=true;
       solver.solve(gg,ww);
       xout << "Final g: "<<std::static_pointer_cast<Wavefunction>(gg[0])->values()<<std::endl;
@@ -1165,11 +1153,11 @@ std::vector<double> Run::ISRSPT(
             int maxIterations)
 {
   if (maxOrder < 0)
-    maxOrder = parameter("MAXORDER",std::vector<int>(1,1000)).at(0);
+    maxOrder = options.parameter("MAXORDER",std::vector<int>(1,1000)).at(0);
   if (maxIterations < 0)
-    maxIterations = parameter("MAXIT",std::vector<int>(1,1000)).at(0);
+    maxIterations = options.parameter("MAXIT",std::vector<int>(1,1000)).at(0);
   if (energyThreshold < (double)0)
-    energyThreshold = parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
+    energyThreshold = options.parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
   std::vector<double> e(maxOrder+1,(double)0);
   Wavefunction d(prototype);
   xout <<"RSPT wavefunction size="<<d.size()<<std::endl;
@@ -1182,7 +1170,7 @@ std::vector<double> Run::ISRSPT(
   preconditioner precon(d,false);
   residual resid(ham,false);
   LinearAlgebra::RSPT solver(resid,precon);
-  solver.m_verbosity = parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
+  solver.m_verbosity = options.parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;
   solver.solve(gg,ww);
@@ -1208,38 +1196,4 @@ void Run::HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, 
       xout <<std::endl;
     }
   }
-}
-
-std::vector<std::string> Run::parameter(std::string key, std::vector<std::string> def)
-{
-//  xout <<"string parameter request "<<key<<std::endl;
-#ifdef MOLPRO
-  std::string r = GetOptionS(key.c_str(),"GCI");
-  if (r != std::string("")) return std::vector<std::string>(1,r);
-#endif
-  if (globalFCIdump != nullptr) return globalFCIdump->parameter(key,def);
-  return def;
-}
-
-std::vector<int> Run::parameter(std::string key, std::vector<int> def)
-{
-//  xout <<"integer parameter request "<<key<<std::endl;
-#ifdef MOLPRO
-  FORTINT r = GetOptionI(key.c_str(),"GCI");
-//  xout << "GetOptionI gives "<<r<<std::endl;
-  if (r != (FORTINT) -1) return std::vector<int>(1,(int) r);
-#endif
-  if (globalFCIdump != nullptr) return globalFCIdump->parameter(key,def);
-//  xout <<"dropped through"<<std::endl;
-  return def;
-}
-
-std::vector<double> Run::parameter(std::string key, std::vector<double> def)
-{
-#ifdef MOLPRO
-  FORTDBL r = GetOptionF(key.c_str(),"GCI");
-  if (r != (FORTDBL) -1) return std::vector<double>(1,(double) r);
-#endif
-  if (globalFCIdump != nullptr) return globalFCIdump->parameter(key,def);
-  return def;
 }
