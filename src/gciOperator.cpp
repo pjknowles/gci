@@ -88,6 +88,22 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
   return result;
 }
 
+gci::Operator gci::Operator::construct(const char *dump) {
+  class bytestream bs(dump);
+  auto so = SymmetryMatrix::Operator::construct(bs);
+  std::vector<OrbitalSpace> os;
+  auto nos=bs.ints()[0];
+  for (auto i=0; i<nos; i++) {
+    auto s=bs.ints();
+//    memory::vector<fint> s=bs.ints();
+    std::vector<int> syms;
+    for (auto& ss : s) syms.push_back(ss);
+    os.push_back(OrbitalSpace(syms,so.m_uhf));
+    }
+  return gci::Operator(so,os);
+}
+
+
 FCIdump gci::Operator::FCIDump(const std::string filename) const
 {
   FCIdump dump;
@@ -386,4 +402,13 @@ void gci::Operator::gsum()
           ::gci::gsum(*O2(false,false).data());
         }
     }
+}
+
+bytestream gci::Operator::bytestream()
+{
+  class bytestream bs = SymmetryMatrix::Operator::bytestream();
+  bs.append(m_orbitalSpaces.size());
+  for (auto& s : m_orbitalSpaces)
+    bs.append(s.orbital_symmetries);
+  return bs;
 }

@@ -119,6 +119,12 @@ namespace gci {
      */
     Operator sameSpinOperator(const Determinant &reference, const std::string description="Same Spin Hamiltonian") const;
 
+    /*!
+     * \brief Serialise the object to a stream of bytes
+     * \return the serialised representation of the object
+     */
+    class memory::bytestream bytestream();
+
    std::vector<OrbitalSpace> m_orbitalSpaces;
 
   const Operator operator+(const Operator& other) const { Operator copy(*this); copy+=other; return copy;}
