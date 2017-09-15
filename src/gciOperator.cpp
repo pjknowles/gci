@@ -3,6 +3,9 @@
 
 gci::Operator gci::Operator::construct(const FCIdump &dump)
 {
+  std::vector<char> portableByteStream;
+  int lPortableByteStream;
+  if (parallel_rank==0) {
   int verbosity=0;
   std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
   dim_t dim(8);
@@ -84,7 +87,19 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
   if (verbosity>1) xout << "int1:\n" <<result.int1(1)<< std::endl;
   if (verbosity>1) xout << "intJ:\n" <<result.intJ(1,1)<< std::endl;
   if (verbosity>1) xout << "intK:\n" <<result.intK(1)<< std::endl;
-
+  portableByteStream = result.bytestream().data();
+  lPortableByteStream = portableByteStream.size();
+    }
+#ifdef MPI_COMM_COMPUTE
+  MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, MPI_COMM_COMPUTE);
+  std::cerr << "lPortableByteStream "<<lPortableByteStream<<std::endl;
+#endif
+  char * buf =  (parallel_rank==0)  ? portableByteStream.data() : (char*) malloc(lPortableByteStream);
+#ifdef MPI_COMM_COMPUTE
+  MPI_Bcast(buf,lPortableByteStream, MPI_CHAR, 0, MPI_COMM_COMPUTE);
+#endif
+  auto result = Operator::construct(buf);
+  if (parallel_rank != 0) free(buf);
   return result;
 }
 
