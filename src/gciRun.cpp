@@ -212,8 +212,27 @@ void operator()(const ParameterVectorSet & psg, ParameterVectorSet & psc, std::v
 #include <memory>
 Run::Run(std::string fcidump)
 {
+#ifdef MPI_COMM_COMPUTE
+  MPI_Comm_rank(MPI_COMM_COMPUTE,&parallel_rank);
+  MPI_Comm_size(MPI_COMM_COMPUTE,&parallel_size);
+  xout << "Parallel run of "<<parallel_size<<" processes"<< std::endl;
+#else
+  parallel_rank=0; parallel_size=1;
+#endif
   globalFCIdump.reset(new FCIdump(fcidump));
-  options = Options(globalFCIdump->data());
+  int lendata=0;
+  if (parallel_rank==0) {
+      options = Options(FCIdump(fcidump).data());
+      lendata=(int)options.data().size();
+    }
+#ifdef MPI_COMM_COMPUTE
+  MPI_Bcast(&lendata, (int)1, MPI_INT, 0, MPI_COMM_COMPUTE);
+  char buf[lendata+1];
+  if (parallel_rank==0) for (auto i=0; i<lendata; i++) buf[i]=options.data()[i];
+  MPI_Bcast(&buf[0], lendata, MPI_CHAR, 0, MPI_COMM_COMPUTE);
+  buf[lendata]=(char)0;
+  options = Options(buf);
+#endif
 //  xout << "gci::Run::options="<<options.data()<<std::endl;
 //  xout << "IUHF "<< options.parameter("IUHF",std::vector<int>{0})[0]<<std::endl;
 //  xout << "NELEC "<< options.parameter("NELEC",std::vector<int>{0})[0]<<std::endl;
@@ -227,13 +246,6 @@ std::vector<double> Run::run()
   _nextval_counter.reset(new sharedCounter());
   profiler->reset("GCI");
   xout <<"PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
-#ifdef MPI_COMM_COMPUTE
-  MPI_Comm_rank(MPI_COMM_WORLD,&parallel_rank);
-  MPI_Comm_size(MPI_COMM_WORLD,&parallel_size);
-  xout << "Parallel run of "<<parallel_size<<" processes"<< std::endl;
-#else
-  parallel_rank=0; parallel_size=1;
-#endif
   std::vector<double>energies;
   std::string method = options.parameter("METHOD",std::vector<std::string>(1,"")).at(0);
   if (method == "MBPT" || method == "MOLLER") method="RSPT";
