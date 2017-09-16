@@ -92,7 +92,6 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
     }
 #ifdef MPI_COMM_COMPUTE
   MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, MPI_COMM_COMPUTE);
-  std::cerr << "lPortableByteStream "<<lPortableByteStream<<std::endl;
 #endif
   char * buf =  (parallel_rank==0)  ? portableByteStream.data() : (char*) malloc(lPortableByteStream);
 #ifdef MPI_COMM_COMPUTE
@@ -426,14 +425,8 @@ void gci::Operator::gsum()
 bytestream gci::Operator::bytestream()
 {
   class bytestream bs = SymmetryMatrix::Operator::bytestream();
-  std::cout <<"gci::Operator::bytestream size "<<bs.size()<<std::endl;
-  std::cout <<"gci::Operator::bytestream position "<<bs.position()<<std::endl;
-  std::cout <<"gci::Operator::bytestream m_orbitalSpaces size "<<m_orbitalSpaces.size()<<std::endl;
   bs.append(m_orbitalSpaces.size());
-  for (auto& s : m_orbitalSpaces) {
-      std::cout << "orbital symmetries:";
-      for (auto& ss : s.orbital_symmetries) std::cout << " "<<ss; std::cout<<std::endl;
+  for (auto& s : m_orbitalSpaces)
     bs.append(s.orbital_symmetries);
-    }
   return bs;
 }
