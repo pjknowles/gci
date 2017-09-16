@@ -220,7 +220,6 @@ Run::Run(std::string fcidump)
 #else
   parallel_rank=0; parallel_size=1;
 #endif
-  globalFCIdump.reset(new FCIdump(fcidump));
   int lendata=0;
   if (parallel_rank==0) {
       options = Options(FCIdump(fcidump).data());
