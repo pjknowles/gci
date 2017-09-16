@@ -21,15 +21,13 @@ public:
   /**
  * @brief
  *
- * @param filename is the file containing the FCIDUMP. If present, load is called.
  */
-  State(std::string filename="");
+  State() {};
   /**
      * @brief
      *
-     * @param dump points to an FCIdump object. If present, load is called.
+     * @param dump points to an Options object. If present, load is called.
      */
-  State(const FCIdump &dump);
   State(const Options &dump);
   /*!
      * \brief Construct a State object linked to a OrbitalSpace
@@ -53,21 +51,15 @@ public:
     nelec = source.nelec;
     ms2 = source.ms2;
     symmetry = source.symmetry;
+    return *this;
   }
 
   ~State();
   /*!
      \brief
     load number of electrons, spin from FCIDUMP file.
-     \param filename is the file containing the FCIDUMP.
-    */
-  void load(std::string filename="FCIDUMP");
-  /*!
-     \brief
-    load number of electrons, spin from FCIDUMP file.
      \param dump is an FCIdump object.
     */
-  void load(const FCIdump &dump);
   void load(const Options &dump);
   /*!
       \brief
