@@ -9,13 +9,6 @@
 #include <algorithm>
 #include "gciOrbitals.h"
 
-Wavefunction::Wavefunction(const FCIdump &dump) : State(dump), distributed(false) {
-  buildStrings();
-}
-
-Wavefunction::Wavefunction(std::string filename) : State(filename), distributed(false) {
-  if (filename!="") buildStrings();
-}
 Wavefunction::Wavefunction(OrbitalSpace* h, int n, int s, int m2) : State(h,n,s,m2), distributed(false) {
   buildStrings();
 }

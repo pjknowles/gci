@@ -22,18 +22,6 @@ namespace gci {
 class Wavefunction : public State, public LinearAlgebra::vector<double>
 {
 public:
-  /**
- * @brief
- *
- * @param filename is the file containing the FCIDUMP. If present, load is called.
- */
-  Wavefunction(std::string filename="");
-  /**
-     * @brief
-     *
-     * @param dump points to an FCIdump object. If present, load is called.
-     */
-  Wavefunction(const FCIdump &dump);
 
   /*!
      * \brief Construct a Wavefunction object linked to an OrbitalSpace
