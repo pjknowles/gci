@@ -2,34 +2,12 @@
 #include <iostream>
 #include <sstream>
 
-OrbitalSpace::OrbitalSpace(std::string filename, int verbosity) : SymmetrySpace("Orbitals",2)
-{
-  if (filename != "") load(filename, verbosity);
-}
-
-OrbitalSpace::OrbitalSpace(const FCIdump& dump, int verbosity) : SymmetrySpace("Orbitals",2)
-{
-  load(dump, verbosity);
-}
-
-void OrbitalSpace::load(std::string filename, int verbosity) {
-  FCIdump d(filename);
-  load(d, verbosity);
-}
-
 void OrbitalSpace::load(const Options &dump, int verbosity) {
   if (verbosity) xout <<"Load OrbitalSpace from Options object" <<std::endl;
   load(dump.parameter("ORBSYM",std::vector<int>{0}),
   dump.parameter("IUHF")!=0,
        verbosity);
 }
-void OrbitalSpace::load(const FCIdump &dump, int verbosity) {
-  if (verbosity) xout <<"Load OrbitalSpace from " << dump.fileName() <<std::endl;
-  load(dump.parameter("ORBSYM"),
-  dump.parameter("IUHF").at(0)!=0,
-       verbosity);
-}
-
 
 void OrbitalSpace::load(const std::vector<int> syms, bool uhf, int verbosity) {
   spinUnrestricted=uhf;

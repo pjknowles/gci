@@ -2,7 +2,6 @@
 #define GCIORBITALSPACE_H
 #include "gciSymmetrySpace.h"
 #include "gciOptions.h"
-#include "FCIdump.h"
 #include <map>
 
 namespace gci {
@@ -14,12 +13,6 @@ class OrbitalSpace : public SymmetrySpace
 public:
   /*!
      \brief construct OrbitalSpace object
-     \param filename : if present, call load
-     \param verbosity : how much to print
-    */
-  OrbitalSpace(std::string filename="", int verbosity=0);
-  /*!
-     \brief construct OrbitalSpace object
      \param dump : if present, call load
      \param verbosity : how much to print
     */
@@ -27,7 +20,6 @@ public:
     load(dump);
   }
 
-  OrbitalSpace(const FCIdump &dump, int verbosity=0);
   OrbitalSpace(const std::vector<int> syms, bool uhf=false, int verbosity=0) {
     load(syms, uhf, verbosity);
   }
@@ -36,8 +28,6 @@ public:
   void load(const Options& options, int verbosity=0);
 
   void load(const std::vector<int> syms, bool uhf=false, int verbosity=0);
-  void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load from FCIDUMP */
-  void load(const FCIdump &dump, int verbosity=0); /**< \brief load from FCIDUMP */
 
   bool spinUnrestricted; /**< \brief whether alpha and beta spin orbitals are different */
   std::vector<unsigned int> orbital_symmetries;///< \brief spatial symmetry of orbitals (0-7)
