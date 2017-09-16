@@ -9,12 +9,15 @@ Determinant::Determinant(State* State, String* alpha, String*beta)
     ms2=0;
   } else {
     nelec=State->nelec;
-    orbitalSpace=State->orbitalSpace;
+    orbitalSpace.reset(new OrbitalSpace(*State->orbitalSpace));
     ms2=State->ms2;
   }
   if (alpha!=nullptr) stringAlpha=*alpha;
   if (beta!=nullptr) stringBeta=*beta;
-  stringAlpha.orbitalSpace=stringBeta.orbitalSpace=orbitalSpace;
+  if (State != nullptr) {
+    stringAlpha.orbitalSpace.reset(new OrbitalSpace(*State->orbitalSpace));
+    stringBeta.orbitalSpace.reset(new OrbitalSpace(*State->orbitalSpace));
+    }
   //    xout << "determinant constructor, hamiltonian="<<(hamiltonian!=nullptr)<<hamiltonian->total()<<std::endl;
 }
 

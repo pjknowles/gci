@@ -4,7 +4,9 @@
 #include "FCIdump.h"
 #include "gciOrbitalSpace.h"
 #include "gciPrintable.h"
+#include "gciOptions.h"
 #include <string>
+#include <memory>
 
 namespace gci {
 /**
@@ -28,6 +30,7 @@ public:
      * @param dump points to an FCIdump object. If present, load is called.
      */
   State(const FCIdump &dump);
+  State(const Options &dump);
   /*!
      * \brief Construct a State object linked to a OrbitalSpace
      * \param os The orbital space
@@ -37,6 +40,20 @@ public:
      */
   State(OrbitalSpace *os, int nelec=0, int symmetry=1, int ms2=0);
   State(OrbitalSpace &os, int nelec=0, int symmetry=1, int ms2=0);
+
+  State(const State& source)
+    : orbitalSpace(new OrbitalSpace(*source.orbitalSpace))
+    , nelec(source.nelec), ms2(source.ms2), symmetry(source.symmetry)
+  {
+  }
+
+  State& operator=(const State& source)
+  {
+    orbitalSpace.reset(new OrbitalSpace(*source.orbitalSpace));
+    nelec = source.nelec;
+    ms2 = source.ms2;
+    symmetry = source.symmetry;
+  }
 
   ~State();
   /*!
@@ -51,11 +68,12 @@ public:
      \param dump is an FCIdump object.
     */
   void load(const FCIdump &dump);
+  void load(const Options &dump);
   /*!
       \brief
        Pointer to orbital basis set, if any
       */
-  OrbitalSpace* orbitalSpace;
+  std::unique_ptr<OrbitalSpace> orbitalSpace;
   /*! \brief Number of electrons */
   unsigned int nelec;
   /*! \brief Twice the spin quantum number, ie multiplicity minus one */

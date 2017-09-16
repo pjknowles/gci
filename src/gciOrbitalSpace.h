@@ -1,6 +1,7 @@
 #ifndef GCIORBITALSPACE_H
 #define GCIORBITALSPACE_H
 #include "gciSymmetrySpace.h"
+#include "gciOptions.h"
 #include "FCIdump.h"
 #include <map>
 
@@ -22,11 +23,17 @@ public:
      \param dump : if present, call load
      \param verbosity : how much to print
     */
+  OrbitalSpace(const Options &dump, int verbosity=0) {
+    load(dump);
+  }
+
   OrbitalSpace(const FCIdump &dump, int verbosity=0);
   OrbitalSpace(const std::vector<int> syms, bool uhf=false, int verbosity=0) {
     load(syms, uhf, verbosity);
   }
   virtual ~OrbitalSpace(){}
+
+  void load(const Options& options, int verbosity=0);
 
   void load(const std::vector<int> syms, bool uhf=false, int verbosity=0);
   void load(std::string filename="FCIDUMP", int verbosity=0); /**< \brief load from FCIDUMP */

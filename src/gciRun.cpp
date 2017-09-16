@@ -253,7 +253,7 @@ std::vector<double> Run::run()
 
   profiler->start("load Hamiltonian");
   auto hho=Operator::construct(*globalFCIdump);
-//  xout <<hho.str("Hamiltonian loaded",3)<<std::endl;
+//  std::cerr <<hho.str("Hamiltonian loaded",3)<<std::endl;
   options.addParameter("EXPLICIT1","1"); // because Operator no longer supports embedding 1-electron in 2-electron
   parallel_stringset = options.parameter("PARALLEL_STRINGSET") != 0;
 

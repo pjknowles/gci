@@ -11,10 +11,8 @@ size_t gci::String::keyUnassigned=(size_t)-1; ///< conventional null value for k
 String::String(const State* State, const int Spin)
   : m_spin(Spin)
 {
-  if (State == nullptr) {
-    orbitalSpace=nullptr;
-  } else {
-    orbitalSpace=State->orbitalSpace;
+  if (State != nullptr) {
+    orbitalSpace.reset(new OrbitalSpace(*State->orbitalSpace));
   }
   nullify();
 }
@@ -24,7 +22,7 @@ String::String(const std::vector<char> bytestream, const State *State)
   if (State == nullptr) {
     orbitalSpace=nullptr;
   } else {
-    orbitalSpace=State->orbitalSpace;
+    orbitalSpace.reset(new OrbitalSpace(*State->orbitalSpace));
 //    xout << "assigned orbitalSpace="<<orbitalSpace<<std::endl;
 //    xout <<orbitalSpace->str()<<std::endl;
   }

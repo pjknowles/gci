@@ -17,6 +17,12 @@ void OrbitalSpace::load(std::string filename, int verbosity) {
   load(d, verbosity);
 }
 
+void OrbitalSpace::load(const Options &dump, int verbosity) {
+  if (verbosity) xout <<"Load OrbitalSpace from Options object" <<std::endl;
+  load(dump.parameter("ORBSYM",std::vector<int>{0}),
+  dump.parameter("IUHF")!=0,
+       verbosity);
+}
 void OrbitalSpace::load(const FCIdump &dump, int verbosity) {
   if (verbosity) xout <<"Load OrbitalSpace from " << dump.fileName() <<std::endl;
   load(dump.parameter("ORBSYM"),
