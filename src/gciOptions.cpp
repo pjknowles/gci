@@ -1,5 +1,6 @@
 #ifdef MOLPRO
 #include "common/molpro_config.h"
+#include "gciMolpro.h"
 #else
 #define _GNU_SOURCE
 #endif
@@ -43,7 +44,7 @@ int Options::parameter(const std::string &key, int def) const {
 #ifdef MOLPRO
   FORTINT r = GetOptionI(key.c_str(),"GCI");
 //  xout << "GetOptionI gives "<<r<<std::endl;
-  if (r != (FORTINT) -1) return std::static_cast<int>(r);
+  if (r != (FORTINT) -1) return static_cast<int>(r);
 #endif
   return parameter(key,std::vector<int>{def})[0];
 }
@@ -53,7 +54,7 @@ double Options::parameter(const std::string &key, double def) const {
 #ifdef MOLPRO
   FORTINT r = GetOptionF(key.c_str(),"GCI");
 //  xout << "GetOptionF gives "<<r<<std::endl;
-  if (r != (FORTDBL) -1) return std::static_cast<double>(r);
+  if (r != (FORTDBL) -1) return static_cast<double>(r);
 #endif
   return parameter(key,std::vector<double>{def})[0];
 }
