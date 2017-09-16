@@ -108,12 +108,16 @@ gci::Operator gci::Operator::construct(const char *dump) {
   auto so = SymmetryMatrix::Operator::construct(bs);
   std::vector<OrbitalSpace> os;
   auto nos=bs.ints()[0];
+//  std::cout << "nos="<<nos<<std::endl;
   for (auto i=0; i<nos; i++) {
     auto s=bs.ints();
-//    memory::vector<fint> s=bs.ints();
     std::vector<int> syms;
-    for (auto& ss : s) syms.push_back(ss);
+    for (auto& ss : s) syms.push_back(ss+1);
+//    std::cout << "syms "<<syms.size()<<so.m_uhf<<std::endl;
+//    for (auto& ss : syms) std::cout << " "<<ss; std::cout<<std::endl;
+//    std::cout << "OrbitalSpace "<<OrbitalSpace(syms,so.m_uhf)<<std::endl;
     os.push_back(OrbitalSpace(syms,so.m_uhf));
+//    std::cout << "pushed to os "<<os.size()<<std::endl;;
     }
   return gci::Operator(so,os);
 }
@@ -422,8 +426,14 @@ void gci::Operator::gsum()
 bytestream gci::Operator::bytestream()
 {
   class bytestream bs = SymmetryMatrix::Operator::bytestream();
+  std::cout <<"gci::Operator::bytestream size "<<bs.size()<<std::endl;
+  std::cout <<"gci::Operator::bytestream position "<<bs.position()<<std::endl;
+  std::cout <<"gci::Operator::bytestream m_orbitalSpaces size "<<m_orbitalSpaces.size()<<std::endl;
   bs.append(m_orbitalSpaces.size());
-  for (auto& s : m_orbitalSpaces)
+  for (auto& s : m_orbitalSpaces) {
+      std::cout << "orbital symmetries:";
+      for (auto& ss : s.orbital_symmetries) std::cout << " "<<ss; std::cout<<std::endl;
     bs.append(s.orbital_symmetries);
+    }
   return bs;
 }
