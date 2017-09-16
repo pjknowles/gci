@@ -1,5 +1,4 @@
 #include "gciState.h"
-#include "FCIdump.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -36,17 +35,6 @@ void State::load(const Options &dump)
   //    xout << "basisSize=" << orbitalSpace->basisSize <<std::endl;
 }
 
-//void State::load(const FCIdump &dump)
-//{
-//  nelec = dump.parameter("NELEC").at(0);
-//  ms2 = dump.parameter("MS2").at(0);
-//  symmetry = dump.parameter("ISYM",std::vector<int>(1,1)).at(0)-1; // D2h symmetries are 0-7 internally, 1-8 externally
-//  // xout <<"nelec="<<nelec<<std::endl;
-//  //    xout <<"ms2="<<ms2<<endl;
-//  orbitalSpace.reset(new OrbitalSpace(dump));
-//  //    xout << "State::load orbitalSpace=" << (orbitalSpace != nullptr) << std::endl;
-//  //    xout << "basisSize=" << orbitalSpace->basisSize <<std::endl;
-//}
 
 std::string State::str(int verbosity, unsigned int columns) const
 {

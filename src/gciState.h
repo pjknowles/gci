@@ -1,7 +1,6 @@
 #ifndef GCIState_H
 #define GCIState_H
 #include "gci.h"
-#include "FCIdump.h"
 #include "gciOrbitalSpace.h"
 #include "gciPrintable.h"
 #include "gciOptions.h"
@@ -57,8 +56,8 @@ public:
   ~State();
   /*!
      \brief
-    load number of electrons, spin from FCIDUMP file.
-     \param dump is an FCIdump object.
+    load number of electrons, spin
+     \param dump is an Options object.
     */
   void load(const Options &dump);
   /*!
