@@ -57,6 +57,9 @@ namespace gci {
      * \param dump The raw buffer of a FCIdump.
      */
     static Operator construct(const FCIdump& dump);
+    static Operator construct(FCIdump&& dump) {
+      return construct(dump);
+    }
 
     /*!
      * \brief Construct an operator templated on this, but with a special specification

@@ -3,6 +3,7 @@
 
 gci::Operator gci::Operator::construct(const FCIdump &dump)
 {
+  std::cout << "gci::Operator::construct lvalue "<<memory_remaining()<<std::endl;
   std::vector<char> portableByteStream;
   int lPortableByteStream;
   if (parallel_rank==0) {

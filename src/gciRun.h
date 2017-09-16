@@ -96,6 +96,7 @@ private:
   void HamiltonianMatrixPrint (Operator &hamiltonian, const State &prototype, int verbosity=0);
 
   std::unique_ptr<FCIdump> globalFCIdump; // the FCIdump
+  Operator m_hamiltonian;
 public:
   std::unique_ptr<Operator> m_densityMatrix; // the (state-averaged) density matrix
   std::vector<Operator> m_densityMatrices; // the individual state density matrices

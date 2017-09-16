@@ -73,6 +73,19 @@ int main(int argc, char *argv[])
       strcpy(fcidumpname,plugin.receive().c_str());
     }
   if (argc > 1) strcpy(fcidumpname,argv[1]);
+
+  size_t memory=100000;
+  for (int i=2; i<argc; i++) {
+      std::string s(argv[i]);
+      size_t equals = s.find("=");
+      if (equals != std::string::npos && s.substr(0,equals)=="MEMORY")
+        memory=std::stol(s.substr(equals+1));
+    }
+  memory_initialize(memory);
+  std::cout << "memory initialised to "<<memory_remaining()<<std::endl;
+  size_t memory_allocated=memory_remaining();
+
+  {
   Run run(fcidumpname);
   if (argc<3 ||
      plugin.active()) {
@@ -86,8 +99,6 @@ int main(int argc, char *argv[])
       if (equals != std::string::npos)
         run.options.addParameter(s.substr(0,equals),s.substr(equals+1),true);
   }
-  memory_initialize(run.options.parameter("MEMORY",std::vector<int>{100000000})[0]);
-  size_t memory_allocated=memory_remaining();
   std::vector<double> e=run.run();
   xout << "e after run:"; for (size_t i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;
   if (plugin.active()) {
@@ -112,6 +123,7 @@ int main(int argc, char *argv[])
             plugin.send(densityname);
         }
     }
+}
 
   xout << "initial memory="<<memory_allocated<<", remaining memory="<<memory_remaining()<<std::endl;
   if (plugin.active())

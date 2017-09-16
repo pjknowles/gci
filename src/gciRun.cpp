@@ -211,6 +211,7 @@ void operator()(const ParameterVectorSet & psg, ParameterVectorSet & psc, std::v
 
 #include <memory>
 Run::Run(std::string fcidump)
+  : m_hamiltonian(Operator::construct(FCIdump(fcidump)))
 {
 #ifdef MPI_COMM_COMPUTE
   MPI_Comm_rank(MPI_COMM_COMPUTE,&parallel_rank);
@@ -251,40 +252,21 @@ std::vector<double> Run::run()
   if (method == "MBPT" || method == "MOLLER") method="RSPT";
   xout << "METHOD="<<method<<std::endl;
 
-  profiler->start("load Hamiltonian");
-  auto hho=Operator::construct(*globalFCIdump);
-//  std::cerr <<hho.str("Hamiltonian loaded",3)<<std::endl;
   options.addParameter("EXPLICIT1","1"); // because Operator no longer supports embedding 1-electron in 2-electron
   parallel_stringset = options.parameter("PARALLEL_STRINGSET") != 0;
-
-//  bool test_rotation_of_hamiltonian=false;
-//  if (test_rotation_of_hamiltonian) {
-//    std::vector<double> rot(hh.total(0,0));
-//    double theta=std::acos(-1.0)/4;
-//    for (std::vector<double>::iterator i=rot.begin(); i!=rot.end(); i++) *i=(double)0;
-//    for (unsigned int i=0; i<hh.basisSize; i++) rot[hh.pairIndex(i+1,i+1,0)]=(double)1;
-//    rot[0]=rot[3]=std::cos(theta);
-//    rot[2]=-std::sin(theta);
-//    rot[1]=std::sin(theta);
-//    xout << "rotation matrix"; for (std::vector<double>::const_iterator i=rot.begin(); i!=rot.end(); i++) xout <<" "<< *i; xout <<std::endl;
-//    for (unsigned int i=0; i<hh.total(); i++)  rot[hh.int1Index(i+1,i+1)]=(double)1;
-//    hh.rotate(&rot);
-//  }
-
-  profiler->stop("load Hamiltonian");
   size_t referenceLocation;
   Determinant referenceDeterminant;
   State prototype;
   profiler->start("find reference");
   { // so that w goes out of scope
-    Wavefunction w(*globalFCIdump);
-    w.diagonalOperator(hho);
+    Wavefunction w(options);
+    w.diagonalOperator(m_hamiltonian);
     referenceLocation = w.minloc();
     referenceDeterminant = w.determinantAt(referenceLocation);
     xout.precision(8);
     xout <<std::fixed;
     xout << "Lowest energy determinant " << referenceDeterminant <<" with energy "<<w.at(referenceLocation)<<std::endl;
-    prototype = State(hho.m_orbitalSpaces[0],w.nelec,w.symmetry,w.ms2);
+    prototype = State(m_hamiltonian.m_orbitalSpaces[0],w.nelec,w.symmetry,w.ms2);
   }
   profiler->stop("find reference");
   if (options.parameter("EXPLICIT1")==0 && method != "RSPT") throw std::runtime_error("EXPLICIT1 has been retired");
@@ -299,15 +281,15 @@ std::vector<double> Run::run()
     double scs_same = options.parameter("SCS_SAME",std::vector<double>(1,(double)1)).at(0);
     xout << "First-order hamiltonian contains " << scs_opposite<<" of opposite-spin and "<< scs_same <<" of same spin"<<std::endl;
     xout << "Second-order hamiltonian contains " << 1-scs_opposite<<" of opposite-spin and "<< 1-scs_same <<" of same spin"<<std::endl;
-    gci::Operator h0 = hho.fockOperator(referenceDeterminant);
+    gci::Operator h0 = m_hamiltonian.fockOperator(referenceDeterminant);
 //    xout <<"h0="<<h0<<std::endl;
-    gci::Operator ssh = hho.sameSpinOperator(referenceDeterminant);
+    gci::Operator ssh = m_hamiltonian.sameSpinOperator(referenceDeterminant);
 //    xout <<"ssh="<<ssh<<std::endl;
-    gci::Operator osh=hho; osh -= ssh; osh-=h0; // spinUnrestricted not yet implemented
+    gci::Operator osh=m_hamiltonian; osh -= ssh; osh-=h0; // spinUnrestricted not yet implemented
 //    xout <<"osh="<<osh<<std::endl;
     gci::Operator h1 = osh*scs_opposite; h1 += ssh*scs_same;
 //    xout <<"h1="<<h1<<std::endl;
-    gci::Operator h2(hho); // spinUnrestricted not yet implemented
+    gci::Operator h2(m_hamiltonian); // spinUnrestricted not yet implemented
     h2-=h1; h2-=h0;
 //    xout <<"h2="<<h2<<std::endl;
     std::vector<gci::Operator*> hams;
@@ -325,16 +307,16 @@ std::vector<double> Run::run()
 #endif
   } else  if (method == "IPT") {
     xout << "Ionisation perturbation theory" << std::endl;
-//    Operator h0 = hho.fockOperator(referenceDeterminant);
-     IPT(hho, prototype,referenceLocation);
+//    Operator h0 = m_hamiltonian.fockOperator(referenceDeterminant);
+     IPT(m_hamiltonian, prototype,referenceLocation);
 //    xout <<std::fixed << std::setprecision(8);
 //    xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
 //    xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(emp[i]=totalEnergy+=emp[i]); xout <<std::endl;
 //    energies.resize(1); energies[0] = totalEnergy;
   } else  if (method == "ISRSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
-    Operator h0 = hho.fockOperator(referenceDeterminant);
-    std::vector<double> emp = ISRSPT(hho, h0, prototype);
+    Operator h0 = m_hamiltonian.fockOperator(referenceDeterminant);
+    std::vector<double> emp = ISRSPT(m_hamiltonian, h0, prototype);
     xout <<std::fixed << std::setprecision(8);
     xout <<"MP energies" ; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<emp[i]; xout <<std::endl;
     xout <<"MP total energies" ; double totalEnergy=0; for (int i=0; i<(int)emp.size(); i++) xout <<" "<<(emp[i]=totalEnergy+=emp[i]); xout <<std::endl;
@@ -343,16 +325,16 @@ std::vector<double> Run::run()
     itf::SetVariables( "ENERGY_MP", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
   } else if (method == "DAVIDSON") {
-    energies = Davidson(hho,  prototype);
+    energies = Davidson(m_hamiltonian,  prototype);
   } else if (method == "CS") {
-    energies = CSDavidson(hho,  prototype);
+    energies = CSDavidson(m_hamiltonian,  prototype);
 #ifdef MOLPRO
 //    itf::SetVariables( "ENERGY_METHOD", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
   } else if (method=="DIIS") {
-    energies = DIIS(hho, prototype);
+    energies = DIIS(m_hamiltonian, prototype);
   } else if (method=="HAMILTONIAN")
-     HamiltonianMatrixPrint(hho,prototype);
+     HamiltonianMatrixPrint(m_hamiltonian,prototype);
   else if (method=="PROFILETEST") {
     double a=1.234;
     for (int i=0; i<100000000; i++) a=(a+1/std::sqrt(a));
@@ -393,7 +375,7 @@ std::vector<double> Run::run()
     for (size_t state=0; state < m_wavefunctions.size(); state++) {
         m_densityMatrices.emplace_back(
             m_wavefunctions[state]->density(options.parameter("DENSITY")));
-        xout << "Density . hamiltonian ="<< (m_densityMatrices[state] & hho) << std::endl;
+        xout << "Density . hamiltonian ="<< (m_densityMatrices[state] & m_hamiltonian) << std::endl;
     }
 
   return energies;
