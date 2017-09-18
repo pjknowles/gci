@@ -220,6 +220,7 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
 
 void StringSet::setupPartialWeightArray()
 { // set up partial weight array for addressing binomial distributions
+  auto p = profiler->push("StringSet::setupPartialWeightArray");
   int nitem = proto.nelec;
   int nbox = proto.orbitalSpace->total();
   PartialWeightArray = std::vector< std::vector<int> > (nitem, std::vector<int>(nbox));
@@ -282,24 +283,24 @@ void StringSet::complete(int sym)
 
 }
 
-void StringSet::insert(String& s)
-{
-//    std::cout <<parallel_rank<< "StringSet::insert "<<s.str()<<std::endl;std::cout.flush();
-//    xout <<parallel_rank<< "addressMap has "<<addressMap.size()<<" entries; size()="<<size()<<std::endl;
-  s.keygen(PartialWeightArray);
-//  xout << "s.key="<<s.key<<", s.orbitals().size()="<<s.orbitals().size()<<std::endl;
-  if (addressMap.count(s.key())) {
-//        std::cout <<parallel_rank<<" "<<size()<<" "<<addressMap.count(s.key)<< "StringSet::insert found existing"<<std::endl;std::cout.flush();
-    if (addressMap[s.key()] >= size()) throw std::logic_error("something wrong in StringSet reset");
-    at(addressMap[s.key()]) = s;
-  } else {
-//        if (s.orbitals().size()==0) std::cout <<parallel_rank<< "StringSet::insert found new"<<std::endl;std::cout.flush();
-    addressMap[s.key()]=size();
-    memory::vector<String>::push_back(s);
-//      if (s.orbitals().size()==0) std::cout <<parallel_rank<<"StringSet::push_back " <<s <<" size()=" <<size()<<std::endl;std::cout.flush();
-  }
-  //std::cout <<parallel_rank<< "StringSet::insert finished "<<std::endl;std::cout.flush();
-}
+//void StringSet::insert(String& s)
+//{
+////    std::cout <<parallel_rank<< "StringSet::insert "<<s.str()<<std::endl;std::cout.flush();
+////    xout <<parallel_rank<< "addressMap has "<<addressMap.size()<<" entries; size()="<<size()<<std::endl;
+//  s.keygen(PartialWeightArray);
+////  xout << "s.key="<<s.key<<", s.orbitals().size()="<<s.orbitals().size()<<std::endl;
+//  if (addressMap.count(s.key())) {
+////        std::cout <<parallel_rank<<" "<<size()<<" "<<addressMap.count(s.key)<< "StringSet::insert found existing"<<std::endl;std::cout.flush();
+//    if (addressMap[s.key()] >= size()) throw std::logic_error("something wrong in StringSet reset");
+//    at(addressMap[s.key()]) = s;
+//  } else {
+////        if (s.orbitals().size()==0) std::cout <<parallel_rank<< "StringSet::insert found new"<<std::endl;std::cout.flush();
+//    addressMap[s.key()]=size();
+//    memory::vector<String>::push_back(s);
+////      if (s.orbitals().size()==0) std::cout <<parallel_rank<<"StringSet::push_back " <<s <<" size()=" <<size()<<std::endl;std::cout.flush();
+//  }
+//  //std::cout <<parallel_rank<< "StringSet::insert finished "<<std::endl;std::cout.flush();
+//}
 
 std::string StringSet::str(int verbosity, unsigned int columns) const
 {

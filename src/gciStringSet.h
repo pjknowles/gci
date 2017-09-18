@@ -98,7 +98,17 @@ public:
      * \brief Add a new element to the end of the set
      * \param s The element to add
      */
-  void insert(String &s);
+  void insert(String &s)
+  {
+    s.keygen(PartialWeightArray);
+    if (addressMap.count(s.key())) {
+      if (addressMap[s.key()] >= size()) throw std::logic_error("something wrong in StringSet reset");
+      at(addressMap[s.key()]) = s;
+    } else {
+      addressMap[s.key()]=size();
+      memory::vector<String>::push_back(s);
+    }
+  }
 
   /*!
      * \brief Find the locations of the String objects of this in a given other StringSet

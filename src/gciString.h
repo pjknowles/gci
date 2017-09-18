@@ -36,14 +36,70 @@ public:
      \param orbital Add an orbital to the string.
      \return int On exit, the phase change required to bring the determinant into canonical form is returned (plus or minus 1), or else zero if the orbital was already present in the determinant.
     */
-  int create(unsigned int orbital);
+  int create(unsigned int orbital)
+  {
+  //      xout << "String::create before="<<str()<<", orbital="<<orbital<<std::endl;
+    //        xout  << "create orbital "<<orbital <<" " <<orbitals_.size()<<std::endl;
+    //        xout << "hamiltonian "<<(hamiltonian!=nullptr)<<std::endl;
+    if (orbitalSpace==nullptr)
+      throw std::logic_error("String::create missing orbitalSpace");
+    //        xout << "basisSize "<<hamiltonian->total()<<std::endl;
+    if (orbitalSpace==nullptr || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total()) throw std::range_error("invalid orbital");
+    //    xout <<"make iterator "<<std::endl;
+  //  std::vector<unsigned int>::iterator ilast=orbitals_.begin();
+    //    xout <<"iterator OK"<<std::endl;
+
+    int phase=((m_orbitals.size()/2)*2 == m_orbitals.size()) ? 1 : -1;
+    //    xout <<"phase="<<phase<<std::endl;
+    //    xout <<"spin="<<spin<<std::endl;
+    for (std::vector<orbital_type>::iterator i = m_orbitals.begin(); i!=m_orbitals.end(); ++i) {
+      if (*i==orbital) return 0; // exclusion principle
+      if (*i > orbital){
+        ms2+=m_spin;
+        nelec++;
+        symmetry^=orbitalSpace->orbital_symmetries[orbital-1];
+  //                  xout <<"create orbital="<<*i <<" with symmetry="<<orbitalSpace->orbital_symmetries[*i-1]<<", giving total symmetry"<<symmetry<<std::endl;
+        m_orbitals.insert(i,orbital);
+  //                  xout << "String::create inserts, after="<<str()<<", phase="<<phase<<std::endl;
+        return phase;
+      }
+      phase=-phase;
+    }
+    ms2+=m_spin;
+    nelec++;
+    symmetry^=orbitalSpace->orbital_symmetries[orbital-1];
+    m_orbitals.insert(m_orbitals.end(),orbital);
+  //      xout << "String::create final append, after="<<str()<<", phase="<<phase<<std::endl;
+    return phase;
+  }
+
   /*!
      \brief
 
      \param orbital Remove an orbital from the string.
      \return int the phase change required to bring the determinant into canonical form before annihilation is returned (plus or minus 1), or else zero if the orbital was not present in the determinant.
     */
-  int destroy(unsigned int orbital);
+  int destroy(unsigned int orbital)
+  {
+    if (orbitalSpace==nullptr || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total() ) throw std::range_error("invalid orbital");
+    if (m_orbitals.size() <= 0) return (int) 0; //throw "too few electrons in String";
+    //    xout << "String::destroy before="<<str()<<", orbital="<<orbital<<std::endl;
+  //  int phase=1;
+    int phase=((m_orbitals.size()/2)*2 == m_orbitals.size()) ? -1 : 1;
+    for (std::vector<orbital_type>::iterator i = m_orbitals.begin(); i!=m_orbitals.end(); ++i) {
+      if (*i==orbital)  {
+        ms2-=m_spin;
+        nelec--;
+        symmetry^=orbitalSpace->orbital_symmetries[*i-1];
+        m_orbitals.erase(i);
+        //            xout << "String::destroy succeeds, after="<<str()<<", phase="<<phase<<std::endl;
+        return phase;
+      }
+      phase=-phase;
+    }
+    //    xout << "String::destroy fails, after="<<str()<<std::endl;
+    return (int)0; // exclusion principle
+  }
   /*!
      \brief advance to the canonically next string
     \param sym the desired symmetry of the string. Negative signifies any will do.
