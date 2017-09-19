@@ -41,10 +41,13 @@ public:
   //      xout << "String::create before="<<str()<<", orbital="<<orbital<<std::endl;
     //        xout  << "create orbital "<<orbital <<" " <<orbitals_.size()<<std::endl;
     //        xout << "hamiltonian "<<(hamiltonian!=nullptr)<<std::endl;
-    if (orbitalSpace==nullptr)
-      throw std::logic_error("String::create missing orbitalSpace");
+//    if (orbitalSpace==nullptr)
+//      throw std::logic_error("String::create missing orbitalSpace");
     //        xout << "basisSize "<<hamiltonian->total()<<std::endl;
-    if (orbitalSpace==nullptr || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total()) throw std::range_error("invalid orbital");
+//    if (orbitalSpace==nullptr || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total()) throw std::range_error("invalid orbital");
+    assert(orbitalSpace!=nullptr);
+    assert(orbital != 0);
+    assert(orbital <= orbitalSpace->total());
     //    xout <<"make iterator "<<std::endl;
   //  std::vector<unsigned int>::iterator ilast=orbitals_.begin();
     //    xout <<"iterator OK"<<std::endl;
