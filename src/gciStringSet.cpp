@@ -184,12 +184,16 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
       for (int i=0; i<(int)from.orbitalSpace->orbital_symmetries.size(); i++) {
         if (from.orbitalSpace->orbital_symmetries[i]==(unsigned int)symexc || symexc==-1) {
           String tt = from;
+//                profiler->start("destroy or create");
           int phase = (annihilations > 0) ? tt.destroy(i+1) : tt.create(i+1);
+//                profiler->stop("destroy or create");
           if (phase) {
             if (first) {
               proto = tt; setupPartialWeightArray(); insert(tt); proto = tt; first = false;
-            } else
+            } else {
+//                profiler->push("insert");
               insert(tt);
+              }
           }
         }
       }
