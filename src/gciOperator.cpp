@@ -139,7 +139,6 @@ FCIdump gci::Operator::FCIDump(const std::string filename) const
 
   dump.write(filename);
   dump.rewind();
-  FCIdump::integralType type;
   size_t i,j,k,l;
   const auto& integrals_a = O1(true);
   const auto& integrals_b = O1(false);

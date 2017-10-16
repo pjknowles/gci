@@ -545,8 +545,8 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                           memory::vector<double> result(nsa*nsb);
                           MXM(result.data(),&d[0], &(*h.O1(true).data())[0],
                               nsa*nsb,w.orbitalSpace->total(0,1),1,false);
-                          for (auto ia=0; ia<nsa; ia++)
-                            for (auto ib=0; ib<nsb; ib++)
+                          for (size_t ia=0; ia<nsa; ia++)
+                            for (size_t ib=0; ib<nsb; ib++)
                               buffer[offset+ia*bb.size()+bb0-bb.begin()+ib]
                                   += result[ia*nsb+ib];
                         }
