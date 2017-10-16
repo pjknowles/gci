@@ -1,3 +1,4 @@
+#include "common/molpro_config.h"
 #include "gci.h"
 #include "gciFile.h"
 #include "gciMolpro.h"
