@@ -217,21 +217,21 @@ Run::Run(std::string fcidump)
   MPI_Comm_rank(MPI_COMM_COMPUTE,&parallel_rank);
   MPI_Comm_size(MPI_COMM_COMPUTE,&parallel_size);
   xout << "Parallel run of "<<parallel_size<<" processes"<< std::endl;
-#else
-  parallel_rank=0; parallel_size=1;
-#endif
   int lendata=0;
   if (parallel_rank==0) {
       options = Options(FCIdump(fcidump).data());
       lendata=(int)options.data().size();
     }
-#ifdef MPI_COMM_COMPUTE
   MPI_Bcast(&lendata, (int)1, MPI_INT, 0, MPI_COMM_COMPUTE);
-  char buf[lendata+1];
+  char* buf = (char*) malloc(lendata+1);
   if (parallel_rank==0) for (auto i=0; i<lendata; i++) buf[i]=options.data()[i];
   MPI_Bcast(&buf[0], lendata, MPI_CHAR, 0, MPI_COMM_COMPUTE);
   buf[lendata]=(char)0;
   options = Options(buf);
+  free(buf);
+#else
+  parallel_rank=0; parallel_size=1;
+  options = Options(FCIdump(fcidump).data());
 #endif
 //  xout << "gci::Run::options="<<options.data()<<std::endl;
 //  xout << "IUHF "<< options.parameter("IUHF",std::vector<int>{0})[0]<<std::endl;
@@ -944,7 +944,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       meanfield_residual resid(ham,false);
       if (false) { // print A
           _IPT_b0m->set(0);
-          for (int i=0; i<ww.back()->size(); i++) {
+          for (size_t i=0; i<ww.back()->size(); i++) {
               std::static_pointer_cast<Wavefunction>(ww.back())->set((double)0);
               std::static_pointer_cast<Wavefunction>(ww.back())->set(i, (double) 1);
               std::static_pointer_cast<Wavefunction>(gg.back())->set((double)0);
