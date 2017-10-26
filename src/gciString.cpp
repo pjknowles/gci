@@ -208,10 +208,9 @@ bool String::first(int n, int sym) {
 String String::exhausted;
 
 
-size_t String::index(const StringSet& set) const
+const size_t String::index(const StringSet& set) const
 {
-  std::map<size_t,size_t>::const_iterator i;
-  i = set.addressMap.find(m_key);
+  const auto i = set.addressMap.find(m_key);
   return (i == set.addressMap.end()) ? StringNotFound : i->second;
 }
 

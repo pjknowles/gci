@@ -166,7 +166,7 @@ public:
      * \param set the StringSet that hopefully contains this String
      * \return the offset in set or StringNotFound if not in set
      */
-  size_t index(const StringSet& set) const;
+  const size_t index(const StringSet& set) const;
 
   /*!
    * \brief operator == test whether two String objects are identical

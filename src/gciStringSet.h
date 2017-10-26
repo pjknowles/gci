@@ -5,6 +5,7 @@
 #include "gciPrintable.h"
 #include <vector>
 #include <map>
+#include <unordered_map>
 
 namespace gci {
 
@@ -50,7 +51,8 @@ public:
   /*!
      * \brief Map from the summed partial weights to the canonical index of a String in this set
      */
-  std::map<size_t,size_t> addressMap;
+  using t_addressMap = std::unordered_map<size_t,size_t>;
+  t_addressMap addressMap;
   /*!
      * \brief Populate the StringSet with the complete set of String objects
      * \param sym Restrict to those String objects with this symmetry if not negative
