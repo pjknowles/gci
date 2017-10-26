@@ -107,7 +107,7 @@ void operator()(const ParameterVectorSet & psx, ParameterVectorSet & outputs, st
 //        xout << "_meanfield_residual: x"<<x->values()<<std::endl;
         if (not append)
           g->set(0);
-          *g -= *_IPT_b0m;
+        *g -= *_IPT_b0m;
 //        xout << "_meanfield_residual: g after b0m"<<g->values()<<std::endl;
         g->operatorOnWavefunction(_IPT_Fock[0], *x, parallel_stringset);
 //        xout << "_meanfield_residual: g after fock"<<g->values()<<std::endl;
