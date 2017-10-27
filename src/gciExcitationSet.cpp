@@ -1,12 +1,6 @@
 #include "gciExcitationSet.h"
 #include <iostream>
 #include <sstream>
-Excitation::Excitation(size_t StringIndex, int Phase, size_t OrbitalAddress)
-{
-  stringIndex = StringIndex;
-  phase = Phase;
-  orbitalAddress = OrbitalAddress;
-}
 
 ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihilations, int creations)
   : ExcitationSetContainer()
@@ -16,8 +10,39 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
   //    xout <<"ExcitationSet taking From="<<From.str()<<" annihilations="<<annihilations<<" creations="<<creations<<std::endl;
   To = &to;
   if (to.symmetry>=0) symexc = from.symmetry ^ to.symmetry; // use symmetry if we can
-  if (annihilations + creations ==1) {
+  if (false && annihilations==0 && creations ==1) {
     int ii=0;
+    for (int i=0; i<(int)from.orbitalSpace->orbital_symmetries.size(); i++) {
+      if (from.orbitalSpace->orbital_symmetries[i]==(unsigned int)symexc || symexc==-1) {
+        String tt = from;
+        int phase = tt.create(i+1);
+        if (phase) {
+            tt.gci::String::keygen(to.PartialWeightArray);
+            size_t ti=to.addressMap.find(tt.key())->second;
+            emplace_back(ti,phase,ii);
+        }
+        ii++;
+      }
+    }
+  }
+  else if (false && annihilations==1 && creations ==0) {
+    int ii=0;
+    for (int i=0; i<(int)from.orbitalSpace->orbital_symmetries.size(); i++) {
+      if (from.orbitalSpace->orbital_symmetries[i]==(unsigned int)symexc || symexc==-1) {
+        String tt = from;
+        int phase = tt.destroy(i+1);
+        if (phase) {
+            tt.gci::String::keygen(to.PartialWeightArray);
+            size_t ti=to.addressMap.find(tt.key())->second;
+            emplace_back(ti,phase,ii);
+        }
+        ii++;
+      }
+    }
+  }
+  else if (annihilations + creations ==1) {
+    int ii=0;
+    reserve (symexc==-1 ? from.orbitalSpace->orbital_symmetries.size() : from.orbitalSpace->orbital_symmetries.size());
     for (int i=0; i<(int)from.orbitalSpace->orbital_symmetries.size(); i++) {
       if (from.orbitalSpace->orbital_symmetries[i]==(unsigned int)symexc || symexc==-1) {
         String tt = from;
@@ -26,6 +51,7 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
             tt.gci::String::keygen(to.PartialWeightArray);
             size_t ti=to.addressMap.find(tt.key())->second;
             emplace_back(ti,phase,ii);
+//            push_back(Excitation(ti,phase,ii));
         }
         ii++;
       }
