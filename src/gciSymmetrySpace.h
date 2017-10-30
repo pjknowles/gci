@@ -10,7 +10,7 @@ namespace gci {
  * \brief General class to hold dimensions of symmetry blocks in a matrix or more general tensor.
  * The vector<> elements are the numbers of functions in each symmetry.
  */
-class SymmetrySpace :public std::vector<size_t>, public gci::Printable {
+class SymmetrySpace : public std::vector<size_t>, public gci::Printable {
 public:
   /*!
      * \brief Construct a SymmetrySpace object
