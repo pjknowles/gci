@@ -82,6 +82,7 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
       }
     }
   }
+//  shrink_to_fit();
 }
 
 std::string ExcitationSet::str(int verbosity) const {
