@@ -59,6 +59,7 @@ public:
   size_t total(int sym1, int parity=0) const;
 private:
   std::vector<size_t> offsets;
+  std::vector<size_t> buffer;
 };
 }
 
