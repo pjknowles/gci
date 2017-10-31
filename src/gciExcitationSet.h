@@ -51,7 +51,6 @@ class ExcitationSet : public ExcitationSetContainer
 {
 public:
   ExcitationSet()=delete;
-//  ExcitationSet() : ExcitationSetContainer() {}
   /*!
      * \brief Construct the ExcitationSet containing all excitations
      * from a given String
@@ -62,14 +61,16 @@ public:
      * \param creations How many creations.
      */
   ExcitationSet(const String &from, const StringSet &to, int annihilations, int creations);
+private:
   /*!
      * \brief The String to which this set relates
      */
-  String From;
+  const String& From;
   /*!
      * \brief The StringSet containing the excited String objects
      */
-  const StringSet* To;
+  const StringSet& To;
+public:
   /*!
      * \brief Generate printable representation of the object
      * \return Printable representation of the object

@@ -3,12 +3,10 @@
 #include <sstream>
 
 ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihilations, int creations)
-  : ExcitationSetContainer()
+  : ExcitationSetContainer(), From(from), To(to)
 {
   int symexc=-1;
-  From = from;
   //    xout <<"ExcitationSet taking From="<<From.str()<<" annihilations="<<annihilations<<" creations="<<creations<<std::endl;
-  To = &to;
   if (to.symmetry>=0) symexc = from.symmetry ^ to.symmetry; // use symmetry if we can
   if (false && annihilations==0 && creations ==1) {
     int ii=0;
@@ -87,12 +85,12 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
 }
 
 std::string ExcitationSet::str(int verbosity) const {
-  if ((*To).size()==0 || verbosity < 0) return "";
+  if (To.size()==0 || verbosity < 0) return "";
   std::stringstream ss;
-  ss<<"Excitations for String "<<From.str() << " into symmetry " << (*To)[0].symmetry+1 <<":";
+  ss<<"Excitations for String "<<From.str() << " into symmetry " << To[0].symmetry+1 <<":";
   for (ExcitationSet::const_iterator e=this->begin(); e!=this->end(); e++) {
     ss<<std::endl<< " String index="<< e->stringIndex
-     <<"("<<(*To)[e->stringIndex].str()<<")"
+     <<"("<<To[e->stringIndex].str()<<")"
     <<" phase="<<e->phase<<" orbitalAddress="<<e->orbitalAddress;
   }
   return ss.str();
