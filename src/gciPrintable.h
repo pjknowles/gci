@@ -15,7 +15,7 @@ namespace gci {
 class Printable
 {
 public:
-  Printable();
+  Printable() {}
   /*!
      \brief
     printable form of the object.
@@ -31,7 +31,7 @@ public:
  \brief
  Overloaded <<
 */
-std::ostream& operator<<(std::ostream& os, Printable const& obj);
+inline std::ostream& operator<<(std::ostream& os, Printable const& obj) { return os << obj.str(); }
 }
 using namespace gci;
 
