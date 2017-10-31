@@ -3,7 +3,7 @@
 #include <sstream>
 
 ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihilations, int creations)
-  : ExcitationSetContainer(), From(from), To(to)
+  : From(from), To(to)
 {
   int symexc=-1;
   //    xout <<"ExcitationSet taking From="<<From.str()<<" annihilations="<<annihilations<<" creations="<<creations<<std::endl;
@@ -17,7 +17,7 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
         if (phase) {
             tt.gci::String::keygen(to.PartialWeightArray);
             size_t ti=to.addressMap.find(tt.key())->second;
-            emplace_back(ti,phase,ii);
+            buffer.emplace_back(ti,phase,ii);
         }
         ii++;
       }
@@ -32,7 +32,7 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
         if (phase) {
             tt.gci::String::keygen(to.PartialWeightArray);
             size_t ti=to.addressMap.find(tt.key())->second;
-            emplace_back(ti,phase,ii);
+            buffer.emplace_back(ti,phase,ii);
         }
         ii++;
       }
@@ -40,7 +40,7 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
   }
   else if (annihilations + creations ==1) {
     int ii=0;
-    reserve (symexc==-1 ? from.orbitalSpace->orbital_symmetries.size() : from.orbitalSpace->orbital_symmetries.size());
+    buffer.reserve (symexc==-1 ? from.orbitalSpace->orbital_symmetries.size() : from.orbitalSpace->orbital_symmetries.size());
     for (int i=0; i<(int)from.orbitalSpace->orbital_symmetries.size(); i++) {
       if (from.orbitalSpace->orbital_symmetries[i]==(unsigned int)symexc || symexc==-1) {
         String tt = from;
@@ -48,8 +48,8 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
         if (phase) {
             tt.gci::String::keygen(to.PartialWeightArray);
             size_t ti=to.addressMap.find(tt.key())->second;
-            emplace_back(ti,phase,ii);
-//            push_back(Excitation(ti,phase,ii));
+            buffer.emplace_back(ti,phase,ii);
+//            buffer.push_back(Excitation(ti,phase,ii));
         }
         ii++;
       }
@@ -75,21 +75,21 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
                 throw std::range_error("index error in ExcitationSet");
               }
               if (from.orbitalSpace->orbital_symmetries[i] > from.orbitalSpace->orbital_symmetries[j]) phase=-phase;
-              emplace_back(ti,phase,from.orbitalSpace->pairIndex(i+1,j+1,parity));
+              buffer.emplace_back(ti,phase,from.orbitalSpace->pairIndex(i+1,j+1,parity));
             }
           }
         }
       }
     }
   }
-//  shrink_to_fit();
+//  buffer.shrink_to_fit();
 }
 
 std::string ExcitationSet::str(int verbosity) const {
   if (To.size()==0 || verbosity < 0) return "";
   std::stringstream ss;
   ss<<"Excitations for String "<<From.str() << " into symmetry " << To[0].symmetry+1 <<":";
-  for (ExcitationSet::const_iterator e=this->begin(); e!=this->end(); e++) {
+  for (auto e=buffer.begin(); e!=buffer.end(); e++) {
     ss<<std::endl<< " String index="<< e->stringIndex
      <<"("<<To[e->stringIndex].str()<<")"
     <<" phase="<<e->phase<<" orbitalAddress="<<e->orbitalAddress;

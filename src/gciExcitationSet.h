@@ -47,7 +47,7 @@ using ExcitationSetContainer = std::vector<Excitation>;
 /*!
  * \brief Container for a number of Excitation objects all arising from the same base String
  */
-class ExcitationSet : public ExcitationSetContainer
+class ExcitationSet
 {
 public:
   ExcitationSet()=delete;
@@ -70,12 +70,17 @@ private:
      * \brief The StringSet containing the excited String objects
      */
   const StringSet& To;
+  ExcitationSetContainer buffer;
 public:
   /*!
      * \brief Generate printable representation of the object
      * \return Printable representation of the object
      */
   std::string str(int verbosity=0) const;
+  size_t size() const { return buffer.size();}
+  using const_iterator=ExcitationSetContainer::const_iterator;
+  ExcitationSetContainer::const_iterator begin() const { return buffer.begin();}
+  ExcitationSetContainer::const_iterator end() const { return buffer.end();}
 
 };
 
