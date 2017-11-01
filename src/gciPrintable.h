@@ -22,9 +22,6 @@ public:
      \return std::string
     */
   virtual std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const=0;
-
-  //    friend std::ostream& operator<<(std::ostream& os, Printable const& obj);
-
 };
 
 /*!

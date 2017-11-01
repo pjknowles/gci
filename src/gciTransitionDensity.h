@@ -1,5 +1,6 @@
 #ifndef GCITRANSITIONDENSITY_H
 #define GCITRANSITIONDENSITY_H
+#include "memory.h"
 #include <vector>
 #include "gciStringSet.h"
 #include "gciOrbitalSpace.h"
@@ -13,7 +14,7 @@ namespace gci {
  * \brief Class to hold transition density matrix,
  * defined by an array of ExcitationSet objects
  */
-class TransitionDensity : public std::vector<double>, public Printable
+class TransitionDensity : public memory::vector<double>, public Printable
 {
 public:
   /*!
@@ -53,11 +54,11 @@ private:
   size_t nsb; ///< number of beta strings
   unsigned int symexc; ///< symmetry of excitations
   size_t excitations; ///< number of excitations
-  StringSet::const_iterator alphaStringsBegin;
-  StringSet::const_iterator alphaStringsEnd;
-  StringSet::const_iterator betaStringsBegin;
-  StringSet::const_iterator betaStringsEnd;
-  int parity;
+  const StringSet::const_iterator alphaStringsBegin;
+  const StringSet::const_iterator alphaStringsEnd;
+  const StringSet::const_iterator betaStringsBegin;
+  const StringSet::const_iterator betaStringsEnd;
+  const int parity;
   bool m_hasAlpha;
   bool m_hasBeta;
 };

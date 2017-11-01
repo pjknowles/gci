@@ -18,10 +18,6 @@ State::State(OrbitalSpace& h, int n, int s, int m2)
 {
 }
 
-State::~State()
-{
-}
-
 
 void State::load(const Options &dump)
 {

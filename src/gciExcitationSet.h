@@ -22,7 +22,11 @@ public:
      * \param Phase plus or minus one, giving the parity of the line-up permutation
      * \param OrbitalAddress An address representing the orbital(s) involved.
      */
-  Excitation(size_t StringIndex, int Phase, size_t OrbitalAddress);
+  Excitation(size_t StringIndex, int Phase, size_t OrbitalAddress)
+    : stringIndex ( StringIndex)
+    , phase ( Phase)
+    , orbitalAddress ( OrbitalAddress)
+  { }
   /*!
      * \brief stringIndex points to the destination of the excitation in a StringSet
      */
@@ -43,11 +47,10 @@ using ExcitationSetContainer = std::vector<Excitation>;
 /*!
  * \brief Container for a number of Excitation objects all arising from the same base String
  */
-class ExcitationSet : public ExcitationSetContainer
+class ExcitationSet
 {
 public:
   ExcitationSet()=delete;
-//  ExcitationSet() : ExcitationSetContainer() {}
   /*!
      * \brief Construct the ExcitationSet containing all excitations
      * from a given String
@@ -58,19 +61,26 @@ public:
      * \param creations How many creations.
      */
   ExcitationSet(const String &from, const StringSet &to, int annihilations, int creations);
+private:
   /*!
      * \brief The String to which this set relates
      */
-  String From;
+  const String& From;
   /*!
      * \brief The StringSet containing the excited String objects
      */
-  const StringSet* To;
+  const StringSet& To;
+  ExcitationSetContainer buffer;
+public:
   /*!
      * \brief Generate printable representation of the object
      * \return Printable representation of the object
      */
   std::string str(int verbosity=0) const;
+  size_t size() const { return buffer.size();}
+  using const_iterator=ExcitationSetContainer::const_iterator;
+  ExcitationSetContainer::const_iterator begin() const { return buffer.begin();}
+  ExcitationSetContainer::const_iterator end() const { return buffer.end();}
 
 };
 
