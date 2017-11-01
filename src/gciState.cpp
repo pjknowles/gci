@@ -9,12 +9,12 @@ State::State(const Options& dump)
 }
 
 State::State(OrbitalSpace *h, int n, int s, int m2)
-  : orbitalSpace(new OrbitalSpace(*h)), nelec(n), symmetry(s), ms2(m2)
+  : orbitalSpace(new OrbitalSpace(*h)), nelec(n), ms2(m2), symmetry(s)
 {
 }
 
 State::State(OrbitalSpace& h, int n, int s, int m2)
-  : orbitalSpace(new OrbitalSpace(h)), nelec(n), symmetry(s), ms2(m2)
+  : orbitalSpace(new OrbitalSpace(h)), nelec(n), ms2(m2), symmetry(s)
 {
 }
 

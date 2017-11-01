@@ -9,11 +9,11 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
                                      const StringSet::const_iterator &betaStringsBegin_,
                                      const StringSet::const_iterator &betaStringsEnd_,
                                      const int parity_, const bool doAlpha, const bool doBeta)
-  : parity(parity_)
-  , alphaStringsBegin(alphaStringsBegin_)
+  : alphaStringsBegin(alphaStringsBegin_)
   , alphaStringsEnd(alphaStringsEnd_)
   , betaStringsBegin(betaStringsBegin_)
   , betaStringsEnd(betaStringsEnd_)
+  , parity(parity_)
 {
   // first parse the type of transition
   nsa = std::distance(alphaStringsBegin,alphaStringsEnd);
