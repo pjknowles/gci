@@ -172,14 +172,17 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       unsigned int symexca = wsyma ^ syma;
       size_t intoff = w.orbitalSpace->offset(symexc,symexca,parity);
       size_t wnsb = w.betaStrings[wsymb].size();
+      if (wnsb==0) continue;
       size_t woffset = w.blockOffset(wsyma);
       size_t offb = 0;
       std::vector<ExcitationSet> eebs;
       {
       auto prof3=profiler->push("construct eebs");
-      for (StringSet::const_iterator sb = betaStringsBegin; sb != betaStringsEnd; sb++)
+      for (StringSet::const_iterator sb = betaStringsBegin; sb != betaStringsEnd; sb++) {
 //        eebs.push_back(ExcitationSet(*sb,w.betaStrings[wsymb],0,1));
         eebs.emplace_back(*sb,w.betaStrings[wsymb],0,1);
+        prof3 += eebs.back().size();
+      }
       }
       for (StringSet::const_iterator sa = alphaStringsBegin; sa != alphaStringsEnd; sa++) {
 //      profiler->start("construct eea");
