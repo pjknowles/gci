@@ -322,7 +322,7 @@ void Diagonalize( double *x, double *d, unsigned int m, unsigned int nColStride 
 
   for (int i=0; i<(int)n-1; i++) {
     double pm=(double)0;
-    int k;
+    int k=0;
     for (int j=0; j<(int)n-1; j++) {
       if(pm <= std::fabs(x[j+m*i]))  {
   pm =std::fabs(x[j+m*i]);
