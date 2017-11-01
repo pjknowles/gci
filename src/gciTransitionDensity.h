@@ -54,11 +54,11 @@ private:
   size_t nsb; ///< number of beta strings
   unsigned int symexc; ///< symmetry of excitations
   size_t excitations; ///< number of excitations
-  StringSet::const_iterator alphaStringsBegin;
-  StringSet::const_iterator alphaStringsEnd;
-  StringSet::const_iterator betaStringsBegin;
-  StringSet::const_iterator betaStringsEnd;
-  int parity;
+  const StringSet::const_iterator alphaStringsBegin;
+  const StringSet::const_iterator alphaStringsEnd;
+  const StringSet::const_iterator betaStringsBegin;
+  const StringSet::const_iterator betaStringsEnd;
+  const int parity;
   bool m_hasAlpha;
   bool m_hasBeta;
 };

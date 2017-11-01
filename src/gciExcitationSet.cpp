@@ -39,22 +39,16 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
     }
   }
   else if (annihilations + creations ==1) {
-//  auto p=profiler->push("ExcitationSet ab");
     int ii=0;
     buffer.reserve (symexc==-1 ? from.orbitalSpace->orbital_symmetries.size() : from.orbitalSpace->orbital_symmetries.size());
     for (int i=0; i<(int)from.orbitalSpace->orbital_symmetries.size(); i++) {
       if (from.orbitalSpace->orbital_symmetries[i]==(unsigned int)symexc || symexc==-1) {
-//        for (auto rep=0; rep<100; rep++) String tt{from}; // the culprit!
         String tt = from;
-//        for (auto rep=0; rep<100; rep++) tt.destroy(i+1) ; tt.create(i+1);
         int phase = (annihilations > 0) ? tt.destroy(i+1) : tt.create(i+1);
         if (phase) {
             tt.gci::String::keygen(to.PartialWeightArray);
             size_t ti=to.addressMap.find(tt.key())->second;
-//        for (auto rep=0; rep<100; rep++) { buffer.emplace_back(ti,phase,ii); buffer.pop_back();}
             buffer.emplace_back(ti,phase,ii);
-//            p+=1;
-//            buffer.push_back(Excitation(ti,phase,ii));
         }
         ii++;
       }
