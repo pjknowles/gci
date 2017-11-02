@@ -208,7 +208,7 @@ bool String::first(int n, int sym) {
 String String::exhausted;
 
 
-const size_t String::index(const StringSet& set) const
+size_t String::index(const StringSet& set) const
 {
   const auto i = set.addressMap.find(m_key);
   return (i == set.addressMap.end()) ? StringNotFound : i->second;
