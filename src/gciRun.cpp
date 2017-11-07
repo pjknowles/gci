@@ -256,8 +256,8 @@ std::vector<double> Run::run()
   size_t referenceLocation;
   Determinant referenceDeterminant;
   State prototype;
-  profiler->start("find reference");
   { // so that w goes out of scope
+    auto p = profiler->push("find reference");
     Wavefunction w(options);
     w.diagonalOperator(m_hamiltonian);
     referenceLocation = w.minloc();
@@ -267,7 +267,6 @@ std::vector<double> Run::run()
     xout << "Lowest energy determinant " << referenceDeterminant <<" with energy "<<w.at(referenceLocation)<<std::endl;
     prototype = State(m_hamiltonian.m_orbitalSpaces[0],w.nelec,w.symmetry,w.ms2);
   }
-  profiler->stop("find reference");
   if (options.parameter("EXPLICIT1")==0 && method != "RSPT") throw std::runtime_error("EXPLICIT1 has been retired");
   //hh.constructBraKet(
 //        referenceDeterminant.nelec+referenceDeterminant.ms2,

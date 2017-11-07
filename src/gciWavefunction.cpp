@@ -55,7 +55,7 @@ void Wavefunction::set(const double value)
 
 void Wavefunction::diagonalOperator(const Operator &op)
 {
-  profiler->start("diagonalOperator");
+  auto p = profiler->push("diagonalOperator");
   auto ha=op.int1(true);
   auto hbb=op.int1(false);
   Eigen::MatrixXd Jaa;
@@ -130,7 +130,6 @@ void Wavefunction::diagonalOperator(const Operator &op)
     offset +=nsa*nsb;
   }
 //  xout << "diagonal elements"<<std::endl; for (size_t i=0; i < buffer.size(); i++) xout <<" "<<buffer[i]; xout <<std::endl;
-  profiler->stop("diagonalOperator");
 }
 
 void Wavefunction::axpy(double a, const LinearAlgebra::vector<double> *x)
