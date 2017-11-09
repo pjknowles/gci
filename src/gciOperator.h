@@ -28,8 +28,9 @@ namespace gci {
                       bool uhf=false,
                       unsigned int symmetry=0,
                       bool covariant=true,
+                      bool hermitian=true,
                       std::string description="")
-      :  SymmetryMatrix::Operator(dims_t{dimension,dimension,dimension,dimension}, rank, uhf, std::vector<int>{1,1}, std::vector<int>{-1,-1}, symmetry, covariant, description) {
+      :  SymmetryMatrix::Operator(dims_t{dimension,dimension,dimension,dimension}, rank, uhf, std::vector<int>{hermitian?1:0,hermitian?1:0}, std::vector<int>{-1,-1}, symmetry, covariant, description) {
       for (auto i=0; i<4; i++) m_orbitalSpaces.push_back(OrbitalSpace(orbital_symmetries,uhf)); // in this implementation, all four orbital spaces are the same
     }
 
