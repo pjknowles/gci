@@ -688,7 +688,8 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
                           alphaStrings[syma].end(),
                           betaStrings[symb].begin(),
                           betaStrings[symb].end(),
-                          1,true, !result.m_uhf);
+                          (hermitian?1:0),true, !result.m_uhf);
+      xout << "Transition density\n"<<d<<std::endl;
       MXM(&((*result.O1(true).data())[0]),&d[0],&(bra->buffer[offset]),orbitalSpace->total(0,1),nsa*nsb,1,true,nsa*nsb);
     }
     if (result.m_uhf) {
@@ -697,7 +698,7 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
                           alphaStrings[syma].end(),
                           betaStrings[symb].begin(),
                           betaStrings[symb].end(),
-                          1,false, true);
+                          (hermitian?1:0),false, true);
       MXM(&((*result.O1(false).data())[0]),&d[0],&(bra->buffer[offset]),orbitalSpace->total(0,1),nsa*nsb,1,true,nsa*nsb);
     }
   }
