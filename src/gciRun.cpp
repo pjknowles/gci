@@ -377,6 +377,8 @@ std::vector<double> Run::run()
       }
   if (options.parameter("EXCITATIONLEVEL")>0) {
       xout << "Excitation level analysis"<<std::endl;
+      auto dm_hermitian=m_wavefunctions[0]->density(2,false,true);
+      xout << "dm_hermitian\n"<<dm_hermitian<<std::endl;
       auto dm=m_wavefunctions[0]->density(2,false,false);
       auto metric = dm.metric();
       auto metricInverse = dm.metric().inverse(1e-5);

@@ -25,6 +25,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
   //  xout << "symb="<<symb<<", nsb="<<nsb<<std::endl;
   symexc = w.symmetry ^ syma ^ symb;
   excitations = w.orbitalSpace->total(symexc,parity);
+  xout << "excitations="<<excitations<<std::endl;
   int deltaAlpha = w.alphaStrings[0].proto.nelec - alphaStringsBegin->nelec;
   int deltaBeta = w.betaStrings[0].proto.nelec - betaStringsBegin->nelec;
 
