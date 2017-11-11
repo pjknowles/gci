@@ -382,22 +382,22 @@ std::vector<double> Run::run()
       auto dm=m_wavefunctions[0]->density(2,false,false);
       auto metric = dm.metric();
       auto metricInverse = dm.metric().inverse(1e-5);
-      xout << "metric\n" << metric<<std::endl;
-      xout << "metric.inverse(1e-5)\n" << metric.inverse(1e-5)<<std::endl;
+//      xout << "metric\n" << metric<<std::endl;
+//      xout << "metric.inverse(1e-5)\n" << metric.inverse(1e-5)<<std::endl;
 //      xout << "metric.inverse(1e-5)\n" << metricInverse<<std::endl;
 //      xout << "metric*metric.inverse(1e-5)\n" << metric*metric.inverse(1e-5)<<std::endl;
 
       for (const auto& w : m_wavefunctions) {
-          xout << "wavefunction:"<<w->values()<<std::endl;
+//          xout << "wavefunction:"<<w->values()<<std::endl;
 //          auto td0=w->density(1,false,true);
 //          xout << "td0\n"<<td0<<std::endl;
           auto td=w->density(1,false,false,m_wavefunctions[0].get());
-          xout << "td\n"<<td<<std::endl;
+//          xout << "td\n"<<td<<std::endl;
           SMat td1({{td.O1().size()},{1}});
           std::copy(td.O1().block(0).begin(),td.O1().block(0).end(),td1.block(0).begin());
-          xout << "td1\n"<<td1<<std::endl;
-          xout << "metricInverse*td1\n"<<(metricInverse*td1)<<std::endl;
-          xout << "Norm of wavefunction projected to ground 0+1 space="<<(transpose(td1)&(metricInverse*td1))<<std::endl;
+//          xout << "td1\n"<<td1<<std::endl;
+//          xout << "metricInverse*td1\n"<<(metricInverse*td1)<<std::endl;
+          xout << "Norm of wavefunction projected to ground+1 space="<<(transpose(td1)&(metricInverse*td1))<<std::endl;
         }
     }
 
