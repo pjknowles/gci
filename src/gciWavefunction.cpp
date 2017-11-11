@@ -536,7 +536,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                                           aa0,
                                           aa1,
                                           bb0,bb1,
-                                          1,true, !h.m_uhf);
+                                          parityEven,true, !h.m_uhf);
                       if (nsb == bb.size())
                         MXM(&buffer[offset],&d[0], &(*h.O1(true).data())[0],
                             nsa*nsb,w.orbitalSpace->total(0,1),1,true);
@@ -555,7 +555,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                                             aa0,
                                             aa1,
                                             bb0,bb1,
-                                            1,false, true);
+                                            parityEven,false, true);
                         MXM(&buffer[offset],&d[0], &(*h.O1(false).data())[0],
                             nsa*nsb,w.orbitalSpace->total(0,1),1,true);
                       }
@@ -586,7 +586,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
             size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
             for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsbbMax > aa.end() ? aa.end() : aa0+nsbbMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
                 size_t nsa = aa1-aa0;
-                TransitionDensity d(w,aa0,aa1,w.betaStrings[symb].begin(),w.betaStrings[symb].end(),-1,false,false);
+                TransitionDensity d(w,aa0,aa1,w.betaStrings[symb].begin(),w.betaStrings[symb].end(),parityOddPacked,false,false);
                 TransitionDensity e(d);
                 MXM(&e[0],&d[0], &h.O2(true,true,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
                 e.action(*this);
@@ -610,7 +610,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
               size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
               for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
                   size_t nsb = bb1-bb0;
-                  TransitionDensity d(w,w.alphaStrings[syma].begin(),w.alphaStrings[syma].end(),bb0,bb1,-1,false,false);
+                  TransitionDensity d(w,w.alphaStrings[syma].begin(),w.alphaStrings[syma].end(),bb0,bb1,parityOddPacked,false,false);
                   TransitionDensity e(d);
                   MXM(&e[0],&d[0], &h.O2(false,false,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
                   e.action(*this);
@@ -641,7 +641,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                   for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
                       size_t nsb = bb1-bb0;
                       if (!NextTask()) continue;
-                      TransitionDensity d(w,aa0,aa1, bb0,bb1,0,false,false);
+                      TransitionDensity d(w,aa0,aa1, bb0,bb1,parityNone,false,false);
                       TransitionDensity e(d);
                       MXM(&e[0],&d[0], &h.O2(true,false,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
                       e.action(*this);
@@ -682,15 +682,15 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
     unsigned int symb = symmetry^syma;
     nsa = alphaStrings[syma].size();
     nsb = betaStrings[symb].size();
-    if (!NextTask()) continue;
+    if (!NextTask() || nsa*nsb==0) continue;
     { TransitionDensity d(*this,
                           alphaStrings[syma].begin(),
                           alphaStrings[syma].end(),
                           betaStrings[symb].begin(),
                           betaStrings[symb].end(),
-                          (hermitian?1:0),true, !result.m_uhf);
-      xout << "Transition density\n"<<d<<std::endl;
-      MXM(&((*result.O1(true).data())[0]),&d[0],&(bra->buffer[offset]),orbitalSpace->total(0,1),nsa*nsb,1,true,nsa*nsb);
+                          (hermitian?parityEven:parityNone),true, !result.m_uhf);
+//      xout << "Transition density\n"<<d<<std::endl;
+      MXM(&((*result.O1(true).data())[0]),&d[0],&(bra->buffer[offset]),orbitalSpace->total(0,(hermitian?parityEven:parityNone)),nsa*nsb,1,true,nsa*nsb);
     }
     if (result.m_uhf) {
       TransitionDensity d(*this,
@@ -698,8 +698,8 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
                           alphaStrings[syma].end(),
                           betaStrings[symb].begin(),
                           betaStrings[symb].end(),
-                          (hermitian?1:0),false, true);
-      MXM(&((*result.O1(false).data())[0]),&d[0],&(bra->buffer[offset]),orbitalSpace->total(0,1),nsa*nsb,1,true,nsa*nsb);
+                          (hermitian?parityEven:parityNone),false, true);
+      MXM(&((*result.O1(false).data())[0]),&d[0],&(bra->buffer[offset]),orbitalSpace->total(0,(hermitian?parityEven:parityNone)),nsa*nsb,1,true,nsa*nsb);
     }
   }
   std::vector<bool> spincases(1,true); if (result.m_uhf) spincases.push_back(false);
@@ -738,8 +738,8 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
             size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
             for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsbbMax > aa.end() ? aa.end() : aa0+nsbbMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
                 size_t nsa = aa1-aa0;
-                TransitionDensity d(*this,aa0,aa1,betaStrings[symb].begin(),betaStrings[symb].end(),-1,false,false);
-                TransitionDensity e(*bra,aa0,aa1,betaStrings[symb].begin(),betaStrings[symb].end(),-1,false,false);
+                TransitionDensity d(*this,aa0,aa1,betaStrings[symb].begin(),betaStrings[symb].end(),parityOddPacked,false,false);
+                TransitionDensity e(*bra,aa0,aa1,betaStrings[symb].begin(),betaStrings[symb].end(),parityOddPacked,false,false);
 //                      xout <<"Daa: "<<d.str(2)<<std::endl;
 //                      xout <<"Eaa: "<<e.str(2)<<std::endl;
 //                xout << "result goes to "<<&result.O2(true,true).block(symexc)[0]<<std::endl;
@@ -766,8 +766,8 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
               size_t nsa = alphaStrings[syma].size(); if (nsa==0) continue;
               for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
                   size_t nsb = bb1-bb0;
-                  TransitionDensity d(*this,alphaStrings[syma].begin(),alphaStrings[syma].end(),bb0,bb1,-1,false,false);
-                  TransitionDensity e(*bra,alphaStrings[syma].begin(),alphaStrings[syma].end(),bb0,bb1,-1,false,false);
+                  TransitionDensity d(*this,alphaStrings[syma].begin(),alphaStrings[syma].end(),bb0,bb1,parityOddPacked,false,false);
+                  TransitionDensity e(*bra,alphaStrings[syma].begin(),alphaStrings[syma].end(),bb0,bb1,parityOddPacked,false,false);
                   MXM(&result.O2(false,false,false).block(symexc)[0], &d[0],&e[0], nexc, nsa*nsb, nexc, true, nsa*nsb); // not yet right for non-symmetric tdm
                 }
             }
@@ -793,8 +793,8 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
                   for (StringSet::iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
                       size_t nsb = bb1-bb0;
                       if (!NextTask()) continue;
-                      TransitionDensity d(*this,aa0,aa1, bb0,bb1,0,false,false);
-                      TransitionDensity e(*bra,aa0,aa1, bb0,bb1,0,false,false);
+                      TransitionDensity d(*this,aa0,aa1, bb0,bb1,parityNone,false,false);
+                      TransitionDensity e(*bra,aa0,aa1, bb0,bb1,parityNone,false,false);
 //                      xout <<"D: "<<d.str(2)<<std::endl;
 //                      xout <<"E: "<<e.str(2)<<std::endl;
 //                      xout << "ab result before MXM"<<result.O2(true,false,false).str("result",2)<<std::endl;

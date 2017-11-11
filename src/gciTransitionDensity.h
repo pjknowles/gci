@@ -7,6 +7,7 @@
 #include "Operator.h"
 #include "gciWavefunction.h"
 #include "gciPrintable.h"
+#include "SMat.h"
 
 namespace gci {
 
@@ -33,7 +34,7 @@ public:
                     const StringSet::const_iterator &alphaStringsEnd,
                     const StringSet::const_iterator &betaStringsBegin,
                     const StringSet::const_iterator &betaStringsEnd,
-                    const int parity, const bool doAlpha=true, const bool doBeta=true);
+                    const parity_t parity, const bool doAlpha=true, const bool doBeta=true);
   /*!
    * \brief Collapse onto a configuration-space residual
    * w(I) += E(K,exc) <I|exc|K>
@@ -58,7 +59,7 @@ private:
   const StringSet::const_iterator alphaStringsEnd;
   const StringSet::const_iterator betaStringsBegin;
   const StringSet::const_iterator betaStringsEnd;
-  const int parity;
+  const parity_t parity;
   bool m_hasAlpha;
   bool m_hasBeta;
 };

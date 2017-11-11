@@ -41,6 +41,7 @@ size_t OrbitalSpace::pairIndex(unsigned int i, unsigned int j, int parity) const
   unsigned int isym = orbital_symmetries[i-1];
   unsigned int jsym = orbital_symmetries[j-1];
   if (parity == 0 || isym > jsym ) {
+//      xout < i<<" "<<j<<" "<< offset(isym^jsym,isym,parity) + jj*at(isym)+ii<<std::endl;
     return offset(isym^jsym,isym,parity) + jj*at(isym)+ii;
   } else {
     if (parity > 0 && isym == jsym)
