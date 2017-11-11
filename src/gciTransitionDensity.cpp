@@ -31,6 +31,8 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
   int deltaBeta = w.betaStrings[0].proto.nelec - betaStringsBegin->nelec;
 
 //    xout <<"TransitionDensity "<<symexc<<" "<<nsa*nsb*excitations<<std::endl;
+//    xout <<"deltaAlpha "<<deltaAlpha<<std::endl;
+//    xout <<"deltaBeta "<<deltaBeta<<std::endl;
   resize(nsa*nsb*excitations,(double)0);
   if (nsa*nsb*excitations == 0) return;
   auto prof = profiler->push("TransitionDensity");
@@ -117,10 +119,11 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
     size_t wnsb = w.betaStrings[wsymb].size();
     // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
     size_t woffset = w.blockOffset(wsyma) + betaStringsBegin->index(w.betaStrings[wsymb]);
-    //    xout << "alpha wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<std::endl;
+//        xout << "alpha wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<std::endl;
 
     size_t offa=0;
     for (StringSet::const_iterator s = alphaStringsBegin; s != alphaStringsEnd; s++) {
+//        xout << "sending parity="<<parity<<" to ExcitatinoSet"<<std::endl;
       ExcitationSet ee(*s,w.alphaStrings[wsyma],0,2,parity);
       prof2 += ee.size()*nsb*2;
       for (const auto& e : ee) {
@@ -144,7 +147,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
     // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
     size_t woffset = w.blockOffset(wsyma) + wnsb * alphaStringsBegin->index(w.alphaStrings[wsyma]);
     size_t offb = 0;
-    //    xout << "beta wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<", woffset="<<woffset<<std::endl;
+//        xout << "beta wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<", woffset="<<woffset<<std::endl;
     for (StringSet::const_iterator s = betaStringsBegin; s != betaStringsEnd; s++) {
       ExcitationSet ee(*s,w.betaStrings[wsymb],0,2,parity);
       prof2 += ee.size()*nsa*2;

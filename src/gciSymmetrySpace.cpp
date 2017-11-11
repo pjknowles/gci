@@ -1,5 +1,6 @@
 #include "gciSymmetrySpace.h"
 #include <iostream>
+#include <algorithm>
 #include <sstream>
 
 SymmetrySpace::SymmetrySpace(std::string title, int maxrank_) : std::vector<size_t>(8,0)
@@ -88,7 +89,7 @@ size_t SymmetrySpace::offset(int sym1, int sym2, int parity) const
 {
   if (offsets.empty())
     throw std::logic_error("SymmetrySpace::calculateOffsets has not been called");
-  return offsets[9 + 8*9 * (parity + 1) + sym1*9 + sym2];
+  return offsets[9 + 8*9 * (std::max(parity,-1) + 1) + sym1*9 + sym2];
 }
 
 size_t SymmetrySpace::total() const {
