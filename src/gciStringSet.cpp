@@ -170,7 +170,7 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
   if ((int) referenceSpace.proto.nelec + creations - annihilations < 0
       || (int) referenceSpace.proto.nelec + creations - annihilations > (int) referenceSpace.proto.orbitals().size())
     return; // null space because not enough electrons or holes left
-  auto p = profiler->push("addByOperators");
+//  auto p = profiler->push("addByOperators");
   int symexc = (referenceSpace.symmetry>=0 && sym >=0) ? referenceSpace.symmetry ^ sym : -1 ; // use symmetry if we can
   for (StringSet::const_iterator s = referenceSpace.begin(); s != referenceSpace.end(); s++) {
     countall++;
@@ -224,7 +224,7 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
 
 void StringSet::setupPartialWeightArray()
 { // set up partial weight array for addressing binomial distributions
-  auto p = profiler->push("StringSet::setupPartialWeightArray");
+//  auto p = profiler->push("StringSet::setupPartialWeightArray");
   int nitem = proto.nelec;
   int nbox = proto.orbitalSpace->total();
   PartialWeightArray = std::vector< std::vector<int> > (nitem, std::vector<int>(nbox));

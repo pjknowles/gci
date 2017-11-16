@@ -52,10 +52,11 @@ public:
   //  std::vector<unsigned int>::iterator ilast=orbitals_.begin();
     //    xout <<"iterator OK"<<std::endl;
 
-    int phase=((m_orbitals.size()/2)*2 == m_orbitals.size()) ? 1 : -1;
+//    int phase=((m_orbitals.size()/2)*2 == m_orbitals.size()) ? 1 : -1;
+    int phase=1-2*(m_orbitals.size()%2);
     //    xout <<"phase="<<phase<<std::endl;
     //    xout <<"spin="<<spin<<std::endl;
-    for (std::vector<orbital_type>::iterator i = m_orbitals.begin(); i!=m_orbitals.end(); ++i) {
+    for (std::vector<orbital_type>::const_iterator i = m_orbitals.begin(); i!=m_orbitals.end(); ++i) {
       if (*i==orbital) return 0; // exclusion principle
       if (*i > orbital){
         ms2+=m_spin;
@@ -87,10 +88,8 @@ public:
     if (orbitalSpace==nullptr || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total() ) throw std::range_error("invalid orbital");
     if (m_orbitals.size() <= 0) return (int) 0; //throw "too few electrons in String";
     //    xout << "String::destroy before="<<str()<<", orbital="<<orbital<<std::endl;
-  //  int phase=1;
-//    int phase=((m_orbitals.size()/2)*2 == m_orbitals.size()) ? -1 : 1;
     int phase=(m_orbitals.size()%2) ? 1 : -1;
-    for (std::vector<orbital_type>::iterator i = m_orbitals.begin(); i!=m_orbitals.end(); ++i) {
+    for (std::vector<orbital_type>::const_iterator i = m_orbitals.begin(); i!=m_orbitals.end(); ++i) {
       if (*i==orbital)  {
         ms2-=m_spin;
         nelec--;

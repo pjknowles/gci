@@ -71,40 +71,25 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
       size_t woffset = w.blockOffset(wsyma) + wnsb * alphaStringsBegin->index(w.alphaStrings[wsyma]);
       size_t offb = 0;
-      //    xout << "beta wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<", woffset="<<woffset<<std::endl;
       for (StringSet::const_iterator s = betaStringsBegin; s != betaStringsEnd; s++) {
-        ExcitationSet ee(*s,w.betaStrings[wsymb],1,1);
-        prof2 += ee.size()*nsa*2;
-        for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
-          //        xout << "beta excitation " << e->orbitalAddress <<" "<<e->phase <<" "<<e->stringIndex<<std::endl;
-//            size_t off =  offb+nsa*nsb*e->orbitalAddress;
-//            size_t offw = woffset+e->stringIndex;
-//            auto di = begin()+offb+nsa*nsb*e->orbitalAddress;
-//            auto wi=w.cbegin() + woffset+e->stringIndex;
-          if (e->phase < 0)
-//            for (auto di = begin()+offb+nsa*nsb*e->orbitalAddress; di < begin()+offb+nsa*nsb*(e->orbitalAddress+1); di+=nsb) {
-            for (size_t ia=0; ia<nsa; ia++) {
-              (*this)[offb+nsa*nsb*e->orbitalAddress+ia*nsb] -= w.buffer[woffset+e->stringIndex+wnsb*ia];
-//              (*this)[off]-= w.buffer[offw];
-//                off += nsb; offw += wnsb;
-//                *di -= *wi;
-//di+=nsb;
-//wi+=wnsb;
-              }
-          else
-//            for (auto di = begin()+offb+nsa*nsb*e->orbitalAddress; di < begin()+offb+nsa*nsb*(e->orbitalAddress+1); di+=nsb) {
-            for (size_t ia=0; ia<nsa; ia++) {
-              (*this)[offb+nsa*nsb*e->orbitalAddress+ia*nsb] += w.buffer[woffset+e->stringIndex+wnsb*ia];
-//              (*this)[off]+= w.buffer[offw];
-//                off += nsb; offw += wnsb;
-//                *di += *wi;
-//di+=nsb;
-//wi+=wnsb;
-              }
+          ExcitationSet ee(*s,w.betaStrings[wsymb],1,1);
+          prof2 += ee.size()*nsa*2;
+          auto v = &((*this)[offb]);
+          for (const auto& e : ee) {
+              if (e.phase < 0)
+                for (size_t ia=0; ia<nsa; ia++) {
+                    *(v+nsa*nsb*e.orbitalAddress+ia*nsb) -= w.buffer[woffset+e.stringIndex+wnsb*ia];
+//                    (*this)[offb+nsa*nsb*e.orbitalAddress+ia*nsb] -= w.buffer[woffset+e.stringIndex+wnsb*ia];
+                  }
+              else
+                for (size_t ia=0; ia<nsa; ia++) {
+                    *(v+nsa*nsb*e.orbitalAddress+ia*nsb) += w.buffer[woffset+e.stringIndex+wnsb*ia];
+//                    (*this)[offb+nsa*nsb*e.orbitalAddress+ia*nsb] += w.buffer[woffset+e.stringIndex+wnsb*ia];
+                  }
+            }
+          offb ++;
         }
-        offb ++;
       }
-    }
 
   } else if (deltaAlpha==2) { // wavefunction has 2 more alpha electrons than interacting states
       auto prof2=profiler->push("TransitionDensity_alpha_alpha");
