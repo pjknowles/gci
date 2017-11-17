@@ -39,7 +39,7 @@ public:
    * w(I) += E(K,exc) <I|exc|K>
    * \param w a Wavefunction object that will receive contributions
    */
-  void action(Wavefunction& w);
+  void action(Wavefunction& w) const;
   /*!
    * \brief Contract TransitionDensity with a bra state to form a 1-particle density matrix
    * \param w the bra state
@@ -50,15 +50,19 @@ public:
 
   std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
 private:
-  size_t nsa; ///< number of alpha strings
-  size_t nsb; ///< number of beta strings
-  unsigned int symexc; ///< symmetry of excitations
-  size_t excitations; ///< number of excitations
   const StringSet::const_iterator alphaStringsBegin;
   const StringSet::const_iterator alphaStringsEnd;
   const StringSet::const_iterator betaStringsBegin;
   const StringSet::const_iterator betaStringsEnd;
   const int parity;
+  const size_t nsa; ///< number of alpha strings
+  const size_t nsb; ///< number of beta strings
+  const unsigned int syma;
+  const unsigned int symb;
+  const unsigned int symexc; ///< symmetry of excitations
+  const int deltaAlpha;
+  const int deltaBeta;
+  const size_t excitations; ///< number of excitations
   bool m_hasAlpha;
   bool m_hasBeta;
 };

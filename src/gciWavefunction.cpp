@@ -723,6 +723,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
 }
 
 
+
 gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wavefunction *bra, std::string description, bool parallel_stringset)
 {
   if (bra==nullptr) bra=this;

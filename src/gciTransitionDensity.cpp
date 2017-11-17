@@ -14,26 +14,15 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
   , betaStringsBegin(betaStringsBegin_)
   , betaStringsEnd(betaStringsEnd_)
   , parity(parity_)
+  , nsa(std::distance(alphaStringsBegin,alphaStringsEnd))
+  , nsb(std::distance(betaStringsBegin,betaStringsEnd))
+  , syma(alphaStringsBegin->computed_symmetry())
+  , symb(betaStringsBegin->computed_symmetry())
+  , symexc(w.symmetry ^ syma ^ symb)
+  , deltaAlpha(w.alphaStrings[0].proto.nelec - alphaStringsBegin->nelec)
+  , deltaBeta(w.betaStrings[0].proto.nelec - betaStringsBegin->nelec)
+  , excitations((deltaAlpha+deltaBeta)%2 ? w.orbitalSpace->operator[](symexc) : w.orbitalSpace->total(symexc,parity))
 {
-  // first parse the type of transition
-  nsa = std::distance(alphaStringsBegin,alphaStringsEnd);
-  nsb = std::distance(betaStringsBegin,betaStringsEnd);
-  if (nsa==0 || nsb==0) return;
-  unsigned int syma = alphaStringsBegin->computed_symmetry();
-  unsigned int symb =  betaStringsBegin->computed_symmetry();
-//    xout << "syma="<<syma<<", nsa="<<nsa<<std::endl;
-//    xout << "symb="<<symb<<", nsb="<<nsb<<std::endl;
-  int deltaAlpha = w.alphaStrings[0].proto.nelec - alphaStringsBegin->nelec;
-  int deltaBeta = w.betaStrings[0].proto.nelec - betaStringsBegin->nelec;
-//  xout << "deltaAlpha="<<deltaAlpha<<", deltaBeta="<<deltaBeta<<std::endl;
-  symexc = w.symmetry ^ syma ^ symb;
-  if (deltaAlpha+deltaBeta==0 || deltaAlpha+deltaBeta==2) // need to make more general
-    excitations = w.orbitalSpace->total(symexc,parity);
-  else
-    excitations = w.orbitalSpace->operator [](symexc);
-//  xout << "excitations="<<excitations<<std::endl;
-
-//    xout <<"TransitionDensity "<<symexc<<" "<<nsa*nsb*excitations<<std::endl;
   resize(nsa*nsb*excitations,(double)0);
   if (nsa*nsb*excitations == 0) return;
   auto prof = profiler->push("TransitionDensity");
@@ -186,26 +175,8 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
 
 }
 
-void TransitionDensity::action(Wavefunction &w)
+void TransitionDensity::action(Wavefunction &w) const
 {
-  // first parse the type of transition
-  nsa = std::distance(alphaStringsBegin,alphaStringsEnd);
-  nsb = std::distance(betaStringsBegin,betaStringsEnd);
-  if (nsa==0 || nsb==0) return;
-  unsigned int syma = alphaStringsBegin->computed_symmetry();
-  unsigned int symb =  betaStringsBegin->computed_symmetry();
-  unsigned int symexcw = w.symmetry ^ syma ^ symb;
-  excitations = w.orbitalSpace->total(symexcw,parity);
-  int deltaAlpha = w.alphaStrings[0].proto.nelec - alphaStringsBegin->nelec;
-  int deltaBeta = w.betaStrings[0].proto.nelec - betaStringsBegin->nelec;
-//  xout << "deltaAlpha="<<deltaAlpha<<", deltaBeta="<<deltaBeta<<std::endl;
-  if (deltaAlpha+deltaBeta==0 || deltaAlpha+deltaBeta==2) // need to make more general
-    excitations = w.orbitalSpace->total(symexcw,parity);
-  else
-    excitations = w.orbitalSpace->operator [](symexcw);
-//  xout << "excitations="<<excitations<<std::endl;
-
-
   if (nsa*nsb*excitations == 0) return;
   auto prof = profiler->push("TransitionDensity::action");
 
@@ -218,8 +189,6 @@ void TransitionDensity::action(Wavefunction &w)
       size_t wnsb = w.betaStrings[wsymb].size();
       // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
       size_t woffset = w.blockOffset(wsyma) + betaStringsBegin->index(w.betaStrings[wsymb]);
-      //    xout << "alpha wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<std::endl;
-
       size_t offa=0;
       for (StringSet::const_iterator s = alphaStringsBegin; s != alphaStringsEnd; s++) {
         ExcitationSet ee(*s,w.alphaStrings[wsyma],1,1);
@@ -314,7 +283,7 @@ void TransitionDensity::action(Wavefunction &w)
     for (unsigned int wsyma=0; wsyma<8; wsyma++) {
       unsigned int wsymb = w.symmetry^wsyma;
       unsigned int symexca = wsyma ^ syma;
-      size_t intoff = w.orbitalSpace->offset(symexcw,symexca,parity);
+      size_t intoff = w.orbitalSpace->offset(symexc,symexca,parity);
       size_t wnsb = w.betaStrings[wsymb].size();
       size_t woffset = w.blockOffset(wsyma);
       size_t offb = 0;
