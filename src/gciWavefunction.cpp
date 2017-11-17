@@ -509,10 +509,14 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
     size_t nsaaMax = 1000000000;
     size_t nsbbMax = 1000000000;
     size_t offset=0, nsa=0, nsb=0;
-    for (unsigned int syma=0; syma<8; syma++) for (unsigned int symb=0; symb<8; symb++) { // symmetry of N-1 electron state
+    std::vector<StringSet> bbs;
+    for (unsigned int symb=0; symb<8; symb++)
+      bbs.emplace_back(w.betaStrings,1,0,symb,parallel_stringset);
+    for (unsigned int syma=0; syma<8; syma++) {
+        StringSet aa(w.alphaStrings,1,0,syma,parallel_stringset);
+      for (unsigned int symb=0; symb<8; symb++) { // symmetry of N-1 electron state
         unsigned int symexc = w.symmetry^syma^symb;
 //        xout << "syma="<<syma<<" symb="<<symb<<" symexc="<<symexc<<std::endl;
-        StringSet aa(w.alphaStrings,1,0,syma,parallel_stringset);
         if (m_tilesize>0) {
           nsaaMax = m_tilesize/double(betaStrings[symb].size())+1;
           nsbbMax = m_tilesize/double(alphaStrings[symb].size())+1;
@@ -541,7 +545,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
 //            xout << "this after action "<<values()<<std::endl;
           }
           }
-        StringSet bb(w.betaStrings,1,0,symb,parallel_stringset);
+        const auto& bb = bbs[symb];
         if (bb.size()>0 && alphaStrings[syma].size()>0) {
         for (StringSet::const_iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
             if (!NextTask()) continue;
@@ -559,6 +563,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
 //            xout << "this after action "<<values()<<std::endl;
           }
           }
+      }
       }
 
   }
