@@ -45,24 +45,23 @@ public:
    * \param w the bra state
    * \return  the 1-particle density matrix
    */
-  std::vector<double> density(Wavefunction& w);
-  SymmetryMatrix::Operator density(const Wavefunction &w);
+  SymmetryMatrix::Operator density(const Wavefunction &w) const;
 
   std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
 private:
-  const StringSet::const_iterator alphaStringsBegin;
-  const StringSet::const_iterator alphaStringsEnd;
-  const StringSet::const_iterator betaStringsBegin;
-  const StringSet::const_iterator betaStringsEnd;
-  const int parity;
-  const size_t nsa; ///< number of alpha strings
-  const size_t nsb; ///< number of beta strings
-  const unsigned int syma;
-  const unsigned int symb;
-  const unsigned int symexc; ///< symmetry of excitations
-  const int deltaAlpha;
-  const int deltaBeta;
-  const size_t excitations; ///< number of excitations
+  const StringSet::const_iterator m_alphaStringsBegin;
+  const StringSet::const_iterator m_alphaStringsEnd;
+  const StringSet::const_iterator m_betaStringsBegin;
+  const StringSet::const_iterator m_betaStringsEnd;
+  const int m_parity;
+  const size_t m_nsa; ///< number of alpha strings
+  const size_t m_nsb; ///< number of beta strings
+  const unsigned int m_syma;
+  const unsigned int m_symb;
+  const unsigned int m_symexc; ///< symmetry of excitations
+  const int m_deltaAlpha;
+  const int m_deltaBeta;
+  const size_t m_excitations; ///< number of excitations
   bool m_hasAlpha;
   bool m_hasBeta;
 };
