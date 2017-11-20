@@ -510,7 +510,6 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
       auto p = profiler->push("1-electron RI");
       size_t nsaaMax = 1000000000;
       size_t nsbbMax = 1000000000;
-      size_t offset=0, nsa=0, nsb=0;
       std::vector<StringSet> bbs;
       for (unsigned int symb=0; symb<8; symb++)
 //        bbs.emplace_back(w.betaStrings,1,0,symb,parallel_stringset);
