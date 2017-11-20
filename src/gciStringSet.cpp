@@ -8,11 +8,12 @@ StringSet::StringSet() : memory::vector<String>()
 //      xout <<parallel_rank<<"StringSet default constructor"<<std::endl;
 }
 
-StringSet::StringSet(String prototype, bool all, int sym) : memory::vector<String>()
+StringSet::StringSet(const String &prototype, bool all, int sym) : memory::vector<String>()
 {
-//      xout <<parallel_rank<<"StringSet prototype constructor "<<all<<std::endl;
+//      xout <<parallel_rank<<"StringSet prototype constructor "<<all<<", sym="<<sym<<std::endl;
   // copy prototype
   proto = prototype;
+//  xout << "prototype="<<proto<<std::endl;
   symmetry = sym;
   setupPartialWeightArray();
   if (all) complete(sym);
@@ -278,7 +279,7 @@ void StringSet::complete(int sym)
   String string(&proto);
   this->erase(this->begin(),this->end());
   if (string.first(proto.nelec,sym)) {
-    //    xout <<"StringSet::complete symmetry="<<sym<<" first String: "<<string.printable()<<std::endl;
+//        xout <<"StringSet::complete symmetry="<<sym<<" first String: "<<string<<std::endl;
     do {
 //              xout << "in StringSet::complete about to push_back " << string.str(1) <<std::endl;
       this->insert(string);

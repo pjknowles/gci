@@ -232,6 +232,7 @@ private:
   bool compatible(const Wavefunction &other) const; ///< whether this wavefunction is on the same space as another
   std::vector<size_t> _blockOffset;
   int m_tilesize=-1, m_alphatilesize=-1, m_betatilesize=-1;
+  static constexpr double m_activeStringTolerance=1e-15;
 
 };
 double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions

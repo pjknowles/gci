@@ -503,6 +503,8 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
 
   //  xout <<std::endl<<"w in operatorOnWavefunction="<<w.str(2)<<std::endl;
   DivideTasks(99999999,1,1);
+  const auto alphaActiveStrings=w.activeStrings(true);
+  const auto betaActiveStrings=w.activeStrings(false);
 
   if (true){
       auto p = profiler->push("1-electron RI");
@@ -511,10 +513,11 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
       size_t offset=0, nsa=0, nsb=0;
       std::vector<StringSet> bbs;
       for (unsigned int symb=0; symb<8; symb++)
-        bbs.emplace_back(w.betaStrings,1,0,symb,parallel_stringset);
+//        bbs.emplace_back(w.betaStrings,1,0,symb,parallel_stringset);
+        bbs.emplace_back(betaActiveStrings,1,0,symb,parallel_stringset);
       for (unsigned int syma=0; syma<8; syma++) {
 //          StringSet aa(w.alphaStrings,1,0,syma,parallel_stringset);
-          StringSet aa(w.activeStrings(),1,0,syma,parallel_stringset);
+          StringSet aa(alphaActiveStrings,1,0,syma,parallel_stringset);
           for (unsigned int symb=0; symb<8; symb++) { // symmetry of N-1 electron state
               unsigned int symexc = w.symmetry^syma^symb;
               //        xout << "syma="<<syma<<" symb="<<symb<<" symexc="<<symexc<<std::endl;
@@ -639,7 +642,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
       size_t nsbbMax = 64; // temporary static
       for (unsigned int syma=0; syma<8; syma++) {
           profiler->start("StringSet aa");
-          StringSet aa(w.alphaStrings,2,0,syma,parallel_stringset);
+          StringSet aa(alphaActiveStrings,2,0,syma,parallel_stringset);
           profiler->stop("StringSet aa");
           if (aa.size()==0) continue;
           for (unsigned int symb=0; symb<8; symb++) {
@@ -666,7 +669,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
         auto p = profiler->push("bb integrals");
         size_t nsbbMax = 64; // temporary static
         for (unsigned int symb=0; symb<8; symb++) {
-            StringSet bb(w.betaStrings,2,0,symb,parallel_stringset);
+            StringSet bb(betaActiveStrings,2,0,symb,parallel_stringset);
             if (bb.size()==0) continue;
             for (unsigned int syma=0; syma<8; syma++) {
                 if (!NextTask()) continue;
@@ -691,10 +694,10 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
       size_t nsaaMax = 640; // temporary static
       size_t nsbbMax = 640; // temporary static
       for (unsigned int symb=0; symb<8; symb++) {
-          StringSet bb(w.betaStrings,1,0,symb,parallel_stringset);
+          StringSet bb(betaActiveStrings,1,0,symb,parallel_stringset);
           if (bb.size()==0) continue;
           for (unsigned int syma=0; syma<8; syma++) {
-              StringSet aa(w.alphaStrings,1,0,syma,parallel_stringset);
+              StringSet aa(alphaActiveStrings,1,0,syma,parallel_stringset);
               if (aa.size()==0) continue;
               unsigned int symexc = symb^syma^w.symmetry;
               size_t nexc = h.O2(true,false,false).block_size(symexc);
@@ -1037,26 +1040,31 @@ memory::vector<double>::const_iterator Wavefunction::cend() const
 
 std::vector<StringSet> Wavefunction::activeStrings(bool spinUp) const
 {
+  auto p = profiler->push("activeStrings");
   const std::vector<StringSet>& sources = spinUp ? alphaStrings : betaStrings;
-  std::vector<StringSet> results;
+//  return sources;
+  const std::vector<StringSet>& complements = spinUp ? betaStrings : alphaStrings;
+  std::vector<StringSet> results(8);
   for (unsigned int sym=0; sym<8; sym++) {
       const StringSet& source = sources[sym];
+      if (source.empty()) continue;
       const auto syma = spinUp ? sym : symmetry ^ sym;
       const auto symb = symmetry ^ syma;
-      results.emplace_back(source,true,source.symmetry);
-      results.back().symmetry=source.symmetry;
+      results[sym] = StringSet(source.front(),false,static_cast<int>(sym));
       size_t off=_blockOffset[syma];
+      size_t dout = spinUp ? betaStrings[symb].size() : 1;
+      size_t din = spinUp ? 1 : betaStrings[symb].size();
+      size_t nc=complements[sym^symmetry].size();
       for (const auto& s : source) {
-//          results.back().emplace_back(s);
-//          results.back().push_back(s);
-          off += spinUp ? betaStrings[symb].size() : 1;
+          for (size_t c=0; c<nc; c++) {
+//              if (buffer[off+c*din] != 0.0) {
+              if (std::abs(buffer[off+c*din]) > m_activeStringTolerance) {
+                  results[sym].push_back(s);
+                  break;
+                }
+            }
+          off += dout;
         }
-      xout << "sources " <<sources[sym].size()<<std::endl;
-      for (const auto& s : sources[sym]) xout << s << std::endl;
-      xout << "results " <<results[sym].size() <<" symmetry="<<results[sym].symmetry<<std::endl;
-      for (const auto& s : results[sym]) xout << s << std::endl;
     }
-      xout << "sources " <<sources.size()<<std::endl;
-      xout << "results " <<results.size()<<std::endl;
   return results;
 }

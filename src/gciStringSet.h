@@ -25,7 +25,7 @@ public:
      * \param all Whether or not to construct the complete set of String objects
      * \param sym If all, specify symmetry of String objects; -1 denotes all symmetries
      */
-  StringSet(String prototype, bool all=true, int sym=-1);
+  explicit StringSet(const String& prototype, bool all=true, int sym=-1);
   /*!
      * \brief Construct a StringSet from another one by applying annihilations and creations
      * \param referenceSpace
@@ -34,7 +34,7 @@ public:
      * \param sym specify symmetry of String objects; -1 denotes all symmetries
      * \param parallel whether to use parallel algorithm
      */
-  StringSet(const StringSet &referenceSpace, int annihilations, int creations, int sym=-1, bool parallel=false);
+  explicit StringSet(const StringSet &referenceSpace, int annihilations, int creations, int sym=-1, bool parallel=false);
   /*!
      * \brief Construct a StringSet from a vector of other ones by applying annihilations and creations
      * \param referenceSpaces vector of reference spaces
@@ -43,7 +43,7 @@ public:
      * \param sym specify symmetry of String objects; -1 denotes all symmetries
      * \param parallel whether to use parallel algorithm
      */
-  StringSet(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym=-1,bool parallel=false);
+  explicit StringSet(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym=-1,bool parallel=false);
   /*!
      * \brief PartialWeightArray holds the partial weight array for addressing the full set of String objects
      */
