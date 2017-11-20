@@ -19,12 +19,14 @@ StringSet::StringSet(String prototype, bool all, int sym) : memory::vector<Strin
 }
 
 StringSet::StringSet(const StringSet &referenceSpace, int annihilations, int creations, int sym, bool parallel)
+  : memory::vector<String>()
 {
   //std::cout<<"crashing"<<std::endl;std::cout.flush();MPI_Abort(MPI_COMM_COMPUTE,12345);
   addByOperators(referenceSpace, annihilations, creations, sym, parallel);
 }
 
 StringSet::StringSet(const std::vector<StringSet>& referenceSpaces, int annihilations, int creations, int sym, bool parallel)
+  : memory::vector<String>()
 {
   addByOperators(referenceSpaces, annihilations, creations, sym, parallel);
 //  xout << "StringSet constructor from referenceSpaces size()="<<size()<<", rank="<<parallel_rank<<", parallel="<<parallel<<std::endl;

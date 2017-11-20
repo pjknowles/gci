@@ -219,6 +219,8 @@ public:
     m_tilesize=t; m_alphatilesize=a; m_betatilesize=b;
   }
 
+  std::vector<StringSet> activeStrings(bool spinUp=true) const;
+
 private:
   void buildStrings(); ///< build alphaStrings and betaStrings
   size_t dimension; ///< the size of the space

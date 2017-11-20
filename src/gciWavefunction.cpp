@@ -513,7 +513,8 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
       for (unsigned int symb=0; symb<8; symb++)
         bbs.emplace_back(w.betaStrings,1,0,symb,parallel_stringset);
       for (unsigned int syma=0; syma<8; syma++) {
-          StringSet aa(w.alphaStrings,1,0,syma,parallel_stringset);
+//          StringSet aa(w.alphaStrings,1,0,syma,parallel_stringset);
+          StringSet aa(w.activeStrings(),1,0,syma,parallel_stringset);
           for (unsigned int symb=0; symb<8; symb++) { // symmetry of N-1 electron state
               unsigned int symexc = w.symmetry^syma^symb;
               //        xout << "syma="<<syma<<" symb="<<symb<<" symexc="<<symexc<<std::endl;
@@ -1032,4 +1033,29 @@ memory::vector<double>::const_iterator Wavefunction::cend() const
     return buffer.cbegin() + std::min((size_t)buffer.size(),(size_t)((parallel_rank+1)*((buffer.size()-1)/parallel_size+1)));
   else
     return buffer.cend();
+}
+
+std::vector<StringSet> Wavefunction::activeStrings(bool spinUp) const
+{
+  const std::vector<StringSet>& sources = spinUp ? alphaStrings : betaStrings;
+  std::vector<StringSet> results;
+  for (unsigned int sym=0; sym<8; sym++) {
+      const StringSet& source = sources[sym];
+      const auto syma = spinUp ? sym : symmetry ^ sym;
+      const auto symb = symmetry ^ syma;
+      results.emplace_back(source,false,source.symmetry);
+      size_t off=_blockOffset[syma];
+      for (const auto& s : source) {
+//          results.back().emplace_back(s);
+          results.back().push_back(s);
+          off += spinUp ? betaStrings[symb].size() : 1;
+        }
+      xout << "sources " <<sources[sym].size()<<std::endl;
+      for (const auto& s : sources[sym]) xout << s << std::endl;
+      xout << "results " <<results[sym].size()<<std::endl;
+      for (const auto& s : results[sym]) xout << s << std::endl;
+    }
+      xout << "sources " <<sources.size()<<std::endl;
+      xout << "results " <<results.size()<<std::endl;
+  return results;
 }
