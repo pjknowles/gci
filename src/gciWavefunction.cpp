@@ -1043,16 +1043,17 @@ std::vector<StringSet> Wavefunction::activeStrings(bool spinUp) const
       const StringSet& source = sources[sym];
       const auto syma = spinUp ? sym : symmetry ^ sym;
       const auto symb = symmetry ^ syma;
-      results.emplace_back(source,false,source.symmetry);
+      results.emplace_back(source,true,source.symmetry);
+      results.back().symmetry=source.symmetry;
       size_t off=_blockOffset[syma];
       for (const auto& s : source) {
 //          results.back().emplace_back(s);
-          results.back().push_back(s);
+//          results.back().push_back(s);
           off += spinUp ? betaStrings[symb].size() : 1;
         }
       xout << "sources " <<sources[sym].size()<<std::endl;
       for (const auto& s : sources[sym]) xout << s << std::endl;
-      xout << "results " <<results[sym].size()<<std::endl;
+      xout << "results " <<results[sym].size() <<" symmetry="<<results[sym].symmetry<<std::endl;
       for (const auto& s : results[sym]) xout << s << std::endl;
     }
       xout << "sources " <<sources.size()<<std::endl;
