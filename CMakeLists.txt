@@ -3,24 +3,12 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 project(gci)
-enable_language(Fortran)
 enable_language(CXX)
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-O3 -march=native" _native)
 if (_native)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native")
 set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native")
-endif()
-set (CMAKE_Fortran_FLAGS_RELEASE "-O3")
-set (CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g")
-include(CheckFortranCompilerFlag)
-check_fortran_compiler_flag("-fdefault-integer-8" _gnu8)
-if(_gnu8)
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fdefault-integer-8")
-endif()
-check_fortran_compiler_flag("-i8" _i8)
-if(_i8)
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -i8")
 endif()
 include(ProcessorCount)
 ProcessorCount(NPROC)
@@ -37,9 +25,9 @@ set(CTEST_BUILD_FLAGS -j${NPROC})
 
 
 
-file (GLOB SRCS src/*.cpp src/*.F90
+file (GLOB SRCS src/*.cpp
     submodules/Profiler/Profiler.cpp
-    submodules/memory/memory.F90 submodules/memory/bytestreamC.cpp submodules/memory/bytestreamF.F90
+    submodules/memory/bytestreamC.cpp
     submodules/symmetry_matrix/SMat.cpp submodules/symmetry_matrix/SMatfunction.cpp submodules/symmetry_matrix/Operator.cpp submodules/symmetry_matrix/SMatMat.cpp
     submodules/FCIdump/FCIdump.cpp
     submodules/IterativeSolver/IterativeSolver/ISDavidson.cpp
