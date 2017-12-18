@@ -8,7 +8,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
                                      const StringSet::const_iterator &alphaStringsEnd,
                                      const StringSet::const_iterator &betaStringsBegin,
                                      const StringSet::const_iterator &betaStringsEnd,
-                                     const int parity, const bool doAlpha, const bool doBeta)
+                                     const parity_t parity, const bool doAlpha, const bool doBeta)
   : m_alphaStringsBegin(alphaStringsBegin)
   , m_alphaStringsEnd(alphaStringsEnd)
   , m_betaStringsBegin(betaStringsBegin)
@@ -25,7 +25,6 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
 {
   resize(m_nsa*m_nsb*m_excitations,(double)0);
   if (m_nsa*m_nsb*m_excitations == 0) return;
-  xout << "excitations="<<m_excitations<<std::endl;
   auto prof = profiler->push("TransitionDensity");
 
   if (m_deltaAlpha==0 && m_deltaBeta==0) { // number of electrons preserved, so one-electron excitation
@@ -41,7 +40,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
           size_t woffset = w.blockOffset(wsyma) + m_betaStringsBegin->index(w.betaStrings[wsymb]);
           size_t offa=0;
           for (StringSet::const_iterator s = m_alphaStringsBegin; s != m_alphaStringsEnd; s++) {
-              ExcitationSet ee(*s,w.alphaStrings[wsyma],1,1);
+	      ExcitationSet ee(*s,w.alphaStrings[wsyma],1,1,m_parity);
               prof2 += ee.size()*m_nsb*2;
               for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
                   if (e->phase < 0)
@@ -65,7 +64,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
           size_t woffset = w.blockOffset(wsyma) + wnsb * m_alphaStringsBegin->index(w.alphaStrings[wsyma]);
           size_t offb = 0;
           for (StringSet::const_iterator s = m_betaStringsBegin; s != m_betaStringsEnd; s++) {
-              ExcitationSet ee(*s,w.betaStrings[wsymb],1,1);
+	      ExcitationSet ee(*s,w.betaStrings[wsymb],1,1,m_parity);
               prof2 += ee.size()*m_nsa*2;
               auto v = &((*this)[offb]);
               for (const auto& e : ee) {
@@ -96,7 +95,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
 
       size_t offa=0;
       for (StringSet::const_iterator s = m_alphaStringsBegin; s != m_alphaStringsEnd; s++) {
-          ExcitationSet ee(*s,w.alphaStrings[wsyma],0,m_deltaAlpha);
+          ExcitationSet ee(*s,w.alphaStrings[wsyma],0,m_deltaAlpha,m_parity);
           prof2 += ee.size()*m_nsb*2;
           for (const auto& e : ee) {
               if (e.phase < 0)
@@ -120,7 +119,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       size_t woffset = w.blockOffset(wsyma) + wnsb * m_alphaStringsBegin->index(w.alphaStrings[wsyma]);
       size_t offb = 0;
       for (StringSet::const_iterator s = m_betaStringsBegin; s != m_betaStringsEnd; s++) {
-          ExcitationSet ee(*s,w.betaStrings[wsymb],0,m_deltaBeta);
+          ExcitationSet ee(*s,w.betaStrings[wsymb],0,m_deltaBeta,m_parity);
           prof2 += ee.size()*m_nsa*2;
           for (const auto& e : ee) {
               if (e.phase < 0)
@@ -150,7 +149,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
           for (StringSet::const_iterator sb = m_betaStringsBegin; sb != m_betaStringsEnd; sb++)
             eebs.emplace_back(*sb,w.betaStrings[wsymb],0,1);
           for (StringSet::const_iterator sa = m_alphaStringsBegin; sa != m_alphaStringsEnd; sa++) {
-              ExcitationSet eea(*sa,w.alphaStrings[wsyma],0,1);
+              ExcitationSet eea(*sa,w.alphaStrings[wsyma],0,1,m_parity);
               for (const auto& eeb : eebs) {
                   prof2 += eea.size()*eeb.size()*2;
                   for (const auto& eb : eeb) {
@@ -189,7 +188,7 @@ void TransitionDensity::action(Wavefunction &w) const
           size_t woffset = w.blockOffset(wsyma) + m_betaStringsBegin->index(w.betaStrings[wsymb]);
           size_t offa=0;
           for (StringSet::const_iterator s = m_alphaStringsBegin; s != m_alphaStringsEnd; s++) {
-              ExcitationSet ee(*s,w.alphaStrings[wsyma],1,1);
+              ExcitationSet ee(*s,w.alphaStrings[wsyma],1,1,m_parity);
               prof += ee.size()*m_nsb*2;
               for (const auto& e : ee) {
                   if (e.phase < 0)
@@ -214,7 +213,7 @@ void TransitionDensity::action(Wavefunction &w) const
           size_t woffset = w.blockOffset(wsyma) + wnsb * m_alphaStringsBegin->index(w.alphaStrings[wsyma]);
           size_t offb = 0;
           for (StringSet::const_iterator s = m_betaStringsBegin; s != m_betaStringsEnd; s++) {
-              ExcitationSet ee(*s,w.betaStrings[wsymb],1,1);
+              ExcitationSet ee(*s,w.betaStrings[wsymb],1,1,m_parity);
               prof += ee.size()*m_nsa*2;
               for (const auto& e : ee) {
                   if (e.phase < 0)
@@ -238,7 +237,7 @@ void TransitionDensity::action(Wavefunction &w) const
       size_t woffset = w.blockOffset(wsyma) + m_betaStringsBegin->index(w.betaStrings[wsymb]);
       size_t offa=0;
       for (StringSet::const_iterator s = m_alphaStringsBegin; s != m_alphaStringsEnd; s++) {
-          ExcitationSet ee(*s,w.alphaStrings[wsyma],0,m_deltaAlpha);
+           ExcitationSet ee(*s,w.alphaStrings[wsyma],0,m_deltaAlpha,m_parity);
           //      for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
           for (const auto& e : ee) {
               if (e.phase < 0)
@@ -260,7 +259,7 @@ void TransitionDensity::action(Wavefunction &w) const
       size_t woffset = w.blockOffset(wsyma) + wnsb * m_alphaStringsBegin->index(w.alphaStrings[wsyma]);
       size_t offb = 0;
       for (StringSet::const_iterator s = m_betaStringsBegin; s != m_betaStringsEnd; s++) {
-          ExcitationSet ee(*s,w.betaStrings[wsymb],0,m_deltaBeta);
+          ExcitationSet ee(*s,w.betaStrings[wsymb],0,m_deltaBeta,m_parity);
           for (const auto& e : ee) {
               if (e.phase < 0)
                 for (size_t ia=0; ia<m_nsa; ia++)

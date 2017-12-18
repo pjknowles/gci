@@ -1,6 +1,7 @@
 #ifndef GCIEXCITATIONSET_H
 #define GCIEXCITATIONSET_H
 #include "gciString.h"
+#include "SMat.h"
 #include <vector>
 
 namespace gci {
@@ -60,7 +61,8 @@ public:
      * \param annihilations How many annihilations.
      * \param creations How many creations.
      */
-  ExcitationSet(const String &from, const StringSet &to, int annihilations, int creations);
+  ExcitationSet(const String &from, const StringSet &to, int annihilations,
+int creations, parity_t parity=parityNone);
 private:
   /*!
      * \brief The String to which this set relates

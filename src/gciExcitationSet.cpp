@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 
-ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihilations, int creations)
+ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihilations, int creations, parity_t parity)
   : From(from), To(to)
 {
   int symexc=-1;
@@ -55,9 +55,9 @@ ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihi
     }
   }
   else if (annihilations+creations==2) {
-    int parity = annihilations==creations ? 1 : -1 ; // could be changed
-    //        xout << "two-orbital excitation, parity="<<parity<<std::endl;
-    //        xout <<"from="<<from<<std::endl;
+//    int parity = annihilations==creations ? 1 : -1 ; // could be changed
+//            xout << "two-orbital excitation, parity="<<parity<<std::endl;
+//            xout <<"from="<<from<<std::endl;
     for (int j=0; j<(int)from.orbitalSpace->orbital_symmetries.size(); j++) {
       String a = from;
       int phasea = (annihilations > 0) ?  a.destroy(j+1) : a.create(j+1);
