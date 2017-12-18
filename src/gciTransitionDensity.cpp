@@ -25,6 +25,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
 {
   resize(m_nsa*m_nsb*m_excitations,(double)0);
   if (m_nsa*m_nsb*m_excitations == 0) return;
+  xout << "excitations="<<m_excitations<<std::endl;
   auto prof = profiler->push("TransitionDensity");
 
   if (m_deltaAlpha==0 && m_deltaBeta==0) { // number of electrons preserved, so one-electron excitation
