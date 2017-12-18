@@ -60,6 +60,7 @@ public:
      * \param to StringSet against which results will be indexed.
      * \param annihilations How many annihilations.
      * \param creations How many creations.
+     * \param parity Parity of stored excitations
      */
   ExcitationSet(const String &from, const StringSet &to, int annihilations,
 int creations, parity_t parity=parityNone);
