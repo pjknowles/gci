@@ -17,13 +17,6 @@ if(NPROC EQUAL 0)
 endif()
 message("Number of processors ${NPROC}")
 set(CTEST_BUILD_FLAGS -j${NPROC})
-#set(ctest_test_args ${ctest_test_args} PARALLEL_LEVEL ${NPROC})
-#message(CMAKE_GENERATOR ${CMAKE_GENERATOR})
-#if(${CMAKE_GENERATOR} MATCHES "Unix Makefiles")
-#  set(CMAKE_MAKE_PROGRAM "${CMAKE_MAKE_PROGRAM} -j${NPROC}")
-#endif()
-
-
 
 file (GLOB SRCS src/*.cpp
     submodules/Profiler/Profiler.cpp
