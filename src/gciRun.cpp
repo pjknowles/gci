@@ -393,7 +393,7 @@ std::vector<double> Run::run()
 //          xout << "td0\n"<<td0<<std::endl;
           auto td=w->density(1,false,false,m_wavefunctions[0].get());
 //          xout << "td\n"<<td<<std::endl;
-          SMat td1({{td.O1().size()},{1}});
+          SMat td1(dims_t{{td.O1().size()},{1}});
           std::copy(td.O1().block(0).begin(),td.O1().block(0).end(),td1.block(0).begin());
 //          xout << "td1\n"<<td1<<std::endl;
 //          xout << "metricInverse*td1\n"<<(metricInverse*td1)<<std::endl;
