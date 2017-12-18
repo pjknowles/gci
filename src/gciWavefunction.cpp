@@ -536,7 +536,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                                           aa0,
                                           aa1,
                                           w.betaStrings[symb].begin(),w.betaStrings[symb].end(),
-                                          1,true, false);
+                                          parityEven,true, false);
                       //            xout << "alpha transition density"<<d<<"\n"<<w.betaStrings[symb].size()<<aa1-aa0<<" "<<d.size()<<std::endl;
                       TransitionDensity e(d);
                       auto ham=h.O1(true).blockCopy(symexc);
@@ -621,7 +621,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                                               aa0,
                                               aa1,
                                               bb0,bb1,
-                                              1,false, true);
+                                              parityEven,false, true);
                           MXM(&buffer[offset],&d[0], &(*h.O1(false).data())[0],
                               nsa*nsb,w.orbitalSpace->total(0,1),1,true);
                         }
@@ -653,7 +653,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
               size_t nsb = betaStrings[symb].size(); if (nsb==0) continue;
               for (StringSet::iterator aa1, aa0=aa.begin(); aa1=aa0+nsbbMax > aa.end() ? aa.end() : aa0+nsbbMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
                   size_t nsa = aa1-aa0;
-                  TransitionDensity d(w,aa0,aa1,w.betaStrings[symb].begin(),w.betaStrings[symb].end(),-1,false,false);
+                  TransitionDensity d(w,aa0,aa1,w.betaStrings[symb].begin(),w.betaStrings[symb].end(),parityOddPacked,false,false);
                   TransitionDensity e(d);
                   MXM(&e[0],&d[0], &h.O2(true,true,false).block(symexc)[0], nsa*nsb,nexc,nexc,false);
                   e.action(*this);
