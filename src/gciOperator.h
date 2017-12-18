@@ -20,6 +20,7 @@ namespace gci {
      * \param uhf Whether the underlying 1-particle spaces are different for alpha and beta spin.
      * \param symmetry Overall symmetry of operator (0-7).
      * \param covariant Whether the operator transforms like spatial basis functions, rather than like a density matrix
+     * \param hermitian Whether the representation of the operator is hermitian.
      * \param description A string describing the object.
      */
     explicit Operator(const dim_t dimension,
