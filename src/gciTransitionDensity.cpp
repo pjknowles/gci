@@ -33,11 +33,11 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       if (doAlpha) {
           auto prof2=profiler->push("TransitionDensity_alpha");
           // alpha excitations
-          unsigned int wsymb = m_symb;
-          unsigned int wsyma = w.symmetry^wsymb;
-          size_t wnsb = w.betaStrings[wsymb].size();
+          const unsigned int wsymb = m_symb;
+          const unsigned int wsyma = w.symmetry^wsymb;
+          const size_t wnsb = w.betaStrings[wsymb].size();
           // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
-          size_t woffset = w.blockOffset(wsyma) + m_betaStringsBegin->index(w.betaStrings[wsymb]);
+          const size_t woffset = w.blockOffset(wsyma) + m_betaStringsBegin->index(w.betaStrings[wsymb]);
           size_t offa=0;
           for (StringSet::const_iterator s = m_alphaStringsBegin; s != m_alphaStringsEnd; s++) {
 	      ExcitationSet ee(*s,w.alphaStrings[wsyma],1,1,m_parity);
@@ -57,11 +57,11 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       if (doBeta) {
           auto prof2=profiler->push("TransitionDensity_beta");
           // beta excitations
-          unsigned int wsyma = m_syma;
-          unsigned int wsymb = w.symmetry^wsyma;
-          size_t wnsb = w.betaStrings[wsymb].size();
+          const unsigned int wsyma = m_syma;
+          const unsigned int wsymb = w.symmetry^wsyma;
+          const size_t wnsb = w.betaStrings[wsymb].size();
           // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
-          size_t woffset = w.blockOffset(wsyma) + wnsb * m_alphaStringsBegin->index(w.alphaStrings[wsyma]);
+          const size_t woffset = w.blockOffset(wsyma) + wnsb * m_alphaStringsBegin->index(w.alphaStrings[wsyma]);
           size_t offb = 0;
           for (StringSet::const_iterator s = m_betaStringsBegin; s != m_betaStringsEnd; s++) {
 	      ExcitationSet ee(*s,w.betaStrings[wsymb],1,1,m_parity);
@@ -86,11 +86,11 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
     } else if (m_deltaBeta==0 && m_deltaAlpha>0) { // wavefunction has deltaAlpha more alpha electrons than interacting states
       auto prof2=profiler->push("TransitionDensity_alpha_alpha");
       m_hasAlpha=true; m_hasBeta=false;
-      unsigned int wsymb = m_symb;
-      unsigned int wsyma = w.symmetry^wsymb;
-      size_t wnsb = w.betaStrings[wsymb].size();
+      const unsigned int wsymb = m_symb;
+      const unsigned int wsyma = w.symmetry^wsymb;
+      const size_t wnsb = w.betaStrings[wsymb].size();
       // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
-      size_t woffset = w.blockOffset(wsyma) + m_betaStringsBegin->index(w.betaStrings[wsymb]);
+      const size_t woffset = w.blockOffset(wsyma) + m_betaStringsBegin->index(w.betaStrings[wsymb]);
       //    xout << "alpha wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<std::endl;
 
       size_t offa=0;
@@ -112,11 +112,11 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
     } else if (m_deltaAlpha==0 && m_deltaBeta>0) { // wavefunction has deltaBeta more beta electrons than interacting states
       auto prof2=profiler->push("TransitionDensity_beta_beta");
       m_hasAlpha=false; m_hasBeta=true;
-      unsigned int wsyma = m_syma;
-      unsigned int wsymb = w.symmetry^wsyma;
-      size_t wnsb = w.betaStrings[wsymb].size();
+      const unsigned int wsyma = m_syma;
+      const unsigned int wsymb = w.symmetry^wsyma;
+      const size_t wnsb = w.betaStrings[wsymb].size();
       // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
-      size_t woffset = w.blockOffset(wsyma) + wnsb * m_alphaStringsBegin->index(w.alphaStrings[wsyma]);
+      const size_t woffset = w.blockOffset(wsyma) + wnsb * m_alphaStringsBegin->index(w.alphaStrings[wsyma]);
       size_t offb = 0;
       for (StringSet::const_iterator s = m_betaStringsBegin; s != m_betaStringsEnd; s++) {
           ExcitationSet ee(*s,w.betaStrings[wsymb],0,m_deltaBeta,m_parity);
@@ -212,11 +212,11 @@ void TransitionDensity::action(Wavefunction &w) const
 
       if (true) {
           // beta excitations
-          unsigned int wsyma = m_syma;
-          unsigned int wsymb = w.symmetry^wsyma;
-          size_t wnsb = w.betaStrings[wsymb].size();
+          const unsigned int wsyma = m_syma;
+          const unsigned int wsymb = w.symmetry^wsyma;
+          const size_t wnsb = w.betaStrings[wsymb].size();
           // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
-          size_t woffset = w.blockOffset(wsyma) + wnsb * m_alphaStringsBegin->index(w.alphaStrings[wsyma]);
+          const size_t woffset = w.blockOffset(wsyma) + wnsb * m_alphaStringsBegin->index(w.alphaStrings[wsyma]);
           size_t offb = 0;
           for (StringSet::const_iterator s = m_betaStringsBegin; s != m_betaStringsEnd; s++) {
               ExcitationSet ee(*s,w.betaStrings[wsymb],1,1,m_parity);
@@ -236,15 +236,14 @@ void TransitionDensity::action(Wavefunction &w) const
         }
 
     } else if (m_deltaBeta==0 && m_deltaAlpha > 0) { // wavefunction has deltaAlpha more alpha electrons than interacting states
-      unsigned int wsymb = m_symb;
-      unsigned int wsyma = w.symmetry^wsymb;
-      size_t wnsb = w.betaStrings[wsymb].size();
+      const unsigned int wsymb = m_symb;
+      const unsigned int wsyma = w.symmetry^wsymb;
+      const size_t wnsb = w.betaStrings[wsymb].size();
       // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
-      size_t woffset = w.blockOffset(wsyma) + m_betaStringsBegin->index(w.betaStrings[wsymb]);
+      const size_t woffset = w.blockOffset(wsyma) + m_betaStringsBegin->index(w.betaStrings[wsymb]);
       size_t offa=0;
       for (StringSet::const_iterator s = m_alphaStringsBegin; s != m_alphaStringsEnd; s++) {
            ExcitationSet ee(*s,w.alphaStrings[wsyma],0,m_deltaAlpha,m_parity);
-          //      for (ExcitationSet::const_iterator e=ee.begin(); e!=ee.end(); e++) {
           for (const auto& e : ee) {
               if (e.phase < 0)
                 for (size_t ib=0; ib<m_nsb; ib++)
@@ -258,11 +257,11 @@ void TransitionDensity::action(Wavefunction &w) const
           offa += m_nsb;
         }
     } else if (m_deltaAlpha==0 && m_deltaBeta>0) { // wavefunction has deltaBeta more beta electrons than interacting states
-      unsigned int wsyma = m_syma;
-      unsigned int wsymb = w.symmetry^wsyma;
-      size_t wnsb = w.betaStrings[wsymb].size();
+      const unsigned int wsyma = m_syma;
+      const unsigned int wsymb = w.symmetry^wsyma;
+      const size_t wnsb = w.betaStrings[wsymb].size();
       // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
-      size_t woffset = w.blockOffset(wsyma) + wnsb * m_alphaStringsBegin->index(w.alphaStrings[wsyma]);
+      const size_t woffset = w.blockOffset(wsyma) + wnsb * m_alphaStringsBegin->index(w.alphaStrings[wsyma]);
       size_t offb = 0;
       for (StringSet::const_iterator s = m_betaStringsBegin; s != m_betaStringsEnd; s++) {
           ExcitationSet ee(*s,w.betaStrings[wsymb],0,m_deltaBeta,m_parity);
