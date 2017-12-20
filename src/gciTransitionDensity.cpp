@@ -159,10 +159,13 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
               }
               for (const auto& eeb : eebs) {
                   prof2 += eea.size()*eeb.size()*2;
-                      for (const auto& ea : eea) {
                   for (const auto& eb : eeb) {
-                          (*this)[offb + eb.orbitalAddress + ea.orbitalAddress] += ea.phase * eb.phase * w.buffer[woffset + eb.stringIndex + ea.stringIndex];
-                        }
+                   if (eb.phase>0)
+                      for (const auto& ea : eea)
+                       (*this)[offb + eb.orbitalAddress + ea.orbitalAddress] += ea.phase * w.buffer[woffset + eb.stringIndex + ea.stringIndex];
+                   else
+                      for (const auto& ea : eea)
+                       (*this)[offb + eb.orbitalAddress + ea.orbitalAddress] -= ea.phase * w.buffer[woffset + eb.stringIndex + ea.stringIndex];
                     }
                   offb ++;
                 }
@@ -284,23 +287,36 @@ void TransitionDensity::action(Wavefunction &w) const
           size_t intoff = w.orbitalSpace->offset(m_symexc,symexca,m_parity);
           size_t wnsb = w.betaStrings[wsymb].size();
           size_t woffset = w.blockOffset(wsyma);
-          size_t offb = 0;
+          size_t offb = m_nsa*m_nsb*intoff;
           std::vector<ExcitationSet> eebs;
-          for (StringSet::const_iterator sb = m_betaStringsBegin; sb != m_betaStringsEnd; sb++)
+          for (StringSet::const_iterator sb = m_betaStringsBegin; sb != m_betaStringsEnd; sb++) {
             eebs.emplace_back(*sb,w.betaStrings[wsymb],0,1);
+            for (auto& eb : eebs.back()) // optimisation for non-standard use in following loop
+             const_cast<Excitation&>(eb).orbitalAddress *= m_nsa*m_nsb*(*w.orbitalSpace)[symexca];
+          }
           for (StringSet::const_iterator sa = m_alphaStringsBegin; sa != m_alphaStringsEnd; sa++) {
               ExcitationSet eea(*sa,w.alphaStrings[wsyma],0,1);
+              for (auto& ea : eea) { // optimisation for non-standard use in following loop
+               const_cast<Excitation&>(ea).orbitalAddress*=m_nsa*m_nsb;
+               const_cast<Excitation&>(ea).stringIndex*=wnsb;
+              }
               for (const auto& eeb : eebs) {
-                  prof += eea.size()*eeb.size()*2;
-                  for (const auto& eb : eeb) {
-                      auto intoffb = offb+m_nsa*m_nsb*(intoff+eb.orbitalAddress*(*w.orbitalSpace)[symexca]);
-                      for (const auto& ea : eea) {
-                          w.buffer[woffset + eb.stringIndex + wnsb * ea.stringIndex]
-                              += ea.phase * eb.phase *
-                              (*this)[intoffb + m_nsa*m_nsb*ea.orbitalAddress];
-                        }
-                    }
-                  offb ++;
+               prof += eea.size()*eeb.size()*2;
+               for (const auto& eb : eeb) {
+                if (eb.phase>0)
+                 for (const auto& ea : eea) {
+                  w.buffer[woffset + eb.stringIndex + ea.stringIndex]
+                    +=  ea.phase *
+                        (*this)[offb + eb.orbitalAddress + ea.orbitalAddress];
+                 }
+                else
+                 for (const auto& ea : eea) {
+                  w.buffer[woffset + eb.stringIndex + ea.stringIndex]
+                    -=  ea.phase *
+                        (*this)[offb + eb.orbitalAddress + ea.orbitalAddress];
+                 }
+               }
+               offb ++;
                 }
            }
         }
