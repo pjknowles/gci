@@ -140,11 +140,10 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       for (unsigned int wsyma=0; wsyma<8; wsyma++) {
           unsigned int wsymb = w.symmetry^wsyma;
           unsigned int symexca = wsyma ^ m_syma;
-          const size_t intoff = w.orbitalSpace->offset(m_symexc,symexca,m_parity);
           const size_t wnsb = w.betaStrings[wsymb].size();
           if (wnsb==0) continue;
           const size_t woffset = w.blockOffset(wsyma);
-          size_t offb = m_nsa*m_nsb*intoff;
+          size_t offb = m_nsa*m_nsb*w.orbitalSpace->offset(m_symexc,symexca,m_parity);
           std::vector<ExcitationSet> eebs;
           for (StringSet::const_iterator sb = m_betaStringsBegin; sb != m_betaStringsEnd; sb++) {
             eebs.emplace_back(*sb,w.betaStrings[wsymb],0,1,m_parity);
@@ -284,10 +283,9 @@ void TransitionDensity::action(Wavefunction &w) const
       for (unsigned int wsyma=0; wsyma<8; wsyma++) {
           unsigned int wsymb = w.symmetry^wsyma;
           unsigned int symexca = wsyma ^ m_syma;
-          size_t intoff = w.orbitalSpace->offset(m_symexc,symexca,m_parity);
-          size_t wnsb = w.betaStrings[wsymb].size();
-          size_t woffset = w.blockOffset(wsyma);
-          size_t offb = m_nsa*m_nsb*intoff;
+          const size_t wnsb = w.betaStrings[wsymb].size();
+          const size_t woffset = w.blockOffset(wsyma);
+          size_t offb = m_nsa*m_nsb*w.orbitalSpace->offset(m_symexc,symexca,m_parity);
           std::vector<ExcitationSet> eebs;
           for (StringSet::const_iterator sb = m_betaStringsBegin; sb != m_betaStringsEnd; sb++) {
             eebs.emplace_back(*sb,w.betaStrings[wsymb],0,1);
