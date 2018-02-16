@@ -19,6 +19,14 @@ class String : public State
   friend class StringSet;
 public:
   /*!
+   * \brief Holds orbital labels. 8-bit unsigned is fine for up to 511 orbitals
+   */
+  typedef uint8_t orbital_type;
+  /*!
+   * \brief Holds hash keys
+   */
+  typedef size_t key_type;
+  /*!
    * \brief String Construct a vacuum object
    * \param State Some State object from which to copy number of electrons etc for bound checking, and to define orbital symmetries
    * \param Spin 1=alpha, -1=beta
@@ -36,7 +44,7 @@ public:
      \param orbital Add an orbital to the string.
      \return int On exit, the phase change required to bring the determinant into canonical form is returned (plus or minus 1), or else zero if the orbital was already present in the determinant.
     */
-  int create(unsigned int orbital)
+  int create(orbital_type orbital)
   {
   //      xout << "String::create before="<<str()<<", orbital="<<orbital<<std::endl;
     //        xout  << "create orbital "<<orbital <<" " <<orbitals_.size()<<std::endl;
@@ -56,7 +64,7 @@ public:
     int phase=1-2*(m_orbitals.size()%2);
     //    xout <<"phase="<<phase<<std::endl;
     //    xout <<"spin="<<spin<<std::endl;
-    for (std::vector<orbital_type>::const_iterator i = m_orbitals.begin(); i!=m_orbitals.end(); ++i) {
+    for (auto i = m_orbitals.begin(); i!=m_orbitals.end(); ++i) {
       if (*i==orbital) return 0; // exclusion principle
       if (*i > orbital){
         ms2+=m_spin;
@@ -83,13 +91,13 @@ public:
      \param orbital Remove an orbital from the string.
      \return int the phase change required to bring the determinant into canonical form before annihilation is returned (plus or minus 1), or else zero if the orbital was not present in the determinant.
     */
-  int destroy(unsigned int orbital)
+  int destroy(orbital_type orbital)
   {
     if (orbitalSpace==nullptr || orbital==(unsigned int)0 || orbital > (unsigned int) orbitalSpace->total() ) throw std::range_error("invalid orbital");
     if (m_orbitals.size() <= 0) return (int) 0; //throw "too few electrons in String";
     //    xout << "String::destroy before="<<str()<<", orbital="<<orbital<<std::endl;
     int phase=(m_orbitals.size()%2) ? 1 : -1;
-    for (std::vector<orbital_type>::const_iterator i = m_orbitals.begin(); i!=m_orbitals.end(); ++i) {
+    for (auto i = m_orbitals.begin(); i!=m_orbitals.end(); ++i) {
       if (*i==orbital)  {
         ms2-=m_spin;
         nelec--;
@@ -121,14 +129,6 @@ public:
     \return false if it was not possible to make even one string, otherwise true
     */
   bool first(int n=0, int sym=-1);
-  /*!
-   * \brief Holds orbital labels. 8-bit unsigned is fine for up to 511 orbitals
-   */
-  typedef uint8_t orbital_type;
-  /*!
-   * \brief Holds hash keys
-   */
-  typedef size_t key_type;
   const std::vector<orbital_type> &orbitals() const;  /*!< The orbitals that make up the string */
   /*!
    * \brief Hash key that can be associated with this object
