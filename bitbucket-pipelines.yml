@@ -9,7 +9,7 @@ pipelines:
   default:
     - step:
         script: # Modify the commands below to build your repository.
-          - apt-get install -y libeigen3-dev libblas-dev liblapack-dev cmake
+          - apt-get install -y libboost-dev   libboost-all-dev   pkg-config
           - cmake .
           - make
           - ctest
