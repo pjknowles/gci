@@ -3,13 +3,13 @@
 # Only use spaces to indent your .yml configuration.
 # -----
 # You can specify a custom docker image from Docker Hub as your build environment.
-image: gcc
+image: dobrautz/neci_base:opensuse42.2
 
 pipelines:
   default:
     - step:
         script: # Modify the commands below to build your repository.
-          - apt-get install -y libboost-dev   libboost-all-dev   pkg-config
-          - cmake .
-          - make
+          - rm -rf build && mkdir build && cd build
+          - cmake ..
+          - make -j
           - ctest
