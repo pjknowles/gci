@@ -9,7 +9,7 @@ pipelines:
   default:
     - step:
         script: # Modify the commands below to build your repository.
-          - aptget -y install eigen3
+          - apt-get -y install eigen3
           - rm -rf build && mkdir build && cd build
           - cmake ..
           - make -j
