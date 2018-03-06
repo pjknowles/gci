@@ -160,7 +160,7 @@ public:
   /*!
    * \brief gather give each process a full copy of buffer
    */
-  void gather();
+  void replicate();
 
   //    Wavefunction& operator=(const double &value);
   void set(size_t offset, const double val);///< set one element to a scalar

@@ -937,7 +937,7 @@ void Wavefunction::getAll(File& f, int index)
   p+=buffer.size();
 }
 
-void Wavefunction::gather()
+void Wavefunction::replicate()
 {
   size_t chunk = (buffer.size()-1)/parallel_size+1;
   gather_chunks(&buffer[0],buffer.size(),chunk);

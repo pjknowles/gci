@@ -739,7 +739,7 @@ std::vector<double> Run::CSDavidson(const Operator& ham,
         g.getw(wfile,i);
         w.axpy(alpha[i] , &g);
       }
-      w.gather();
+      w.replicate();
       w.distributed=olddist;
       double histmin=1e-14,histmax=1.1;
       size_t nhist=25;
