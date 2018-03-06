@@ -15,6 +15,10 @@ ProcessorCount(NPROC)
 if(NPROC EQUAL 0)
   set(NPROC 1)
 endif()
+if(NPROC EQUAL 8)
+#    hack to avoid overload on workstation / CI
+  set(NPROC 4)
+endif()
 message("Number of processors ${NPROC}")
 set(CTEST_BUILD_FLAGS -j${NPROC})
 
