@@ -529,6 +529,8 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                   nsbbMax = m_betatilesize;
                 }
               if (aa.size()>0 && betaStrings[symb].size()>0) {
+               auto ham=h.O1(true).blockCopy(symexc);
+               if (ham.cols()<1) continue;
                   //        for (const auto& aaa: aa) xout <<"N-1 alpha member "<<aaa<<std::endl;
                   for (StringSet::const_iterator aa1, aa0=aa.begin(); aa1=aa0+nsaaMax > aa.end() ? aa.end() : aa0+nsaaMax, aa0 <aa.end(); aa0=aa1) { // loop over alpha batches
                       if (!NextTask()) continue;
@@ -539,7 +541,6 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                                           parityEven,true, false);
                       //            xout << "alpha transition density"<<d<<"\n"<<w.betaStrings[symb].size()<<aa1-aa0<<" "<<d.size()<<std::endl;
                       TransitionDensity e(d);
-                      auto ham=h.O1(true).blockCopy(symexc);
                       //            xout << "hamiltonian block\n"<<ham<<std::endl;
                       //            xout << "ham dimensions "<<ham.rows()<<" "<<ham.cols()<<std::endl;
                       MXM(&e[0],&d[0], &ham(0,0), std::distance(aa0,aa1)*w.betaStrings[symb].size(),ham.rows(),ham.cols(),false);
@@ -550,6 +551,8 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                 }
               const auto& bb = bbs[symb];
               if (bb.size()>0 && alphaStrings[syma].size()>0) {
+               auto ham=h.O1(false).blockCopy(symexc);
+               if (ham.cols()<1) continue;
                   for (StringSet::const_iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
                       if (!NextTask()) continue;
                       TransitionDensity d(w,
@@ -559,7 +562,6 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                                           parityEven,false, true);
                       //            xout << "beta transition density"<<d<<std::endl;
                       TransitionDensity e(d);
-                      auto ham=h.O1(false).blockCopy(symexc);
                       MXM(&e[0],&d[0], &ham(0,0), std::distance(bb0,bb1)*w.alphaStrings[syma].size(),ham.rows(),ham.cols(),false);
                       //            xout << "beta e"<<e<<std::endl;
                       e.action(*this);
