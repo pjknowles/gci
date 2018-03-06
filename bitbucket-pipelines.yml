@@ -11,6 +11,7 @@ pipelines:
         script: # Modify the commands below to build your repository.
           - zypper -n install eigen3-devel cmake gcc-fortran gcc-c++ openmpi-devel openmpi-libs blas-devel libblas3
           - ln -s /usr /usr/usr
+          - git submodule update --init --recursive
           - rm -rf build && mkdir build && cd build
           - cmake ..
           - make -j
