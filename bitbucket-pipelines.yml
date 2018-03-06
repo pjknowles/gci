@@ -12,7 +12,6 @@ pipelines:
           - zypper -n install eigen3-devel cmake gcc-fortran gcc-c++ openmpi-devel openmpi-libs blas-devel libblas3 git
           - ln -s /usr /usr/usr
           - mkdir -p ~/.ssh
-          - ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts
           - git submodule update --init --recursive
           - rm -rf build && mkdir build && cd build
           - cmake ..
