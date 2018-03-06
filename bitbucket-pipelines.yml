@@ -3,13 +3,13 @@
 # Only use spaces to indent your .yml configuration.
 # -----
 # You can specify a custom docker image from Docker Hub as your build environment.
-image: dobrautz/neci_base:opensuse42.2
+image: opensuse/tumbleweed
 
 pipelines:
   default:
     - step:
         script: # Modify the commands below to build your repository.
-          - zypper -n install eigen3-devel
+          - zypper -n install eigen3-devel cmake gcc-fortran gcc-c++
           - rm -rf build && mkdir build && cd build
           - cmake ..
           - make -j
