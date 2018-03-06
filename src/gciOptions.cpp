@@ -2,7 +2,9 @@
 #include "common/molpro_config.h"
 #include "gciMolpro.h"
 #else
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #endif
 #include "gciOptions.h"
 #include <iostream>
