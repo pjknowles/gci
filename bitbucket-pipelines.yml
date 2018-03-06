@@ -10,6 +10,7 @@ pipelines:
     - step:
         script: # Modify the commands below to build your repository.
           - zypper -n install eigen3-devel cmake gcc-fortran gcc-c++
+          - ln -s /usr /usr/usr
           - rm -rf build && mkdir build && cd build
           - cmake ..
           - make -j
