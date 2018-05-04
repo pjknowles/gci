@@ -119,7 +119,7 @@ public:
 
   void scal(double a);
     // Every child of ParameterVector needs exactly this
-    Wavefunction* clone() const { return new Wavefunction(*this); }
+    Wavefunction* clone(int option=0) const { return new Wavefunction(*this); }
 
   /*!
    * \brief push the object's buffer to a file
