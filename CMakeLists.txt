@@ -27,10 +27,6 @@ file (GLOB SRCS src/*.cpp
     submodules/memory/bytestreamC.cpp
     submodules/symmetry_matrix/SMat.cpp submodules/symmetry_matrix/SMatfunction.cpp submodules/symmetry_matrix/Operator.cpp submodules/symmetry_matrix/SMatMat.cpp
     submodules/FCIdump/FCIdump.cpp
-    submodules/IterativeSolver/IterativeSolver/ISDavidson.cpp
-    submodules/IterativeSolver/IterativeSolver/ISDiis.cpp
-    submodules/IterativeSolver/IterativeSolver/ISRSPT.cpp
-    submodules/IterativeSolver/IterativeSolver/IterativeSolver.cpp
     submodules/IterativeSolver/IterativeSolver/PagedParameterVector.cpp
     submodules/IterativeSolver/IterativeSolver/Storage.cpp
     submodules/IterativeSolver/IterativeSolver/SimpleParameterVector.cpp

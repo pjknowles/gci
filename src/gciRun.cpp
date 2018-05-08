@@ -19,19 +19,21 @@ using namespace gci;
 
 
 using namespace LinearAlgebra;
+using ParameterVectorSet = LinearAlgebra::vectorSet<double>;
+using scalar = double;
 
 static double _lastEnergy;
 static double _mu;
 static double _residual_q;
 static bool parallel_stringset;
-struct residual : IterativeSolverBase::ParameterSetTransformation {
+struct residual {
 protected:
   const gci::Operator& m_hamiltonian;
   const bool m_subtract_Energy;
   const gci::Operator* m_Q;
 public:
   residual(const gci::Operator& hamiltonian, bool subtract_Energy, gci::Operator* Q=nullptr) : m_hamiltonian(hamiltonian), m_subtract_Energy(subtract_Energy), m_Q(Q) {}
-void operator() (const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<double> shift=std::vector<double>(), bool append=false) const override {
+void operator() (const ParameterVectorSet & psx, ParameterVectorSet & outputs, bool append=false) const {
     for (size_t k=0; k<psx.size(); k++) {
         const std::shared_ptr<Wavefunction>  x=std::static_pointer_cast<Wavefunction>(psx[k]);
         std::shared_ptr<Wavefunction>  g=std::static_pointer_cast<Wavefunction>(outputs[k]);
@@ -95,7 +97,7 @@ struct meanfield_residual : residual {
 public:
   meanfield_residual(const gci::Operator& hamiltonian, bool subtract_Energy, gci::Operator* Q=nullptr)
     : residual(hamiltonian, subtract_Energy, Q) {}
-void operator()(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<double> shift=std::vector<double>(), bool append=false) const override {
+void operator()(const ParameterVectorSet & psx, ParameterVectorSet & outputs, std::vector<double> shift=std::vector<double>(), bool append=false) const {
     for (size_t k=0; k<psx.size(); k++) {
         const std::shared_ptr<Wavefunction>  x=std::static_pointer_cast<Wavefunction>(psx[k]);
         std::shared_ptr<Wavefunction>  g=std::static_pointer_cast<Wavefunction>(outputs[k]);
@@ -133,7 +135,7 @@ void operator()(const ParameterVectorSet & psx, ParameterVectorSet & outputs, st
 }
 } ;
 
-struct preconditioner : IterativeSolverBase::ParameterSetTransformation {
+struct preconditioner {
   preconditioner(const Wavefunction& diagonals, bool subtractDiagonal)
     : m_diagonals(diagonals)
     ,m_subtractDiagonal(subtractDiagonal)
@@ -142,7 +144,7 @@ private:
   const Wavefunction& m_diagonals;
   const bool m_subtractDiagonal;
 public:
-void operator()(const ParameterVectorSet & psg, ParameterVectorSet & psc, std::vector<double> shift=std::vector<double>(), bool append=false) const override {
+void operator()(const ParameterVectorSet & psg, ParameterVectorSet & psc, std::vector<double> shift=std::vector<double>(), bool append=false) const {
     std::vector<double> shifts=shift;
     for (size_t state=0; state<psc.size(); state++){
         if (m_subtractDiagonal)
@@ -438,9 +440,9 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
   Wavefunction d(prototype);
   d.diagonalOperator(ham);
   size_t reference = d.minloc();
-  LinearAlgebra::ParameterVectorSet gg;
+  ParameterVectorSet gg;
   gg.push_back(std::make_shared<Wavefunction>(prototype));
-  LinearAlgebra::ParameterVectorSet ww;
+  ParameterVectorSet ww;
   ww.push_back(std::make_shared<Wavefunction>(prototype));
   std::static_pointer_cast<Wavefunction>(ww.back())->set((double)0);
   std::static_pointer_cast<Wavefunction>(ww.back())->set(reference, (double) 1);
@@ -449,11 +451,18 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
 //      xout << "Diagonal H: " << d.str(2) << std::endl;
   preconditioner precon(d,true);
   residual resid(ham,true,residual_Q.get());
-  LinearAlgebra::DIIS solver(resid,precon);
+  LinearAlgebra::DIIS<scalar> solver;
   solver.m_verbosity = options.parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;
-  solver.solve(gg,ww);
+//  solver.solve(gg,ww);
+      for (size_t iteration=0; iteration<maxIterations; iteration++) {
+       resid(ww,gg);
+       solver.interpolate(ww,gg);
+       std::vector<double> shift; shift.push_back(0);
+       precon(ww,gg,shift);
+       if (solver.finalize(ww,gg)) break;
+      }
   //      xout << "Final w: "<<w.str(2)<<std::endl;
   //      xout << "Final g: "<<g.str(2)<<std::endl;
   if (_residual_q>0) {
@@ -484,9 +493,9 @@ std::vector<double> Run::Davidson(
   d.diagonalOperator(ham);
   preconditioner precon(d,false);
   residual resid(ham,false);
-  LinearAlgebra::Davidson solver(resid,precon);
-  LinearAlgebra::ParameterVectorSet gg;
-  LinearAlgebra::ParameterVectorSet ww;
+  LinearAlgebra::Davidson<scalar> solver;
+  ParameterVectorSet gg;
+  ParameterVectorSet ww;
   for (int root=0; root<nState; root++) {
       std::shared_ptr<Wavefunction>  w=std::make_shared<Wavefunction>(prototype);
       ww.push_back(w);
@@ -505,7 +514,16 @@ std::vector<double> Run::Davidson(
   solver.m_maxIterations=maxIterations;
   solver.m_roots=nState;
 //  profiler->stop("Davidson preamble");
-  solver.solve(gg,ww);
+//  solver.solve(gg,ww);
+      for (size_t iteration=0; iteration<maxIterations; iteration++) {
+       resid(ww,gg);
+       solver.interpolate(ww,gg);
+       std::vector<double> shift;
+       for (auto root=0; root < nState; root++)
+        shift.push_back(-solver.eigenvalues()[root]+1e-14);
+       precon(ww,gg,shift);
+       if (solver.finalize(ww,gg)) break;
+      }
   for (auto root=0; root < nState; root++) {
       m_wavefunctions.push_back(std::static_pointer_cast<Wavefunction>(ww[root]));
       m_wavefunctions.back()->m_properties["ENERGY"]=solver.eigenvalues()[root];
@@ -962,8 +980,8 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
       xout << "b0m: "<<_IPT_b0m->values()<<std::endl;
       xout << "solve for c0"+std::to_string(m)<<std::endl;
       // solve for c0m
-      LinearAlgebra::ParameterVectorSet gg; gg.push_back(std::make_shared<Wavefunction>(prototype));
-      LinearAlgebra::ParameterVectorSet ww; ww.push_back(std::make_shared<Wavefunction>(prototype));
+      ParameterVectorSet gg; gg.push_back(std::make_shared<Wavefunction>(prototype));
+      ParameterVectorSet ww; ww.push_back(std::make_shared<Wavefunction>(prototype));
       preconditioner precon(d,false);
       meanfield_residual resid(ham,false);
       if (false) { // print A
@@ -984,12 +1002,19 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
         }
       std::static_pointer_cast<Wavefunction>(ww.back())->set((double)0);
       std::static_pointer_cast<Wavefunction>(ww.back())->set(referenceLocation+m%2, (double) 1);
-      LinearAlgebra::DIIS solver(resid,precon);
+      LinearAlgebra::DIIS<scalar> solver;
       solver.m_verbosity = options.parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
       solver.m_thresh=options.parameter("TOL",std::vector<double>(1,(double)1e-8)).at(0);
       solver.m_maxIterations=options.parameter("MAXIT",std::vector<int>(1,1000)).at(0);
       solver.m_linear=true;
-      solver.solve(gg,ww);
+//      solver.solve(gg,ww);
+      for (size_t iteration=0; iteration<solver.m_maxIterations; iteration++) {
+       resid(ww,gg);
+       solver.interpolate(ww,gg);
+       std::vector<double> shift; shift.push_back(0);
+       precon(ww,gg,shift);
+       if (solver.finalize(ww,gg)) break;
+      }
       xout << "Final g: "<<std::static_pointer_cast<Wavefunction>(gg[0])->values()<<std::endl;
 //      xout << "Final w: "<<ww[0]->str(2)<<std::endl;
       _IPT_c.push_back(*std::static_pointer_cast<Wavefunction>(ww[0]));
@@ -1180,17 +1205,24 @@ std::vector<double> Run::ISRSPT(
   xout <<"RSPT wavefunction size="<<d.size()<<std::endl;
   d.diagonalOperator(ham0);
   size_t reference = d.minloc();
-  LinearAlgebra::ParameterVectorSet gg; gg.push_back(std::make_shared<Wavefunction>(prototype));
-  LinearAlgebra::ParameterVectorSet ww; ww.push_back(std::make_shared<Wavefunction>(prototype));
+  ParameterVectorSet gg; gg.push_back(std::make_shared<Wavefunction>(prototype));
+  ParameterVectorSet ww; ww.push_back(std::make_shared<Wavefunction>(prototype));
   std::static_pointer_cast<Wavefunction>(ww.back())->set((double)0);
   std::static_pointer_cast<Wavefunction>(ww.back())->set(reference, (double) 1);
   preconditioner precon(d,false);
   residual resid(ham,false);
-  LinearAlgebra::RSPT solver(resid,precon);
+  LinearAlgebra::RSPT<scalar> solver;
   solver.m_verbosity = options.parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;
-  solver.solve(gg,ww);
+//  solver.solve(gg,ww);
+      for (int iteration=0; iteration<maxIterations; iteration++) {
+       resid(ww,gg);
+       solver.interpolate(ww,gg);
+       std::vector<double> shift; shift.push_back(0);
+       precon(ww,gg,shift);
+       if (solver.finalize(ww,gg)) break;
+      }
   //      xout << "Final w: "<<w.str(2)<<std::endl;
   //      xout << "Final g: "<<g.str(2)<<std::endl;
   return solver.incremental_energies();
