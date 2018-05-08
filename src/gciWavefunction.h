@@ -36,7 +36,12 @@ public:
      * \brief Construct a Wavefunction object from a State prototype
      * \param state the State prototype
      */
-  Wavefunction(const State& state, int option=0);
+  Wavefunction(const State& state);
+
+  Wavefunction(const Wavefunction& source, int option) {
+//   std::cout <<"Wavefunction copy constructor, option="<<option<<std::endl;
+   *this = source;
+  }
 
   std::vector<StringSet> alphaStrings; ///< The alpha-spin strings defining the CI basis
   std::vector<StringSet> betaStrings; ///< The beta-spin strings defining the CI basis

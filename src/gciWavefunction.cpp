@@ -13,8 +13,7 @@ Wavefunction::Wavefunction(OrbitalSpace* h, int n, int s, int m2) : State(h,n,s,
   buildStrings();
 }
 
-Wavefunction::Wavefunction(const State& state, int option) : State(state), distributed(false) {
- std::cout <<"Wavefunction copy constructor, option="<<option<<std::endl;
+Wavefunction::Wavefunction(const State& state) : State(state), distributed(false) {
   buildStrings();
 }
 
@@ -419,8 +418,6 @@ std::string gci::Wavefunction::str(int verbosity, unsigned int columns) const
 
 bool Wavefunction::compatible(const Wavefunction &other) const
 {
- std::cout << "dimension "<<dimension <<" vs "<< other.dimension<<std::endl;
- std::cout << "buffer.size() "<<buffer.size() <<" vs "<< other.buffer.size()<<std::endl;
   return dimension==other.dimension && buffer.size() == other.buffer.size();
 }
 

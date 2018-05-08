@@ -144,7 +144,7 @@ private:
   const Wavefunction& m_diagonals;
   const bool m_subtractDiagonal;
 public:
-void operator()(const ParameterVectorSet & psg, ParameterVectorSet & psc, std::vector<double> shift=std::vector<double>(), bool append=false) const {
+void operator()(ParameterVectorSet & psc, const ParameterVectorSet & psg, std::vector<double> shift=std::vector<double>(), bool append=false) const {
     std::vector<double> shifts=shift;
     for (size_t state=0; state<psc.size(); state++){
         if (m_subtractDiagonal)
@@ -521,7 +521,11 @@ std::vector<double> Run::Davidson(
        std::vector<double> shift;
        for (auto root=0; root < nState; root++)
         shift.push_back(-solver.eigenvalues()[root]+1e-14);
+//       xout << "ww before precon "<<ww.front()->str(2)<<std::endl;
+//       xout << "gg before precon "<<gg.front()->str(2)<<std::endl;
        precon(ww,gg,shift);
+//       xout << "ww after precon "<<ww.front()->str(2)<<std::endl;
+//       xout << "gg after precon "<<gg.front()->str(2)<<std::endl;
        if (solver.finalize(ww,gg)) break;
       }
   for (auto root=0; root < nState; root++) {
