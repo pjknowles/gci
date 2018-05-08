@@ -36,7 +36,7 @@ public:
      * \brief Construct a Wavefunction object from a State prototype
      * \param state the State prototype
      */
-  Wavefunction(const State& state);
+  Wavefunction(const State& state, int option=0);
 
   std::vector<StringSet> alphaStrings; ///< The alpha-spin strings defining the CI basis
   std::vector<StringSet> betaStrings; ///< The beta-spin strings defining the CI basis
@@ -119,7 +119,7 @@ public:
 
   void scal(double a);
     // Every child of ParameterVector needs exactly this
-    Wavefunction* clone(int option=0) const { return new Wavefunction(*this); }
+    Wavefunction* clone(int option=0) const { return new Wavefunction(*this, option); }
 
   /*!
    * \brief push the object's buffer to a file
