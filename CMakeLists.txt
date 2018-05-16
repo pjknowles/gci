@@ -27,9 +27,6 @@ file (GLOB SRCS src/*.cpp
     submodules/memory/bytestreamC.cpp
     submodules/symmetry_matrix/SMat.cpp submodules/symmetry_matrix/SMatfunction.cpp submodules/symmetry_matrix/Operator.cpp submodules/symmetry_matrix/SMatMat.cpp
     submodules/FCIdump/FCIdump.cpp
-    submodules/IterativeSolver/IterativeSolver/PagedParameterVector.cpp
-    submodules/IterativeSolver/IterativeSolver/Storage.cpp
-    submodules/IterativeSolver/IterativeSolver/SimpleParameterVector.cpp
     submodules/molpro-plugin/PluginGuest.cpp
     )
 add_definitions(-DNOMAIN)
@@ -42,6 +39,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 find_package(MPI REQUIRED)
 include_directories(${MPI_CXX_INCLUDE_PATH})
 target_link_libraries(gci.exe ${MPI_CXX_LIBRARIES})
+add_definitions(-DUSE_MPI)
 
 find_package(MKL)
 if (MKL_FOUND)
