@@ -117,9 +117,9 @@ public:
    * \param a the factor defining the multiple
    * \param x the other wavefunction
    */
-  void axpy(double a, const LinearAlgebra::vector<double> *x);
+  void axpy(double a, const LinearAlgebra::vector<double> &x);
   void axpy(double a, const std::shared_ptr<LinearAlgebra::vector<double> > x) {
-    axpy(a,x.get());
+    axpy(a,*x.get());
   }
 
   void scal(double a);
@@ -195,12 +195,12 @@ public:
 
   friend class TransitionDensity;
   friend double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
-  double dot(const LinearAlgebra::vector<double>* other) const;
+  double dot(const LinearAlgebra::vector<double>& other) const;
   double dot(const std::shared_ptr<LinearAlgebra::vector<double> > other) const {
-    return dot(other.get());
+    return dot(*other.get());
   }
   double dot(const std::unique_ptr<LinearAlgebra::vector<double> > other) const {
-    return dot(other.get());
+    return dot(*other.get());
   }
   /*!
    * \brief this[i] = a[i]*b[i]
