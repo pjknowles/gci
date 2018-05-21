@@ -10,9 +10,7 @@
 #include <memory>
 #include <cmath>
 #include "sharedCounter.h"
-#include "IterativeSolver/ISDiis.h"
-#include "IterativeSolver/ISRSPT.h"
-#include "IterativeSolver/ISDavidson.h"
+#include "IterativeSolver.h"
 #include "gciOperator.h"
 using namespace gci;
 
@@ -492,7 +490,7 @@ std::vector<double> Run::Davidson(
   d.diagonalOperator(ham);
   updater update(d,false);
   residual resid(ham,false);
-  LinearAlgebra::Davidson<scalar> solver;
+  LinearAlgebra::LinearEigensystem<scalar> solver;
   ParameterVectorSet gg;
   ParameterVectorSet ww;
   for (int root=0; root<nState; root++) {
