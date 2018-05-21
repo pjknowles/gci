@@ -458,7 +458,7 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
    solver.addVector(ww,gg);
    std::vector<double> shift; shift.push_back(0);
    precon(ww,gg,shift);
-   if (solver.finalize(ww,gg)) break;
+   if (solver.endIteration(ww,gg)) break;
   }
   //      xout << "Final w: "<<w.str(2)<<std::endl;
   //      xout << "Final g: "<<g.str(2)<<std::endl;
@@ -522,7 +522,7 @@ std::vector<double> Run::Davidson(
    update(ww,gg,shift);
    //       xout << "ww after precon "<<ww.front()->str(2)<<std::endl;
    //       xout << "gg after precon "<<gg.front()->str(2)<<std::endl;
-   if (solver.finalize(ww,gg)) break;
+   if (solver.endIteration(ww,gg)) break;
   }
   for (auto root=0; root < nState; root++) {
       m_wavefunctions.push_back(std::static_pointer_cast<Wavefunction>(ww[root]));
@@ -1013,7 +1013,7 @@ void Run::IPT(const gci::Operator& ham, const State &prototype, const size_t ref
        solver.addVector(ww,gg);
        std::vector<double> shift; shift.push_back(0);
        update(ww,gg,shift);
-       if (solver.finalize(ww,gg)) break;
+       if (solver.endIteration(ww,gg)) break;
       }
       xout << "Final g: "<<std::static_pointer_cast<Wavefunction>(gg[0])->values()<<std::endl;
 //      xout << "Final w: "<<ww[0]->str(2)<<std::endl;
@@ -1221,7 +1221,7 @@ std::vector<double> Run::ISRSPT(
        solver.addVector(ww,gg);
        std::vector<double> shift; shift.push_back(0);
        update(ww,gg,shift);
-       if (solver.finalize(ww,gg)) break;
+       if (solver.endIteration(ww,gg)) break;
       }
   //      xout << "Final w: "<<w.str(2)<<std::endl;
   //      xout << "Final g: "<<g.str(2)<<std::endl;
