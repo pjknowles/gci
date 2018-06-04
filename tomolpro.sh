@@ -13,4 +13,6 @@ rsync submodules/Profiler/Profiler* $1/src/global
 rsync submodules/FCIdump/FCIdump* $1/src/global
 rsync submodules/IterativeSolver/LinearAlgebra.h $1/src/global
 rsync submodules/IterativeSolver/PagedVector.h $1/src/global
-rsync submodules/IterativeSolver/I*.{cpp,h} $1/src/IterativeSolver
+rsync submodules/IterativeSolver/IterativeSolver.h $1/src/global
+rsync submodules/IterativeSolver/IterativeSolver.cpp $1/src/util
+rsync submodules/IterativeSolver/IterativeSolverF.F90 $1/src/global
