@@ -1211,7 +1211,7 @@ std::vector<double> Run::ISRSPT(
   std::static_pointer_cast<Wavefunction>(ww.back())->set(reference, (double) 1);
   updater update(d,false);
   residual resid(ham,false);
-  LinearAlgebra::RSPT<scalar> solver;
+  LinearAlgebra::LinearEigensystem<double> solver; // TODO
   solver.m_verbosity = options.parameter("SOLVER_VERBOSITY",std::vector<int>(1,1)).at(0);
   solver.m_thresh=energyThreshold;
   solver.m_maxIterations=maxIterations;
@@ -1225,7 +1225,7 @@ std::vector<double> Run::ISRSPT(
       }
   //      xout << "Final w: "<<w.str(2)<<std::endl;
   //      xout << "Final g: "<<g.str(2)<<std::endl;
-  return solver.incremental_energies();
+//  return solver.incremental_energies(); // TODO
 }
 
 #include <cmath>

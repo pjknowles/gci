@@ -47,7 +47,7 @@ public:
   std::vector<StringSet> betaStrings; ///< The beta-spin strings defining the CI basis
 
   void allocate_buffer(); ///< allocate buffer to full size
-  size_t size() const { return dimension; } ///< the size of the space
+  size_t size() const override { return dimension; } ///< the size of the space
 
   void diagonalOperator(const Operator& op); ///< set this object to the diagonal elements of the hamiltonian
 
@@ -108,7 +108,7 @@ public:
 
   size_t blockOffset(const unsigned int syma) const;
 
-  std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
+  std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const override;
 
   std::string values() const;
 
@@ -117,14 +117,23 @@ public:
    * \param a the factor defining the multiple
    * \param x the other wavefunction
    */
-  void axpy(double a, const LinearAlgebra::vector<double> &x);
+  void axpy(double a, const LinearAlgebra::vector<double> &x) override;
   void axpy(double a, const std::shared_ptr<LinearAlgebra::vector<double> > x) {
     axpy(a,*x.get());
   }
+  void axpy(double a, const std::map<size_t,double>&x) override {
+   throw std::logic_error("P space support not yet implemented");
+  }
 
-  void scal(double a);
+  std::tuple<std::vector<size_t>,std::vector<double> > select (const vector<double>& measure, const size_t maximumNumber = 1000, const double threshold = 0) const override {
+    throw std::logic_error("unimplemented select");
+  };
+
+
+
+  void scal(double a) override;
     // Every child of ParameterVector needs exactly this
-    Wavefunction* clone(int option=0) const { return new Wavefunction(*this, option); }
+    Wavefunction* clone(int option=0) const override { return new Wavefunction(*this, option); }
 
   /*!
    * \brief push the object's buffer to a file
@@ -195,13 +204,17 @@ public:
 
   friend class TransitionDensity;
   friend double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
-  double dot(const LinearAlgebra::vector<double>& other) const;
+  double dot(const LinearAlgebra::vector<double>& other) const override;
   double dot(const std::shared_ptr<LinearAlgebra::vector<double> > other) const {
     return dot(*other.get());
   }
   double dot(const std::unique_ptr<LinearAlgebra::vector<double> > other) const {
     return dot(*other.get());
   }
+  double dot(const std::map<size_t,double>& other) const override {
+    throw std::logic_error("P space support not yet implemented");
+  }
+
   /*!
    * \brief this[i] = a[i]*b[i]
    * \param a
@@ -217,7 +230,7 @@ public:
    * \param negative whether =- or =+
    */
   void divide(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b, double shift=0, bool append=false, bool negative=false);
-  void zero();
+  void zero() override;
   std::map<std::string,double> m_properties;
   void settilesize(int t=-1, int a=-1, int b=-1) {
 //    std::cout << "settilesize "<<t<<","<<a<<","<<b<<std::endl;

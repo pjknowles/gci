@@ -12,4 +12,5 @@ rsync submodules/symmetry_matrix/*.{cpp,h} submodules/symmetry_matrix/SymmetryMa
 rsync submodules/Profiler/Profiler* $1/src/global
 rsync submodules/FCIdump/FCIdump* $1/src/global
 rsync submodules/IterativeSolver/LinearAlgebra.h $1/src/global
-rsync submodules/IterativeSolver/IterativeSolver/I*.{cpp,h} $1/src/IterativeSolver
+rsync submodules/IterativeSolver/PagedVector.h $1/src/global
+rsync submodules/IterativeSolver/I*.{cpp,h} $1/src/IterativeSolver
