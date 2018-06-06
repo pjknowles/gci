@@ -12,6 +12,9 @@
 #define xout std::cout
 #else
 #include "gciMolpro.h"
+#ifdef HAVE_MPI_H
+#define MPI_COMM_COMPUTE MPI_Comm_f2c(PPIDD_Worker_comm())
+#endif
 #endif
 
 #if !defined(MOLPRO) || defined(GA_MPI) || defined(MPI2)

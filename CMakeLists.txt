@@ -39,7 +39,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 find_package(MPI REQUIRED)
 include_directories(${MPI_CXX_INCLUDE_PATH})
 target_link_libraries(gci.exe ${MPI_CXX_LIBRARIES})
-add_definitions(-DUSE_MPI)
+add_definitions(-DHAVE_MPI_H)
 
 find_package(MKL)
 if (MKL_FOUND)
