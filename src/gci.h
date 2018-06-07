@@ -95,7 +95,9 @@ inline void gather_chunks(double *buffer, const size_t length, const size_t chun
       }
 }
 
-void inline gsum(double* buffer, const size_t len)
+ typedef const size_t i;
+
+ void inline gsum(double* buffer, i len)
 {
 #ifdef MPI_COMM_COMPUTE
   std::vector<double>result;
