@@ -3,7 +3,7 @@
 #ifdef MOLPRO
 #include "common/molpro_config.h"
 #endif
-#if !defined(MOLPRO) || defined(GA_MPI) || defined(MPI2)
+#if !defined(MOLPRO) || defined(HAVE_MPI_H) || defined(GA_MPI) || defined(MPI2)
 #include "mpi.h"
 #else
 #define SHAREDCOUNTER_DUMMY

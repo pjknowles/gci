@@ -4,26 +4,23 @@
 #include <cstring>
 #include <stdexcept>
 #include "Profiler.h"
-#include <stdint.h>
+#include <cstdint>
 #include "sharedCounter.h"
 #include "memory.h"
 
 #ifndef MOLPRO
 #define xout std::cout
 #else
+#include "common/molpro_config.h"
 #include "gciMolpro.h"
+#include "ppidd.h"
 #ifdef HAVE_MPI_H
+#include <mpi.h>
 #define MPI_COMM_COMPUTE MPI_Comm_f2c(PPIDD_Worker_comm())
-#endif
-#endif
-
-#if !defined(MOLPRO) || defined(GA_MPI) || defined(MPI2)
-#include "mpi.h"
-#define MPI_COMM_COMPUTE MPI_COMM_WORLD
 #else
 #define MPI_COMM_NULL 0
 #endif
-
+#endif
 
 #include <iostream>
 #include <memory>
