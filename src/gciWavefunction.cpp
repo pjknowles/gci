@@ -390,18 +390,18 @@ std::string gci::Wavefunction::values() const
 std::string gci::Wavefunction::str(int verbosity, unsigned int columns) const
 {
   std::ostringstream s;
-  if (verbosity >= 1) {
-    s<<std::endl<<"Wavefunction object at address " << this ;
-    s<<std::endl<<"values at address " << &buffer <<" and of length " << buffer.size();
+  if (verbosity >= 0) {
+    s<<std::endl<<"Wavefunction object " ;
+    if (verbosity >= 1) s<<std::endl<<"values at address " << &buffer <<" and of length " << buffer.size();
     size_t address=0;
     for (unsigned int syma=0; syma<8; syma++) {
       unsigned int symb = syma ^ symmetry ;
       if (alphaStrings[syma].size() && betaStrings[symb].size()) {
-        s<<std::endl<< "Alpha strings of symmetry "<<syma+1<<":";
+        if (verbosity >= 1) s<<std::endl<< "Alpha strings of symmetry "<<syma+1<<":";
         for (StringSet::const_iterator i=alphaStrings[syma].begin(); i!=alphaStrings[syma].end(); i++) s <<std::endl<< i->str();
-        s<<std::endl<< "Beta strings of symmetry "<<symb+1<<":";
+        if (verbosity >= 1) s<<std::endl<< "Beta strings of symmetry "<<symb+1<<":";
         for (StringSet::const_iterator i=betaStrings[symb].begin(); i!=betaStrings[symb].end(); i++) s <<std::endl<< i->str();
-        if (buffer.size() == dimension && verbosity >=2) {
+        if (buffer.size() == dimension && verbosity >=0) {
           s<<std::endl<<"Values:";
           for (size_t i=0; i<alphaStrings[syma].size(); i++) {
             s<<std::endl;

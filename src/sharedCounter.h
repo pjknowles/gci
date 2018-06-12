@@ -5,6 +5,12 @@
 #endif
 #if !defined(MOLPRO) || defined(HAVE_MPI_H) || defined(GA_MPI) || defined(MPI2)
 #include "mpi.h"
+#ifdef MOLPRO
+#include "ppidd.h"
+#define MPI_COMM_COMPUTE MPI_Comm_f2c(PPIDD_Worker_comm())
+#else
+#define MPI_COMM_COMPUTE MPI_COMM_WORLD
+#endif
 #else
 #define SHAREDCOUNTER_DUMMY
 #define MPI_Comm int
@@ -18,7 +24,7 @@
 class sharedCounter
 {
 public:
-  sharedCounter(const MPI_Comm& communicator=MPI_COMM_WORLD);
+  sharedCounter(const MPI_Comm& communicator=MPI_COMM_COMPUTE);
   ~sharedCounter();
   int increment(int amount=1);
   void reset();

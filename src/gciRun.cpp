@@ -491,6 +491,7 @@ std::vector<double> Run::Davidson(
   updater update(d,false);
   residual resid(ham,false);
   LinearAlgebra::LinearEigensystem<scalar> solver;
+  solver.m_thresh=energyThreshold;
   ParameterVectorSet gg;
   ParameterVectorSet ww;
   for (int root=0; root<nState; root++) {
@@ -513,6 +514,8 @@ std::vector<double> Run::Davidson(
   //  profiler->stop("Davidson preamble");
   for (size_t iteration=0; iteration<maxIterations; iteration++) {
    resid(ww,gg);
+//   xout << "ww after resid "<<ww.front()->str(2)<<std::endl;
+//   xout << "gg after resid "<<gg.front()->str(2)<<std::endl;
    solver.addVector(ww,gg);
    std::vector<double> shift;
    for (auto root=0; root < nState; root++)
