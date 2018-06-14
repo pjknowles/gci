@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
         run.options.addParameter(s.substr(0,equals),s.substr(equals+1),true);
   }
   std::vector<double> e=run.run();
-  xout << "e after run:"; for (size_t i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;
+//  xout << "e after run:"; for (size_t i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;
   if (plugin.active()) {
      // send the energy back
       if (plugin.send("TAKE PROPERTY ENERGY")) {
