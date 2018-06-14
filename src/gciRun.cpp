@@ -213,7 +213,7 @@ void operator()(ParameterVectorSet & psc, const ParameterVectorSet & psg, std::v
 Run::Run(std::string fcidump)
   : m_hamiltonian(Operator::construct(FCIdump(fcidump)))
 {
-#ifdef MPI_COMM_COMPUTE
+#ifdef HAVE_MPI_H
   MPI_Comm_rank(MPI_COMM_COMPUTE,&parallel_rank);
   MPI_Comm_size(MPI_COMM_COMPUTE,&parallel_size);
   xout << "Parallel run of "<<parallel_size<<" processes"<< std::endl;

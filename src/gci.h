@@ -89,7 +89,7 @@ inline void gather_chunks(double *buffer, const size_t length, const size_t chun
 //        xout << "nsa="<<nsa<<std::endl;
 //        xout << "displ:"; for (size_t i=0; i<(size_t)parallel_size; i++) xout <<" "<<displs[i]; xout <<std::endl;
 //        xout << "recvcounts:"; for (size_t i=0; i<(size_t)parallel_size; i++) xout <<" "<<recvcounts[i]; xout <<std::endl;
-#ifdef MPI_COMM_COMPUTE
+#ifdef HAVE_MPI_H
         MPI_Allgatherv(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,buffer,&recvcounts[0],&displs[0],MPI_DOUBLE,MPI_COMM_COMPUTE);
 #endif
       }
@@ -99,7 +99,7 @@ inline void gather_chunks(double *buffer, const size_t length, const size_t chun
 
  void inline gsum(double* buffer, i len)
 {
-#ifdef MPI_COMM_COMPUTE
+#ifdef HAVE_MPI_H
   std::vector<double>result;
   if (parallel_rank == 0)
     result.resize(len);

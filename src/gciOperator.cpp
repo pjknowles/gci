@@ -6,7 +6,7 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
   std::vector<char> portableByteStream;
   int lPortableByteStream;
   int rank=0;
-#ifdef MPI_COMM_COMPUTE
+#ifdef HAVE_MPI_H
   MPI_Comm_rank(MPI_COMM_COMPUTE,&rank);
 #endif
   if (rank==0) {
@@ -94,11 +94,11 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
   portableByteStream = result.bytestream().data();
   lPortableByteStream = portableByteStream.size();
     }
-#ifdef MPI_COMM_COMPUTE
+#ifdef HAVE_MPI_H
   MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, MPI_COMM_COMPUTE);
 #endif
   char * buf =  (rank==0)  ? portableByteStream.data() : (char*) malloc(lPortableByteStream);
-#ifdef MPI_COMM_COMPUTE
+#ifdef HAVE_MPI_H
   MPI_Bcast(buf,lPortableByteStream, MPI_CHAR, 0, MPI_COMM_COMPUTE);
 #endif
   auto result = Operator::construct(buf);
