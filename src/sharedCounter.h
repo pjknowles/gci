@@ -15,7 +15,7 @@
 #define SHAREDCOUNTER_DUMMY
 #define MPI_Comm int
 #define MPI_Win int
-#define MPI_COMM_WORLD 0
+#define MPI_COMM_COMPUTE 0
 #endif
 #include <vector>
 #include <cstddef>
