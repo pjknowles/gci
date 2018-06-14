@@ -51,7 +51,7 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, in
   for (std::vector<StringSet>::const_iterator referenceSpace=referenceSpaces.begin(); referenceSpace != referenceSpaces.end(); referenceSpace++)
     addByOperators(*referenceSpace, annihilations, creations, sym, parallel);
 //  xout << "size="<<size()<<std::endl;
-#ifdef MPI_COMM_COMPUTE
+#ifdef HAVE_MPI_H
   if (parallel) {
     EndTasks();
     auto pp = profiler->push("StringSet::addByOperators:distribute");
