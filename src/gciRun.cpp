@@ -1229,6 +1229,7 @@ std::vector<double> Run::ISRSPT(
   //      xout << "Final w: "<<w.str(2)<<std::endl;
   //      xout << "Final g: "<<g.str(2)<<std::endl;
 //  return solver.incremental_energies(); // TODO
+  return solver.eigenvalues();
 }
 
 #include <cmath>
