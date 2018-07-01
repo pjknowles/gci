@@ -28,6 +28,7 @@ file (GLOB SRCS src/*.cpp
     submodules/symmetry_matrix/SMat.cpp submodules/symmetry_matrix/SMatfunction.cpp submodules/symmetry_matrix/Operator.cpp submodules/symmetry_matrix/SMatMat.cpp
     submodules/FCIdump/FCIdump.cpp
     submodules/molpro-plugin/PluginGuest.cpp
+    submodules/IterativeSolver/IterativeSolver.cpp
     )
 add_definitions(-DNOMAIN)
 add_executable(gci.exe ${SRCS})
