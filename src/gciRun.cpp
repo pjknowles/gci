@@ -522,7 +522,7 @@ std::vector<double> Run::Davidson(
     shift.push_back(-solver.eigenvalues()[root]+1e-14);
    //       xout << "ww before precon "<<ww.front()->str(2)<<std::endl;
    //       xout << "gg before precon "<<gg.front()->str(2)<<std::endl;
-   update(ww,gg,shift);
+   update(ww,gg,shift,true);
    //       xout << "ww after precon "<<ww.front()->str(2)<<std::endl;
    //       xout << "gg after precon "<<gg.front()->str(2)<<std::endl;
    if (solver.endIteration(ww,gg)) break;
