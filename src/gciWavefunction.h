@@ -167,11 +167,6 @@ public:
   std::vector<std::size_t> histogram(const std::vector<double>edges, bool parallel=true, std::size_t start=0, std::size_t stop=(size_t)(-1));
 
   /*!
-   * \brief distributed whether the mode of calculation is to be distributed across processors
-   */
-  bool distributed;
-
-  /*!
    * \brief gather give each process a full copy of buffer
    */
   void replicate();

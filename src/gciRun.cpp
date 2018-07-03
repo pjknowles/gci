@@ -594,8 +594,6 @@ std::vector<double> Run::CSDavidson(const Operator& ham,
     for (int i=n-1; i>-1; i--)
       for (int j=n-1; j>-1; j--)
         reducedHamiltonian[j+i*(n+1)] = reducedHamiltonian[j+i*n];
-    bool olddistw=w.distributed; w.distributed=true;
-    bool olddistg=g.distributed; g.distributed=true;
     for (int i=0; i<n+1; i++) {
       g.getw(gfile,i);
       reducedHamiltonian[i+n*(n+1)] = g * w;
@@ -603,7 +601,6 @@ std::vector<double> Run::CSDavidson(const Operator& ham,
     gsum(&reducedHamiltonian[n*(n+1)],n+1);
     for (int i=0; i<n+1; i++)
       reducedHamiltonian[n+i*(n+1)] = reducedHamiltonian[i+n*(n+1)];
-    w.distributed=olddistw; g.distributed=olddistg;
     }
     profiler->stop("Davidson build rH");
     // { xout << "Reduced hamiltonian:"<<std::endl; for (int i=0; i < n+1; i++) { for (int j=0; j < n+1; j++) xout <<" "<<reducedHamiltonian[j+(n+1)*i]; xout << std::endl; } }
@@ -639,8 +636,6 @@ std::vector<double> Run::CSDavidson(const Operator& ham,
         hamiltonianInverse.push_back(hinvij);
       }
 
-    bool olddistw=w.distributed; w.distributed=true;
-    bool olddistg=g.distributed; g.distributed=true;
     // determine penalty magnitude, first solving for d.alpha/d.mu
     w.set((double)0);
     for (int i=0; i <= n; i++) {
@@ -734,8 +729,6 @@ std::vector<double> Run::CSDavidson(const Operator& ham,
     profiler->stop("Davidson residual");
     double norm2=w*w;
     gsum(&norm2,1);
-    w.distributed=olddistw;
-    g.distributed=olddistg;
 
     double econv=0;
     for (int i=0; i<(int)e.size(); i++) {
@@ -755,13 +748,11 @@ std::vector<double> Run::CSDavidson(const Operator& ham,
 
     { profiler->start("Histogram");
       w.set((double)0);
-      bool olddist=w.distributed; w.distributed=true;
       for (int i=0; i <= n; i++) {
         g.getw(wfile,i);
         w.axpy(alpha[i] , g);
       }
       w.replicate();
-      w.distributed=olddist;
       double histmin=1e-14,histmax=1.1;
       size_t nhist=25;
       double ratio=std::pow(histmin/histmax,1/((double)nhist));
@@ -850,8 +841,6 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams,
 //        xout << "k, E:"<<k<<" "<<e[k]<<", g after -E.w: " << g.str(2) <<std::endl;
     }
       {
-    bool olddistw=w.distributed; w.distributed=true;
-    bool olddistg=g.distributed; g.distributed=true;
     w = -g;
     g.getw(h0file);
 //    xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
@@ -867,7 +856,6 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams,
       e[n+k]+=g*w;
     }
     gsum(&e[n+1],(size_t)(hams.size()-1));
-    w.distributed=olddistw; g.distributed=olddistg;
   }
     xout << "n="<<n<<", E(n+1)="<<e[n+1]<<std::endl;
     if ((e[n+1] < 0 ? -e[n+1] : e[n+1]) < energyThreshold && e[n+1] != (double)0) {e.resize(n+2);break;}
