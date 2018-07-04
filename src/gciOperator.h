@@ -137,7 +137,6 @@ namespace gci {
   const Operator operator*(double other) const { Operator copy(*this); copy*=other; return copy;}
 
   void gsum();
-  void bcast(int rank);
 
   private:
 

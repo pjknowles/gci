@@ -36,9 +36,9 @@ public:
      * \brief Construct a Wavefunction object from a State prototype
      * \param state the State prototype
      */
-  Wavefunction(const State& state);
+  explicit Wavefunction(const State& state);
 
-  Wavefunction(const Wavefunction& source, int option) {
+  Wavefunction(const Wavefunction& source, int option) : dimension(source.dimension){
 //   std::cout <<"Wavefunction copy constructor, option="<<option<<std::endl;
    *this = source;
   }
@@ -106,7 +106,7 @@ public:
    * \return  the offset
    */
 
-  size_t blockOffset(const unsigned int syma) const;
+  size_t blockOffset(unsigned int syma) const;
 
   std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const override;
 
@@ -119,7 +119,7 @@ public:
    */
   void axpy(double a, const LinearAlgebra::vector<double> &x) override;
   void axpy(double a, const std::shared_ptr<LinearAlgebra::vector<double> > x) {
-    axpy(a,*x.get());
+    axpy(a,*x);
   }
   void axpy(double a, const std::map<size_t,double>&x) override {
    throw std::logic_error("P space support not yet implemented");
@@ -164,7 +164,7 @@ public:
    * \param stop last element of buffer plus one
    * \return the numbers of coefficients whose absolute value is greater than the corresponding edge
    */
-  std::vector<std::size_t> histogram(const std::vector<double>edges, bool parallel=true, std::size_t start=0, std::size_t stop=(size_t)(-1));
+  std::vector<std::size_t> histogram(const std::vector<double>& edges, bool parallel=true, std::size_t start=0, std::size_t stop=(size_t)(-1));
 
   /*!
    * \brief gather give each process a full copy of buffer
@@ -201,10 +201,10 @@ public:
   friend double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
   double dot(const LinearAlgebra::vector<double>& other) const override;
   double dot(const std::shared_ptr<LinearAlgebra::vector<double> > other) const {
-    return dot(*other.get());
+    return dot(*other);
   }
   double dot(const std::unique_ptr<LinearAlgebra::vector<double> > other) const {
-    return dot(*other.get());
+    return dot(*other);
   }
   double dot(const std::map<size_t,double>& other) const override {
     throw std::logic_error("P space support not yet implemented");

@@ -50,7 +50,7 @@ void Wavefunction::set(size_t offset, const double val)
 void Wavefunction::set(const double value)
 {
   allocate_buffer();
-  for (auto b=buffer.begin(); b != buffer.end(); b++) *b=value;
+  for (auto& b : buffer) b=value;
 }
 
 void Wavefunction::diagonalOperator(const Operator &op)
@@ -134,7 +134,7 @@ void Wavefunction::diagonalOperator(const Operator &op)
 
 void Wavefunction::axpy(double a, const LinearAlgebra::vector<double>& x)
 {
-  const Wavefunction& xx=dynamic_cast <const Wavefunction&> (x);
+  const auto& xx=dynamic_cast <const Wavefunction&> (x);
 //  xout << "Wavefunction::axpy initial=";
 //  for (size_t i=0; i<buffer.size(); i++) xout<<" "<<buffer[i]; xout << std::endl;
 //  xout << "Wavefunction::axpy x=";
@@ -146,12 +146,12 @@ void Wavefunction::axpy(double a, const LinearAlgebra::vector<double>& x)
 
 void Wavefunction::scal(double a)
 {
- for (size_t i=0; i<buffer.size(); i++) buffer[i] *= a;
+ for (auto& b : buffer) b *= a;
 }
 
 Wavefunction& Wavefunction::operator*=(const double &value)
 {
- for (auto b=buffer.begin(); b != buffer.end(); b++) *b*=value;
+ for (auto& b : buffer) b *= value;
   return *this;
 }
 
@@ -183,9 +183,7 @@ Wavefunction& Wavefunction::operator-=(const Wavefunction &other)
 
 Wavefunction& Wavefunction::operator-=(const double other)
 {
-  size_t chunk = (buffer.size()-1)/parallel_size+1;
-  for (size_t i=0; i<buffer.size(); i++)
-    buffer[i] -= other;
+ for (auto& b : buffer) b -= other;
   return *this;
 }
 
@@ -193,7 +191,6 @@ Wavefunction& Wavefunction::operator-=(const double other)
 Wavefunction& Wavefunction::operator/=(const Wavefunction &other)
 {
   if (! compatible(other)) throw std::domain_error("attempt to add incompatible Wavefunction objects");
-  size_t chunk = (buffer.size()-1)/parallel_size+1;
   for (size_t i=0; i<buffer.size(); i++)
     buffer[i] /= other.buffer[i];
   return *this;
@@ -223,31 +220,31 @@ double Wavefunction::update(const Wavefunction &diagonalH, double & eTruncated, 
 }
 
 
-Wavefunction operator+(const Wavefunction &w1, const Wavefunction &w2)
+Wavefunction& operator+(const Wavefunction &w1, const Wavefunction &w2)
 {
   Wavefunction result = w1;
   return result += w2;
 }
 
-Wavefunction operator-(const Wavefunction &w1, const Wavefunction &w2)
+Wavefunction& operator-(const Wavefunction &w1, const Wavefunction &w2)
 {
   Wavefunction result = w1;
   return result -= w2;
 }
 
-Wavefunction operator/(const Wavefunction &w1, const Wavefunction &w2)
+Wavefunction& operator/(const Wavefunction &w1, const Wavefunction &w2)
 {
   Wavefunction result = w1;
   return result /= w2;
 }
 
-Wavefunction operator*(const Wavefunction &w1, const double &value)
+Wavefunction& operator*(const Wavefunction &w1, const double &value)
 {
   Wavefunction result = w1;
   return result *= value;
 }
 
-Wavefunction operator*(const double &value, const Wavefunction &w1)
+Wavefunction& operator*(const double &value, const Wavefunction &w1)
 {
   Wavefunction result = w1;
   return result *= value;
@@ -260,16 +257,16 @@ double Wavefunction::dot(const LinearAlgebra::vector<double>& other) const
 
 void Wavefunction::times(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b)
 {
- const Wavefunction* wa = dynamic_cast<const Wavefunction*>(a);
- const Wavefunction* wb = dynamic_cast<const Wavefunction*>(b);
+ const auto wa = dynamic_cast<const Wavefunction*>(a);
+ const auto wb = dynamic_cast<const Wavefunction*>(b);
   for (size_t i=0; i<buffer.size(); i++)
     buffer[i] = wa->buffer[i]*wb->buffer[i];
 }
 
 void Wavefunction::divide(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b, double shift, bool append, bool negative)
 {
-  const Wavefunction* wa = dynamic_cast<const Wavefunction*>(a);
-  const Wavefunction* wb = dynamic_cast<const Wavefunction*>(b);
+  const auto wa = dynamic_cast<const Wavefunction*>(a);
+  const auto wb = dynamic_cast<const Wavefunction*>(b);
   if (negative) {
       if (append) {
        for (size_t i=0; i<buffer.size(); i++)
@@ -298,8 +295,7 @@ void Wavefunction::zero()
 double gci::operator *(const Wavefunction &w1, const Wavefunction &w2)
 {
   if (! w1.compatible(w2)) throw std::domain_error("attempt to form scalar product between incompatible Wavefunction objects");
-  double result=(double)0;
-  size_t chunk = (w1.buffer.size()-1)/parallel_size+1;
+  auto result=(double)0;
   for (size_t i=0; i<w1.buffer.size(); i++)
    result += w1.buffer[i]*w2.buffer[i];
   return result;
@@ -307,16 +303,14 @@ double gci::operator *(const Wavefunction &w1, const Wavefunction &w2)
 
 Wavefunction& gci::Wavefunction::operator -()
 {
-  size_t chunk = (buffer.size()-1)/parallel_size+1;
-  for (size_t i=0; i<buffer.size(); i++)
-    buffer[i]=-buffer[i];
+ for (auto& b : buffer) b = -b;
   return *this;
 }
 
 std::string gci::Wavefunction::values() const
 {
   std::ostringstream s;
-  for (auto v : buffer ) s << " "<<v;
+  for (auto& v : buffer ) s << " "<<v;
   return s.str();
 }
 
@@ -329,7 +323,7 @@ std::string gci::Wavefunction::str(int verbosity, unsigned int columns) const
     size_t address=0;
     for (unsigned int syma=0; syma<8; syma++) {
       unsigned int symb = syma ^ symmetry ;
-      if (alphaStrings[syma].size() && betaStrings[symb].size()) {
+      if (!alphaStrings[syma].empty() && !betaStrings[symb].empty()) {
         if (verbosity >= 1) s<<std::endl<< "Alpha strings of symmetry "<<syma+1<<":";
         for (StringSet::const_iterator i=alphaStrings[syma].begin(); i!=alphaStrings[syma].end(); i++) s <<std::endl<< i->str();
         if (verbosity >= 1) s<<std::endl<< "Beta strings of symmetry "<<symb+1<<":";
@@ -388,7 +382,7 @@ Determinant Wavefunction::determinantAt(size_t offset)
   throw std::runtime_error("Wavefunction::determinantAt cannot find");
 }
 
-size_t Wavefunction::blockOffset(const unsigned int syma) const
+size_t Wavefunction::blockOffset(unsigned int syma) const
 {
   return _blockOffset.at(syma);
 }
@@ -428,8 +422,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
     for (size_t i=0; i<buffer.size(); i++)
       buffer[i] += h.m_O0 * w.buffer[i];
   else
-    for (size_t i=0; i<buffer.size(); i++)
-      buffer[i] = (double)0;
+   for (auto& b: buffer) b=0;
   //  xout <<"residual after 0-electron:"<<std::endl<<str(2)<<std::endl;
 
   //  xout <<std::endl<<"w in operatorOnWavefunction="<<w.str(2)<<std::endl;
@@ -459,7 +452,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                   nsaaMax = m_alphatilesize;
                   nsbbMax = m_betatilesize;
                 }
-              if (aa.size()>0 && betaStrings[symb].size()>0) {
+              if (!aa.empty() && !betaStrings[symb].empty()) {
                auto ham=h.O1(true).blockCopy(symexc);
                if (ham.cols()<1) continue;
                   //        for (const auto& aaa: aa) xout <<"N-1 alpha member "<<aaa<<std::endl;
@@ -481,7 +474,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
                     }
                 }
               const auto& bb = bbs[symb];
-              if (bb.size()>0 && alphaStrings[syma].size()>0) {
+              if (!bb.empty() && !alphaStrings[syma].empty()) {
                auto ham=h.O1(false).blockCopy(symexc);
                if (ham.cols()<1) continue;
                   for (StringSet::const_iterator bb1, bb0=bb.begin(); bb1=bb0+nsbbMax > bb.end() ? bb.end() : bb0+nsbbMax, bb0 <bb.end(); bb0=bb1) { // loop over beta batches
@@ -514,7 +507,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
       size_t offset=0, nsa=0, nsb=0;
       for (unsigned int syma=0; syma<8; syma++) {
           unsigned int symb = w.symmetry^syma;
-          if (alphaStrings[syma].size()==0 || betaStrings[symb].size()==0) continue;
+          if (alphaStrings[syma].empty() || betaStrings[symb].empty()) continue;
           auto& aa = w.alphaStrings[syma];
           auto& bb = w.betaStrings[symb];
           if (tilesize>0)
@@ -576,7 +569,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
           profiler->start("StringSet aa");
           StringSet aa(alphaActiveStrings,2,0,syma,parallel_stringset);
           profiler->stop("StringSet aa");
-          if (aa.size()==0) continue;
+          if (aa.empty()) continue;
           for (unsigned int symb=0; symb<8; symb++) {
               if (!NextTask()) continue;
               auto praa = profiler->push("aa1 loop");
@@ -602,7 +595,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
         size_t nsbbMax = 64; // temporary static
         for (unsigned int symb=0; symb<8; symb++) {
             StringSet bb(betaActiveStrings,2,0,symb,parallel_stringset);
-            if (bb.size()==0) continue;
+            if (bb.empty()) continue;
             for (unsigned int syma=0; syma<8; syma++) {
                 if (!NextTask()) continue;
                 unsigned int symexc = symb^syma^w.symmetry;
@@ -627,10 +620,10 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
       size_t nsbbMax = 640; // temporary static
       for (unsigned int symb=0; symb<8; symb++) {
           StringSet bb(betaActiveStrings,1,0,symb,parallel_stringset);
-          if (bb.size()==0) continue;
+          if (bb.empty()) continue;
           for (unsigned int syma=0; syma<8; syma++) {
               StringSet aa(alphaActiveStrings,1,0,syma,parallel_stringset);
-              if (aa.size()==0) continue;
+              if (aa.empty()) continue;
               unsigned int symexc = symb^syma^w.symmetry;
               size_t nexc = h.O2(true,false,false).block_size(symexc);
               {
@@ -713,7 +706,7 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
 //              result.O1(spincase).block(isym)[(i+2)*(i+1)/2-1]*=2;
           result.O1(spincase).scal(0.5,false);
         }
-       else
+      else
         {
           throw std::runtime_error("non-symmetric density not yet supported");
         }
@@ -729,7 +722,7 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
         profiler->start("StringSet aa");
         StringSet aa(alphaStrings,2,0,syma,parallel_stringset);
         profiler->stop("StringSet aa");
-        if (aa.size()==0) continue;
+        if (aa.empty()) continue;
         for (unsigned int symb=0; symb<8; symb++) {
             if (!NextTask()) continue;
             auto praa = profiler->push("aa1 loop");
@@ -759,7 +752,7 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
       size_t nsbbMax = 64; // temporary static
       for (unsigned int symb=0; symb<8; symb++) {
           StringSet bb(betaStrings,2,0,symb,parallel_stringset);
-          if (bb.size()==0) continue;
+          if (bb.empty()) continue;
           for (unsigned int syma=0; syma<8; syma++) {
               if (!NextTask()) continue;
               unsigned int symexc = symb^syma^symmetry;
@@ -781,10 +774,10 @@ gci::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const Wa
     size_t nsbbMax = 640; // temporary static
     for (unsigned int symb=0; symb<8; symb++) {
         StringSet bb(betaStrings,1,0,symb,parallel_stringset);
-        if (bb.size()==0) continue;
+        if (bb.empty()) continue;
         for (unsigned int syma=0; syma<8; syma++) {
             StringSet aa(alphaStrings,1,0,syma,parallel_stringset);
-            if (aa.size()==0) continue;
+            if (aa.empty()) continue;
             unsigned int symexc = symb^syma^symmetry;
             size_t nexc = result.O2(true,false,false).block_size(symexc);
             {
@@ -876,7 +869,7 @@ void Wavefunction::replicate()
 }
 
 #include <cmath>
-std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> edges, bool parallel, std::size_t start, std::size_t stop)
+std::vector<std::size_t> Wavefunction::histogram(const std::vector<double>& edges, bool parallel, std::size_t start, std::size_t stop)
 {
   if (stop > edges.size()) stop = edges.size();
   std::vector<std::size_t> cumulative(edges.size(),0);
@@ -897,7 +890,7 @@ std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> edges
 
 double Wavefunction::norm(const double k)
 {
-  double result = (double)0;
+  auto result = (double)0;
   size_t imin = 0;
   size_t imax = buffer.size();
   for (size_t i=imin; i<imax; i++)
