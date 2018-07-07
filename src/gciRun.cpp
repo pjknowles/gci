@@ -1,17 +1,10 @@
 #include "gciRun.h"
-#include "gciWavefunction.h"
 //#ifndef MOLPRO
 #include "gciMolpro.h"
 //#endif
-#include "FCIdump.h"
-#include <iostream>
 #include <iomanip>
-#include <vector>
-#include <memory>
-#include <cmath>
-#include "sharedCounter.h"
 #include "IterativeSolver.h"
-#include "gciOperator.h"
+
 using namespace gci;
 
 
@@ -209,7 +202,6 @@ void operator()(ParameterVectorSet & psc, const ParameterVectorSet & psg, std::v
 }
 };
 
-#include <memory>
 Run::Run(std::string fcidump)
   : m_hamiltonian(Operator::construct(FCIdump(fcidump)))
 {
@@ -414,7 +406,6 @@ Run::~Run() {
 using namespace itf;
 #endif
 
-#include <cmath>
 std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, double energyThreshold, int maxIterations)
 {
   std::unique_ptr<gci::Operator> residual_Q;
@@ -1220,7 +1211,6 @@ std::vector<double> Run::ISRSPT(
   return solver.eigenvalues();
 }
 
-#include <cmath>
 void Run::HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity)
 {
   Wavefunction w(&hamiltonian.m_orbitalSpaces[0],prototype.nelec,prototype.symmetry,prototype.ms2);

@@ -3,10 +3,6 @@
 #endif
 #include "gci.h"
 #include "gciFile.h"
-#include "gciMolpro.h"
-#include <string.h>
-#include <iostream>
-#include <stdlib.h>
 #include <unistd.h>
 
 File::File()

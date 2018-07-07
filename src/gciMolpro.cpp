@@ -1,5 +1,6 @@
 #include "gciMolpro.h"
 #include <Eigen/Dense>
+#include <assert.h>
 #ifndef MOLPRO
 
 static bool eigen=true;
@@ -80,8 +81,6 @@ void MxmDrvGen( double *Out, uint nRowStOut, uint nColStOut,
             A[r*nRowStA+t*nColStA] * B[t*nRowStB+s*nColStB];
 }
 
-#include <cmath>
-#include <assert.h>
 void Diagonalize( double *x, double *d, unsigned int m, unsigned int nColStride ) {
   assert (nColStride == m);
   unsigned int n=m;

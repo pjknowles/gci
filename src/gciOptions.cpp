@@ -8,10 +8,8 @@
 #endif
 #include "gciOptions.h"
 #include <iostream>
-#include <fstream>
-#include <istream>
 #include <sstream>
-#include <stdexcept>
+
 #define xout std::cout
 
 using namespace gci;
