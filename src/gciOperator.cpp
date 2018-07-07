@@ -1,5 +1,6 @@
 #include "gci.h"
 #include "gciOperator.h"
+#include <algorithm>
 
 gci::Operator gci::Operator::construct(const FCIdump &dump)
 {
