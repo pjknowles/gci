@@ -14,10 +14,10 @@ gci::Operator gci::Operator::construct(const FCIdump &dump)
   int verbosity=0;
   std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
   dim_t dim(8);
-  for (auto& s : orbital_symmetries)
+  for (const auto& s : orbital_symmetries)
     dim.at(s-1)++;
 
-  gci::Operator result(dim, orbital_symmetries, 2, dump.parameter("IUHF")[0]>0, 0, "Hamiltonian");
+  gci::Operator result(dim, orbital_symmetries, 2, dump.parameter("IUHF")[0]>0, 0, true, true, "Hamiltonian");
 //  for (auto i=0; i<orbital_symmetries.size(); i++) xout << "i="<<i+1<<", symmetry="<<orbital_symmetries[i]<<", offset="<<result.offset(i+1)<<std::endl;;
 
   dump.rewind();
@@ -120,7 +120,7 @@ gci::Operator gci::Operator::construct(const char *dump) {
 //    std::cout << "syms "<<syms.size()<<so.m_uhf<<std::endl;
 //    for (auto& ss : syms) std::cout << " "<<ss; std::cout<<std::endl;
 //    std::cout << "OrbitalSpace "<<OrbitalSpace(syms,so.m_uhf)<<std::endl;
-    os.push_back(OrbitalSpace(syms,so.m_uhf));
+    os.emplace_back(OrbitalSpace(syms,so.m_uhf));
 //    std::cout << "pushed to os "<<os.size()<<std::endl;;
     }
   return gci::Operator(so,os);
@@ -190,17 +190,17 @@ FCIdump gci::Operator::FCIDump(const std::string filename) const
     }
 //  xout << "n="<<n<<std::endl;
   if (m_rank>0)
-  for (size_t i=1; i<=n; i++)
-    for (size_t j=1; j<=i; j++) {
-//        xout << "i="<<i<<", j="<<j<<std::endl;
-      auto oi = offset(i);
-      auto oj = offset(j);
-      auto si =  m_orbitalSpaces[0].orbital_symmetries[i-1];
-      auto sj =  m_orbitalSpaces[0].orbital_symmetries[j-1];
+  for (size_t ii=1; ii<=n; ii++)
+    for (size_t jj=1; jj<=ii; jj++) {
+//        xout << "ii="<<ii<<", jj="<<jj<<std::endl;
+      auto oi = offset(ii);
+      auto oj = offset(jj);
+      auto si =  m_orbitalSpaces[0].orbital_symmetries[ii-1];
+      auto sj =  m_orbitalSpaces[0].orbital_symmetries[jj-1];
       if ((si^sj)==m_symmetry) {
           auto value=integrals_a.block(si).at(oi*(oi+1)/2+oj);
           if (std::abs(value)>1e-15)
-            dump.writeIntegral(i,j,0,0, value);
+            dump.writeIntegral(ii,jj,0,0, value);
         }
       }
   dump.writeIntegral(0,0,0,0,m_O0);
@@ -320,13 +320,12 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
   f.m_orbitalSpaces[0].orbital_symmetries = m_orbitalSpaces[0].orbital_symmetries;
   unsigned int basisSize=m_orbitalSpaces[0].orbital_symmetries.size();
   // xout <<"reference.stringAlpha.orbitals ";for (size_t i=0; i < reference.stringAlpha.orbitals().size(); i++) xout <<reference.stringAlpha.orbitals()[i]<<" ";xout <<std::endl;
-  // for (std::vector<unsigned int>::const_iterator o=reference.stringAlpha.orbitals().begin(); o != reference.stringAlpha.orbitals().end(); o++)
-  for (auto o=refAlphaOrbitals.begin(); o != refAlphaOrbitals.end(); o++)
+  for (const auto& o : refAlphaOrbitals)
     {
 //       xout << "gci::Operator::fockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
 //       xout<< "f alpha, alpha occ: " <<*o << std::endl;
-      unsigned int os=m_orbitalSpaces[0].orbital_symmetries[(*o)-1];
-      unsigned int oo=offset(*o);
+      unsigned int os=m_orbitalSpaces[0].orbital_symmetries[o-1];
+      unsigned int oo=offset(o);
       for (unsigned int i=1; i<=basisSize; i++)
         for (unsigned int j=1; j<=i; j++) {
             if (m_orbitalSpaces[0].orbital_symmetries[i-1]!=m_orbitalSpaces[0].orbital_symmetries[j-1]) continue;
@@ -335,11 +334,11 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
                 element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i-1],oo,os,oo,os,offset(j),m_orbitalSpaces[0].orbital_symmetries[j-1],true,true);
           }
     }
-  for (auto o=refBetaOrbitals.begin(); o != refBetaOrbitals.end(); o++)
+  for (const auto& o : refBetaOrbitals)
     {
       // xout<< "f alpha, beta occ: " <<*o << std::endl;
-      unsigned int os=m_orbitalSpaces[0].orbital_symmetries[(*o)-1];
-      unsigned int oo=offset(*o);
+      unsigned int os=m_orbitalSpaces[0].orbital_symmetries[o-1];
+      unsigned int oo=offset(o);
       for (unsigned int i=1; i<=basisSize; i++)
         for (unsigned int j=1; j<=i; j++) {
             if (m_orbitalSpaces[0].orbital_symmetries[i-1]!=m_orbitalSpaces[0].orbital_symmetries[j-1]) continue;
@@ -348,11 +347,11 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
           }
     }
   if (f.m_uhf) {
-      for (auto o=refBetaOrbitals.begin(); o != refBetaOrbitals.end(); o++)
+      for (const auto& o : refBetaOrbitals)
         {
           // xout<< "f beta, beta occ: " <<*o << std::endl;
-          unsigned int os=m_orbitalSpaces[0].orbital_symmetries[(*o)-1];
-          unsigned int oo=offset(*o);
+          unsigned int os=m_orbitalSpaces[0].orbital_symmetries[o-1];
+          unsigned int oo=offset(o);
           for (unsigned int i=1; i<=basisSize; i++)
             for (unsigned int j=1; j<=i; j++) {
                 if (m_orbitalSpaces[0].orbital_symmetries[i-1]!=m_orbitalSpaces[0].orbital_symmetries[j-1]) continue;
@@ -361,11 +360,11 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
                     element(offset(i),m_orbitalSpaces[0].orbital_symmetries[i-1],oo,os,oo,os,offset(j),m_orbitalSpaces[0].orbital_symmetries[j-1],false,false);
               }
         }
-      for (auto o=refAlphaOrbitals.begin(); o != refAlphaOrbitals.end(); o++)
+      for (const auto& o : refAlphaOrbitals)
         {
           // xout<< "f beta, alpha occ: " <<*o << std::endl;
-          unsigned int os=m_orbitalSpaces[0].orbital_symmetries[(*o)-1];
-          unsigned int oo=offset(*o);
+          unsigned int os=m_orbitalSpaces[0].orbital_symmetries[o-1];
+          unsigned int oo=offset(o);
           for (unsigned int i=1; i<=basisSize; i++)
             for (unsigned int j=1; j<=i; j++) {
                 if (m_orbitalSpaces[0].orbital_symmetries[i-1]!=m_orbitalSpaces[0].orbital_symmetries[j-1]) continue;
