@@ -9,11 +9,11 @@
 #include <algorithm>
 #include "gciOrbitals.h"
 
-Wavefunction::Wavefunction(OrbitalSpace* h, int n, int s, int m2) : State(h,n,s,m2) {
+Wavefunction::Wavefunction(OrbitalSpace* h, int n, int s, int m2) : State(h,n,s,m2), m_sparse(false) {
   buildStrings();
 }
 
-Wavefunction::Wavefunction(const State& state) : State(state) {
+Wavefunction::Wavefunction(const State& state) : State(state), m_sparse(false) {
   buildStrings();
 }
 
