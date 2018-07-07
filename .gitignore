@@ -17,3 +17,8 @@ CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
 CMakeLists.txt.user*
+.idea
+cmake-build-debug
+cmake-build-release
+Testing
+build
