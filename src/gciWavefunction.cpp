@@ -309,12 +309,13 @@ std::string gci::Wavefunction::str(int verbosity, unsigned int columns) const {
       unsigned int symb = syma ^symmetry;
       if (!alphaStrings[syma].empty() && !betaStrings[symb].empty()) {
         if (verbosity >= 1) s << std::endl << "Alpha strings of symmetry " << syma + 1 << ":";
-        for (const auto &i : alphaStrings[syma])
-          s << std::endl << i.str();
-        if (verbosity >= 1) s << std::endl << "Beta strings of symmetry " << symb + 1 << ":";
-        for (const auto &i : betaStrings[symb])
-          s << std::endl << i.str();
-        if (buffer.size() == dimension && verbosity >= 0) {
+        if (verbosity >= 2) {
+          for (const auto &i : alphaStrings[syma])
+            s << std::endl << i.str();
+          for (const auto &i : betaStrings[symb])
+            s << std::endl << i.str();
+        }
+        if (!m_sparse && buffer.size() == dimension && verbosity >= 0) {
           s << std::endl << "Values:";
           for (size_t i = 0; i < alphaStrings[syma].size(); i++) {
             s << std::endl;
@@ -322,6 +323,11 @@ std::string gci::Wavefunction::str(int verbosity, unsigned int columns) const {
               s << buffer[address++] << " ";
             }
           }
+        }
+        if (m_sparse && !buffer_sparse.empty() && verbosity >= 0) {
+          s << std::endl << "Values:";
+          for (const auto &b : buffer_sparse)
+            s << std::endl << determinantAt(b.first) << " : " << b.second;
         }
       }
     }
@@ -494,17 +500,24 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                                           const Wavefunction &w,
                                           bool parallel_stringset) { // FIXME not really thoroughly checked if the symmetry of h is not zero.
   auto prof = profiler->push("operatorOnWavefunction");
-  if (w.m_sparse) {
+  if (false && w.m_sparse) {
     operatorOnSparseWavefunction(h, w);
     xout << "result of operatorOnSparseWavefunction:\n";
     for (const auto &x : buffer_sparse)
       xout << determinantAt(x.first) << " : " << x.second << std::endl;
     return;
   }
-  if (parallel_rank == 0)
-    for (size_t i = 0; i < buffer.size(); i++)
-      buffer[i] += h.m_O0 * w.buffer[i];
-  else
+  if (m_sparse) buffer_sparse.clear();
+  if (parallel_rank == 0) {
+    if (m_sparse) {
+      if (!w.m_sparse) throw std::runtime_error("Cannot make sparse residual from full vector");
+      for (const auto &b : w.buffer_sparse)
+        buffer_sparse[b.first] += h.m_O0 * b.second;
+    } else {
+      for (size_t i = 0; i < buffer.size(); i++)
+        buffer[i] += h.m_O0 * w.buffer[i];
+    }
+  } else if (!m_sparse)
     for (auto &b: buffer) b = 0;
   //  xout <<"residual after 0-electron:"<<std::endl<<str(2)<<std::endl;
 
@@ -512,18 +525,23 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
   DivideTasks(99999999, 1, 1);
   const auto alphaActiveStrings = w.activeStrings(true);
   const auto betaActiveStrings = w.activeStrings(false);
+  xout << "betaActiveStrings"<<std::endl;
+  for (const auto& s : betaActiveStrings) for (const auto& ss : s) xout <<ss<<std::endl;
 
   if (true) {
     auto p = profiler->push("1-electron RI");
     size_t nsaaMax = 1000000000;
     size_t nsbbMax = 1000000000;
     std::vector<StringSet> bbs;
+    xout << "before bbs emplace "<<std::endl;
     for (unsigned int symb = 0; symb < 8; symb++)
 //        bbs.emplace_back(w.betaStrings,1,0,symb,parallel_stringset);
       bbs.emplace_back(betaActiveStrings, 1, 0, symb, parallel_stringset);
+    xout << "after bbs emplace "<<std::endl;
     for (unsigned int syma = 0; syma < 8; syma++) {
 //          StringSet aa(w.alphaStrings,1,0,syma,parallel_stringset);
       StringSet aa(alphaActiveStrings, 1, 0, syma, parallel_stringset);
+      xout << "after making StringSet aa "<<std::endl;
       for (unsigned int symb = 0; symb < 8; symb++) { // symmetry of N-1 electron state
         unsigned int symexc = w.symmetry ^syma ^symb;
         //        xout << "syma="<<syma<<" symb="<<symb<<" symexc="<<symexc<<std::endl;
@@ -548,9 +566,10 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                                 aa1,
                                 w.betaStrings[symb].begin(), w.betaStrings[symb].end(),
                                 parityEven, true, false);
-            //            xout << "alpha transition density"<<d<<"\n"<<w.betaStrings[symb].size()<<aa1-aa0<<" "<<d.size()<<std::endl;
+            xout << "alpha transition density" << d << "\n" << w.betaStrings[symb].size() << aa1 - aa0 << " "
+                 << d.size() << std::endl;
             TransitionDensity e(d);
-            //            xout << "hamiltonian block\n"<<ham<<std::endl;
+            xout << "hamiltonian block\n" << ham << std::endl;
             //            xout << "ham dimensions "<<ham.rows()<<" "<<ham.cols()<<std::endl;
             MXM(&e[0],
                 &d[0],
@@ -559,9 +578,9 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                 ham.rows(),
                 ham.cols(),
                 false);
-            //            xout << "alpha e"<<e<<std::endl;
+            xout << "alpha e" << e << std::endl;
             e.action(*this);
-            //            xout << "this after action "<<values()<<std::endl;
+            xout << "this after action " << values() << std::endl;
           }
         }
         const auto &bb = bbs[symb];
@@ -761,7 +780,11 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
 
   EndTasks();
 
-  gsum(&buffer[0], buffer.size());
+  if (m_sparse) {
+    gsum(buffer_sparse);
+  } else {
+    gsum(&buffer[0], buffer.size());
+  }
 }
 
 gci::Operator Wavefunction::density(int rank,
@@ -1029,6 +1052,7 @@ void Wavefunction::replicate() {
 }
 
 #include <cmath>
+#include <set>
 std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> &edges,
                                                  bool parallel,
                                                  std::size_t start,
@@ -1103,26 +1127,39 @@ std::vector<StringSet> Wavefunction::activeStrings(bool spinUp) const {
 //  return sources;
   const std::vector<StringSet> &complements = spinUp ? betaStrings : alphaStrings;
   std::vector<StringSet> results(8);
-  for (unsigned int sym = 0; sym < 8; sym++) {
-    const StringSet &source = sources[sym];
-    if (source.empty()) continue;
-    const auto syma = spinUp ? sym : symmetry ^ sym;
-    const auto symb = symmetry ^syma;
-    results[sym] = StringSet(source.front(), false, static_cast<int>(sym));
-    size_t off = _blockOffset[syma];
-    size_t dout = spinUp ? betaStrings[symb].size() : 1;
-    size_t din = spinUp ? 1 : betaStrings[symb].size();
-    size_t nc = complements[sym ^ symmetry].size();
-    for (const auto &s : source) {
-      for (size_t c = 0; c < nc; c++) {
-//              if (buffer[off+c*din] != 0.0) {
-        if (std::abs(buffer[off + c * din]) > m_activeStringTolerance) {
-          results[sym].push_back(s);
-          break;
-        }
-      }
-      off += dout;
+  if (m_sparse) {
+    auto axis = spinUp ? 1 : 0;
+    for (const auto &ww : buffer_sparse) {
+      const auto det = determinantAt(ww.first);
+      xout << "activeStrings " << ww.first << " : " << ww.second << std::endl;
+      results[stringSymmetry(ww.first, axis)].push_back((spinUp ? det.stringAlpha : det.stringBeta));
     }
+  } else {
+    for (unsigned int sym = 0; sym < 8; sym++) {
+      const StringSet &source = sources[sym];
+      if (source.empty()) continue;
+      const auto syma = spinUp ? sym : symmetry ^ sym;
+      const auto symb = symmetry ^syma;
+      results[sym] = StringSet(source.front(), false, static_cast<int>(sym));
+      size_t off = _blockOffset[syma];
+      size_t dout = spinUp ? betaStrings[symb].size() : 1;
+      size_t din = spinUp ? 1 : betaStrings[symb].size();
+      size_t nc = complements[sym ^ symmetry].size();
+      for (const auto &s : source) {
+        for (size_t c = 0; c < nc; c++) {
+          if (std::abs(buffer[off + c * din]) > m_activeStringTolerance) {
+            results[sym].push_back(s);
+            break;
+          }
+        }
+        off += dout;
+      }
+    }
+  }
+  for (unsigned int sym = 0; sym < 8; sym++) {
+    xout << "symmetry "<<sym<<std::endl;
+    for (const auto &r : results[sym])
+      xout << r << std::endl;
   }
   return results;
 }

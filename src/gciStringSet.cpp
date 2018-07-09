@@ -32,7 +32,7 @@ StringSet::StringSet(const std::vector<StringSet>& referenceSpaces, int annihila
   : memory::vector<String>()
 {
   addByOperators(referenceSpaces, annihilations, creations, sym, parallel);
-//  xout << "StringSet constructor from referenceSpaces size()="<<size()<<", rank="<<parallel_rank<<", parallel="<<parallel<<std::endl;
+  xout << "StringSet constructor from referenceSpaces size()="<<size()<<", rank="<<parallel_rank<<", parallel="<<parallel<<std::endl;
 }
 
 void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym, bool parallel)
