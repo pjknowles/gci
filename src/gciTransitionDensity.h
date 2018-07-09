@@ -45,7 +45,7 @@ class TransitionDensity : public memory::vector<double>, public Printable {
    * \param w the bra state
    * \return  the 1-particle density matrix
    */
-  SymmetryMatrix::Operator density(const Wavefunction &w) const;
+  gci::Operator density(const Wavefunction &w) const;
 
   std::string str(int verbosity = 0, unsigned int columns = UINT_MAX) const override;
  private:

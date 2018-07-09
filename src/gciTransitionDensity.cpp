@@ -503,7 +503,7 @@ void TransitionDensity::action(Wavefunction &w) const {
 
 #include "gciMolpro.h"
 
-SymmetryMatrix::Operator TransitionDensity::density(const Wavefunction &w) const {
+gci::Operator TransitionDensity::density(const Wavefunction &w) const {
   dim_t dimension;
   for (auto i = 0; i < 8; i++) dimension[i] = w[i];
   std::vector<int> symmetries;
@@ -533,7 +533,7 @@ std::string TransitionDensity::str(int verbosity, unsigned int columns) const {
     xout << "wrong size in TransitionDensity::str " << size() << " " << m_nsa * m_nsb * m_excitations << std::endl;
     throw std::range_error("help");
   }
-  if (size())
+  if (!empty())
     for (size_t ij = 0; ij < m_excitations; ij++) {
       s << std::endl;
       for (size_t ab = 0; ab < m_nsa * m_nsb; ab++)
