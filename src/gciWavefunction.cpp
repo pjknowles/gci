@@ -445,9 +445,9 @@ void Wavefunction::operatorOnSparseWavefunction(const Operator &h, const Wavefun
     else
       for (auto &b: buffer) b = 0;
   }
-  DivideTasks(w.buffer_sparse.size(), 1, 1);
+//  DivideTasks(w.buffer_sparse.size(), 1, 1);
   for (const auto &ww : w.buffer_sparse) {
-    if (!NextTask()) continue;
+//    if (!NextTask()) continue;
     const auto &index = ww.first;
     const auto &value = ww.second;
     const auto det = w.determinantAt(index);
