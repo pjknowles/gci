@@ -42,14 +42,31 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       size_t offa = 0;
       for (auto s = m_alphaStringsBegin; s != m_alphaStringsEnd; s++) {
         ExcitationSet ee(*s, w.alphaStrings[wsyma], 1, 1, m_parity);
-        prof2 += ee.size() * m_nsb * 2;
-        for (const auto &e : ee) {
-          if (e.phase < 0)
-            for (size_t ib = 0; ib < m_nsb; ib++)
-              (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] -= w.buffer[woffset + e.stringIndex * wnsb + ib];
-          else
-            for (size_t ib = 0; ib < m_nsb; ib++)
-              (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] += w.buffer[woffset + e.stringIndex * wnsb + ib];
+        if (w.m_sparse) {
+          for (const auto &e : ee) {
+            if (e.phase < 0) {
+              for (size_t ib = 0; ib < m_nsb; ib++)
+                if (w.buffer_sparse.count(woffset + e.stringIndex * wnsb + ib))
+                  (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] -=
+                      w.buffer_sparse.at(woffset + e.stringIndex * wnsb + ib);
+            } else {
+              for (size_t ib = 0; ib < m_nsb; ib++)
+                if (w.buffer_sparse.count(woffset + e.stringIndex * wnsb + ib))
+                  (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] +=
+                      w.buffer_sparse.at(woffset + e.stringIndex * wnsb + ib);
+            }
+          }
+
+        } else {
+          prof2 += ee.size() * m_nsb * 2;
+          for (const auto &e : ee) {
+            if (e.phase < 0)
+              for (size_t ib = 0; ib < m_nsb; ib++)
+                (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] -= w.buffer[woffset + e.stringIndex * wnsb + ib];
+            else
+              for (size_t ib = 0; ib < m_nsb; ib++)
+                (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] += w.buffer[woffset + e.stringIndex * wnsb + ib];
+          }
         }
         offa += m_nsb;
       }
@@ -66,19 +83,37 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       size_t offb = 0;
       for (auto s = m_betaStringsBegin; s != m_betaStringsEnd; s++) {
         ExcitationSet ee(*s, w.betaStrings[wsymb], 1, 1, m_parity);
-        prof2 += ee.size() * m_nsa * 2;
-        auto v = &((*this)[offb]);
-        for (const auto &e : ee) {
-          if (e.phase < 0)
-            for (size_t ia = 0; ia < m_nsa; ia++) {
-              *(v + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb) -= w.buffer[woffset + e.stringIndex + wnsb * ia];
-              //                    (*this)[offb+nsa*nsb*e.orbitalAddress+ia*nsb] -= w.buffer[woffset+e.stringIndex+wnsb*ia];
+        if (w.m_sparse) {
+          for (const auto &e : ee) {
+            if (e.phase < 0) {
+              for (size_t ia = 0; ia < m_nsa; ia++) {
+                if (w.buffer_sparse.count(woffset + e.stringIndex + wnsb * ia))
+                  (*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb] -=
+                      w.buffer_sparse.at(woffset + e.stringIndex + wnsb * ia);
+              }
+            } else {
+              for (size_t ia = 0; ia < m_nsa; ia++) {
+                if (w.buffer_sparse.count(woffset + e.stringIndex + wnsb * ia))
+                  (*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb] +=
+                      w.buffer_sparse.at(woffset + e.stringIndex + wnsb * ia);
+              }
             }
-          else
-            for (size_t ia = 0; ia < m_nsa; ia++) {
-              *(v + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb) += w.buffer[woffset + e.stringIndex + wnsb * ia];
-              //                    (*this)[offb+nsa*nsb*e.orbitalAddress+ia*nsb] += w.buffer[woffset+e.stringIndex+wnsb*ia];
-            }
+          }
+        } else {
+          prof2 += ee.size() * m_nsa * 2;
+          auto v = &((*this)[offb]);
+          for (const auto &e : ee) {
+            if (e.phase < 0)
+              for (size_t ia = 0; ia < m_nsa; ia++) {
+                *(v + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb) -= w.buffer[woffset + e.stringIndex + wnsb * ia];
+                //                    (*this)[offb+nsa*nsb*e.orbitalAddress+ia*nsb] -= w.buffer[woffset+e.stringIndex+wnsb*ia];
+              }
+            else
+              for (size_t ia = 0; ia < m_nsa; ia++) {
+                *(v + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb) += w.buffer[woffset + e.stringIndex + wnsb * ia];
+                //                    (*this)[offb+nsa*nsb*e.orbitalAddress+ia*nsb] += w.buffer[woffset+e.stringIndex+wnsb*ia];
+              }
+          }
         }
         offb++;
       }
@@ -99,16 +134,33 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
     size_t offa = 0;
     for (auto s = m_alphaStringsBegin; s != m_alphaStringsEnd; s++) {
       ExcitationSet ee(*s, w.alphaStrings[wsyma], 0, m_deltaAlpha, m_parity);
-      prof2 += ee.size() * m_nsb * 2;
-      for (const auto &e : ee) {
-        if (e.phase < 0)
-          for (size_t ib = 0; ib < m_nsb; ib++)
-            (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] -=
-                w.buffer[woffset + e.stringIndex * wnsb + ib];
-        else
-          for (size_t ib = 0; ib < m_nsb; ib++)
-            (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] +=
-                w.buffer[woffset + e.stringIndex * wnsb + ib];
+      if (w.m_sparse) {
+        for (const auto &e : ee) {
+          if (e.phase < 0) {
+            for (size_t ib = 0; ib < m_nsb; ib++)
+              if (w.buffer_sparse.count(woffset + e.stringIndex * wnsb + ib))
+                (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] -=
+                    w.buffer_sparse.at(woffset + e.stringIndex * wnsb + ib);
+          } else {
+            for (size_t ib = 0; ib < m_nsb; ib++)
+              if (w.buffer_sparse.count(woffset + e.stringIndex * wnsb + ib))
+                (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] +=
+                    w.buffer_sparse.at(woffset + e.stringIndex * wnsb + ib);
+          }
+        }
+      } else {
+        prof2 += ee.size() * m_nsb * 2;
+        for (const auto &e : ee) {
+          if (e.phase < 0) {
+            for (size_t ib = 0; ib < m_nsb; ib++)
+              (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] -=
+                  w.buffer[woffset + e.stringIndex * wnsb + ib];
+          } else {
+            for (size_t ib = 0; ib < m_nsb; ib++)
+              (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] +=
+                  w.buffer[woffset + e.stringIndex * wnsb + ib];
+          }
+        }
       }
       offa += m_nsb;
     }
@@ -125,16 +177,33 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
     size_t offb = 0;
     for (auto s = m_betaStringsBegin; s != m_betaStringsEnd; s++) {
       ExcitationSet ee(*s, w.betaStrings[wsymb], 0, m_deltaBeta, m_parity);
+      if (w.m_sparse) {
+        for (const auto &e : ee) {
+          if (e.phase < 0) {
+            for (size_t ia = 0; ia < m_nsa; ia++)
+              if (w.buffer_sparse.count(woffset + e.stringIndex + wnsb * ia))
+                (*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb] -=
+                    w.buffer_sparse.at(woffset + e.stringIndex + wnsb * ia);
+          } else {
+            for (size_t ia = 0; ia < m_nsa; ia++)
+              if (w.buffer_sparse.count(woffset + e.stringIndex + wnsb * ia))
+              (*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb] +=
+                  w.buffer_sparse.at(woffset + e.stringIndex + wnsb * ia);
+          }
+        }
+      } else {
       prof2 += ee.size() * m_nsa * 2;
       for (const auto &e : ee) {
-        if (e.phase < 0)
+        if (e.phase < 0) {
           for (size_t ia = 0; ia < m_nsa; ia++)
             (*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb] -=
                 w.buffer[woffset + e.stringIndex + wnsb * ia];
-        else
+        } else {
           for (size_t ia = 0; ia < m_nsa; ia++)
             (*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb] +=
                 w.buffer[woffset + e.stringIndex + wnsb * ia];
+        }
+      }
       }
       offb++;
     }
@@ -164,16 +233,33 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
           const_cast<Excitation &>(ea).stringIndex *= wnsb;
         }
         for (const auto &eeb : eebs) {
-          prof2 += eea.size() * eeb.size() * 2;
-          for (const auto &eb : eeb) {
-            if (eb.phase > 0)
-              for (const auto &ea : eea)
-                (*this)[offb + eb.orbitalAddress + ea.orbitalAddress] +=
-                    ea.phase * w.buffer[woffset + eb.stringIndex + ea.stringIndex];
-            else
-              for (const auto &ea : eea)
-                (*this)[offb + eb.orbitalAddress + ea.orbitalAddress] -=
-                    ea.phase * w.buffer[woffset + eb.stringIndex + ea.stringIndex];
+          if (w.m_sparse) {
+            for (const auto &eb : eeb) {
+              if (eb.phase > 0) {
+                for (const auto &ea : eea)
+                  if (w.buffer_sparse.count(woffset + eb.stringIndex + ea.stringIndex))
+                    (*this)[offb + eb.orbitalAddress + ea.orbitalAddress] +=
+                        ea.phase * w.buffer_sparse.at(woffset + eb.stringIndex + ea.stringIndex);
+              } else {
+                for (const auto &ea : eea)
+                  if (w.buffer_sparse.count(woffset + eb.stringIndex + ea.stringIndex))
+                    (*this)[offb + eb.orbitalAddress + ea.orbitalAddress] -=
+                        ea.phase * w.buffer_sparse.at(woffset + eb.stringIndex + ea.stringIndex);
+              }
+            }
+          } else {
+            prof2 += eea.size() * eeb.size() * 2;
+            for (const auto &eb : eeb) {
+              if (eb.phase > 0) {
+                for (const auto &ea : eea)
+                  (*this)[offb + eb.orbitalAddress + ea.orbitalAddress] +=
+                      ea.phase * w.buffer[woffset + eb.stringIndex + ea.stringIndex];
+              } else {
+                for (const auto &ea : eea)
+                  (*this)[offb + eb.orbitalAddress + ea.orbitalAddress] -=
+                      ea.phase * w.buffer[woffset + eb.stringIndex + ea.stringIndex];
+              }
+            }
           }
           offb++;
         }
