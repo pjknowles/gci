@@ -64,12 +64,13 @@ public:
      * \return  the value of the component
      */
   double at(size_t offset) const;
+
   /*!
      * \brief get the determinant corresponding to a particular component of the wavefunction
      * \param offset which component to get
      * \return  the determinant
      */
-  Determinant determinantAt(size_t offset);
+  Determinant determinantAt(size_t offset) const;
 
   /*!
      * \brief Add to this object the action of an operator on another wavefunction

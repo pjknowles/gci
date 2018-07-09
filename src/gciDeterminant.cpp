@@ -1,7 +1,7 @@
 #include "gciDeterminant.h"
 #include <iostream>
 
-Determinant::Determinant(State* State, String* alpha, String*beta)
+Determinant::Determinant(const State* State, const String* alpha, const String*beta)
 {
   if (State == nullptr) {
     nelec=999999999;

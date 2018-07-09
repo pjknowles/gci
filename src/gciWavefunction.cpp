@@ -366,7 +366,7 @@ double Wavefunction::at(size_t offset) const
   return buffer.at(offset);
 }
 
-Determinant Wavefunction::determinantAt(size_t offset)
+Determinant Wavefunction::determinantAt(size_t offset) const
 {
   size_t address=0;
   for (unsigned int syma=0; syma<8; syma++) {

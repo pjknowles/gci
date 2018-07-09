@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <string.h>
 
 StringSet::StringSet() : memory::vector<String>()
 {
@@ -33,7 +34,6 @@ StringSet::StringSet(const std::vector<StringSet>& referenceSpaces, int annihila
 //  xout << "StringSet constructor from referenceSpaces size()="<<size()<<", rank="<<parallel_rank<<", parallel="<<parallel<<std::endl;
 }
 
-#include <string.h>
 void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym, bool parallel)
 {
   auto p = profiler->push("StringSet::addByOperators[]");
