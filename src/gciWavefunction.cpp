@@ -227,12 +227,12 @@ Wavefunction &operator/(const Wavefunction &w1, const Wavefunction &w2) {
   return result /= w2;
 }
 
-Wavefunction &operator*(const Wavefunction &w1, const double &value) {
+Wavefunction operator*(const Wavefunction &w1, const double &value) {
   Wavefunction result = w1;
   return result *= value;
 }
 
-Wavefunction &operator*(const double &value, const Wavefunction &w1) {
+Wavefunction operator*(const double &value, const Wavefunction &w1) {
   Wavefunction result = w1;
   return result *= value;
 }
@@ -275,8 +275,8 @@ void Wavefunction::divide(const LinearAlgebra::vector<double> *a,
 }
 
 void Wavefunction::zero() {
-  for (size_t i = 0; i < buffer.size(); i++)
-    buffer[i] = 0;
+  for (auto &b : buffer)
+    b = 0;
 }
 
 double gci::operator*(const Wavefunction &w1, const Wavefunction &w2) {
@@ -309,11 +309,11 @@ std::string gci::Wavefunction::str(int verbosity, unsigned int columns) const {
       unsigned int symb = syma ^symmetry;
       if (!alphaStrings[syma].empty() && !betaStrings[symb].empty()) {
         if (verbosity >= 1) s << std::endl << "Alpha strings of symmetry " << syma + 1 << ":";
-        for (StringSet::const_iterator i = alphaStrings[syma].begin(); i != alphaStrings[syma].end(); i++)
-          s << std::endl << i->str();
+        for (const auto &i : alphaStrings[syma])
+          s << std::endl << i.str();
         if (verbosity >= 1) s << std::endl << "Beta strings of symmetry " << symb + 1 << ":";
-        for (StringSet::const_iterator i = betaStrings[symb].begin(); i != betaStrings[symb].end(); i++)
-          s << std::endl << i->str();
+        for (const auto &i : betaStrings[symb])
+          s << std::endl << i.str();
         if (buffer.size() == dimension && verbosity >= 0) {
           s << std::endl << "Values:";
           for (size_t i = 0; i < alphaStrings[syma].size(); i++) {
@@ -1038,8 +1038,8 @@ std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> &edge
   if (parallel) DivideTasks(edges.size());
   for (size_t i = start; i < stop; i++)
     if (parallel && NextTask())
-      for (size_t j = 0; j < buffer.size(); j++)
-        if (std::fabs(buffer[j]) > edges[i]) cumulative[i]++;
+      for (double j : buffer)
+        if (std::fabs(j) > edges[i]) cumulative[i]++;
   if (parallel) {
     EndTasks();
     std::vector<double> dcumulative(cumulative.size());

@@ -145,7 +145,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
    * \param x the other wavefunction
    */
   void axpy(double a, const LinearAlgebra::vector<double> &x) override;
-  void axpy(double a, const std::shared_ptr<LinearAlgebra::vector<double> > x) {
+  void axpy(double a, const std::shared_ptr<LinearAlgebra::vector<double> > &x) {
     axpy(a, *x);
   }
   void axpy(double a, const std::map<size_t, double> &x) override {
@@ -202,21 +202,21 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
   void replicate();
 
   //    Wavefunction& operator=(const double &value);
-  void set(size_t offset, const double val);///< set one element to a scalar
+  void set(size_t offset, double val);///< set one element to a scalar
   void set(const double val);///< set all elements to a scalar
   //    Wavefunction& operator=(const Wavefunction &other); ///< copy
 //  namespace IterativeSolver {
   Wavefunction &operator*=(const double &value); ///< multiply by a scalar
   Wavefunction &operator+=(const Wavefunction &other); ///< add another wavefunction
   Wavefunction &operator-=(const Wavefunction &other); ///< subtract another wavefunction
-  Wavefunction &operator-=(const double); ///< subtract a scalar from every element
+  Wavefunction &operator-=(double); ///< subtract a scalar from every element
   Wavefunction &operator-(); ///< unary minus
   Wavefunction &operator/=(const Wavefunction &other); ///< element-by-element division by another wavefunction
   double update(const Wavefunction &diagonalH,
                 double &eTruncated,
                 const double dEmax = (double) 0); ///< form a perturbation-theory update, and return the predicted energy change. eTruncated is the energy change lost by truncation
 
-  double norm(const double k = 2); ///< k-norm
+  double norm(double k = 2); ///< k-norm
   /*!
    * \brief addAbsPower Evaluate this[i] += factor * abs(c[I])^k * c[I]
    * \param c
@@ -224,7 +224,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
    * \param factor
    * \return a pointer to this
    */
-  Wavefunction &addAbsPower(const Wavefunction &c, const double k = 0, const double factor = 1);
+  Wavefunction &addAbsPower(const Wavefunction &c, double k = 0, double factor = 1);
 
 //  double* data() { return &buffer[0];}
 //  const double* cdata() const { return &buffer[0];}
@@ -294,8 +294,8 @@ Wavefunction &operator+(const Wavefunction &w1, const Wavefunction &w2); ///< ad
 Wavefunction &operator-(const Wavefunction &w1, const Wavefunction &w2); ///< subtract two wavefunctions
 Wavefunction &operator/(const Wavefunction &w1,
                         const Wavefunction &w2); ///< element-by-element division of two wavefunctions
-Wavefunction &operator*(const Wavefunction &w1, const double &value);///< multiply by a scalar
-Wavefunction &operator*(const double &value, const Wavefunction &w1);///< multiply by a scalar
+Wavefunction operator*(const Wavefunction &w1, const double &value);///< multiply by a scalar
+Wavefunction operator*(const double &value, const Wavefunction &w1);///< multiply by a scalar
 }
 using namespace gci;
 
