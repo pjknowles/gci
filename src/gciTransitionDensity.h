@@ -15,9 +15,8 @@ namespace gci {
  * \brief Class to hold transition density matrix,
  * defined by an array of ExcitationSet objects
  */
-class TransitionDensity : public memory::vector<double>, public Printable
-{
-public:
+class TransitionDensity : public memory::vector<double>, public Printable {
+ public:
   /*!
    * \brief Construct a TransitionDensity from a wavefunction to a subset of space defined by sets of alpha and beta String objects
    * \param w
@@ -29,18 +28,18 @@ public:
    * \param doAlpha whether to process alpha excitations
    * \param doBeta whether to process beta excitations
    */
-  TransitionDensity(const Wavefunction& w,
+  TransitionDensity(const Wavefunction &w,
                     const StringSet::const_iterator &alphaStringsBegin,
                     const StringSet::const_iterator &alphaStringsEnd,
                     const StringSet::const_iterator &betaStringsBegin,
                     const StringSet::const_iterator &betaStringsEnd,
-                    const parity_t parity, const bool doAlpha=true, const bool doBeta=true);
+                    parity_t parity, bool doAlpha = true, bool doBeta = true);
   /*!
    * \brief Collapse onto a configuration-space residual
    * w(I) += E(K,exc) <I|exc|K>
    * \param w a Wavefunction object that will receive contributions
    */
-  void action(Wavefunction& w) const;
+  void action(Wavefunction &w) const;
   /*!
    * \brief Contract TransitionDensity with a bra state to form a 1-particle density matrix
    * \param w the bra state
@@ -48,8 +47,8 @@ public:
    */
   SymmetryMatrix::Operator density(const Wavefunction &w) const;
 
-  std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
-private:
+  std::string str(int verbosity = 0, unsigned int columns = UINT_MAX) const override;
+ private:
   const StringSet::const_iterator m_alphaStringsBegin;
   const StringSet::const_iterator m_alphaStringsEnd;
   const StringSet::const_iterator m_betaStringsBegin;
