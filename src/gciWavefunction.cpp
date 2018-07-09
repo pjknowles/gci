@@ -672,6 +672,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction 
           profiler->start("StringSet aa");
           StringSet aa(alphaActiveStrings,2,0,syma,parallel_stringset);
           profiler->stop("StringSet aa");
+          xout << "number of alpha-alpha-excited strings="<<aa.size()<<std::endl;
           if (aa.empty()) continue;
           for (unsigned int symb=0; symb<8; symb++) {
               if (!NextTask()) continue;
