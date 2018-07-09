@@ -19,9 +19,8 @@ namespace gci {
 /*!
  * \brief The Wavefunction class, which holds a configuration expansion in the tensor space defined by a hamiltonian
  */
-class Wavefunction : public State, public LinearAlgebra::vector<double>
-{
-public:
+class Wavefunction : public State, public LinearAlgebra::vector<double> {
+ public:
 
   /*!
      * \brief Construct a Wavefunction object linked to an OrbitalSpace
@@ -36,11 +35,11 @@ public:
      * \brief Construct a Wavefunction object from a State prototype
      * \param state the State prototype
      */
-  explicit Wavefunction(const State& state);
+  explicit Wavefunction(const State &state);
 
-  Wavefunction(const Wavefunction& source, int option) : dimension(source.dimension){
+  Wavefunction(const Wavefunction &source, int option) : dimension(source.dimension) {
 //   std::cout <<"Wavefunction copy constructor, option="<<option<<std::endl;
-   *this = source;
+    *this = source;
   }
 
   std::vector<StringSet> alphaStrings; ///< The alpha-spin strings defining the CI basis
@@ -49,14 +48,14 @@ public:
   void allocate_buffer(); ///< allocate buffer to full size
   size_t size() const override { return dimension; } ///< the size of the space
 
-  void diagonalOperator(const Operator& op); ///< set this object to the diagonal elements of the hamiltonian
+  void diagonalOperator(const Operator &op); ///< set this object to the diagonal elements of the hamiltonian
 
   /*!
      * \brief find the index of the smallest component
      * \param n the n'th smallest will be found
      * \return offset in buffer
      */
-  size_t minloc(size_t n=1) const;
+  size_t minloc(size_t n = 1) const;
 
   /*!
      * \brief Get a component of the wavefunction
@@ -78,7 +77,7 @@ public:
      * \param w the wavefunction
      * \param parallel_stringset whether to use parallel algorithm in StringSet construction
      */
-  void operatorOnWavefunction(const gci::Operator &h, const Wavefunction &w, bool parallel_stringset=false);
+  void operatorOnWavefunction(const gci::Operator &h, const Wavefunction &w, bool parallel_stringset = false);
 
   /*!
    * \brief Construct a density matrix with this wavefunction
@@ -90,16 +89,21 @@ public:
    * \param parallel_stringset whether to use parallel algorithm in StringSet construction
    * \return
    */
-  gci::Operator density(int rank=2, bool uhf=false, bool hermitian=true, const Wavefunction* bra=nullptr, std::string description="", bool parallel_stringset=false);
+  gci::Operator density(int rank = 2,
+                        bool uhf = false,
+                        bool hermitian = true,
+                        const Wavefunction *bra = nullptr,
+                        std::string description = "",
+                        bool parallel_stringset = false);
 
   /*!
    * \brief Calculate natural orbitals
    * \return
    */
   Orbitals naturalOrbitals();
-private:
+ private:
 //  void density(memory::vector<double>& den1, memory::vector<double>& den2, bool d1, bool d2, const Wavefunction& bra);
-public:
+ public:
 
   /*!
    * \brief blockOffset gives the address of the start of a symmetry block of the Wavefunction object
@@ -109,7 +113,7 @@ public:
 
   size_t blockOffset(unsigned int syma) const;
 
-  std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const override;
+  std::string str(int verbosity = 0, unsigned int columns = UINT_MAX) const override;
 
   std::string values() const;
 
@@ -119,43 +123,43 @@ public:
    * \param x the other wavefunction
    */
   void axpy(double a, const LinearAlgebra::vector<double> &x) override;
-  void axpy(double a, const std::shared_ptr<LinearAlgebra::vector<double> > x) {
-    axpy(a,*x);
+  void axpy(double a, const std::shared_ptr<LinearAlgebra::vector<double> > &x) {
+    axpy(a, *x);
   }
-  void axpy(double a, const std::map<size_t,double>&x) override {
-   throw std::logic_error("P space support not yet implemented");
+  void axpy(double a, const std::map<size_t, double> &x) override {
+    throw std::logic_error("P space support not yet implemented");
   }
 
-  std::tuple<std::vector<size_t>,std::vector<double> > select (const vector<double>& measure, const size_t maximumNumber = 1000, const double threshold = 0) const override {
+  std::tuple<std::vector<size_t>, std::vector<double> > select(const vector<double> &measure,
+                                                               const size_t maximumNumber = 1000,
+                                                               const double threshold = 0) const override {
     throw std::logic_error("unimplemented select");
   };
 
-
-
   void scal(double a) override;
-    // Every child of ParameterVector needs exactly this
-    Wavefunction* clone(int option=0) const override { return new Wavefunction(*this, option); }
+  // Every child of ParameterVector needs exactly this
+  Wavefunction *clone(int option = 0) const override { return new Wavefunction(*this, option); }
 
   /*!
    * \brief push the object's buffer to a file
    * \param f the file
    * \param index where on the file, in units of the size of the object
    */
-  void putw(File& f, int index=0);
+  void putw(File &f, int index = 0);
 
   /*!
    * \brief pull the local part of the object's buffer from a file
    * \param f the file
    * \param index where on the file, in units of the size of the object
    */
-  void getw(File& f, int index=0);
+  void getw(File &f, int index = 0);
 
   /*!
    * \brief pull the object's buffer from a file
    * \param f the file
    * \param index where on the file, in units of the size of the object
    */
-  void getAll(File& f, int index=0);
+  void getAll(File &f, int index = 0);
 
   /*!
    * \brief Construct a cumulative histogram of absolute values
@@ -165,7 +169,10 @@ public:
    * \param stop last element of buffer plus one
    * \return the numbers of coefficients whose absolute value is greater than the corresponding edge
    */
-  std::vector<std::size_t> histogram(const std::vector<double>& edges, bool parallel=true, std::size_t start=0, std::size_t stop=(size_t)(-1));
+  std::vector<std::size_t> histogram(const std::vector<double> &edges,
+                                     bool parallel = true,
+                                     std::size_t start = 0,
+                                     std::size_t stop = (size_t) (-1));
 
   /*!
    * \brief gather give each process a full copy of buffer
@@ -173,19 +180,21 @@ public:
   void replicate();
 
   //    Wavefunction& operator=(const double &value);
-  void set(size_t offset, const double val);///< set one element to a scalar
+  void set(size_t offset, double val);///< set one element to a scalar
   void set(const double val);///< set all elements to a scalar
   //    Wavefunction& operator=(const Wavefunction &other); ///< copy
 //  namespace IterativeSolver {
-  Wavefunction& operator*=(const double &value); ///< multiply by a scalar
-  Wavefunction& operator+=(const Wavefunction &other); ///< add another wavefunction
-  Wavefunction& operator-=(const Wavefunction &other); ///< subtract another wavefunction
-  Wavefunction& operator-=(const double); ///< subtract a scalar from every element
-  Wavefunction& operator-(); ///< unary minus
-  Wavefunction& operator/=(const Wavefunction &other); ///< element-by-element division by another wavefunction
-  double update(const Wavefunction &diagonalH, double & eTruncated, const double dEmax=(double)0); ///< form a perturbation-theory update, and return the predicted energy change. eTruncated is the energy change lost by truncation
+  Wavefunction &operator*=(const double &value); ///< multiply by a scalar
+  Wavefunction &operator+=(const Wavefunction &other); ///< add another wavefunction
+  Wavefunction &operator-=(const Wavefunction &other); ///< subtract another wavefunction
+  Wavefunction &operator-=(double); ///< subtract a scalar from every element
+  Wavefunction &operator-(); ///< unary minus
+  Wavefunction &operator/=(const Wavefunction &other); ///< element-by-element division by another wavefunction
+  double update(const Wavefunction &diagonalH,
+                double &eTruncated,
+                const double dEmax = (double) 0); ///< form a perturbation-theory update, and return the predicted energy change. eTruncated is the energy change lost by truncation
 
-  double norm(const double k=2); ///< k-norm
+  double norm(double k = 2); ///< k-norm
   /*!
    * \brief addAbsPower Evaluate this[i] += factor * abs(c[I])^k * c[I]
    * \param c
@@ -193,21 +202,21 @@ public:
    * \param factor
    * \return a pointer to this
    */
-  Wavefunction& addAbsPower(const Wavefunction &c, const double k=0, const double factor=1);
+  Wavefunction &addAbsPower(const Wavefunction &c, double k = 0, double factor = 1);
 
 //  double* data() { return &buffer[0];}
 //  const double* cdata() const { return &buffer[0];}
 
   friend class TransitionDensity;
   friend double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
-  double dot(const LinearAlgebra::vector<double>& other) const override;
+  double dot(const LinearAlgebra::vector<double> &other) const override;
   double dot(const std::shared_ptr<LinearAlgebra::vector<double> > other) const {
     return dot(*other);
   }
   double dot(const std::unique_ptr<LinearAlgebra::vector<double> > other) const {
     return dot(*other);
   }
-  double dot(const std::map<size_t,double>& other) const override {
+  double dot(const std::map<size_t, double> &other) const override {
     throw std::logic_error("P space support not yet implemented");
   }
 
@@ -225,17 +234,23 @@ public:
    * \param append whether to do += or =
    * \param negative whether =- or =+
    */
-  void divide(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b, double shift=0, bool append=false, bool negative=false);
+  void divide(const LinearAlgebra::vector<double> *a,
+              const LinearAlgebra::vector<double> *b,
+              double shift = 0,
+              bool append = false,
+              bool negative = false);
   void zero() override;
-  std::map<std::string,double> m_properties;
-  void settilesize(int t=-1, int a=-1, int b=-1) {
+  std::map<std::string, double> m_properties;
+  void settilesize(int t = -1, int a = -1, int b = -1) {
 //    std::cout << "settilesize "<<t<<","<<a<<","<<b<<std::endl;
-    m_tilesize=t; m_alphatilesize=a; m_betatilesize=b;
+    m_tilesize = t;
+    m_alphatilesize = a;
+    m_betatilesize = b;
   }
 
-  std::vector<StringSet> activeStrings(bool spinUp=true) const;
+  std::vector<StringSet> activeStrings(bool spinUp = true) const;
 
-private:
+ private:
   void buildStrings(); ///< build alphaStrings and betaStrings
   size_t dimension; ///< the size of the space
   memory::vector<double> buffer; ///< buffer to hold coefficients describing the object
@@ -245,18 +260,19 @@ private:
   memory::vector<double>::const_iterator cend() const; ///< end of this processor's data
   bool compatible(const Wavefunction &other) const; ///< whether this wavefunction is on the same space as another
   std::vector<size_t> _blockOffset;
-  int m_tilesize=-1, m_alphatilesize=-1, m_betatilesize=-1;
-  static constexpr double m_activeStringTolerance=1e-15;
-  std::map<size_t,double> buffer_sparse; ///< alternative storage to buffer, useful when very sparse
+  int m_tilesize = -1, m_alphatilesize = -1, m_betatilesize = -1;
+  static constexpr double m_activeStringTolerance = 1e-15;
+  std::map<size_t, double> buffer_sparse; ///< alternative storage to buffer, useful when very sparse
   bool m_sparse; ///< whether the coefficients are stored in buffer_sparse instead of buffer
 
 };
 double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
-Wavefunction& operator+(const Wavefunction &w1, const Wavefunction &w2); ///< add two wavefunctions
-Wavefunction& operator-(const Wavefunction &w1, const Wavefunction &w2); ///< subtract two wavefunctions
-Wavefunction& operator/(const Wavefunction &w1, const Wavefunction &w2); ///< element-by-element division of two wavefunctions
-Wavefunction& operator*(const Wavefunction &w1, const double &value);///< multiply by a scalar
-Wavefunction& operator*(const double &value, const Wavefunction &w1);///< multiply by a scalar
+Wavefunction &operator+(const Wavefunction &w1, const Wavefunction &w2); ///< add two wavefunctions
+Wavefunction &operator-(const Wavefunction &w1, const Wavefunction &w2); ///< subtract two wavefunctions
+Wavefunction &operator/(const Wavefunction &w1,
+                        const Wavefunction &w2); ///< element-by-element division of two wavefunctions
+Wavefunction operator*(const Wavefunction &w1, const double &value);///< multiply by a scalar
+Wavefunction operator*(const double &value, const Wavefunction &w1);///< multiply by a scalar
 }
 using namespace gci;
 
