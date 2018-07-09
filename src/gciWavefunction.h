@@ -64,12 +64,32 @@ public:
      * \return  the value of the component
      */
   double at(size_t offset) const;
+
   /*!
      * \brief get the determinant corresponding to a particular component of the wavefunction
      * \param offset which component to get
      * \return  the determinant
      */
-  Determinant determinantAt(size_t offset);
+  Determinant determinantAt(size_t offset) const;
+
+/*!
+ * \brief calculate address of one of the constituent strings in a Determinant
+ * @param offset Determinant's address
+ * @param axis
+ * - 0: beta spin
+ * - 1: alpha spin
+ * @return string address
+ */
+ size_t stringAddress(size_t offset, unsigned int axis) const;
+/*!
+ * \brief calculate symmetry of one of the constituent strings in a Determinant
+ * @param offset Determinant's address
+ * @param axis
+ * - 0: beta spin
+ * - 1: alpha spin
+ * @return string symmetry
+ */
+ size_t stringSymmetry(size_t offset, unsigned int axis) const;
 
   /*!
      * \brief Add to this object the action of an operator on another wavefunction
@@ -78,6 +98,9 @@ public:
      * \param parallel_stringset whether to use parallel algorithm in StringSet construction
      */
   void operatorOnWavefunction(const gci::Operator &h, const Wavefunction &w, bool parallel_stringset=false);
+private:
+ void operatorOnSparseWavefunction(const gci::Operator &h, const Wavefunction &w);
+public:
 
   /*!
    * \brief Construct a density matrix with this wavefunction
@@ -247,6 +270,7 @@ private:
   int m_tilesize=-1, m_alphatilesize=-1, m_betatilesize=-1;
   static constexpr double m_activeStringTolerance=1e-15;
   std::map<size_t,double> buffer_sparse; ///< alternative storage to buffer, useful when very sparse
+public:
   bool m_sparse; ///< whether the coefficients are stored in buffer_sparse instead of buffer
 
 };

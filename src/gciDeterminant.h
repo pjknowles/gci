@@ -19,7 +19,7 @@ public:
  \param alpha Alpha string
  \param beta Beta string
 */
-  Determinant(State* State=nullptr, String* alpha=nullptr, String* beta=nullptr);
+  Determinant(const State* State=nullptr, const String* alpha=nullptr, const String* beta=nullptr);
 
   /*!
      \brief

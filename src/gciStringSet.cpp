@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <string.h>
 
 StringSet::StringSet() : memory::vector<String>()
 {
@@ -24,16 +25,16 @@ StringSet::StringSet(const StringSet &referenceSpace, int annihilations, int cre
 {
   //std::cout<<"crashing"<<std::endl;std::cout.flush();MPI_Abort(MPI_COMM_COMPUTE,12345);
   addByOperators(referenceSpace, annihilations, creations, sym, parallel);
+//  xout << "StringSet constructor from referenceSpace size()="<<size()<<", rank="<<parallel_rank<<", parallel="<<parallel<<std::endl;
 }
 
 StringSet::StringSet(const std::vector<StringSet>& referenceSpaces, int annihilations, int creations, int sym, bool parallel)
   : memory::vector<String>()
 {
-  addByOperators(referenceSpaces, annihilations, creations, sym, parallel);
+//  addByOperators(referenceSpaces, annihilations, creations, sym, parallel);
 //  xout << "StringSet constructor from referenceSpaces size()="<<size()<<", rank="<<parallel_rank<<", parallel="<<parallel<<std::endl;
 }
 
-#include <string.h>
 void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces, int annihilations, int creations, int sym, bool parallel)
 {
   auto p = profiler->push("StringSet::addByOperators[]");
@@ -169,7 +170,8 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
   size_t countall=0;
   bool first=size()==0;
   symmetry = sym;
-  //    xout << "in StringSet creator, referenceSpace="<<referenceSpace.str(5)<<std::endl;
+//      xout << "in StringSet creator, referenceSpace="<<referenceSpace.str(5)<<std::endl;
+//      xout <<"referenceSpace.symmetry="<<referenceSpace.symmetry<<std::endl;
   if ((int) referenceSpace.proto.nelec + creations - annihilations < 0
       || (int) referenceSpace.proto.nelec + creations - annihilations > (int) referenceSpace.proto.orbitals().size())
     return; // null space because not enough electrons or holes left
@@ -202,6 +204,7 @@ void StringSet::addByOperators(const StringSet &referenceSpace, int annihilation
       }
     }
     else if (annihilations+creations==2) {
+//     xout << "annihilations="<<annihilations<<", creations="<<creations<<", first="<<first<<std::endl;
       for (int j=0; j<(int)from.orbitalSpace->orbital_symmetries.size(); j++) {
         String a = from;
         int phasea = (annihilations > 0) ?  a.destroy(j+1) : a.create(j+1);

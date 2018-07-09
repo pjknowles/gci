@@ -7,6 +7,7 @@
 #include "gciTransitionDensity.h"
 #include "Profiler.h"
 #include <algorithm>
+#include <assert.h>
 #include "gciOrbitals.h"
 
 Wavefunction::Wavefunction(OrbitalSpace* h, int n, int s, int m2) : State(h,n,s,m2), m_sparse(false) {
@@ -39,11 +40,17 @@ void Wavefunction::buildStrings()
 
 void Wavefunction::allocate_buffer()
 {
+ if (m_sparse)
+  buffer_sparse.clear();
+ else
   buffer.resize(dimension,(double)0);
 }
 
 void Wavefunction::set(size_t offset, const double val)
 {
+ if (m_sparse)
+  buffer_sparse[offset] = val;
+ else
   buffer.at(offset) = val;
 }
 
@@ -366,7 +373,7 @@ double Wavefunction::at(size_t offset) const
   return buffer.at(offset);
 }
 
-Determinant Wavefunction::determinantAt(size_t offset)
+Determinant Wavefunction::determinantAt(size_t offset) const
 {
   size_t address=0;
   for (unsigned int syma=0; syma<8; syma++) {
@@ -380,6 +387,42 @@ Determinant Wavefunction::determinantAt(size_t offset)
     address=newaddress;
   }
   throw std::runtime_error("Wavefunction::determinantAt cannot find");
+}
+
+size_t Wavefunction::stringAddress(size_t offset, unsigned int axis) const
+{
+ size_t address=0;
+ for (unsigned int syma=0; syma<8; syma++) {
+  unsigned int symb = syma ^ symmetry ;
+  size_t newaddress = address +  alphaStrings[syma].size() * betaStrings[symb].size();
+  if (offset >= address && offset < newaddress) {
+   size_t a=(offset-address)/betaStrings[symb].size();
+   size_t b=offset-address-a*betaStrings[symb].size();
+   if (axis==0) return b;
+   if (axis==1) return a;
+   throw std::runtime_error("Wavefunction::stringAddress bad axis");
+  }
+  address=newaddress;
+ }
+ throw std::runtime_error("Wavefunction::stringAddress cannot find");
+
+}
+
+size_t Wavefunction::stringSymmetry(size_t offset, unsigned int axis) const
+{
+ size_t address=0;
+ for (unsigned int syma=0; syma<8; syma++) {
+  unsigned int symb = syma ^ symmetry ;
+  size_t newaddress = address +  alphaStrings[syma].size() * betaStrings[symb].size();
+  if (offset >= address && offset < newaddress) {
+   if (axis==0) return symb;
+   if (axis==1) return syma;
+   throw std::runtime_error("Wavefunction::stringSymmetry bad axis");
+  }
+  address=newaddress;
+ }
+ throw std::runtime_error("Wavefunction::stringAddress cannot find");
+
 }
 
 size_t Wavefunction::blockOffset(unsigned int syma) const
@@ -415,9 +458,69 @@ void MXM(double *Out, const double * A, const double *B, uint nRows, uint nLink,
     }
 }
 
+void Wavefunction::operatorOnSparseWavefunction(const Operator &h, const Wavefunction &w)
+{
+ auto prof = profiler->push("operatorOnSparseWavefunction");
+ assert(w.m_sparse);
+ if (parallel_rank != 0) {
+  if (m_sparse)
+   buffer_sparse.clear();
+  else
+   for (auto& b: buffer) b=0;
+ }
+ DivideTasks(w.buffer_sparse.size(),1,1);
+ for (const auto& ww : w.buffer_sparse) {
+  if (!NextTask()) continue;
+  const auto& index = ww.first;
+  const auto& value = ww.second;
+  const auto det = w.determinantAt(index);
+  const auto& deta = det.stringAlpha;
+  const auto& detb = det.stringBeta;
+  const auto& syma = w.stringSymmetry(index,1);
+  const auto& symb = w.stringSymmetry(index,0);
+  const auto& adda = w.stringAddress(index,1);
+  const auto& addb = w.stringAddress(index,0);
+  StringSet s0a(deta,false); s0a.push_back(deta); //FIXME incomplete construction, including symmetry
+  StringSet s0b(detb,false); s0b.push_back(detb);
+  if (parallel_rank == 0) {
+   if (m_sparse)
+    buffer_sparse[index] += h.m_O0 * value;
+   else
+    buffer[index] += h.m_O0 * value;
+  }
+  {
+#pragma omp parallel for private(e,stringaddress,detaddress)
+   for (const auto& e : ExcitationSet(deta, StringSet(s0a, 1, 1, 0), 1, 1, parityEven)) {
+    const auto& detaddress= blockOffset(syma) + addb + e.stringIndex * betaStrings[symb].size();
+    if (m_sparse)
+     buffer_sparse[detaddress] += (*(h.O1(true).data()))[e.orbitalAddress] * value * e.phase;
+    else
+     buffer[detaddress] += (*(h.O1(true).data()))[e.orbitalAddress] * value * e.phase;
+   }
+  }
+  {
+#pragma omp parallel for private(e,stringaddress,detaddress)
+   for (const auto& e : ExcitationSet(detb, StringSet(s0b, 1, 1, 0), 1, 1, parityEven)) {
+    const auto& detaddress= blockOffset(syma) + adda * betaStrings[symb].size() + e.stringIndex;
+    if (m_sparse)
+     buffer_sparse[detaddress] += (*(h.O1(false).data()))[e.orbitalAddress] * value * e.phase;
+    else
+     buffer[detaddress] += (*(h.O1(false).data()))[e.orbitalAddress] * value * e.phase;
+   }
+  }
+ }
+}
+
 void Wavefunction::operatorOnWavefunction(const Operator &h, const Wavefunction &w, bool parallel_stringset)
 { // FIXME not really thoroughly checked if the symmetry of h is not zero.
   auto prof = profiler->push("operatorOnWavefunction");
+  if (w.m_sparse) {
+   operatorOnSparseWavefunction(h, w);
+   xout << "result of operatorOnSparseWavefunction:\n";
+   for (const auto& x : buffer_sparse)
+    xout<<determinantAt(x.first)<<" : "<<x.second<<std::endl;
+   return;
+  }
   if (parallel_rank == 0)
     for (size_t i=0; i<buffer.size(); i++)
       buffer[i] += h.m_O0 * w.buffer[i];
