@@ -46,7 +46,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
   std::vector<StringSet> betaStrings; ///< The beta-spin strings defining the CI basis
 
   void allocate_buffer(); ///< allocate buffer to full size
-  size_t size() const override { return dimension; } ///< the size of the space
+  size_t size() const override { return m_sparse ? buffer_sparse.size() : dimension; } ///< the size of the space
 
   void diagonalOperator(const Operator &op); ///< set this object to the diagonal elements of the hamiltonian
 
@@ -71,6 +71,25 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
      */
   Determinant determinantAt(size_t offset) const;
 
+/*!
+ * \brief calculate address of one of the constituent strings in a Determinant
+ * @param offset Determinant's address
+ * @param axis
+ * - 0: beta spin
+ * - 1: alpha spin
+ * @return string address
+ */
+  size_t stringAddress(size_t offset, unsigned int axis) const;
+/*!
+ * \brief calculate symmetry of one of the constituent strings in a Determinant
+ * @param offset Determinant's address
+ * @param axis
+ * - 0: beta spin
+ * - 1: alpha spin
+ * @return string symmetry
+ */
+  size_t stringSymmetry(size_t offset, unsigned int axis) const;
+
   /*!
      * \brief Add to this object the action of an operator on another wavefunction
      * \param h the operator
@@ -78,6 +97,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
      * \param parallel_stringset whether to use parallel algorithm in StringSet construction
      */
   void operatorOnWavefunction(const gci::Operator &h, const Wavefunction &w, bool parallel_stringset = false);
+ public:
 
   /*!
    * \brief Construct a density matrix with this wavefunction
@@ -262,6 +282,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
   std::vector<size_t> _blockOffset;
   int m_tilesize = -1, m_alphatilesize = -1, m_betatilesize = -1;
   static constexpr double m_activeStringTolerance = 1e-15;
+ public:
   std::map<size_t, double> buffer_sparse; ///< alternative storage to buffer, useful when very sparse
   bool m_sparse; ///< whether the coefficients are stored in buffer_sparse instead of buffer
 
