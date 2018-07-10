@@ -237,7 +237,16 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
     return dot(*other);
   }
   double dot(const std::map<size_t, double> &other) const override {
-    throw std::logic_error("P space support not yet implemented");
+    double result = 0;
+    if (m_sparse)
+      for (const auto &o : other) {
+        if (buffer_sparse.count(o.first))
+          result += buffer_sparse.at(o.first) * o.second;
+      }
+    else
+      for (const auto &o : other)
+        result += buffer[o.first] * o.second;
+    return result;
   }
 
   /*!

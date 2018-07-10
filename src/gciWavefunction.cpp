@@ -451,6 +451,9 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
       if (!w.m_sparse) throw std::runtime_error("Cannot make sparse residual from full vector");
       for (const auto &b : w.buffer_sparse)
         buffer_sparse[b.first] += h.m_O0 * b.second;
+    } else if (w.m_sparse) {
+      for (const auto &b : w.buffer_sparse)
+        buffer[b.first] += h.m_O0 * b.second;
     } else {
       for (size_t i = 0; i < buffer.size(); i++)
         buffer[i] += h.m_O0 * w.buffer[i];
