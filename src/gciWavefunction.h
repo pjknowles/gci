@@ -284,8 +284,8 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
   std::vector<size_t> _blockOffset;
   int m_tilesize = -1, m_alphatilesize = -1, m_betatilesize = -1;
   static constexpr double m_activeStringTolerance = 1e-15;
-  std::map<size_t, double> buffer_sparse; ///< alternative storage to buffer, useful when very sparse
  public:
+  std::map<size_t, double> buffer_sparse; ///< alternative storage to buffer, useful when very sparse
   bool m_sparse; ///< whether the coefficients are stored in buffer_sparse instead of buffer
 
 };
