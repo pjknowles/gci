@@ -97,8 +97,6 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
      * \param parallel_stringset whether to use parallel algorithm in StringSet construction
      */
   void operatorOnWavefunction(const gci::Operator &h, const Wavefunction &w, bool parallel_stringset = false);
- private:
-  void operatorOnSparseWavefunction(const gci::Operator &h, const Wavefunction &w);
  public:
 
   /*!

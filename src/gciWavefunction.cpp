@@ -441,71 +441,10 @@ void MXM(double *Out,
   }
 }
 
-void Wavefunction::operatorOnSparseWavefunction(const Operator &h, const Wavefunction &w) {
-  auto prof = profiler->push("operatorOnSparseWavefunction");
-  assert(w.m_sparse);
-  if (parallel_rank != 0) {
-    if (m_sparse)
-      buffer_sparse.clear();
-    else
-      for (auto &b: buffer) b = 0;
-  }
-//  DivideTasks(w.buffer_sparse.size(), 1, 1);
-  for (const auto &ww : w.buffer_sparse) {
-//    if (!NextTask()) continue;
-    const auto &index = ww.first;
-    const auto &value = ww.second;
-    const auto det = w.determinantAt(index);
-    const auto &deta = det.stringAlpha;
-    const auto &detb = det.stringBeta;
-    const auto &syma = w.stringSymmetry(index, 1);
-    const auto &symb = w.stringSymmetry(index, 0);
-    const auto &adda = w.stringAddress(index, 1);
-    const auto &addb = w.stringAddress(index, 0);
-    StringSet s0a(deta, false);
-    s0a.push_back(deta); //FIXME incomplete construction, including symmetry
-    StringSet s0b(detb, false);
-    s0b.push_back(detb);
-    if (parallel_rank == 0) {
-      if (m_sparse)
-        buffer_sparse[index] += h.m_O0 * value;
-      else
-        buffer[index] += h.m_O0 * value;
-    }
-    {
-#pragma omp parallel for private(e, stringaddress, detaddress)
-      for (const auto &e : ExcitationSet(deta, StringSet(s0a, 1, 1, 0), 1, 1, parityEven)) {
-        const auto &detaddress = blockOffset(syma) + addb + e.stringIndex * betaStrings[symb].size();
-        if (m_sparse)
-          buffer_sparse[detaddress] += (*(h.O1(true).data()))[e.orbitalAddress] * value * e.phase;
-        else
-          buffer[detaddress] += (*(h.O1(true).data()))[e.orbitalAddress] * value * e.phase;
-      }
-    }
-    {
-#pragma omp parallel for private(e, stringaddress, detaddress)
-      for (const auto &e : ExcitationSet(detb, StringSet(s0b, 1, 1, 0), 1, 1, parityEven)) {
-        const auto &detaddress = blockOffset(syma) + adda * betaStrings[symb].size() + e.stringIndex;
-        if (m_sparse)
-          buffer_sparse[detaddress] += (*(h.O1(false).data()))[e.orbitalAddress] * value * e.phase;
-        else
-          buffer[detaddress] += (*(h.O1(false).data()))[e.orbitalAddress] * value * e.phase;
-      }
-    }
-  }
-}
-
 void Wavefunction::operatorOnWavefunction(const Operator &h,
                                           const Wavefunction &w,
                                           bool parallel_stringset) { // FIXME not really thoroughly checked if the symmetry of h is not zero.
   auto prof = profiler->push("operatorOnWavefunction");
-  if (false && w.m_sparse) {
-    operatorOnSparseWavefunction(h, w);
-    xout << "result of operatorOnSparseWavefunction:\n";
-    for (const auto &x : buffer_sparse)
-      xout << determinantAt(x.first) << " : " << x.second << std::endl;
-    return;
-  }
   if (m_sparse) buffer_sparse.clear();
   if (parallel_rank == 0) {
     if (m_sparse) {
