@@ -495,7 +495,8 @@ std::vector<double> Run::Davidson(
    Wavefunction gsparse(prototype); gsparse.m_sparse=true;
     xout << "wsparse\n"<<wsparse<<std::endl;
    gsparse.operatorOnWavefunction(ham,wsparse);
-   xout << "gsparse\n"<<gsparse<<std::endl;
+   xout << "Size of sparse action vector: "<<gsparse.size()<<std::endl;
+//   xout << "gsparse\n"<<gsparse<<std::endl;
       std::shared_ptr<Wavefunction>  g=std::make_shared<Wavefunction>(prototype);
       g->allocate_buffer();
       g->settilesize(

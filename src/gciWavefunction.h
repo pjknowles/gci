@@ -46,7 +46,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
   std::vector<StringSet> betaStrings; ///< The beta-spin strings defining the CI basis
 
   void allocate_buffer(); ///< allocate buffer to full size
-  size_t size() const override { return dimension; } ///< the size of the space
+  size_t size() const override { return m_sparse ? buffer_sparse.size() : dimension; } ///< the size of the space
 
   void diagonalOperator(const Operator &op); ///< set this object to the diagonal elements of the hamiltonian
 

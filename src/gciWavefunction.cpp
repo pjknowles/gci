@@ -302,7 +302,6 @@ std::string gci::Wavefunction::values() const {
 std::string gci::Wavefunction::str(int verbosity, unsigned int columns) const {
   std::ostringstream s;
   if (verbosity >= 0) {
-    s << std::endl << "Wavefunction object ";
     if (verbosity >= 1) s << std::endl << "values at address " << &buffer << " and of length " << buffer.size();
     size_t address = 0;
     for (unsigned int syma = 0; syma < 8; syma++) {
@@ -324,15 +323,15 @@ std::string gci::Wavefunction::str(int verbosity, unsigned int columns) const {
             }
           }
         }
-        if (m_sparse && !buffer_sparse.empty() && verbosity >= 0) {
-          s << std::endl << "Values:";
-          for (const auto &b : buffer_sparse)
-            s << std::endl << determinantAt(b.first) << " : " << b.second;
-        }
       }
     }
+    if (m_sparse && !buffer_sparse.empty() && verbosity >= 0) {
+      s << std::endl << "Sparse storage, values:";
+      for (const auto &b : buffer_sparse)
+        s << std::endl << determinantAt(b.first) << " : " << b.second;
+    }
   }
-  return this->State::str(verbosity) + s.str();
+  return "Wavefunction object\n" + this->State::str(verbosity) + s.str();
 }
 
 bool Wavefunction::compatible(const Wavefunction &other) const {

@@ -293,12 +293,14 @@ void TransitionDensity::action(Wavefunction &w) const {
           for (const auto &e : ee) {
             if (e.phase < 0) {
               for (size_t ib = 0; ib < m_nsb; ib++)
-                w.buffer_sparse[woffset + e.stringIndex * wnsb + ib] -=
-                    (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib];
+                if ((*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] != 0)
+                  w.buffer_sparse[woffset + e.stringIndex * wnsb + ib] -=
+                      (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib];
             } else {
               for (size_t ib = 0; ib < m_nsb; ib++)
-                w.buffer_sparse[woffset + e.stringIndex * wnsb + ib] +=
-                    (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib];
+                if ((*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] != 0)
+                  w.buffer_sparse[woffset + e.stringIndex * wnsb + ib] +=
+                      (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib];
             }
           }
         } else {
@@ -333,12 +335,14 @@ void TransitionDensity::action(Wavefunction &w) const {
           for (const auto &e : ee) {
             if (e.phase < 0) {
               for (size_t ia = 0; ia < m_nsa; ia++)
-                w.buffer_sparse[woffset + e.stringIndex + wnsb * ia] -=
-                    (*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb];
+                if ((*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb] != 0)
+                  w.buffer_sparse[woffset + e.stringIndex + wnsb * ia] -=
+                      (*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb];
             } else {
               for (size_t ia = 0; ia < m_nsa; ia++)
-                w.buffer_sparse[woffset + e.stringIndex + wnsb * ia] +=
-                    (*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb];
+                if ((*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb] != 0)
+                  w.buffer_sparse[woffset + e.stringIndex + wnsb * ia] +=
+                      (*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb];
             }
           }
         } else {
@@ -373,12 +377,14 @@ void TransitionDensity::action(Wavefunction &w) const {
         for (const auto &e : ee) {
           if (e.phase < 0) {
             for (size_t ib = 0; ib < m_nsb; ib++)
-              w.buffer_sparse[woffset + e.stringIndex * wnsb + ib] -=
-                  (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib];
+              if ((*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] != 0)
+                w.buffer_sparse[woffset + e.stringIndex * wnsb + ib] -=
+                    (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib];
           } else {
             for (size_t ib = 0; ib < m_nsb; ib++)
-              w.buffer_sparse[woffset + e.stringIndex * wnsb + ib] +=
-                  (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib];
+              if ((*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib] != 0)
+                w.buffer_sparse[woffset + e.stringIndex * wnsb + ib] +=
+                    (*this)[offa + m_nsa * m_nsb * e.orbitalAddress + ib];
           }
         }
       } else {
@@ -410,12 +416,14 @@ void TransitionDensity::action(Wavefunction &w) const {
         for (const auto &e : ee) {
           if (e.phase < 0) {
             for (size_t ia = 0; ia < m_nsa; ia++)
-              w.buffer_sparse[woffset + e.stringIndex + wnsb * ia] -=
-                  (*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb];
+              if ((*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb] != 0)
+                w.buffer_sparse[woffset + e.stringIndex + wnsb * ia] -=
+                    (*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb];
           } else {
             for (size_t ia = 0; ia < m_nsa; ia++)
-              w.buffer_sparse[woffset + e.stringIndex + wnsb * ia] +=
-                  (*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb];
+              if ((*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb] != 0)
+                w.buffer_sparse[woffset + e.stringIndex + wnsb * ia] +=
+                    (*this)[offb + m_nsa * m_nsb * e.orbitalAddress + ia * m_nsb];
           }
         }
       } else {
@@ -460,15 +468,17 @@ void TransitionDensity::action(Wavefunction &w) const {
             for (const auto &eb : eeb) {
               if (eb.phase > 0)
                 for (const auto &ea : eea) {
-                  w.buffer_sparse[woffset + eb.stringIndex + ea.stringIndex]
-                      += ea.phase *
-                      (*this)[offb + eb.orbitalAddress + ea.orbitalAddress];
+                  if ((*this)[offb + eb.orbitalAddress + ea.orbitalAddress] != 0)
+                    w.buffer_sparse[woffset + eb.stringIndex + ea.stringIndex]
+                        += ea.phase *
+                        (*this)[offb + eb.orbitalAddress + ea.orbitalAddress];
                 }
               else
                 for (const auto &ea : eea) {
-                  w.buffer_sparse[woffset + eb.stringIndex + ea.stringIndex]
-                      -= ea.phase *
-                      (*this)[offb + eb.orbitalAddress + ea.orbitalAddress];
+                  if ((*this)[offb + eb.orbitalAddress + ea.orbitalAddress] != 0)
+                    w.buffer_sparse[woffset + eb.stringIndex + ea.stringIndex]
+                        -= ea.phase *
+                        (*this)[offb + eb.orbitalAddress + ea.orbitalAddress];
                 }
             }
             offb++;
