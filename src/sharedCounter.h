@@ -20,18 +20,16 @@
 #include <vector>
 #include <cstddef>
 
-
-class sharedCounter
-{
-public:
-  sharedCounter(const MPI_Comm& communicator=MPI_COMM_COMPUTE);
+class sharedCounter {
+ public:
+  explicit sharedCounter(const MPI_Comm &communicator = MPI_COMM_COMPUTE);
   ~sharedCounter();
-  int increment(int amount=1);
+  int increment(int amount = 1);
   void reset();
-private:
+ private:
   MPI_Win m_win;
-  int  m_hostrank ;
-  int  m_myval;
+  int m_hostrank;
+  int m_myval;
   std::vector<int> m_data;
   int m_rank, m_size;
 };

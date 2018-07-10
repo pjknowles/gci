@@ -6,26 +6,25 @@
 #include "gciState.h"
 #include "gciWavefunction.h"
 #include "gciOptions.h"
-#include <stdint.h>
+#include <cstdint>
 
 namespace gci {
 /*!
  * \brief The Run class encapsulates a complete calculation using gci
  */
-class Run
-{
-public:
+class Run {
+ public:
   /*!
    * \brief Construct Run object from an FCIdump
    * \param fcidump the file name of the FCIdump
    */
-  Run(std::string fcidump);
+  explicit Run(std::string fcidump);
   ~Run();
   /*!
    * \brief Start the run
    */
   std::vector<double> run();
-private:
+ private:
   /*!
    * \brief Perform a Rayleigh-Schroedinger perturbation theory calculation
    * \param hams A vector of pointers to the zero, first, second... order hamiltonians
@@ -37,17 +36,17 @@ private:
    * \return the energies order by order
    */
   std::vector<double> RSPT(const std::vector<Operator *> &hams,
-         const State &prototype,
-         int maxOrder=-1,
-         double energyThreshold=-1,
-         int maxIterations=-1);
+                           const State &prototype,
+                           int maxOrder = -1,
+                           double energyThreshold = -1,
+                           int maxIterations = -1);
   std::vector<double> ISRSPT(const gci::Operator &ham, const gci::Operator &ham0,
-         const State &prototype,
-         int maxOrder=-1,
-         double energyThreshold=-1,
-         int maxIterations=-1);
+                             const State &prototype,
+                             int maxOrder = -1,
+                             double energyThreshold = -1,
+                             int maxIterations = -1);
   void IPT(const gci::Operator &ham,
-         const State &prototype, const size_t referenceLocation);
+           const State &prototype, size_t referenceLocation);
 
   /*!
    * \brief Perform a variational calculation using the Davidson algorithm
@@ -60,11 +59,11 @@ private:
    * \return the energies for each state. Note that only the first nState energies are considered converged
    */
   std::vector<double> Davidson(const Operator &ham,
-                               const State& prototype,
-                               double energyThreshold=(double)-1, int nState=-1, int maxIterations=-1);
+                               const State &prototype,
+                               double energyThreshold = (double) -1, int nState = -1, int maxIterations = -1);
   std::vector<double> CSDavidson(const Operator &ham,
-                               const State& prototype,
-                               double energyThreshold=(double)-1, int nState=-1, int maxIterations=-1);
+                                 const State &prototype,
+                                 double energyThreshold = (double) -1, int nState = -1, int maxIterations = -1);
   /*!
    * \brief Perform a variational calculation using the preconditioned stepest descent algorithm
    * \param ham The Hamiltonian
@@ -75,13 +74,13 @@ private:
    * \return the energy of the state.
    */
   std::vector<double> DIIS(const Operator &ham,
-                               const State& prototype,
-                               double energyThreshold=(double)-1, int maxIterations=-1);
+                           const State &prototype,
+                           double energyThreshold = (double) -1, int maxIterations = -1);
 
-  void HamiltonianMatrixPrint (Operator &hamiltonian, const State &prototype, int verbosity=0);
+  void HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity = 0);
 
   Operator m_hamiltonian;
-public:
+ public:
   std::unique_ptr<Operator> m_densityMatrix; // the (state-averaged) density matrix
   std::vector<Operator> m_densityMatrices; // the individual state density matrices
 

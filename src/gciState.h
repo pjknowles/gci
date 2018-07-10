@@ -13,21 +13,20 @@ namespace gci {
  * Class represents a quantum-mechanical state with or without reference to a particular representation
  *
  */
-class State : public Printable
-{
-public:
+class State : public Printable {
+ public:
 
   /**
  * @brief
  *
  */
-  State() {};
+  State() : nelec(0), ms2(0), symmetry(0) {};
   /**
      * @brief
      *
      * @param dump points to an Options object. If present, load is called.
      */
-  State(const Options &dump);
+  explicit State(const Options &dump);
   /*!
      * \brief Construct a State object linked to a OrbitalSpace
      * \param os The orbital space
@@ -35,10 +34,10 @@ public:
      * \param symmetry Spatial symmetry
      * \param ms2 Sz quantum number times 2
      */
-  State(OrbitalSpace *os, int nelec=0, int symmetry=1, int ms2=0);
-  State(OrbitalSpace &os, int nelec=0, int symmetry=1, int ms2=0);
+  explicit State(OrbitalSpace *os, int nelec = 0, int symmetry = 1, int ms2 = 0);
+  explicit State(OrbitalSpace &os, int nelec = 0, int symmetry = 1, int ms2 = 0);
 
-  virtual ~State() { }
+  virtual ~State() = default;
   /*!
      \brief
     load number of electrons, spin
@@ -56,8 +55,7 @@ public:
   int ms2;
   /*! \brief Spatial symmetry of state */
   unsigned int symmetry;
-  std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
-
+  std::string str(int verbosity = 0, unsigned int columns = UINT_MAX) const override;
 
 };
 }

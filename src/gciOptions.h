@@ -6,15 +6,14 @@
 /*!
  * \brief C++ class that manages input options
  */
-namespace gci{
-class Options
-{
-public:
+namespace gci {
+class Options {
+ public:
   /*!
      * \brief Construct Options object
      * \param input Namelist format option specifier
      */
-  Options(const std::string input="");
+  explicit Options(std::string input = "");
 
   /*!
      * \brief Obtain an integer parameter.
@@ -22,8 +21,8 @@ public:
      * \param def Default value if the parameter is not found.
      * \return  The result as a vector of integers.
      */
-  std::vector<int> parameter(const std::string &key, const std::vector<int>& def) const;
-  int parameter(const std::string &key, int def=0) const;
+  std::vector<int> parameter(const std::string &key, const std::vector<int> &def) const;
+  int parameter(const std::string &key, int def = 0) const;
 
   /*!
      * \brief Obtain a real parameter.
@@ -40,8 +39,8 @@ public:
      * \param def Default value if the parameter is not found.
      * \return  The result as a vector of integers.
      */
-  std::vector<std::string> parameter(const std::string& key, const std::vector<std::string>& def) const;
-  std::string parameter(const std::string& key, const std::string& def) const;
+  std::vector<std::string> parameter(const std::string &key, const std::vector<std::string> &def) const;
+  std::string parameter(const std::string &key, const std::string &def) const;
 
   /*!
    * \brief Add a parameter with array values
@@ -49,7 +48,7 @@ public:
    * \param values values
    * \param echo whether to print the parameter and value
    */
-  void addParameter(const std::string& key, const std::vector<std::string>& values, bool echo=false);
+  void addParameter(const std::string &key, const std::vector<std::string> &values, bool echo = false);
 
   /*!
    * \brief Add a parameter with array values
@@ -57,7 +56,7 @@ public:
    * \param values values
    * \param echo whether to print the parameter and value
    */
-  void addParameter(const std::string& key, const std::vector<int>& values, bool echo=false);
+  void addParameter(const std::string &key, const std::vector<int> &values, bool echo = false);
 
   /*!
    * \brief Add a parameter with array values
@@ -65,7 +64,7 @@ public:
    * \param values values
    * \param echo whether to print the parameter and value
    */
-  void addParameter(const std::string& key, const std::vector<double>& values, bool echo=false);
+  void addParameter(const std::string &key, const std::vector<double> &values, bool echo = false);
 
   /*!
    * \brief Add a parameter with a scalar value
@@ -73,7 +72,7 @@ public:
    * \param value value
    * \param echo whether to print the parameter and value
    */
-  void addParameter(const std::string& key, const std::string& value, bool echo=false);
+  void addParameter(const std::string &key, const std::string &value, bool echo = false);
 
   /*!
    * \brief Add a parameter with a scalar value
@@ -81,7 +80,7 @@ public:
    * \param value value
    * \param echo whether to print the parameter and value
    */
-  void addParameter(const std::string& key, const int& value, bool echo=false);
+  void addParameter(const std::string &key, const int &value, bool echo = false);
 
   /*!
    * \brief Add a parameter with a scalar value
@@ -89,12 +88,11 @@ public:
    * \param value value
    * \param echo whether to print the parameter and value
    */
-  void addParameter(const std::string& key, const double& value, bool echo=false);
+  void addParameter(const std::string &key, const double &value, bool echo = false);
 
-std::string data() { return namelistData;}
+  std::string data() { return namelistData; }
 
-
-private:
+ private:
   std::string namelistData;
 };
 }

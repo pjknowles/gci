@@ -91,7 +91,7 @@ struct meanfield_residual : residual {
       : residual(hamiltonian, subtract_Energy, Q) {}
   void operator()(const ParameterVectorSet &psx,
                   ParameterVectorSet &outputs,
-                  std::vector<double> shift = std::vector<double>(),
+                  const std::vector<double> &shift = std::vector<double>(),
                   bool append = false) const {
     for (size_t k = 0; k < psx.size(); k++) {
       const std::shared_ptr<Wavefunction> x = std::static_pointer_cast<Wavefunction>(psx[k]);
@@ -117,8 +117,9 @@ struct meanfield_residual : residual {
       g->operatorOnWavefunction(m_hamiltonian.fock(x->density(1, false, true, &_IPT_c[0]) * 2, false),
                                 _IPT_c[0],
                                 parallel_stringset);
-      g->operatorOnWavefunction(m_hamiltonian.fock(_IPT_c[0].density(1, false, true, &_IPT_c[0]) * (2 * (-(*x) * _IPT_c[0])),
-                                                   false),
+      g->operatorOnWavefunction(m_hamiltonian.fock(
+          _IPT_c[0].density(1, false, true, &_IPT_c[0]) * (2 * (-(*x) * _IPT_c[0])),
+          false),
                                 _IPT_c[0],
                                 parallel_stringset);
       auto dd = _IPT_c[0] * *g;
@@ -226,7 +227,7 @@ Run::Run(std::string fcidump)
     lendata = (int) options.data().size();
   }
   MPI_Bcast(&lendata, (int) 1, MPI_INT, 0, MPI_COMM_COMPUTE);
-  char *buf = (char *) malloc(lendata + 1);
+  auto *buf = (char *) malloc(static_cast<size_t>(lendata + 1));
   if (parallel_rank == 0) for (auto i = 0; i < lendata; i++) buf[i] = options.data()[i];
   MPI_Bcast(&buf[0], lendata, MPI_CHAR, 0, MPI_COMM_COMPUTE);
   buf[lendata] = (char) 0;
@@ -260,7 +261,10 @@ std::vector<double> Run::run() {
   State prototype;
   { // so that w goes out of scope
     auto p = profiler->push("find reference");
-    Wavefunction w(options);
+    Wavefunction w(State(m_hamiltonian.m_orbitalSpaces[0],
+                         options.parameter("NELEC"),
+                         options.parameter("ISYM") - 1,
+                         options.parameter("MS2")));
     w.diagonalOperator(m_hamiltonian);
     referenceLocation = w.minloc();
     referenceDeterminant = w.determinantAt(referenceLocation);
@@ -307,11 +311,11 @@ std::vector<double> Run::run() {
 //    std::vector<double> emp = ISRSPT(hh, h0, prototype);
     xout << std::fixed << std::setprecision(8);
     xout << "MP energies";
-    for (int i = 0; i < (int) emp.size(); i++) xout << " " << emp[i];
+    for (double i : emp) xout << " " << i;
     xout << std::endl;
     xout << "MP total energies";
     double totalEnergy = 0;
-    for (int i = 0; i < (int) emp.size(); i++) xout << " " << (emp[i] = totalEnergy += emp[i]);
+    for (double &i : emp) xout << " " << (i = totalEnergy += i);
     xout << std::endl;
     energies.resize(1);
     energies[0] = totalEnergy;
@@ -332,11 +336,11 @@ std::vector<double> Run::run() {
     std::vector<double> emp = ISRSPT(m_hamiltonian, h0, prototype);
     xout << std::fixed << std::setprecision(8);
     xout << "MP energies";
-    for (int i = 0; i < (int) emp.size(); i++) xout << " " << emp[i];
+    for (double i : emp) xout << " " << i;
     xout << std::endl;
     xout << "MP total energies";
     double totalEnergy = 0;
-    for (int i = 0; i < (int) emp.size(); i++) xout << " " << (emp[i] = totalEnergy += emp[i]);
+    for (double &i : emp) xout << " " << (i = totalEnergy += i);
     xout << std::endl;
     energies.resize(1);
     energies[0] = totalEnergy;
@@ -372,7 +376,7 @@ std::vector<double> Run::run() {
 
   if (false) { // just for a test
     energies.clear();
-    for (auto w: m_wavefunctions)
+    for (const auto &w: m_wavefunctions)
       energies.push_back(w->m_properties["ENERGY"]);
   }
 
@@ -474,7 +478,7 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
   LinearAlgebra::DIIS<scalar> solver;
   solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
   solver.m_thresh = energyThreshold;
-  solver.m_maxIterations = maxIterations;
+  solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
   for (size_t iteration = 0; iteration < maxIterations; iteration++) {
     resid(ww, gg);
     solver.addVector(ww, gg);
@@ -520,11 +524,11 @@ std::vector<double> Run::Davidson(
     std::shared_ptr<Wavefunction> w = std::make_shared<Wavefunction>(prototype);
     ww.push_back(w);
     w->set((double) 0);
-    w->set(d.minloc(root + 1), (double) 1);
+    w->set(d.minloc(static_cast<size_t>(root + 1)), (double) 1);
     Wavefunction wsparse(prototype);
     wsparse.m_sparse = true;
     if (false) {
-      wsparse.set(d.minloc(root + 1), (double) 1);
+      wsparse.set(d.minloc(static_cast<size_t>(root + 1)), (double) 1);
       Wavefunction gsparse(prototype);
       gsparse.m_sparse = true;
       xout << "wsparse\n" << wsparse << std::endl;
@@ -542,8 +546,8 @@ std::vector<double> Run::Davidson(
   }
   solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
   solver.m_thresh = energyThreshold;
-  solver.m_maxIterations = maxIterations;
-  solver.m_roots = nState;
+  solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
+  solver.m_roots = static_cast<size_t>(nState);
   //  profiler->stop("Davidson preamble");
   for (size_t iteration = 0; iteration < maxIterations; iteration++) {
     resid(ww, gg);
@@ -615,7 +619,7 @@ std::vector<double> Run::CSDavidson(const Operator &ham,
   w.set((double) 0);
   w.set(reference, (double) 1);
   std::vector<double> reducedHamiltonian;
-  std::vector<double> elast(nState, e0 + 1);
+  std::vector<double> elast(static_cast<unsigned long>(nState), e0 + 1);
   profiler->stop("Davidson preamble");
   for (int n = 0; n < maxIterations; n++) {
     w.putw(wfile, n);
@@ -683,7 +687,7 @@ std::vector<double> Run::CSDavidson(const Operator &ham,
       w.axpy(alpha[i], g);
     } // w contains current wavefunction
     double l2norm = w.norm((double) 2);
-    double lknorm = w.norm((double) compressionK);
+    double lknorm = w.norm(compressionK);
 //    xout << "l2norm="<<l2norm<<" "<<w*w<<std::endl;
     // xout << "lknorm="<<lknorm<<std::endl;
     double factor = pow(lknorm, compressionL) * pow(l2norm, -compressionK * compressionL * (double) 0.5);
@@ -694,7 +698,7 @@ std::vector<double> Run::CSDavidson(const Operator &ham,
     // xout << "Pkl from eigenvectors = " <<Pkl<<std::endl;
     // construct dP/dmu in g
     g.set((double) 0);
-    g.addAbsPower(w, (double) compressionK - 2, factor / lknorm);
+    g.addAbsPower(w, compressionK - 2, factor / lknorm);
     g.axpy(-factor / l2norm, w);
     // project dP/dmu onto subspace
     std::vector<double> dPdmu(n + 1);
@@ -704,7 +708,7 @@ std::vector<double> Run::CSDavidson(const Operator &ham,
       dPdmu[i] = g * w;
       //      xout << "dPdmu[] "<<dPdmu[i]<<std::endl;
     }
-    double d2Edmu2 = (double) 0;
+    auto d2Edmu2 = (double) 0;
     for (size_t i = 0; i <= (size_t) n; i++) {
       dalphadmu[i] = (double) 0;
       for (size_t j = 0; j <= (size_t) n; j++) {
@@ -728,7 +732,7 @@ std::vector<double> Run::CSDavidson(const Operator &ham,
         g.axpy(alpha[i], w);
       } // g contains the current wavefunction
       w.set((double) 0);
-      w.addAbsPower(g, (double) compressionK - 2, mu * factor / (2 * lknorm));
+      w.addAbsPower(g, compressionK - 2, mu * factor / (2 * lknorm));
       w.axpy(-mu * factor / (2 * l2norm), g);
     } else // !compressive
       w.set((double) 0);
@@ -801,7 +805,7 @@ std::vector<double> Run::CSDavidson(const Operator &ham,
       for (size_t i = 1; i < nhist; i++)
         edges[i] = edges[i - 1] * ratio;
       std::vector<std::size_t> cumulative = w.histogram(edges);
-      while (cumulative.size() > 0 && *cumulative.end() == *(cumulative.end() - 1)) cumulative.pop_back();
+      while (!cumulative.empty() && *cumulative.end() == *(cumulative.end() - 1)) cumulative.pop_back();
       std::vector<double> fcumulative(cumulative.size());
       for (size_t i = 0; i < nhist; i++) {
         fcumulative[i] = ((double) cumulative[i]) / (double) w.size();
@@ -837,7 +841,7 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams,
 //  for (int k=0; k<(int)hamiltonians.size(); k++)
 //    HamiltonianMatrixPrint(*hamiltonians[k],prototype);
 //  return e;
-  if (hams.size() < 1) throw std::logic_error("not enough hamiltonians");
+  if (hams.empty()) throw std::logic_error("not enough hamiltonians");
 //  for (int k=0; k<(int)hamiltonians.size(); k++) xout << "H("<<k<<"): " << *hamiltonians[k] << std::endl;
   Wavefunction w(prototype);
   xout << "RSPT wavefunction size=" << w.size() << std::endl;

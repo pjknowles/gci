@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-#include <string.h>
+#include <cstring>
 
 StringSet::StringSet() : memory::vector<String>() {
 //      xout <<parallel_rank<<"StringSet default constructor"<<std::endl;
@@ -49,17 +49,16 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces,
   std::cout.flush();
   if (parallel) {
     size_t ntask = 0;
-    for (std::vector<StringSet>::const_iterator s = referenceSpaces.begin(); s != referenceSpaces.end(); s++) {
-      ntask += (*s).size();
+    for (const auto &referenceSpace : referenceSpaces) {
+      ntask += referenceSpace.size();
     }
     //  xout << "parallel_rank="<<parallel_rank<<", ntask="<<ntask<<std::endl;
     DivideTasks(ntask);
   }
 //  xout << "about to call addByOperators " << annihilations << creations << sym << std::endl;
-  for (std::vector<StringSet>::const_iterator referenceSpace = referenceSpaces.begin();
-       referenceSpace != referenceSpaces.end(); referenceSpace++) {
+  for (const auto &referenceSpace : referenceSpaces) {
 //    xout << "Stringset " << *referenceSpace << std::endl;
-    addByOperators(*referenceSpace, annihilations, creations, sym, parallel);
+    addByOperators(referenceSpace, annihilations, creations, sym, parallel);
   }
 //  xout << "size="<<size()<<std::endl;
 #ifdef HAVE_MPI_H
@@ -67,8 +66,8 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces,
     EndTasks();
     auto pp = profiler->push("StringSet::addByOperators:distribute");
     std::vector<char> serialised;
-    for (StringSet::const_iterator s = begin(); s != end(); s++) {
-      std::vector<char> serialised1 = s->serialise();
+    for (const auto &s : *this) {
+      std::vector<char> serialised1 = s.serialise();
       for (std::vector<char>::const_iterator c = serialised1.begin(); c != serialised1.end(); c++)
         serialised.push_back(*c);
     }
@@ -87,7 +86,7 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces,
     //    String refString = this->at(0);
     size_t initial_symmetry;
     for (initial_symmetry = 0; initial_symmetry < 8; initial_symmetry++)
-      if (referenceSpaces[initial_symmetry].size() > 0) break;
+      if (!referenceSpaces[initial_symmetry].empty()) break;
     if (initial_symmetry > 7) {
       xout << "Something has gone wrong with discovering reference space in gci::StringSet::addByOperators"
            << std::endl;
@@ -98,7 +97,7 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces,
     //  std::cout << "parallel_rank = "<<parallel_rank<<std::endl;std::cout.flush();
     if (parallel_rank > 0) {
       //    std::cout << "slave "<<std::endl;    std::cout.flush();
-      int len = (int) size();
+      auto len = (int) size();
       MPI_Send(&len, (int) 1, MPI_INT, 0, 0, MPI_COMM_COMPUTE);
       //    xout << "slave sends len="<<len<<std::endl;
       if (len > 0) {
@@ -109,14 +108,14 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces,
       MPI_Bcast(&len, (int) 1, MPI_INT, 0, MPI_COMM_COMPUTE);
       MPI_Bcast(&bytestreamsize, (int) 1, MPI_INT, 0, MPI_COMM_COMPUTE);
       //        std::cout << "slave after receving broadcast len "<<len<<", bytestreamsize="<<bytestreamsize<<std::endl; std::cout.flush();
-      serialised.resize(len * bytestreamsize);
+      serialised.resize(static_cast<unsigned long>(len * bytestreamsize));
       clear();
       addressMap.clear();
       //    xout << "slave ready to bcast"<<std::endl;
       MPI_Bcast(&serialised[0], len * bytestreamsize, MPI_BYTE, 0, MPI_COMM_COMPUTE);
       for (size_t k = 0; k < (size_t) len; k++) {
-        std::vector<char> s(bytestreamsize);
-        memcpy(&s[0], &serialised[k * bytestreamsize], bytestreamsize);
+        std::vector<char> s(static_cast<unsigned long>(bytestreamsize));
+        memcpy(&s[0], &serialised[k * bytestreamsize], static_cast<size_t>(bytestreamsize));
         //            std::cout << "slave construct string"<<std::endl;
         String ss(s, &refString);
         //            std::cout << "slave insert string "<<ss.str()<<std::endl; std::cout.flush();
@@ -134,10 +133,10 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces,
           MPI_Recv(&bytestreamsize, (int) 1, MPI_INT, iproc, 1, MPI_COMM_COMPUTE, &status);
           //      xout <<"received len="<<len<<", bytestreamsize="<<bytestreamsize<<std::endl;
           serialised.resize((size_t) len * bytestreamsize);
-          MPI_Recv(&serialised[0], (int) len * bytestreamsize, MPI_BYTE, iproc, 2, MPI_COMM_COMPUTE, &status);
+          MPI_Recv(&serialised[0], len * bytestreamsize, MPI_BYTE, iproc, 2, MPI_COMM_COMPUTE, &status);
           for (size_t k = 0; k < (size_t) len; k++) {
-            std::vector<char> s(bytestreamsize);
-            memcpy(&s[0], &serialised[k * bytestreamsize], bytestreamsize);
+            std::vector<char> s(static_cast<unsigned long>(bytestreamsize));
+            memcpy(&s[0], &serialised[k * bytestreamsize], static_cast<size_t>(bytestreamsize));
             //        xout << "master construct string"<<std::endl;
             String ss(s, &refString);
             //        xout <<"master before insert"<<std::endl;
@@ -145,14 +144,14 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces,
             //        xout <<"master after insert"<<std::endl;
           }
           serialised.clear();
-          for (StringSet::const_iterator s = begin(); s != end(); s++) {
-            std::vector<char> serialised1 = s->serialise();
+          for (const auto &s : *this) {
+            std::vector<char> serialised1 = s.serialise();
             for (std::vector<char>::const_iterator c = serialised1.begin(); c != serialised1.end(); c++)
               serialised.push_back(*c);
           }
         }
       }
-      int len = (int) size();
+      auto len = (int) size();
       //        xout <<"master after serialising global list"<<std::endl;
       //    xout << "master ready to bcast len="<<len<<", bytestreamsize="<<bytestreamsize<<std::endl;
       bytestreamsize = serialised.size() / std::max((int) size(), 1);
@@ -184,7 +183,7 @@ void StringSet::addByOperators(const StringSet &referenceSpace,
                                bool parallel) {
   size_t count = 0;
   size_t countall = 0;
-  bool first = size() == 0;
+  bool first = empty();
   symmetry = sym;
 //  xout << "in StringSet::addByOperators, referenceSpace=" << referenceSpace.str(5) << std::endl;
 //  xout << "referenceSpace.symmetry=" << referenceSpace.symmetry << ", nelec=" << referenceSpace.proto.nelec
@@ -196,14 +195,13 @@ void StringSet::addByOperators(const StringSet &referenceSpace,
 //  xout << "still here" << std::endl;
   int symexc =
       (referenceSpace.symmetry >= 0 && sym >= 0) ? referenceSpace.symmetry ^ sym : -1; // use symmetry if we can
-  for (StringSet::const_iterator s = referenceSpace.begin(); s != referenceSpace.end(); s++) {
+  for (auto from : referenceSpace) {
 //    xout << "next reference" << std::endl;
     countall++;
     if (parallel)
       if (!NextTask()) continue;
 //    if (parallel && countall%parallel_size != parallel_rank) continue;
     count++;
-    String from = *s;
 //    xout << "from=" << from.str(5) << std::endl;
     if (annihilations + creations == 1) {
       for (int i = 0; i < (int) from.orbitalSpace->orbital_symmetries.size(); i++) {
@@ -260,12 +258,15 @@ void StringSet::setupPartialWeightArray() { // set up partial weight array for a
 //  auto p = profiler->push("StringSet::setupPartialWeightArray");
   int nitem = proto.nelec;
   int nbox = proto.orbitalSpace->total();
-  PartialWeightArray = std::vector<std::vector<int> >(nitem, std::vector<int>(nbox));
+  PartialWeightArray = std::vector<std::vector<int> >(static_cast<unsigned long>(nitem),
+                                                      std::vector<int>(static_cast<unsigned long>(nbox)));
   for (int k = 0; k < nitem; k++) {
     for (int l = 0; l < nbox; l++)
       PartialWeightArray[k][l] = 0;
     for (int l = k; l < nbox - nitem + k; l++)
-      PartialWeightArray[k][l + 1] = binomial_coefficient(nbox - l - 1, nitem - k - 1) + PartialWeightArray[k][l];
+      PartialWeightArray[k][l + 1] = binomial_coefficient(static_cast<unsigned long>(nbox - l - 1),
+                                                          static_cast<unsigned long>(nitem - k - 1))
+          + PartialWeightArray[k][l];
   }
   for (int k = 0; k < nitem - 1; k++) {
     for (int l = k; l < nbox - nitem + k + 1; l++)
@@ -344,32 +345,31 @@ std::string StringSet::str(int verbosity, unsigned int columns) const {
     s << "StringSet size=" << size();
   }
   if (verbosity > 0) {
-    for (StringSet::const_iterator i = begin(); i != end(); i++)
-      s << std::endl << i->str();
+    for (const auto &i : *this)
+      s << std::endl << i.str();
   }
   return s.str();
 }
 
 std::vector<ExcitationSet> StringSet::allExcitations(StringSet &to, int annihilations, int creations) {
   std::vector<ExcitationSet> set;
-  for (iterator f = begin(); f != end(); f++) {
-    String ff = *f;
-    set.push_back(ExcitationSet(ff, to, annihilations, creations));
+  for (auto ff : *this) {
+    set.emplace_back(ff, to, annihilations, creations);
   }
   return set;
 }
 
 std::vector<double> StringSet::occupationNumbers() {
   std::vector<double> result;
-  if (this->size()) {
+  if (!this->empty()) {
     String firstString = this->at(0);
     result.resize(this->size() * firstString.orbitalSpace->total(), (double) 0);
     int stringoffset = 0;
-    for (StringSet::iterator s = this->begin(); s != this->end(); s++) {
-      auto orbitals = s->orbitals();
-      for (auto i = orbitals.begin(); i != orbitals.end(); i++) {
+    for (auto &s : *this) {
+      auto orbitals = s.orbitals();
+      for (unsigned char &orbital : orbitals) {
         //                xout << "StringSet::occupationNumbers stringoffset="<<stringoffset<<" *i="<<*i<<std::endl;
-        result[stringoffset + (*i - 1) * this->size()] = (double) 1;
+        result[stringoffset + (orbital - 1) * this->size()] = (double) 1;
       }
       stringoffset++;
     }
@@ -379,7 +379,7 @@ std::vector<double> StringSet::occupationNumbers() {
 
 std::vector<size_t> StringSet::index(const StringSet &set) const {
   std::vector<size_t> result;
-  for (const_iterator s = begin(); s != end(); s++)
-    result.push_back(s->index(set));
+  for (const auto &s : *this)
+    result.push_back(s.index(set));
   return result;
 }

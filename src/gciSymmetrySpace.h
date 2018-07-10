@@ -11,18 +11,18 @@ namespace gci {
  * The vector<> elements are the numbers of functions in each symmetry.
  */
 class SymmetrySpace : public std::vector<size_t>, public gci::Printable {
-public:
+ public:
   /*!
      * \brief Construct a SymmetrySpace object
      * \param title String to associate with the object
      * \param maxrank Maximum rank of underlying tensor that will be addressed
      */
-  SymmetrySpace(std::string title="", int maxrank=2);
+  explicit SymmetrySpace(std::string title = "", int maxrank = 2);
   /*!
      * \brief The maximum rank of tensor
      */
   int maxrank;
-  std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
+  std::string str(int verbosity = 0, unsigned int columns = UINT_MAX) const override;
   /*!
      * \brief A string describing the object
      */
@@ -40,7 +40,7 @@ public:
      * \param parity 0 denotes general matrix, 1 symmetric, -1 antisymmetric
      * \return
      */
-  size_t offset(int sym1, int sym2, int parity=0) const;
+  size_t offset(int sym1, int sym2, int parity = 0) const;
   /*!
      * \brief calculateOffsets compute the offsets from the dimension
      */
@@ -56,8 +56,8 @@ public:
      * \param parity 0 denotes general matrix, 1 symmetric, -1 antisymmetric
      * \return The size
      */
-  size_t total(int sym1, int parity=0) const;
-private:
+  size_t total(int sym1, int parity = 0) const;
+ private:
   std::vector<size_t> offsets;
   std::vector<size_t> buffer;
 };

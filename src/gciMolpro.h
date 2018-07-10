@@ -17,32 +17,31 @@ typedef unsigned int uint;
 // col-stride==nrows. A^T B is supposed to be the fastest
 // MxM-driver on most machine architectures.
 void MxmDrvTN(double *Out, const double *A,
-    const double *B, uint nRows, uint nLink, uint nStrideLink, uint nCols, bool AddToDest = false);
+              const double *B, uint nRows, uint nLink, uint nStrideLink, uint nCols, bool AddToDest = false);
 // as above, but for C = A B
-void MxmDrvNN( double *Out, const double *A,
-    const double *B, uint nRows, uint nLink, uint nCols, bool AddToDest = false);
+void MxmDrvNN(double *Out, const double *A,
+              const double *B, uint nRows, uint nLink, uint nCols, bool AddToDest = false);
 
 // as MOLPRO's mxma/mxmb, except for 'Out' occuring before A/B.
-void MxmDrvGen( double *Out, uint nRowStOut, uint nColStOut,
-    const double *A, uint nRowStA, uint nColStA,
-    const double *B, uint nRowStB, uint nColStB,
-    uint nRows, uint nLink, uint nCols, bool AddToDest = false );
+void MxmDrvGen(double *Out, uint nRowStOut, uint nColStOut,
+               const double *A, uint nRowStA, uint nColStA,
+               const double *B, uint nRowStB, uint nColStB,
+               uint nRows, uint nLink, uint nCols, bool AddToDest = false);
 // adds support for a prefactor factor, but resorts to BLAS for
 // actual computation. Therefore for each matrix one of the strides
 // must be 1! Also, this will likely be very slow for small matrices.
-void MxmDrvGenF( double *Out, uint nRowStOut, uint nColStOut,
-    const double *A, uint nRowStA, uint nColStA,
-    const double *B, uint nRowStB, uint nColStB,
-    uint nRows, uint nLink, uint nCols, bool AddToDest, double Factor );
+void MxmDrvGenF(double *Out, uint nRowStOut, uint nColStOut,
+                const double *A, uint nRowStA, uint nColStA,
+                const double *B, uint nRowStB, uint nColStB,
+                uint nRows, uint nLink, uint nCols, bool AddToDest, double Factor);
 
 // also a generic driver for mxva/b
 void MxvDrvGen(const double *A, uint nRowStA, uint nColStA,
-    const double *V, uint nStrideV, double *R, uint nStrideR,
-    uint nRowsR, uint nLink, bool AddToDest = false);
+               const double *V, uint nStrideV, double *R, uint nStrideR,
+               uint nRowsR, uint nLink, bool AddToDest = false);
 
 // diagonalize a symmetric matrix in-place, storing nDim eigenvalues at pEigValues.
-void Diagonalize( double *pMatrix, double *pEigValues, uint nDim, uint nColStride );
-
+void Diagonalize(double *pMatrix, double *pEigValues, uint nDim, uint nColStride);
 
 #endif
 #endif // GCIMOLPRO_H
