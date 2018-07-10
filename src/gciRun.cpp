@@ -527,7 +527,7 @@ std::vector<double> Run::Davidson(
     w->set(d.minloc(static_cast<size_t>(root + 1)), (double) 1);
     Wavefunction wsparse(prototype);
     wsparse.m_sparse = true;
-    if (false) {
+    if (true) {
       wsparse.set(d.minloc(static_cast<size_t>(root + 1)), (double) 1);
       Wavefunction gsparse(prototype);
       gsparse.m_sparse = true;
