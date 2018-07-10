@@ -526,7 +526,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
   const auto alphaActiveStrings = w.activeStrings(true);
   const auto betaActiveStrings = w.activeStrings(false);
 //  xout << "betaActiveStrings"<<std::endl;
-  for (const auto& s : betaActiveStrings) for (const auto& ss : s) xout <<ss<<std::endl;
+//  for (const auto& s : betaActiveStrings) for (const auto& ss : s) xout <<ss<<std::endl;
 
   if (true) {
     auto p = profiler->push("1-electron RI");

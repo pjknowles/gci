@@ -493,6 +493,7 @@ std::vector<double> Run::Davidson(
       Wavefunction wsparse(prototype); wsparse.m_sparse=true;
    wsparse.set(d.minloc(root+1), (double) 1);
    Wavefunction gsparse(prototype); gsparse.m_sparse=true;
+    xout << "wsparse\n"<<wsparse<<std::endl;
    gsparse.operatorOnWavefunction(ham,wsparse);
    xout << "gsparse\n"<<gsparse<<std::endl;
       std::shared_ptr<Wavefunction>  g=std::make_shared<Wavefunction>(prototype);
