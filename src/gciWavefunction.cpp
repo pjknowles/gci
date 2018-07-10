@@ -525,7 +525,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
   DivideTasks(99999999, 1, 1);
   const auto alphaActiveStrings = w.activeStrings(true);
   const auto betaActiveStrings = w.activeStrings(false);
-  xout << "betaActiveStrings"<<std::endl;
+//  xout << "betaActiveStrings"<<std::endl;
   for (const auto& s : betaActiveStrings) for (const auto& ss : s) xout <<ss<<std::endl;
 
   if (true) {
@@ -533,15 +533,15 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
     size_t nsaaMax = 1000000000;
     size_t nsbbMax = 1000000000;
     std::vector<StringSet> bbs;
-    xout << "before bbs emplace "<<std::endl;
+//    xout << "before bbs emplace "<<std::endl;
     for (unsigned int symb = 0; symb < 8; symb++)
 //        bbs.emplace_back(w.betaStrings,1,0,symb,parallel_stringset);
       bbs.emplace_back(betaActiveStrings, 1, 0, symb, parallel_stringset);
-    xout << "after bbs emplace "<<std::endl;
+//    xout << "after bbs emplace "<<std::endl;
     for (unsigned int syma = 0; syma < 8; syma++) {
 //          StringSet aa(w.alphaStrings,1,0,syma,parallel_stringset);
       StringSet aa(alphaActiveStrings, 1, 0, syma, parallel_stringset);
-      xout << "after making StringSet aa "<<std::endl;
+//      xout << "after making StringSet aa "<<std::endl;
       for (unsigned int symb = 0; symb < 8; symb++) { // symmetry of N-1 electron state
         unsigned int symexc = w.symmetry ^syma ^symb;
         //        xout << "syma="<<syma<<" symb="<<symb<<" symexc="<<symexc<<std::endl;
@@ -566,11 +566,11 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                                 aa1,
                                 w.betaStrings[symb].begin(), w.betaStrings[symb].end(),
                                 parityEven, true, false);
-            xout << "alpha transition density" << d << "\n" << w.betaStrings[symb].size() << aa1 - aa0 << " "
-                 << d.size() << std::endl;
+//            xout << "alpha transition density" << d << "\n" << w.betaStrings[symb].size() << aa1 - aa0 << " "
+//                 << d.size() << std::endl;
             TransitionDensity e(d);
-            xout << "hamiltonian block\n" << ham << std::endl;
-            //            xout << "ham dimensions "<<ham.rows()<<" "<<ham.cols()<<std::endl;
+//            xout << "hamiltonian block\n" << ham << std::endl;
+//                        xout << "ham dimensions "<<ham.rows()<<" "<<ham.cols()<<std::endl;
             MXM(&e[0],
                 &d[0],
                 &ham(0, 0),
@@ -578,9 +578,9 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                 ham.rows(),
                 ham.cols(),
                 false);
-            xout << "alpha e" << e << std::endl;
+//            xout << "alpha e" << e << std::endl;
             e.action(*this);
-            xout << "this after action " << values() << std::endl;
+//            xout << "this after action " << values() << std::endl;
           }
         }
         const auto &bb = bbs[symb];
@@ -689,7 +689,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
       profiler->start("StringSet aa");
       StringSet aa(alphaActiveStrings, 2, 0, syma, parallel_stringset);
       profiler->stop("StringSet aa");
-      xout << "number of alpha-alpha-excited strings=" << aa.size() << std::endl;
+//      xout << "number of alpha-alpha-excited strings=" << aa.size() << std::endl;
       if (aa.empty()) continue;
       for (unsigned int symb = 0; symb < 8; symb++) {
         if (!NextTask()) continue;
@@ -1129,9 +1129,17 @@ std::vector<StringSet> Wavefunction::activeStrings(bool spinUp) const {
   std::vector<StringSet> results(8);
   if (m_sparse) {
     auto axis = spinUp ? 1 : 0;
+    String proto;
+    for (unsigned int sym = 0; sym < 8; sym++)
+      if (!sources[sym].empty()) proto=sources[sym].front();
+    for (unsigned int sym = 0; sym < 8; sym++)
+      results[sym] = StringSet(proto,false, static_cast<int>(sym));
     for (const auto &ww : buffer_sparse) {
       const auto det = determinantAt(ww.first);
-      xout << "activeStrings " << ww.first << " : " << ww.second << std::endl;
+//      xout << "activeStrings " << ww.first << " : " << ww.second << std::endl;
+//      xout <<" symmetry calculated "<<stringSymmetry(ww.first,axis)<<std::endl;
+//      xout <<" det "<<det<<std::endl;
+//      xout <<" strings "<<det.stringAlpha<<", "<<det.stringBeta<<std::endl;
       results[stringSymmetry(ww.first, axis)].push_back((spinUp ? det.stringAlpha : det.stringBeta));
     }
   } else {
@@ -1156,10 +1164,10 @@ std::vector<StringSet> Wavefunction::activeStrings(bool spinUp) const {
       }
     }
   }
-  for (unsigned int sym = 0; sym < 8; sym++) {
-    xout << "symmetry "<<sym<<std::endl;
-    for (const auto &r : results[sym])
-      xout << r << std::endl;
-  }
+//  for (unsigned int sym = 0; sym < 8; sym++) {
+//    xout << "symmetry "<<sym<<std::endl;
+//    for (const auto &r : results[sym])
+//      xout << r << std::endl;
+//  }
   return results;
 }

@@ -138,19 +138,19 @@ void inline gsum(double *buffer, i len) {
 }
 
 void inline gsum(std::map<size_t, double> buffer) {
-  xout << "gsum sparse"<<std::endl;
+//  xout << "gsum sparse"<<std::endl;
 #ifdef HAVE_MPI_H
-  xout << "gsum sparse MPI"<<std::endl;
+//  xout << "gsum sparse MPI"<<std::endl;
   for (int rank = 0; rank < parallel_size; rank++) {
     int siz=buffer.size();
     MPI_Bcast(&siz, (int) 1, MPI_INT, rank, MPI_COMM_COMPUTE);
-    xout << "siz "<<siz<<std::endl;
+//    xout << "siz "<<siz<<std::endl;
     std::vector<size_t> addresses(siz);
     std::vector<double> values(siz);
     if (rank == parallel_rank) {
       size_t i = 0;
       for (const auto &b : buffer) {
-        xout << "buffer in gsum "<<b.first<<": "<<b.second<<std::endl;
+//        xout << "buffer in gsum "<<b.first<<": "<<b.second<<std::endl;
         addresses[i] = b.first;
         values[i] = b.second;
         ++i;
