@@ -520,26 +520,36 @@ std::vector<double> Run::Davidson(
   solver.m_thresh = energyThreshold;
   ParameterVectorSet gg;
   ParameterVectorSet ww;
+  using Pvector = std::map<size_t, double>;
+  std::vector<double> initialHPP(nState * nState, (double)0);
+  std::vector<Pvector> initialP;
   for (int root = 0; root < nState; root++) {
     std::shared_ptr<Wavefunction> w = std::make_shared<Wavefunction>(prototype);
     ww.push_back(w);
     w->set((double) 0);
-    w->set(d.minloc(static_cast<size_t>(root + 1)), (double) 1);
+    auto det1 = d.minloc(static_cast<size_t>(root + 1));
+    w->set(det1, (double) 1); // TODO remove
+    initialP.emplace_back(Pvector{{det1, (double) 1}});
     Wavefunction wsparse(prototype);
     wsparse.m_sparse = true;
-    if (true) {
-      wsparse.set(d.minloc(static_cast<size_t>(root + 1)), (double) 1);
-      Wavefunction gsparse(prototype);
-      gsparse.m_sparse = true;
-      xout << "wsparse\n" << wsparse << std::endl;
-      gsparse.operatorOnWavefunction(ham, wsparse);
+    Wavefunction gsparse(prototype);
+    gsparse.m_sparse = true;
+    wsparse.set(det1, (double) 1);
+//    xout << "wsparse\n" << wsparse << std::endl;
+    gsparse.operatorOnWavefunction(ham, wsparse);
+    for (int jroot = 0; jroot <= root; jroot++) {
+      auto jdet1 = initialP[jroot].begin()->first;
+      if (gsparse.buffer_sparse.count(jdet1))
+        initialHPP[jroot+root*nState]= initialHPP[root+jroot*nState] = gsparse.buffer_sparse.at(det1);
+    }
+    if (false) { // just for fun
       xout << "Size of sparse action vector: " << gsparse.size() << std::endl;
       Wavefunction gfull(prototype);
       gfull.m_sparse = false;
       gfull.allocate_buffer();
       gfull.operatorOnWavefunction(ham, wsparse);
       xout << "Size of full action vector: " << gfull.size() << std::endl;
-      xout <<gfull.dot(wsparse.buffer_sparse)<<std::endl;
+      xout << gfull.dot(wsparse.buffer_sparse) << std::endl;
 //   xout << "gsparse\n"<<gsparse<<std::endl;
     }
     std::shared_ptr<Wavefunction> g = std::make_shared<Wavefunction>(prototype);
@@ -554,6 +564,7 @@ std::vector<double> Run::Davidson(
   solver.m_thresh = energyThreshold;
   solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
   solver.m_roots = static_cast<size_t>(nState);
+//  solver.addP(initialP,initialHPP.data(),Pcoeff,Presid);
   //  profiler->stop("Davidson preamble");
   for (size_t iteration = 0; iteration < maxIterations; iteration++) {
     resid(ww, gg);
