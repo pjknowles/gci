@@ -1,44 +1,47 @@
 #include "gciDeterminant.h"
 #include <iostream>
-
-Determinant::Determinant(const State* State, const String* alpha, const String*beta)
-{
+#include <memory>
+Determinant::Determinant(const State *State, const String *alpha, const String *beta) {
   if (State == nullptr) {
-    nelec=999999999;
-    orbitalSpace=nullptr;
-    ms2=0;
+    nelec = 999999999;
+    orbitalSpace = nullptr;
+    ms2 = 0;
   } else {
-    nelec=State->nelec;
-    orbitalSpace.reset(new OrbitalSpace(*State->orbitalSpace));
-    ms2=State->ms2;
+    nelec = State->nelec;
+    orbitalSpace = std::make_shared<OrbitalSpace>(*State->orbitalSpace);
+    ms2 = State->ms2;
   }
-  if (alpha!=nullptr) stringAlpha=*alpha;
-  if (beta!=nullptr) stringBeta=*beta;
+  if (alpha != nullptr) stringAlpha = *alpha;
+  if (beta != nullptr) stringBeta = *beta;
   if (State != nullptr) {
-    stringAlpha.orbitalSpace.reset(new OrbitalSpace(*State->orbitalSpace));
-    stringBeta.orbitalSpace.reset(new OrbitalSpace(*State->orbitalSpace));
-    }
+    stringAlpha.orbitalSpace = std::make_shared<OrbitalSpace>(*State->orbitalSpace);
+    stringBeta.orbitalSpace = std::make_shared<OrbitalSpace>(*State->orbitalSpace);
+  }
   //    xout << "determinant constructor, hamiltonian="<<(hamiltonian!=nullptr)<<hamiltonian->total()<<std::endl;
 }
 
 int Determinant::create(int orbital) {
   //    xout << "create orbital "<<orbital <<std::endl;
-  unsigned int orbabs = orbital > 0 ? orbital : -orbital;
-  if (orbitalSpace==nullptr || orbital==(int)0 || orbital > (int) orbitalSpace->total() || orbital < -(int)orbitalSpace->total()) throw std::range_error("invalid orbital");
+  auto orbabs = static_cast<String::orbital_type >(orbital > 0 ? orbital : -orbital);
+  if (orbitalSpace == nullptr || orbital == (int) 0 || orbital > (int) orbitalSpace->total()
+      || orbital < -(int) orbitalSpace->total())
+    throw std::range_error("invalid orbital");
   if (orbital > 0) {
-    if (stringAlpha.orbitals().size() >= (nelec+ms2)/2) throw std::range_error("too many electrons in determinant");
+    if (stringAlpha.orbitals().size() >= (nelec + ms2) / 2) throw std::range_error("too many electrons in determinant");
     //        xout <<"try to populate stringAlpha"<<std::endl;
     return stringAlpha.create(orbabs);
   } else {
-    if (stringBeta.orbitals().size() >= (nelec-ms2)/2) throw std::range_error("too many electrons in determinant");
+    if (stringBeta.orbitals().size() >= (nelec - ms2) / 2) throw std::range_error("too many electrons in determinant");
     return stringBeta.create(orbabs);
   }
 }
 
 int Determinant::destroy(int orbital) {
-  if (orbitalSpace==nullptr || orbital==(int)0 || orbital > (int) orbitalSpace->total() || orbital < -(int)orbitalSpace->total()) throw std::range_error("invalid orbital");
-  unsigned int orbabs = orbital > 0 ? orbital : -orbital;
-  String* string = orbital > 0 ? &stringAlpha : &stringBeta;
+  if (orbitalSpace == nullptr || orbital == (int) 0 || orbital > (int) orbitalSpace->total()
+      || orbital < -(int) orbitalSpace->total())
+    throw std::range_error("invalid orbital");
+  auto orbabs = static_cast<String::orbital_type>(orbital > 0 ? orbital : -orbital);
+  String *string = orbital > 0 ? &stringAlpha : &stringBeta;
 //  if (string->orbitals().size() <= 0) throw std::range_error("too few electrons in determinant");
   return string->destroy(orbabs);
 
@@ -59,7 +62,6 @@ int Determinant::destroy(int orbital) {
 //  return stringAlpha.next();
 //}
 
-std::string Determinant::str(int verbosity, unsigned int columns) const
-{
-  return verbosity >= 0 ? stringAlpha.str()+"|"+stringBeta.str() : std::string("");
+std::string Determinant::str(int verbosity, unsigned int columns) const {
+  return verbosity >= 0 ? stringAlpha.str() + "|" + stringBeta.str() : std::string("");
 }

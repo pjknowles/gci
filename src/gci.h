@@ -22,8 +22,8 @@
 #endif
 #endif
 #ifdef HAVE_MPI_H
-#include <stdint.h>
-#include <limits.h>
+#include <cstdint>
+#include <climits>
 
 #if SIZE_MAX == UCHAR_MAX
 #define MPI_SIZE_T MPI_UNSIGNED_CHAR
@@ -67,7 +67,7 @@ extern int64_t __task_granularity, __task, __my_first_task;
 inline void DivideTasks(std::size_t ntasks, std::size_t nMinBatch = 0, std::size_t nMaxBatch = 0) {
   {
     // simple static LB
-    __task_granularity = (ntasks - 1) / parallel_size + 1;
+    __task_granularity = ((ntasks - 1) / parallel_size + 1);
     __task_granularity = __task_granularity > 0 ? __task_granularity : 1;
     if ((int64_t) nMinBatch > 0 && __task_granularity < (int64_t) nMinBatch) __task_granularity = (int64_t) nMinBatch;
     if ((int64_t) nMaxBatch > 0 && __task_granularity > (int64_t) nMaxBatch) __task_granularity = (int64_t) nMaxBatch;
@@ -99,10 +99,11 @@ inline void EndTasks() {
 
 inline void gather_chunks(double *buffer, const size_t length, const size_t chunk) {
   {
-    std::vector<int> recvcounts(parallel_size), displs(parallel_size);
+    std::vector<int> recvcounts(static_cast<unsigned long>(parallel_size)),
+        displs(static_cast<unsigned long>(parallel_size));
     displs[0] = 0;
     for (size_t i = 1; i < (size_t) parallel_size; i++) {
-      displs[i] = (int) i * chunk;
+      displs[i] = static_cast<int>((int) i * chunk);
       if (displs[i] > (int) (length)) displs[i] = (int) length;
       recvcounts[i - 1] = displs[i] - displs[i - 1];
     }
@@ -142,8 +143,8 @@ void inline gsum(std::map<size_t, double> buffer) {
 #ifdef HAVE_MPI_H
 //  xout << "gsum sparse MPI"<<std::endl;
   for (int rank = 0; rank < parallel_size; rank++) {
-    int siz=buffer.size();
-    MPI_Bcast(&siz, (int) 1, MPI_INT, rank, MPI_COMM_COMPUTE);
+    size_t siz = buffer.size();
+    MPI_Bcast(&siz, (int) 1, MPI_SIZE_T, rank, MPI_COMM_COMPUTE);
 //    xout << "siz "<<siz<<std::endl;
     std::vector<size_t> addresses(siz);
     std::vector<double> values(siz);
@@ -156,9 +157,9 @@ void inline gsum(std::map<size_t, double> buffer) {
         ++i;
       }
     }
-    MPI_Bcast(addresses.data(), siz, MPI_SIZE_T, rank, MPI_COMM_COMPUTE);
-    MPI_Bcast(values.data(), siz, MPI_DOUBLE, rank, MPI_COMM_COMPUTE);
-    for (auto i=0; i<siz; i++) {
+    MPI_Bcast(addresses.data(), static_cast<int>(siz), MPI_SIZE_T, rank, MPI_COMM_COMPUTE);
+    MPI_Bcast(values.data(), static_cast<int>(siz), MPI_DOUBLE, rank, MPI_COMM_COMPUTE);
+    for (auto i = 0; i < siz; i++) {
       buffer[addresses[i]] = values[i];
     }
   }

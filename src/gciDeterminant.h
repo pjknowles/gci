@@ -9,9 +9,8 @@ namespace gci {
  \brief
 A Slater determinant
 */
-class Determinant : public State
-{
-public:
+class Determinant : public State {
+ public:
   /*!
  \brief
 
@@ -19,7 +18,7 @@ public:
  \param alpha Alpha string
  \param beta Beta string
 */
-  Determinant(const State* State=nullptr, const String* alpha=nullptr, const String* beta=nullptr);
+  explicit Determinant(const State *State = nullptr, const String *alpha = nullptr, const String *beta = nullptr);
 
   /*!
      \brief
@@ -38,13 +37,13 @@ public:
   /*!
      * \brief Set to the canonically first determinant
      */
-  void first();
+  void first() { throw std::logic_error("unimplemented");}
   /*!
      \brief
     Advance to the canonically next determinant
      \return false if the end of the set is reached.
     */
-  bool next();
+  bool next() { throw std::logic_error("unimplemented");}
 
   /*!
      * \brief Genenerate a printable representation of the object
@@ -52,13 +51,12 @@ public:
      * \param columns Page width
      * \return
      */
-  std::string str(int verbosity=0, unsigned int columns=UINT_MAX) const;
-
+  std::string str(int verbosity = 0, unsigned int columns = UINT_MAX) const override;
 
   String stringAlpha; /*!< The String of alpha-spin orbitals that make up the determinant */
   String stringBeta; /*!< The String of beta-spin orbitals that make up the determinant */
 
-private:
+ private:
   friend class Operator;
 };
 }
