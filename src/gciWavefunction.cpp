@@ -1069,9 +1069,9 @@ std::vector<StringSet> Wavefunction::activeStrings(bool spinUp) const {
     auto axis = spinUp ? 1 : 0;
     String proto;
     for (unsigned int sym = 0; sym < 8; sym++)
-      if (!sources[sym].empty()) proto=sources[sym].front();
+      if (!sources[sym].empty()) proto = sources[sym].front();
     for (unsigned int sym = 0; sym < 8; sym++)
-      results[sym] = StringSet(proto,false, static_cast<int>(sym));
+      results[sym] = StringSet(proto, false, static_cast<int>(sym));
     for (const auto &ww : buffer_sparse) {
       const auto det = determinantAt(ww.first);
 //      xout << "activeStrings " << ww.first << " : " << ww.second << std::endl;
