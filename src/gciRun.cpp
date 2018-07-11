@@ -584,7 +584,9 @@ std::vector<double> Run::Davidson(
   //  profiler->stop("Davidson preamble");
 
     for (size_t iteration = 0; iteration < maxIterations; iteration++) {
-      Presid(Pcoeff, gg);
+//      Presid(Pcoeff, gg);
+    ParameterVectorSet pp;
+    for (const auto& pc : Pcoeff)
     std::vector<double> shift;
     for (auto root = 0; root < nState; root++)
       shift.push_back(-solver.eigenvalues()[root] + 1e-14);
