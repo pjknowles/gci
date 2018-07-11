@@ -147,6 +147,11 @@ void Wavefunction::axpy(double a, const LinearAlgebra::vector<double> &x) {
 //  for (size_t i=0; i<buffer.size(); i++) xout<<" "<<buffer[i]; xout << std::endl;
 }
 
+void Wavefunction::axpy(double a, const std::map<size_t, double> &x) {
+  for (const auto &xx : x)
+    buffer[xx.first] += xx.second * a;
+}
+
 void Wavefunction::scal(double a) {
   for (auto &b : buffer) b *= a;
 }

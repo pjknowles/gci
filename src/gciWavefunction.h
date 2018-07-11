@@ -146,9 +146,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
   void axpy(double a, const std::shared_ptr<LinearAlgebra::vector<double> > &x) {
     axpy(a, *x);
   }
-  void axpy(double a, const std::map<size_t, double> &x) override {
-    throw std::logic_error("P space support not yet implemented");
-  }
+  void axpy(double a, const std::map<size_t, double> &x) override ;
 
   std::tuple<std::vector<size_t>, std::vector<double> > select(const vector<double> &measure,
                                                                const size_t maximumNumber = 1000,
