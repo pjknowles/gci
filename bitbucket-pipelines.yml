@@ -22,3 +22,5 @@ pipelines:
 definitions:
   caches:
     cmake: build
+options:
+  max-time: 5
