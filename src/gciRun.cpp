@@ -3,6 +3,7 @@
 #include "gciMolpro.h"
 //#endif
 #include <iomanip>
+#include <algorithm>
 #include "IterativeSolver.h"
 
 using namespace gci;
@@ -543,8 +544,6 @@ std::vector<double> Run::Davidson(
   ParameterVectorSet gg;
   ParameterVectorSet ww;
   using Pvector = std::map<size_t, double>;
-  std::vector<double> initialHPP(nState * nState, (double) 0);
-  std::vector<Pvector> initialP;
   for (int root = 0; root < nState; root++) {
     std::shared_ptr<Wavefunction> w = std::make_shared<Wavefunction>(prototype);
     ww.push_back(w);
@@ -557,8 +556,12 @@ std::vector<double> Run::Davidson(
         options.parameter("BETATILESIZE", std::vector<int>(1, -1)).at(0));
     gg.push_back(g);
   }
-  for (auto p = 0; p < options.parameter("PSPACE_INITIAL", nState) && p < ww.front()->size(); p++) {
+  auto initialNP = std::min(std::max(options.parameter("PSPACE_INITIAL", nState),nState), static_cast<int>(ww.front()->size()));
+  std::vector<double> initialHPP(initialNP * initialNP, (double) 0);
+  std::vector<Pvector> initialP;
+  for (auto p = 0; p < initialNP; p++) {
     auto det1 = d.minloc(static_cast<size_t>(p + 1));
+    xout << "P: "<<det1<<" : "<<d.at(det1)<<std::endl;
     initialP.emplace_back(Pvector{{det1, (double) 1}});
     Wavefunction wsparse(prototype);
     wsparse.m_sparse = true;
@@ -569,7 +572,7 @@ std::vector<double> Run::Davidson(
     for (int p1 = 0; p1 <= p; p1++) {
       auto jdet1 = initialP[p1].begin()->first;
       if (gsparse.buffer_sparse.count(jdet1))
-        initialHPP[p1 + p * nState] = initialHPP[p + p1 * nState] = gsparse.buffer_sparse.at(det1);
+        initialHPP[p1 + p * initialNP] = initialHPP[p + p1 * initialNP] = gsparse.buffer_sparse.at(det1);
     }
   }
   solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
