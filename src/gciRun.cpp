@@ -81,15 +81,22 @@ struct residual {
 };
 
 struct Presidual {
- protected:
+ private:
   const gci::Operator &m_hamiltonian;
  public:
+  std::vector<size_t> pvec;
   Presidual(const gci::Operator &hamiltonian) : m_hamiltonian(hamiltonian) {}
   void operator()(const std::vector<std::vector<double> > &Pcoeff, ParameterVectorSet &outputs) const {
     for (size_t k = 0; k < Pcoeff.size(); k++) {
+      assert(pvec.size() == Pcoeff[k].size());
       std::shared_ptr<Wavefunction> g = std::static_pointer_cast<Wavefunction>(outputs[k]);
+      Wavefunction w(*g);
+      w.m_sparse = true;
+      for (auto i = 0; i < pvec.size(); i++)
+        w.buffer_sparse.insert({pvec[i], Pcoeff[k][i]});
+//      xout << "Presidual: wavefunction:"<<w.buffer_sparse.size()<<"\n"<<w<<std::endl;
       auto prof = profiler->push("HcP");
-      g->operatorOnWavefunction(m_hamiltonian, Pcoeff[k]);
+      g->operatorOnWavefunction(m_hamiltonian, w);
 //        xout << "g=Hc "<<g->str(2)<<std::endl;
     }
   }
@@ -541,32 +548,7 @@ std::vector<double> Run::Davidson(
   for (int root = 0; root < nState; root++) {
     std::shared_ptr<Wavefunction> w = std::make_shared<Wavefunction>(prototype);
     ww.push_back(w);
-    w->set((double) 0);
-    auto det1 = d.minloc(static_cast<size_t>(root + 1));
-    w->set(det1, (double) 1); // TODO remove
-    initialP.emplace_back(Pvector{{det1, (double) 1}});
-    Wavefunction wsparse(prototype);
-    wsparse.m_sparse = true;
-    Wavefunction gsparse(prototype);
-    gsparse.m_sparse = true;
-    wsparse.set(det1, (double) 1);
-//    xout << "wsparse\n" << wsparse << std::endl;
-    gsparse.operatorOnWavefunction(ham, wsparse);
-    for (int jroot = 0; jroot <= root; jroot++) {
-      auto jdet1 = initialP[jroot].begin()->first;
-      if (gsparse.buffer_sparse.count(jdet1))
-        initialHPP[jroot + root * nState] = initialHPP[root + jroot * nState] = gsparse.buffer_sparse.at(det1);
-    }
-    if (false) { // just for fun
-      xout << "Size of sparse action vector: " << gsparse.size() << std::endl;
-      Wavefunction gfull(prototype);
-      gfull.m_sparse = false;
-      gfull.allocate_buffer();
-      gfull.operatorOnWavefunction(ham, wsparse);
-      xout << "Size of full action vector: " << gfull.size() << std::endl;
-      xout << gfull.dot(wsparse.buffer_sparse) << std::endl;
-//   xout << "gsparse\n"<<gsparse<<std::endl;
-    }
+    w->allocate_buffer();
     std::shared_ptr<Wavefunction> g = std::make_shared<Wavefunction>(prototype);
     g->allocate_buffer();
     g->settilesize(
@@ -575,18 +557,37 @@ std::vector<double> Run::Davidson(
         options.parameter("BETATILESIZE", std::vector<int>(1, -1)).at(0));
     gg.push_back(g);
   }
+  for (auto p = 0; p < options.parameter("PSPACE_INITIAL", nState) && p < ww.front()->size(); p++) {
+    auto det1 = d.minloc(static_cast<size_t>(p + 1));
+    initialP.emplace_back(Pvector{{det1, (double) 1}});
+    Wavefunction wsparse(prototype);
+    wsparse.m_sparse = true;
+    Wavefunction gsparse(prototype);
+    gsparse.m_sparse = true;
+    wsparse.set(det1, (double) 1);
+    gsparse.operatorOnWavefunction(ham, wsparse);
+    for (int p1 = 0; p1 <= p; p1++) {
+      auto jdet1 = initialP[p1].begin()->first;
+      if (gsparse.buffer_sparse.count(jdet1))
+        initialHPP[p1 + p * nState] = initialHPP[p + p1 * nState] = gsparse.buffer_sparse.at(det1);
+    }
+  }
   solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
   solver.m_thresh = energyThreshold;
   solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
   solver.m_roots = static_cast<size_t>(nState);
   std::vector<std::vector<double> > Pcoeff;
+  Presidual Presid(ham);
   solver.addP(initialP, initialHPP.data(), ww, gg, Pcoeff);
+//  xout << "after addP, Pcoeff="; for (const auto & p : Pcoeff) for (const auto & pp : p) xout <<" "<<pp; xout <<std::endl;
+  for (const auto &pp : initialP)
+    Presid.pvec.push_back(pp.begin()->first);
   //  profiler->stop("Davidson preamble");
 
-    for (size_t iteration = 0; iteration < maxIterations; iteration++) {
-//      Presid(Pcoeff, gg);
+  for (size_t iteration = 0; iteration < maxIterations; iteration++) {
+    Presid(Pcoeff, gg); // augment residual with contributions from P space
     ParameterVectorSet pp;
-    for (const auto& pc : Pcoeff)
+//    for (const auto &pc : Pcoeff)
     std::vector<double> shift;
     for (auto root = 0; root < nState; root++)
       shift.push_back(-solver.eigenvalues()[root] + 1e-14);
@@ -599,7 +600,8 @@ std::vector<double> Run::Davidson(
     resid(ww, gg);
 //   xout << "ww after resid "<<ww.front()->str(2)<<std::endl;
 //   xout << "gg after resid "<<gg.front()->str(2)<<std::endl;
-    solver.addVector(ww, gg);
+    solver.addVector(ww, gg, Pcoeff);
+//    xout << "after addVector, Pcoeff="; for (const auto & p : Pcoeff) for (const auto & pp : p) xout <<" "<<pp; xout <<std::endl;
   }
   for (auto root = 0; root < nState; root++) {
     m_wavefunctions.push_back(std::static_pointer_cast<Wavefunction>(ww[root]));
