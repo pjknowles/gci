@@ -572,7 +572,7 @@ std::vector<double> Run::Davidson(
     for (int p1 = 0; p1 <= p; p1++) {
       auto jdet1 = initialP[p1].begin()->first;
       if (gsparse.buffer_sparse.count(jdet1))
-        initialHPP[p1 + p * initialNP] = initialHPP[p + p1 * initialNP] = gsparse.buffer_sparse.at(det1);
+        initialHPP[p1 + p * initialNP] = initialHPP[p + p1 * initialNP] = gsparse.buffer_sparse.at(jdet1);
     }
   }
   solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
