@@ -95,9 +95,11 @@ struct Presidual {
       w.m_sparse = true;
       for (auto i = 0; i < pvec.size(); i++)
         w.buffer_sparse.insert({pvec[i], Pcoeff[k][i]});
-//      xout << "Presidual: wavefunction:"<<w.buffer_sparse.size()<<"\n"<<w<<std::endl;
+//      xout << "Presidual: wavefunction:" << w.buffer_sparse.size() << "\n" << w << std::endl;
       auto prof = profiler->push("HcP");
       g->operatorOnWavefunction(m_hamiltonian, w);
+//      xout << "g[1708407]: " << g->at(1708407) << std::endl;
+//      xout << "g[1708429]: " << g->at(1708429) << std::endl;
 //        xout << "g=Hc "<<g->str(2)<<std::endl;
     }
   }
@@ -556,12 +558,13 @@ std::vector<double> Run::Davidson(
         options.parameter("BETATILESIZE", std::vector<int>(1, -1)).at(0));
     gg.push_back(g);
   }
-  auto initialNP = std::min(std::max(options.parameter("PSPACE_INITIAL", nState),nState), static_cast<int>(ww.front()->size()));
+  auto initialNP =
+      std::min(std::max(options.parameter("PSPACE_INITIAL", nState), nState), static_cast<int>(ww.front()->size()));
   std::vector<double> initialHPP(initialNP * initialNP, (double) 0);
   std::vector<Pvector> initialP;
   for (auto p = 0; p < initialNP; p++) {
     auto det1 = d.minloc(static_cast<size_t>(p + 1));
-    xout << "P: "<<det1<<" : "<<d.at(det1)<<std::endl;
+//    xout << "P: " << det1 << " : " << d.at(det1) << std::endl;
     initialP.emplace_back(Pvector{{det1, (double) 1}});
     Wavefunction wsparse(prototype);
     wsparse.m_sparse = true;
@@ -582,24 +585,60 @@ std::vector<double> Run::Davidson(
   std::vector<std::vector<double> > Pcoeff;
   Presidual Presid(ham);
   solver.addP(initialP, initialHPP.data(), ww, gg, Pcoeff);
+//  for (auto i = 0; i < ww.size(); i++)
+//    xout << "g . w after addP " << gg[i]->dot(*ww[i]) << std::endl;
+//  for (auto i = 0; i < ww.size(); i++)
+//    xout << "square norm of w after addP " << ww[i]->dot(*ww[i]) << std::endl;
+//  for (auto i = 0; i < gg.size(); i++)
+//    xout << "square norm of g after addP " << gg[i]->dot(*gg[i]) << std::endl;
+//  for (auto i=0; i<gg.size(); i++)
+//    gg[i]->axpy(-solver.eigenvalues()[i],*ww[i]);
+//  for (auto i=0; i<gg.size(); i++)
+//    xout << "square norm of g after eigenvalue subtract "<<gg[i]->dot(*gg[i])<<std::endl;
+//  for (auto i = 0; i < gg.size(); i++)
+//    xout << "residual active " << gg.m_active[i] << std::endl;
 //  xout << "after addP, Pcoeff="; for (const auto & p : Pcoeff) for (const auto & pp : p) xout <<" "<<pp; xout <<std::endl;
   for (const auto &pp : initialP)
     Presid.pvec.push_back(pp.begin()->first);
   //  profiler->stop("Davidson preamble");
 
   for (size_t iteration = 0; iteration < maxIterations; iteration++) {
+//    for (auto i = 0; i < gg.size(); i++)
+//      xout << "square norm of g before Presid " << gg[i]->dot(*gg[i]) << std::endl;
     Presid(Pcoeff, gg); // augment residual with contributions from P space
+//    for (auto i = 0; i < gg.size(); i++)
+//      xout << "square norm of g after Presid " << gg[i]->dot(*gg[i]) << std::endl;
     ParameterVectorSet pp;
 //    for (const auto &pc : Pcoeff)
     std::vector<double> shift;
+//    for (auto root = 0; root < nState; root++)
+//      xout << "eigenvalue " << solver.eigenvalues()[root] << std::endl;
     for (auto root = 0; root < nState; root++)
-      shift.push_back(-solver.eigenvalues()[root] + 1e-14);
-    //       xout << "ww before precon "<<ww.front()->str(2)<<std::endl;
-    //       xout << "gg before precon "<<gg.front()->str(2)<<std::endl;
+      shift.push_back(-solver.eigenvalues()[root] + 1e-10);
+//    for (const auto &s : shift) xout << "shift " << s << std::endl;
+//    for (auto root = 0; root < nState; root++) {
+//      xout << "square norm of solution " << ww[root]->dot(*ww[root]) << std::endl;
+//             xout << "ww before precon "<<ww[root]->str(2)<<std::endl;
+//             xout << "gg before precon "<<gg[root]->str(2)<<std::endl;
+//      xout << "g[1708407]: " << static_cast<Wavefunction*>(gg[root].get())->at(1708407) << std::endl;
+//      xout << "g[1708429]: " << static_cast<Wavefunction*>(gg[root].get())->at(1708429) << std::endl;
+//      xout << "w[1708407]: " << static_cast<Wavefunction*>(ww[root].get())->at(1708407) << std::endl;
+//      xout << "w[1708429]: " << static_cast<Wavefunction*>(ww[root].get())->at(1708429) << std::endl;
+//      xout << "update" << std::endl;
+//    }
     update(ww, gg, shift, true);
-    //       xout << "ww after precon "<<ww.front()->str(2)<<std::endl;
-    //       xout << "gg after precon "<<gg.front()->str(2)<<std::endl;
+//    for (auto root = 0; root < nState; root++) {
+//      xout << "square norm of solution " << ww[root]->dot(*ww[root]) << std::endl;
+//      xout << "g[1708407]: " << static_cast<Wavefunction*>(gg[root].get())->at(1708407) << std::endl;
+//      xout << "g[1708429]: " << static_cast<Wavefunction*>(gg[root].get())->at(1708429) << std::endl;
+//      xout << "w[1708407]: " << static_cast<Wavefunction*>(ww[root].get())->at(1708407) << std::endl;
+//      xout << "w[1708429]: " << static_cast<Wavefunction*>(ww[root].get())->at(1708429) << std::endl;
+//           xout << "ww after precon "<<ww[root]->str(2)<<std::endl;
+//           xout << "gg after precon "<<gg[root]->str(2)<<std::endl;
+//    }
     if (solver.endIteration(ww, gg)) break;
+//    xout << "after endIteration " << std::endl;
+//    for (const auto &e: solver.errors()) xout << e << std::endl;
     resid(ww, gg);
 //   xout << "ww after resid "<<ww.front()->str(2)<<std::endl;
 //   xout << "gg after resid "<<gg.front()->str(2)<<std::endl;
