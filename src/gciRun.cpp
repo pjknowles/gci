@@ -560,6 +560,8 @@ std::vector<double> Run::Davidson(
   }
   auto initialNP =
       std::min(std::max(options.parameter("PSPACE_INITIAL", nState), nState), static_cast<int>(ww.front()->size()));
+  auto NP =
+      std::min(std::max(options.parameter("PSPACE", 200), nState), static_cast<int>(ww.front()->size()));
   std::vector<double> initialHPP(initialNP * initialNP, (double) 0);
   std::vector<Pvector> initialP;
   for (auto p = 0; p < initialNP; p++) {
@@ -644,6 +646,9 @@ std::vector<double> Run::Davidson(
 //   xout << "gg after resid "<<gg.front()->str(2)<<std::endl;
     solver.addVector(ww, gg, Pcoeff);
 //    xout << "after addVector, Pcoeff="; for (const auto & p : Pcoeff) for (const auto & pp : p) xout <<" "<<pp; xout <<std::endl;
+    if (iteration==0 && NP > initialNP) { // find some more P space
+
+    }
   }
   for (auto root = 0; root < nState; root++) {
     m_wavefunctions.push_back(std::static_pointer_cast<Wavefunction>(ww[root]));
