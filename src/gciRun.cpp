@@ -604,7 +604,7 @@ std::vector<double> Run::Davidson(
     Presid.pvec.push_back(pp.begin()->first);
   //  profiler->stop("Davidson preamble");
 
-  for (size_t iteration = 0; iteration < maxIterations; iteration++) {
+  for (size_t iteration = 1; iteration <= maxIterations; iteration++) {
 //    for (auto i = 0; i < gg.size(); i++)
 //      xout << "square norm of g before Presid " << gg[i]->dot(*gg[i]) << std::endl;
     Presid(Pcoeff, gg); // augment residual with contributions from P space
@@ -646,8 +646,38 @@ std::vector<double> Run::Davidson(
 //   xout << "gg after resid "<<gg.front()->str(2)<<std::endl;
     solver.addVector(ww, gg, Pcoeff);
 //    xout << "after addVector, Pcoeff="; for (const auto & p : Pcoeff) for (const auto & pp : p) xout <<" "<<pp; xout <<std::endl;
-    if (iteration==0 && NP > initialNP) { // find some more P space
-
+    if (iteration == 1 && NP > initialNP) { // find some more P space
+      auto newP = solver.suggestP(ww, gg, NP - initialNP);
+      const auto addNP = newP.size(), newNP = initialNP + addNP;
+      std::vector<double> addHPP(newNP * addNP, (double) 0);
+      std::vector<Pvector> addP;
+      for (auto p0 = 0; p0 < addNP; p0++) {
+//    xout << "P: " << det1 << " : " << d.at(det1) << std::endl;
+        addP.emplace_back(Pvector{{newP[p0], (double) 1}});
+        Wavefunction wsparse(prototype);
+        wsparse.m_sparse = true;
+        Wavefunction gsparse(prototype);
+        gsparse.m_sparse = true;
+        wsparse.set(newP[p0], (double) 1);
+        gsparse.operatorOnWavefunction(ham, wsparse);
+        for (int p1 = 0; p1 < initialNP; p1++) {
+          auto jdet1 = initialP[p1].begin()->first;
+          if (gsparse.buffer_sparse.count(jdet1))
+            addHPP[p1 + p0 * newNP] = gsparse.buffer_sparse.at(jdet1);
+        }
+        for (int p1 = 0; p1 <= p0; p1++) {
+          auto jdet1 = addP[p1].begin()->first;
+          xout << "p0=" << p0 << ", p1=" << p1 << ", jdet1=" << jdet1 << std::endl;
+          xout << addHPP.size() << " > " << p1 + initialNP + p0  * newNP << std::endl;
+          xout << gsparse.buffer_sparse.count(jdet1) << std::endl;
+          if (gsparse.buffer_sparse.count(jdet1))
+            xout << gsparse.buffer_sparse.at(jdet1) << std::endl;
+          if (gsparse.buffer_sparse.count(jdet1))
+            addHPP[p1 + initialNP + p0 * newNP] = gsparse.buffer_sparse.at(jdet1);
+        }
+      }
+      Pcoeff.resize(newNP);
+      solver.addP(addP, addHPP.data(), ww, gg, Pcoeff);
     }
   }
   for (auto root = 0; root < nState; root++) {

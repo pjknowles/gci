@@ -2,6 +2,7 @@
 #define GCIWAVEFUNCTION_H
 #include <vector>
 #include <map>
+#include <tuple>
 #include <string>
 #include "gci.h"
 #include "gciOperator.h"
@@ -150,9 +151,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
 
   std::tuple<std::vector<size_t>, std::vector<double> > select(const vector<double> &measure,
                                                                const size_t maximumNumber = 1000,
-                                                               const double threshold = 0) const override {
-    throw std::logic_error("unimplemented select");
-  };
+                                                               const double threshold = 0) const override ;
 
   void scal(double a) override;
   // Every child of ParameterVector needs exactly this
