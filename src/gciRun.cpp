@@ -89,6 +89,7 @@ struct Presidual {
   Presidual(const gci::Operator &hamiltonian) : m_hamiltonian(hamiltonian) {}
   void operator()(const std::vector<std::vector<double> > &Pcoeff, ParameterVectorSet &outputs) const {
     for (size_t k = 0; k < Pcoeff.size(); k++) {
+//      xout << "k "<<k<<", pvec.size() "<<pvec.size()<<", Pcoeff[k].size() "<<Pcoeff[k].size()<<std::endl;
       assert(pvec.size() == Pcoeff[k].size());
       std::shared_ptr<Wavefunction> g = std::static_pointer_cast<Wavefunction>(outputs[k]);
       Wavefunction w(*g);
@@ -578,6 +579,8 @@ std::vector<double> Run::Davidson(
       auto jdet1 = initialP[p1].begin()->first;
       if (gsparse.buffer_sparse.count(jdet1))
         initialHPP[p1 + p * initialNP] = initialHPP[p + p1 * initialNP] = gsparse.buffer_sparse.at(jdet1);
+      else
+        initialHPP[p1 + p * initialNP] = initialHPP[p + p1 * initialNP] = 0;
     }
   }
   solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
@@ -678,6 +681,8 @@ std::vector<double> Run::Davidson(
       }
       Pcoeff.resize(newNP);
       solver.addP(addP, addHPP.data(), ww, gg, Pcoeff);
+      for (const auto &pp : addP)
+        Presid.pvec.push_back(pp.begin()->first);
     }
   }
   for (auto root = 0; root < nState; root++) {
