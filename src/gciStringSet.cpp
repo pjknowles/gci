@@ -46,7 +46,7 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces,
   auto p = profiler->push("StringSet::addByOperators[]");
   //std::cout <<"referenceSpaces="<<&referenceSpaces<<std::endl;std::cout.flush();
 //  std::cout << "addByOperators: referenceSpaces.size()=" << referenceSpaces.size() << std::endl;
-  std::cout.flush();
+//  std::cout.flush();
   if (parallel) {
     size_t ntask = 0;
     for (const auto &referenceSpace : referenceSpaces) {
