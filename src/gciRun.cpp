@@ -574,7 +574,9 @@ std::vector<double> Run::Davidson(
       std::min(std::max(options.parameter("PSPACE", 100), nState), static_cast<int>(ww.front()->size()));
   auto NP = std::min(initialNP, maxNP);
 
-  {
+  bool newWay = false;
+
+  if (!newWay) {
     std::vector<double> initialHPP(initialNP * initialNP, (double) 0);
     for (auto p = 0; p < initialNP; p++) {
       auto det1 = d.minloc(static_cast<size_t>(p + 1));
@@ -599,26 +601,31 @@ std::vector<double> Run::Davidson(
   }
 
   for (size_t iteration = 1; iteration <= static_cast<size_t>(maxIterations); iteration++) {
-    if (iteration > 1 && maxNP > NP) { // find some more P space
-      Presid(Pcoeff, gg); // augment residual with contributions from P space
-      auto newP = solver.suggestP(ww, gg, (maxNP - NP));
-      for (const auto &pp : P)
-        newP.erase(std::remove(newP.begin(), newP.end(), pp.begin()->first),
-                   newP.end()); // remove anything already in P
-      const auto addNP = newP.size(), newNP = NP + addNP;
+    if ((newWay || iteration > 1) && maxNP > NP) { // find some more P space
+      if (iteration == 1) {
+      } else {
+        Presid(Pcoeff, gg); // augment residual with contributions from P space
+        auto newP = solver.suggestP(ww, gg, (maxNP - NP));
+        for (const auto &pp : P)
+          newP.erase(std::remove(newP.begin(), newP.end(), pp.begin()->first),
+                     newP.end()); // remove anything already in P
+        for (const auto &pp : newP)
+          P.emplace_back(Pvector{{pp, 1}});
+      }
+      const auto newNP = P.size();
+      const auto addNP = newNP - NP;
       if (solver.m_verbosity > 0 && addNP > 0)
         xout << "Adding " << addNP << " P-space configurations (total " << newNP << ")" << std::endl;
       std::vector<double> addHPP(newNP * addNP, (double) 0);
-      for (size_t p0 = 0; p0 < addNP; p0++) {
-        P.emplace_back(Pvector{{newP[p0], (double) 1}});
-        Presid.pvec.push_back(P.back().begin()->first);
+      for (size_t p0 = NP; p0 < newNP; p0++) {
+        Presid.pvec.push_back(P[p0].begin()->first);
       }
       for (size_t p0 = 0; p0 < addNP; p0++) {
         Wavefunction wsparse(prototype);
         wsparse.m_sparse = true;
         Wavefunction gsparse(prototype);
         gsparse.m_sparse = true;
-        wsparse.set(newP[p0], (double) 1);
+        wsparse.set(P[NP + p0].begin()->first, (double) 1);
         gsparse.operatorOnWavefunction(ham, wsparse);
         for (size_t p1 = 0; p1 < newNP; p1++) {
           auto jdet1 = P[p1].begin()->first;
@@ -627,7 +634,7 @@ std::vector<double> Run::Davidson(
         }
       }
       Pcoeff.resize(newNP);
-      solver.addP(std::vector<Pvector>(P.begin()+NP,P.end()), addHPP.data(), ww, gg, Pcoeff);
+      solver.addP(std::vector<Pvector>(P.begin() + NP, P.end()), addHPP.data(), ww, gg, Pcoeff);
       NP = newNP;
     }
     Presid(Pcoeff, gg); // augment residual with contributions from P space
