@@ -608,6 +608,14 @@ std::vector<double> Run::Davidson(
     if (solver.endIteration(ww, gg)) break;
     resid(ww, gg);
     solver.addVector(ww, gg, Pcoeff);
+    if (options.parameter("PSPACE_REBUILD",0)) { // clear out the P space and rebuild it
+//      Presid(Pcoeff, gg); // augment residual with contributions from P space
+      solver.clearP();
+      NP=0;
+      Presid.pvec.clear();
+      P.clear();
+      Pcoeff.clear();
+    }
     if (maxNP > NP) { // find some more P space
       Presid(Pcoeff, gg); // augment residual with contributions from P space
       auto newP = solver.suggestP(ww, gg, (maxNP - NP));
