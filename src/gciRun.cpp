@@ -599,6 +599,37 @@ std::vector<double> Run::Davidson(
   }
 
   for (size_t iteration = 1; iteration <= static_cast<size_t>(maxIterations); iteration++) {
+    if (iteration > 1 && maxNP > NP) { // find some more P space
+      Presid(Pcoeff, gg); // augment residual with contributions from P space
+      auto newP = solver.suggestP(ww, gg, (maxNP - NP));
+      for (const auto &pp : P)
+        newP.erase(std::remove(newP.begin(), newP.end(), pp.begin()->first),
+                   newP.end()); // remove anything already in P
+      const auto addNP = newP.size(), newNP = NP + addNP;
+      if (solver.m_verbosity > 0 && addNP > 0)
+        xout << "Adding " << addNP << " P-space configurations (total " << newNP << ")" << std::endl;
+      std::vector<double> addHPP(newNP * addNP, (double) 0);
+      for (size_t p0 = 0; p0 < addNP; p0++) {
+        P.emplace_back(Pvector{{newP[p0], (double) 1}});
+        Presid.pvec.push_back(P.back().begin()->first);
+      }
+      for (size_t p0 = 0; p0 < addNP; p0++) {
+        Wavefunction wsparse(prototype);
+        wsparse.m_sparse = true;
+        Wavefunction gsparse(prototype);
+        gsparse.m_sparse = true;
+        wsparse.set(newP[p0], (double) 1);
+        gsparse.operatorOnWavefunction(ham, wsparse);
+        for (size_t p1 = 0; p1 < newNP; p1++) {
+          auto jdet1 = P[p1].begin()->first;
+          if (gsparse.buffer_sparse.count(jdet1))
+            addHPP[p1 + p0 * newNP] = gsparse.buffer_sparse.at(jdet1);
+        }
+      }
+      Pcoeff.resize(newNP);
+      solver.addP(std::vector<Pvector>(P.begin()+NP,P.end()), addHPP.data(), ww, gg, Pcoeff);
+      NP = newNP;
+    }
     Presid(Pcoeff, gg); // augment residual with contributions from P space
     ParameterVectorSet pp;
     std::vector<double> shift;
@@ -615,43 +646,6 @@ std::vector<double> Run::Davidson(
       Presid.pvec.clear();
       P.clear();
       Pcoeff.clear();
-    }
-    if (maxNP > NP && iteration == 1) { // find some more P space
-      Presid(Pcoeff, gg); // augment residual with contributions from P space
-      auto newP = solver.suggestP(ww, gg, (maxNP - NP));
-      for (const auto &pp : P)
-        newP.erase(std::remove(newP.begin(), newP.end(), pp.begin()->first),
-                   newP.end()); // remove anything already in P
-      const auto addNP = newP.size(), newNP = NP + addNP;
-      if (solver.m_verbosity > 0 && addNP > 0)
-        xout << "Adding " << addNP << " P-space configurations (total " << newNP << ")" << std::endl;
-      std::vector<double> addHPP(newNP * addNP, (double) 0);
-      std::vector<Pvector> addP;
-      for (size_t p0 = 0; p0 < addNP; p0++) {
-        addP.emplace_back(Pvector{{newP[p0], (double) 1}});
-        P.emplace_back(Pvector{{newP[p0], (double) 1}});
-        Presid.pvec.push_back(P.back().begin()->first);
-      }
-      for (size_t p0 = 0; p0 < addNP; p0++) {
-        Wavefunction wsparse(prototype);
-        wsparse.m_sparse = true;
-        Wavefunction gsparse(prototype);
-        gsparse.m_sparse = true;
-        wsparse.set(newP[p0], (double) 1);
-        gsparse.operatorOnWavefunction(ham, wsparse);
-        for (size_t p1 = 0; p1 < NP + addNP; p1++) {
-          auto jdet1 = P[p1].begin()->first;
-          if (gsparse.buffer_sparse.count(jdet1))
-            addHPP[p1 + p0 * newNP] = gsparse.buffer_sparse.at(jdet1);
-        }
-      }
-      Pcoeff.resize(newNP);
-      solver.addP(addP, addHPP.data(), ww, gg, Pcoeff);
-      for (const auto &pp : addP) {
-//        Presid.pvec.push_back(pp.begin()->first);
-//        P.push_back(pp);
-      }
-      NP = newNP;
     }
   }
   for (auto root = 0; root < nState; root++) {
