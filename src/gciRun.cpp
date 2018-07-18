@@ -574,37 +574,8 @@ std::vector<double> Run::Davidson(
       std::min(std::max(options.parameter("PSPACE", 100), nState), static_cast<int>(ww.front()->size()));
   size_t NP = 0;
 
-  bool newWay = true;
-
-  if (!newWay) {
-    NP = std::min(initialNP, maxNP);
-    std::vector<double> initialHPP(initialNP * initialNP, (double) 0);
-    for (auto p = 0; p < initialNP; p++) {
-      auto det1 = d.minloc(static_cast<size_t>(p + 1));
-      P.emplace_back(Pvector{{det1, (double) 1}});
-      Wavefunction wsparse(prototype);
-      wsparse.m_sparse = true;
-      Wavefunction gsparse(prototype);
-      gsparse.m_sparse = true;
-      wsparse.set(det1, (double) 1);
-      gsparse.operatorOnWavefunction(ham, wsparse);
-      for (int p1 = 0; p1 <= p; p1++) {
-        auto jdet1 = P[p1].begin()->first;
-        if (gsparse.buffer_sparse.count(jdet1))
-          initialHPP[p1 + p * initialNP] = initialHPP[p + p1 * initialNP] = gsparse.buffer_sparse.at(jdet1);
-        else
-          initialHPP[p1 + p * initialNP] = initialHPP[p + p1 * initialNP] = 0;
-      }
-    }
-    solver.addP(P, initialHPP.data(), ww, gg, Pcoeff);
-    for (const auto &pp : P)
-      Presid.pvec.push_back(pp.begin()->first);
-  } else {
-
-  }
-
   for (size_t iteration = 1; iteration <= static_cast<size_t>(maxIterations); iteration++) {
-    if ((newWay || iteration > 1) && maxNP > NP) { // find some more P space
+    if (maxNP > NP) { // find some more P space
       if (iteration == 1) {
         for (auto p = 0; p < initialNP; p++) {
           auto det1 = d.minloc(static_cast<size_t>(p + 1));
@@ -620,24 +591,23 @@ std::vector<double> Run::Davidson(
           P.emplace_back(Pvector{{det1, 1}});
       }
       const auto newNP = P.size();
-      const auto addNP = newNP - NP;
-      if (solver.m_verbosity > 0 && addNP > 0)
-        xout << "Adding " << addNP << " P-space configurations (total " << newNP << ")" << std::endl;
-      std::vector<double> addHPP(newNP * addNP, (double) 0);
+      if (solver.m_verbosity > 0 && newNP > NP)
+        xout << "Adding " << newNP - NP << " P-space configurations (total " << newNP << ")" << std::endl;
+      std::vector<double> addHPP(newNP * (newNP - NP), (double) 0);
       for (size_t p0 = NP; p0 < newNP; p0++) {
         Presid.pvec.push_back(P[p0].begin()->first);
       }
-      for (size_t p0 = 0; p0 < addNP; p0++) {
+      for (size_t p0 = NP; p0 < newNP; p0++) {
         Wavefunction wsparse(prototype);
         wsparse.m_sparse = true;
         Wavefunction gsparse(prototype);
         gsparse.m_sparse = true;
-        wsparse.set(P[NP + p0].begin()->first, (double) 1);
+        wsparse.set(P[p0].begin()->first, (double) 1);
         gsparse.operatorOnWavefunction(ham, wsparse);
         for (size_t p1 = 0; p1 < newNP; p1++) {
           auto jdet1 = P[p1].begin()->first;
           if (gsparse.buffer_sparse.count(jdet1))
-            addHPP[p1 + p0 * newNP] = gsparse.buffer_sparse.at(jdet1);
+            addHPP[p1 + (p0 - NP) * newNP] = gsparse.buffer_sparse.at(jdet1);
         }
       }
       Pcoeff.resize(newNP);
