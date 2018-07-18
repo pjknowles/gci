@@ -533,7 +533,7 @@ std::vector<double> Run::Davidson(
   if (nState < 0)
     nState = options.parameter("NSTATE", std::vector<int>(1, 1)).at(0);
   if (energyThreshold <= (double) 0)
-    energyThreshold = options.parameter("TOL", std::vector<double>(1, (double) 1e-12)).at(0);
+    energyThreshold = options.parameter("TOL", std::vector<double>(1, (double) 1e-8)).at(0);
   xout << "Davidson eigensolver, maximum iterations=" << maxIterations;
   if (nState > 1) xout << "; number of states=" << nState;
   xout << "; energy threshold=" << std::scientific << std::setprecision(1) << energyThreshold << std::endl;
@@ -559,106 +559,64 @@ std::vector<double> Run::Davidson(
         options.parameter("BETATILESIZE", std::vector<int>(1, -1)).at(0));
     gg.push_back(g);
   }
-  auto initialNP =
-      std::min(std::max(options.parameter("PSPACE_INITIAL", nState), nState), static_cast<int>(ww.front()->size()));
-  auto maxNP =
-      std::min(std::max(options.parameter("PSPACE", 200), nState), static_cast<int>(ww.front()->size()));
-  auto NP = std::min(initialNP,maxNP);
-  std::vector<double> initialHPP(initialNP * initialNP, (double) 0);
-  std::vector<Pvector> P;
-  for (auto p = 0; p < initialNP; p++) {
-    auto det1 = d.minloc(static_cast<size_t>(p + 1));
-//    xout << "P: " << det1 << " : " << d.at(det1) << std::endl;
-    P.emplace_back(Pvector{{det1, (double) 1}});
-    Wavefunction wsparse(prototype);
-    wsparse.m_sparse = true;
-    Wavefunction gsparse(prototype);
-    gsparse.m_sparse = true;
-    wsparse.set(det1, (double) 1);
-    gsparse.operatorOnWavefunction(ham, wsparse);
-    for (int p1 = 0; p1 <= p; p1++) {
-      auto jdet1 = P[p1].begin()->first;
-      if (gsparse.buffer_sparse.count(jdet1))
-        initialHPP[p1 + p * initialNP] = initialHPP[p + p1 * initialNP] = gsparse.buffer_sparse.at(jdet1);
-      else
-        initialHPP[p1 + p * initialNP] = initialHPP[p + p1 * initialNP] = 0;
-    }
-  }
   solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
   solver.m_thresh = energyThreshold;
   solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
   solver.m_roots = static_cast<size_t>(nState);
+
   std::vector<std::vector<double> > Pcoeff;
   Presidual Presid(ham);
-  solver.addP(P, initialHPP.data(), ww, gg, Pcoeff);
-//  for (auto i = 0; i < ww.size(); i++)
-//    xout << "g . w after addP " << gg[i]->dot(*ww[i]) << std::endl;
-//  for (auto i = 0; i < ww.size(); i++)
-//    xout << "square norm of w after addP " << ww[i]->dot(*ww[i]) << std::endl;
-//  for (auto i = 0; i < gg.size(); i++)
-//    xout << "square norm of g after addP " << gg[i]->dot(*gg[i]) << std::endl;
-//  for (auto i=0; i<gg.size(); i++)
-//    gg[i]->axpy(-solver.eigenvalues()[i],*ww[i]);
-//  for (auto i=0; i<gg.size(); i++)
-//    xout << "square norm of g after eigenvalue subtract "<<gg[i]->dot(*gg[i])<<std::endl;
-//  for (auto i = 0; i < gg.size(); i++)
-//    xout << "residual active " << gg.m_active[i] << std::endl;
-//  xout << "after addP, Pcoeff="; for (const auto & p : Pcoeff) for (const auto & pp : p) xout <<" "<<pp; xout <<std::endl;
-  for (const auto &pp : P)
-    Presid.pvec.push_back(pp.begin()->first);
-  //  profiler->stop("Davidson preamble");
+  std::vector<Pvector> P;
+
+  auto initialNP =
+      std::min(std::max(options.parameter("PSPACE_INITIAL", nState), nState), static_cast<int>(ww.front()->size()));
+  auto maxNP =
+      std::min(std::max(options.parameter("PSPACE", 200), nState), static_cast<int>(ww.front()->size()));
+  auto NP = std::min(initialNP, maxNP);
+
+  {
+    std::vector<double> initialHPP(initialNP * initialNP, (double) 0);
+    for (auto p = 0; p < initialNP; p++) {
+      auto det1 = d.minloc(static_cast<size_t>(p + 1));
+      P.emplace_back(Pvector{{det1, (double) 1}});
+      Wavefunction wsparse(prototype);
+      wsparse.m_sparse = true;
+      Wavefunction gsparse(prototype);
+      gsparse.m_sparse = true;
+      wsparse.set(det1, (double) 1);
+      gsparse.operatorOnWavefunction(ham, wsparse);
+      for (int p1 = 0; p1 <= p; p1++) {
+        auto jdet1 = P[p1].begin()->first;
+        if (gsparse.buffer_sparse.count(jdet1))
+          initialHPP[p1 + p * initialNP] = initialHPP[p + p1 * initialNP] = gsparse.buffer_sparse.at(jdet1);
+        else
+          initialHPP[p1 + p * initialNP] = initialHPP[p + p1 * initialNP] = 0;
+      }
+    }
+    solver.addP(P, initialHPP.data(), ww, gg, Pcoeff);
+    for (const auto &pp : P)
+      Presid.pvec.push_back(pp.begin()->first);
+  }
 
   for (size_t iteration = 1; iteration <= maxIterations; iteration++) {
-//    for (auto i = 0; i < gg.size(); i++)
-//      xout << "square norm of g before Presid " << gg[i]->dot(*gg[i]) << std::endl;
     Presid(Pcoeff, gg); // augment residual with contributions from P space
-//    for (auto i = 0; i < gg.size(); i++)
-//      xout << "square norm of g after Presid " << gg[i]->dot(*gg[i]) << std::endl;
     ParameterVectorSet pp;
-//    for (const auto &pc : Pcoeff)
     std::vector<double> shift;
-//    for (auto root = 0; root < nState; root++)
-//      xout << "eigenvalue " << solver.eigenvalues()[root] << std::endl;
     for (auto root = 0; root < nState; root++)
       shift.push_back(-solver.eigenvalues()[root] + 1e-10);
-//    for (const auto &s : shift) xout << "shift " << s << std::endl;
-//    for (auto root = 0; root < nState; root++) {
-//      xout << "square norm of solution " << ww[root]->dot(*ww[root]) << std::endl;
-//             xout << "ww before precon "<<ww[root]->str(2)<<std::endl;
-//             xout << "gg before precon "<<gg[root]->str(2)<<std::endl;
-//      xout << "g[1708407]: " << static_cast<Wavefunction*>(gg[root].get())->at(1708407) << std::endl;
-//      xout << "g[1708429]: " << static_cast<Wavefunction*>(gg[root].get())->at(1708429) << std::endl;
-//      xout << "w[1708407]: " << static_cast<Wavefunction*>(ww[root].get())->at(1708407) << std::endl;
-//      xout << "w[1708429]: " << static_cast<Wavefunction*>(ww[root].get())->at(1708429) << std::endl;
-//      xout << "update" << std::endl;
-//    }
     update(ww, gg, shift, true);
-//    for (auto root = 0; root < nState; root++) {
-//      xout << "square norm of solution " << ww[root]->dot(*ww[root]) << std::endl;
-//      xout << "g[1708407]: " << static_cast<Wavefunction*>(gg[root].get())->at(1708407) << std::endl;
-//      xout << "g[1708429]: " << static_cast<Wavefunction*>(gg[root].get())->at(1708429) << std::endl;
-//      xout << "w[1708407]: " << static_cast<Wavefunction*>(ww[root].get())->at(1708407) << std::endl;
-//      xout << "w[1708429]: " << static_cast<Wavefunction*>(ww[root].get())->at(1708429) << std::endl;
-//           xout << "ww after precon "<<ww[root]->str(2)<<std::endl;
-//           xout << "gg after precon "<<gg[root]->str(2)<<std::endl;
-//    }
     if (solver.endIteration(ww, gg)) break;
-//    xout << "after endIteration " << std::endl;
-//    for (const auto &e: solver.errors()) xout << e << std::endl;
     resid(ww, gg);
-//   xout << "ww after resid "<<ww.front()->str(2)<<std::endl;
-//   xout << "gg after resid "<<gg.front()->str(2)<<std::endl;
     solver.addVector(ww, gg, Pcoeff);
-//    xout << "after addVector, Pcoeff="; for (const auto & p : Pcoeff) for (const auto & pp : p) xout <<" "<<pp; xout <<std::endl;
     if (maxNP > NP) { // find some more P space
       Presid(Pcoeff, gg); // augment residual with contributions from P space
       auto newP = solver.suggestP(ww, gg, (maxNP - NP));
       const auto addNP = newP.size(), newNP = NP + addNP;
-      if (solver.m_verbosity>0 && addNP>0) xout <<"Adding "<<addNP<<" P-space configurations (total "<<newNP<<")"<<std::endl;
+      if (solver.m_verbosity > 0 && addNP > 0)
+        xout << "Adding " << addNP << " P-space configurations (total " << newNP << ")" << std::endl;
       std::vector<double> addHPP(newNP * addNP, (double) 0);
       std::vector<Pvector> addP;
       for (auto p0 = 0; p0 < addNP; p0++) {
-//        xout << "result returned from suggestP: " << newP[p0] << std::endl;
         addP.emplace_back(Pvector{{newP[p0], (double) 1}});
         Wavefunction wsparse(prototype);
         wsparse.m_sparse = true;
@@ -673,18 +631,10 @@ std::vector<double> Run::Davidson(
         }
         for (int p1 = 0; p1 <= p0; p1++) {
           auto jdet1 = addP[p1].begin()->first;
-//          xout << "p0=" << p0 << ", p1=" << p1 << ", jdet1=" << jdet1 << std::endl;
-//          xout << addHPP.size() << " > " << p1 + NP + p0 * newNP << std::endl;
-//          xout << gsparse.buffer_sparse.count(jdet1) << std::endl;
-//          if (gsparse.buffer_sparse.count(jdet1))
-//            xout << gsparse.buffer_sparse.at(jdet1) << std::endl;
           if (gsparse.buffer_sparse.count(jdet1))
             addHPP[p1 + NP + p0 * newNP] = gsparse.buffer_sparse.at(jdet1);
         }
       }
-//      xout << "just before second solver.addP, addHPP:";
-//      for (auto i = 0; i < addNP * newNP; i++) xout << " " << addHPP[i];
-//      xout << std::endl;
       Pcoeff.resize(newNP);
       solver.addP(addP, addHPP.data(), ww, gg, Pcoeff);
       for (const auto &pp : addP) {
