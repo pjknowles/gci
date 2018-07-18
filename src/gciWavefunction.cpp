@@ -159,7 +159,8 @@ std::tuple<std::vector<size_t>, std::vector<double> > Wavefunction::select(const
   const Wavefunction &measur = dynamic_cast <const Wavefunction &> (measure);
   assert(buffer.size() == measur.size());
   for (size_t i = 0; i < buffer.size(); i++) {
-    auto test = buffer[i] * measur[i];
+    auto test = buffer[i] * measur.buffer[i];
+//    xout << "select "<<buffer[i]<<" "<<measur.buffer[i]<<std::endl;
     if (test > threshold) {
       sortlist.insert(std::make_pair(test, i));
       if (sortlist.size() > maximumNumber)
