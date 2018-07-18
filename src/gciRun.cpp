@@ -608,10 +608,10 @@ std::vector<double> Run::Davidson(
     if (solver.endIteration(ww, gg)) break;
     resid(ww, gg);
     solver.addVector(ww, gg, Pcoeff);
-    if (options.parameter("PSPACE_REBUILD",0)) { // clear out the P space and rebuild it
+    if (options.parameter("PSPACE_REBUILD", 0)) { // clear out the P space and rebuild it
 //      Presid(Pcoeff, gg); // augment residual with contributions from P space
       solver.clearP();
-      NP=0;
+      NP = 0;
       Presid.pvec.clear();
       P.clear();
       Pcoeff.clear();
@@ -619,6 +619,8 @@ std::vector<double> Run::Davidson(
     if (maxNP > NP) { // find some more P space
       Presid(Pcoeff, gg); // augment residual with contributions from P space
       auto newP = solver.suggestP(ww, gg, (maxNP - NP));
+      for (const auto &pp : P)
+        newP.erase(std::remove(newP.begin(), newP.end(), pp.begin()->first), newP.end()); // remove anything already in P
       const auto addNP = newP.size(), newNP = NP + addNP;
       if (solver.m_verbosity > 0 && addNP > 0)
         xout << "Adding " << addNP << " P-space configurations (total " << newNP << ")" << std::endl;
@@ -640,6 +642,7 @@ std::vector<double> Run::Davidson(
         for (size_t p1 = 0; p1 <= p0; p1++) {
           auto jdet1 = addP[p1].begin()->first;
           if (gsparse.buffer_sparse.count(jdet1))
+            addHPP[p0 + NP + p1 * newNP] =
             addHPP[p1 + NP + p0 * newNP] = gsparse.buffer_sparse.at(jdet1);
         }
       }
