@@ -2,6 +2,7 @@
 #define GCIWAVEFUNCTION_H
 #include <vector>
 #include <map>
+#include <tuple>
 #include <string>
 #include "gci.h"
 #include "gciOperator.h"
@@ -146,15 +147,11 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
   void axpy(double a, const std::shared_ptr<LinearAlgebra::vector<double> > &x) {
     axpy(a, *x);
   }
-  void axpy(double a, const std::map<size_t, double> &x) override {
-    throw std::logic_error("P space support not yet implemented");
-  }
+  void axpy(double a, const std::map<size_t, double> &x) override ;
 
   std::tuple<std::vector<size_t>, std::vector<double> > select(const vector<double> &measure,
                                                                const size_t maximumNumber = 1000,
-                                                               const double threshold = 0) const override {
-    throw std::logic_error("unimplemented select");
-  };
+                                                               const double threshold = 0) const override ;
 
   void scal(double a) override;
   // Every child of ParameterVector needs exactly this
@@ -237,7 +234,16 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
     return dot(*other);
   }
   double dot(const std::map<size_t, double> &other) const override {
-    throw std::logic_error("P space support not yet implemented");
+    double result = 0;
+    if (m_sparse)
+      for (const auto &o : other) {
+        if (buffer_sparse.count(o.first))
+          result += buffer_sparse.at(o.first) * o.second;
+      }
+    else
+      for (const auto &o : other)
+        result += buffer[o.first] * o.second;
+    return result;
   }
 
   /*!

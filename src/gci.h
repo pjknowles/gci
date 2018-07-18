@@ -138,9 +138,10 @@ void inline gsum(double *buffer, i len) {
 #endif
 }
 
-void inline gsum(std::map<size_t, double> buffer) {
-//  xout << "gsum sparse"<<std::endl;
+void inline gsum(std::map<size_t, double>& buffer) {
 #ifdef HAVE_MPI_H
+//  xout << "gsum sparse"<<std::endl;
+  std::map<size_t, double> result;
 //  xout << "gsum sparse MPI"<<std::endl;
   for (int rank = 0; rank < parallel_size; rank++) {
     size_t siz = buffer.size();
@@ -160,9 +161,13 @@ void inline gsum(std::map<size_t, double> buffer) {
     MPI_Bcast(addresses.data(), static_cast<int>(siz), MPI_SIZE_T, rank, MPI_COMM_COMPUTE);
     MPI_Bcast(values.data(), static_cast<int>(siz), MPI_DOUBLE, rank, MPI_COMM_COMPUTE);
     for (auto i = 0; i < siz; i++) {
-      buffer[addresses[i]] = values[i];
+      result[addresses[i]] += values[i];
+//      xout << "rank="<<rank<<", contribution "<<addresses[i]<<" : "<<values[i]<<", cumulative"<<result[addresses[i]]<<std::endl;
     }
   }
+//  for (const auto& r : result) xout << "result "<<r.first<<" : "<<r.second<<std::endl;
+  buffer = result;
+//  for (const auto& r : buffer) xout << "buffer "<<r.first<<" : "<<r.second<<std::endl;
 #endif
 }
 

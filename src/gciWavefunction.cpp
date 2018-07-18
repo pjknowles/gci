@@ -147,6 +147,37 @@ void Wavefunction::axpy(double a, const LinearAlgebra::vector<double> &x) {
 //  for (size_t i=0; i<buffer.size(); i++) xout<<" "<<buffer[i]; xout << std::endl;
 }
 
+void Wavefunction::axpy(double a, const std::map<size_t, double> &x) {
+  for (const auto &xx : x)
+    buffer[xx.first] += xx.second * a;
+}
+
+std::tuple<std::vector<size_t>, std::vector<double> > Wavefunction::select(const vector<double> &measure,
+                                                                           const size_t maximumNumber,
+                                                                           const double threshold) const {
+  std::multimap<double, size_t, std::greater<double> > sortlist;
+  const Wavefunction &measur = dynamic_cast <const Wavefunction &> (measure);
+  assert(buffer.size() == measur.size());
+  for (size_t i = 0; i < buffer.size(); i++) {
+    auto test = buffer[i] * measur.buffer[i];
+//    xout << "select "<<buffer[i]<<" "<<measur.buffer[i]<<std::endl;
+    if (test > threshold) {
+      sortlist.insert(std::make_pair(test, i));
+      if (sortlist.size() > maximumNumber)
+        sortlist.erase(std::prev(sortlist.end()));
+    }
+  }
+  std::vector<size_t> indices;
+  indices.reserve(sortlist.size());
+  std::vector<double> values;
+  values.reserve(sortlist.size());
+  for (const auto &p : sortlist) {
+    indices.push_back(p.second);
+    values.push_back(p.first);
+  }
+  return std::make_tuple(indices, values);
+}
+
 void Wavefunction::scal(double a) {
   for (auto &b : buffer) b *= a;
 }
@@ -451,6 +482,9 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
       if (!w.m_sparse) throw std::runtime_error("Cannot make sparse residual from full vector");
       for (const auto &b : w.buffer_sparse)
         buffer_sparse[b.first] += h.m_O0 * b.second;
+    } else if (w.m_sparse) {
+      for (const auto &b : w.buffer_sparse)
+        buffer[b.first] += h.m_O0 * b.second;
     } else {
       for (size_t i = 0; i < buffer.size(); i++)
         buffer[i] += h.m_O0 * w.buffer[i];
@@ -670,7 +704,14 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                bb0 = bb1) { // loop over beta batches
             size_t nsb = bb1 - bb0;
             TransitionDensity
-                d(w, w.alphaStrings[syma].begin(), w.alphaStrings[syma].end(), bb0, bb1, parityOddPacked, false, false);
+                d(w,
+                  w.alphaStrings[syma].begin(),
+                  w.alphaStrings[syma].end(),
+                  bb0,
+                  bb1,
+                  parityOddPacked,
+                  false,
+                  false);
             TransitionDensity e(d);
             MXM(&e[0], &d[0], &h.O2(false, false, false).block(symexc)[0], nsa * nsb, nexc, nexc, false);
             e.action(*this);

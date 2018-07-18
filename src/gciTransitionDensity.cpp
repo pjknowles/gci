@@ -232,8 +232,8 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
           const_cast<Excitation &>(ea).orbitalAddress *= m_nsa * m_nsb;
           const_cast<Excitation &>(ea).stringIndex *= wnsb;
         }
-        for (const auto &eeb : eebs) {
-          if (w.m_sparse) {
+        if (w.m_sparse) {
+          for (const auto &eeb : eebs) {
             for (const auto &eb : eeb) {
               if (eb.phase > 0) {
                 for (const auto &ea : eea)
@@ -247,7 +247,10 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
                         ea.phase * w.buffer_sparse.at(woffset + eb.stringIndex + ea.stringIndex);
               }
             }
-          } else {
+            offb++;
+          }
+        } else {
+          for (const auto &eeb : eebs) {
             prof2 += eea.size() * eeb.size() * 2;
             for (const auto &eb : eeb) {
               if (eb.phase > 0) {
@@ -260,8 +263,8 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
                       ea.phase * w.buffer[woffset + eb.stringIndex + ea.stringIndex];
               }
             }
+            offb++;
           }
-          offb++;
         }
       }
     }
