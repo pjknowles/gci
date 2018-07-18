@@ -572,11 +572,12 @@ std::vector<double> Run::Davidson(
       std::min(std::max(options.parameter("PSPACE_INITIAL", nState), nState), static_cast<int>(ww.front()->size()));
   auto maxNP =
       std::min(std::max(options.parameter("PSPACE", 100), nState), static_cast<int>(ww.front()->size()));
-  auto NP = std::min(initialNP, maxNP);
+  size_t NP = 0;
 
-  bool newWay = false;
+  bool newWay = true;
 
   if (!newWay) {
+    NP = std::min(initialNP, maxNP);
     std::vector<double> initialHPP(initialNP * initialNP, (double) 0);
     for (auto p = 0; p < initialNP; p++) {
       auto det1 = d.minloc(static_cast<size_t>(p + 1));
@@ -598,19 +599,25 @@ std::vector<double> Run::Davidson(
     solver.addP(P, initialHPP.data(), ww, gg, Pcoeff);
     for (const auto &pp : P)
       Presid.pvec.push_back(pp.begin()->first);
+  } else {
+
   }
 
   for (size_t iteration = 1; iteration <= static_cast<size_t>(maxIterations); iteration++) {
     if ((newWay || iteration > 1) && maxNP > NP) { // find some more P space
       if (iteration == 1) {
+        for (auto p = 0; p < initialNP; p++) {
+          auto det1 = d.minloc(static_cast<size_t>(p + 1));
+          P.emplace_back(Pvector{{det1, 1}});
+        }
       } else {
         Presid(Pcoeff, gg); // augment residual with contributions from P space
         auto newP = solver.suggestP(ww, gg, (maxNP - NP));
         for (const auto &pp : P)
           newP.erase(std::remove(newP.begin(), newP.end(), pp.begin()->first),
                      newP.end()); // remove anything already in P
-        for (const auto &pp : newP)
-          P.emplace_back(Pvector{{pp, 1}});
+        for (const auto &det1 : newP)
+          P.emplace_back(Pvector{{det1, 1}});
       }
       const auto newNP = P.size();
       const auto addNP = newNP - NP;
