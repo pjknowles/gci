@@ -94,7 +94,7 @@ struct Presidual {
       std::shared_ptr<Wavefunction> g = std::static_pointer_cast<Wavefunction>(outputs[k]);
       Wavefunction w(*g);
       w.m_sparse = true;
-      for (auto i = 0; i < pvec.size(); i++)
+      for (size_t i = 0; i < pvec.size(); i++)
         w.buffer_sparse.insert({pvec[i], Pcoeff[k][i]});
 //      xout << "Presidual: wavefunction:" << w.buffer_sparse.size() << "\n" << w << std::endl;
       auto prof = profiler->push("HcP");
@@ -505,7 +505,7 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
   solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
   solver.m_thresh = energyThreshold;
   solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
-  for (size_t iteration = 0; iteration < maxIterations; iteration++) {
+  for (size_t iteration = 0; iteration < static_cast<size_t>(maxIterations); iteration++) {
     resid(ww, gg);
     solver.addVector(ww, gg);
     std::vector<double> shift;
@@ -598,7 +598,7 @@ std::vector<double> Run::Davidson(
       Presid.pvec.push_back(pp.begin()->first);
   }
 
-  for (size_t iteration = 1; iteration <= maxIterations; iteration++) {
+  for (size_t iteration = 1; iteration <= static_cast<size_t>(maxIterations); iteration++) {
     Presid(Pcoeff, gg); // augment residual with contributions from P space
     ParameterVectorSet pp;
     std::vector<double> shift;
@@ -624,7 +624,7 @@ std::vector<double> Run::Davidson(
         xout << "Adding " << addNP << " P-space configurations (total " << newNP << ")" << std::endl;
       std::vector<double> addHPP(newNP * addNP, (double) 0);
       std::vector<Pvector> addP;
-      for (auto p0 = 0; p0 < addNP; p0++) {
+      for (size_t p0 = 0; p0 < addNP; p0++) {
         addP.emplace_back(Pvector{{newP[p0], (double) 1}});
         Wavefunction wsparse(prototype);
         wsparse.m_sparse = true;
@@ -637,7 +637,7 @@ std::vector<double> Run::Davidson(
           if (gsparse.buffer_sparse.count(jdet1))
             addHPP[p1 + p0 * newNP] = gsparse.buffer_sparse.at(jdet1);
         }
-        for (int p1 = 0; p1 <= p0; p1++) {
+        for (size_t p1 = 0; p1 <= p0; p1++) {
           auto jdet1 = addP[p1].begin()->first;
           if (gsparse.buffer_sparse.count(jdet1))
             addHPP[p1 + NP + p0 * newNP] = gsparse.buffer_sparse.at(jdet1);

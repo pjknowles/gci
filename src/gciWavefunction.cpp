@@ -243,17 +243,17 @@ double Wavefunction::update(const Wavefunction &diagonalH, double &eTruncated, d
   return ePredicted;
 }
 
-Wavefunction &operator+(const Wavefunction &w1, const Wavefunction &w2) {
+Wavefunction operator+(const Wavefunction &w1, const Wavefunction &w2) {
   Wavefunction result = w1;
   return result += w2;
 }
 
-Wavefunction &operator-(const Wavefunction &w1, const Wavefunction &w2) {
+Wavefunction operator-(const Wavefunction &w1, const Wavefunction &w2) {
   Wavefunction result = w1;
   return result -= w2;
 }
 
-Wavefunction &operator/(const Wavefunction &w1, const Wavefunction &w2) {
+Wavefunction operator/(const Wavefunction &w1, const Wavefunction &w2) {
   Wavefunction result = w1;
   return result /= w2;
 }

@@ -160,7 +160,7 @@ void inline gsum(std::map<size_t, double>& buffer) {
     }
     MPI_Bcast(addresses.data(), static_cast<int>(siz), MPI_SIZE_T, rank, MPI_COMM_COMPUTE);
     MPI_Bcast(values.data(), static_cast<int>(siz), MPI_DOUBLE, rank, MPI_COMM_COMPUTE);
-    for (auto i = 0; i < siz; i++) {
+    for (size_t i = 0; i < siz; i++) {
       result[addresses[i]] += values[i];
 //      xout << "rank="<<rank<<", contribution "<<addresses[i]<<" : "<<values[i]<<", cumulative"<<result[addresses[i]]<<std::endl;
     }
