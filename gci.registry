@@ -1,0 +1,27 @@
+# Note: -1 means default value taken from Molpro
+{class=INPUT,type=i,name='ORBSYM',default_value=-1,set='GCI',short_description='FCIDUMP parameter placeholder'}
+{class=INPUT,type=i,name='NORB',default_value=-1,set='GCI',short_description='FCIDUMP parameter placeholder'}
+{class=INPUT,type=i,name='NELEC',default_value=-1,set='GCI',short_description='FCIDUMP parameter placeholder'}
+{class=INPUT,type=i,name='MS2',default_value=-1,set='GCI',short_description='FCIDUMP parameter placeholder'}
+{class=INPUT,type=i,name='ISYM',default_value=-1,set='GCI',short_description='FCIDUMP parameter placeholder'}
+{class=INPUT,type=i,name='IUHF',default_value=-1,set='GCI',short_description='FCIDUMP parameter placeholder'}
+{class=INPUT,type=i,name='MEMORY',default_value=-1,set='GCI',short_description='memory'}
+{class=INPUT,type=f,name='SCS_OPPOSITE',default_value=1.d0,set='GCI',short_description='Spin-component scaling, opposite spin'}
+{class=INPUT,type=f,name='SCS_SAME',default_value=1.d0,set='GCI',short_description='Spin-component scaling, same spin'}
+{class=INPUT,type=f,name='TOL:ENERGY',default_value=-1.d0,set='GCI',short_description='energy convergence threshold'}
+{class=INPUT,type=s,name='METHOD:CALC:CALCLEVEL',default_value='DAVIDSON',set='GCI',short_description='computational method'}
+{class=INPUT,type=i,name='MAXIT:MAXCYC',default_value=100,set='GCI',short_description='Maximum number of iterations'}
+{class=INPUT,type=i,name='NSTATE',default_value=1,set='GCI',short_description='Number of states to solve for'}
+{class=INPUT,type=i,name='MAXORDER',default_value=100,set='GCI',short_description='Maximum order of perturbed energy to find'}
+{class=INPUT,type=i,name='PROFILER',default_value=-1,set='GCI',short_description='Level of performance profiling to print'}
+{class=INPUT,type=i,name='EXPLICIT1',default_value=1,set='GCI',short_description='Whether to force use of explict 1-electron algorithm'}
+{class=INPUT,type=i,name='PARALLEL_STRINGSET',default_value=0,set='GCI',short_description='Whether to distribute the generation of StringSets'}
+{class=INPUT,type=i,name='DENSITY',default_value=0,set='GCI', short_description='whether to calculate 1-density (1 or 2), 2-density (2)'}
+{class=INPUT,type=i,name='SOLVER_VERBOSITY',default_value=1,set='GCI', short_description='How verbose in equation solving'}
+{class=INPUT,type=i,name='TILESIZE',default_value=-1,set='GCI', short_description='Tile size in FCI'}
+{class=INPUT,type=i,name='ALPHATILESIZE',default_value=-1,set='GCI', short_description='Tile size in FCI'}
+{class=INPUT,type=i,name='BETATILESIZE',default_value=-1,set='GCI', short_description='Tile size in FCI'}
+{class=INPUT,type=i,name='EXCITATIONLEVEL',default_value=-1,set='GCI', short_description='Excitation level analysis'}
+{class=INPUT,type=i,name='PSPACE',default_value=100,set='GCI', short_description='Number of P-space configurations desired'}
+{class=INPUT,type=i,name='PSPACE_INITIAL',default_value=0,set='GCI', short_description='Number of initial P-space configurations desired'}
+{class=INPUT,type=i,name='PSPACE_REBUILD',default_value=0,set='GCI', short_description='Whether to rebuild the P-space each iteration'}

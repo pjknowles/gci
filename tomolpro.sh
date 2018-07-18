@@ -18,3 +18,4 @@ rsync submodules/IterativeSolver/IterativeSolver.h $1/src/global
 rsync submodules/IterativeSolver/IterativeSolver.cpp $1/src/util
 rsync submodules/IterativeSolver/IterativeSolverF.F90 $1/src/global
 rsync submodules/IterativeSolver/examples/*.{F90,cpp} $1/develop/examples
+rsync gci.registry $1/lib
