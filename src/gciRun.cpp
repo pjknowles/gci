@@ -276,7 +276,7 @@ std::vector<double> Run::run() {
   profiler->reset("GCI");
   xout << "PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
   std::vector<double> energies;
-  std::string method = options.parameter("METHOD", std::vector<std::string>(1, "")).at(0);
+  std::string method = options.parameter("METHOD", std::vector<std::string>(1, "DAVIDSON")).at(0);
   if (method == "MBPT" || method == "MOLLER") method = "RSPT";
   xout << "METHOD=" << method << std::endl;
 
