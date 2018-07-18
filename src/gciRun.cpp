@@ -571,7 +571,7 @@ std::vector<double> Run::Davidson(
   auto initialNP =
       std::min(std::max(options.parameter("PSPACE_INITIAL", nState), nState), static_cast<int>(ww.front()->size()));
   auto maxNP =
-      std::min(std::max(options.parameter("PSPACE", 200), nState), static_cast<int>(ww.front()->size()));
+      std::min(std::max(options.parameter("PSPACE", 100), nState), static_cast<int>(ww.front()->size()));
   auto NP = std::min(initialNP, maxNP);
 
   {
@@ -616,11 +616,12 @@ std::vector<double> Run::Davidson(
       P.clear();
       Pcoeff.clear();
     }
-    if (maxNP > NP) { // find some more P space
+    if (maxNP > NP && iteration == 1) { // find some more P space
       Presid(Pcoeff, gg); // augment residual with contributions from P space
       auto newP = solver.suggestP(ww, gg, (maxNP - NP));
       for (const auto &pp : P)
-        newP.erase(std::remove(newP.begin(), newP.end(), pp.begin()->first), newP.end()); // remove anything already in P
+        newP.erase(std::remove(newP.begin(), newP.end(), pp.begin()->first),
+                   newP.end()); // remove anything already in P
       const auto addNP = newP.size(), newNP = NP + addNP;
       if (solver.m_verbosity > 0 && addNP > 0)
         xout << "Adding " << addNP << " P-space configurations (total " << newNP << ")" << std::endl;
@@ -628,29 +629,27 @@ std::vector<double> Run::Davidson(
       std::vector<Pvector> addP;
       for (size_t p0 = 0; p0 < addNP; p0++) {
         addP.emplace_back(Pvector{{newP[p0], (double) 1}});
+        P.emplace_back(Pvector{{newP[p0], (double) 1}});
+        Presid.pvec.push_back(P.back().begin()->first);
+      }
+      for (size_t p0 = 0; p0 < addNP; p0++) {
         Wavefunction wsparse(prototype);
         wsparse.m_sparse = true;
         Wavefunction gsparse(prototype);
         gsparse.m_sparse = true;
         wsparse.set(newP[p0], (double) 1);
         gsparse.operatorOnWavefunction(ham, wsparse);
-        for (int p1 = 0; p1 < NP; p1++) {
+        for (size_t p1 = 0; p1 < NP + addNP; p1++) {
           auto jdet1 = P[p1].begin()->first;
           if (gsparse.buffer_sparse.count(jdet1))
             addHPP[p1 + p0 * newNP] = gsparse.buffer_sparse.at(jdet1);
-        }
-        for (size_t p1 = 0; p1 <= p0; p1++) {
-          auto jdet1 = addP[p1].begin()->first;
-          if (gsparse.buffer_sparse.count(jdet1))
-            addHPP[p0 + NP + p1 * newNP] =
-            addHPP[p1 + NP + p0 * newNP] = gsparse.buffer_sparse.at(jdet1);
         }
       }
       Pcoeff.resize(newNP);
       solver.addP(addP, addHPP.data(), ww, gg, Pcoeff);
       for (const auto &pp : addP) {
-        Presid.pvec.push_back(pp.begin()->first);
-        P.push_back(pp);
+//        Presid.pvec.push_back(pp.begin()->first);
+//        P.push_back(pp);
       }
       NP = newNP;
     }
