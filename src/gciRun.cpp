@@ -577,12 +577,12 @@ std::vector<double> Run::Davidson(
     }
     if (maxNP > P.size()) { // find some more P space
       size_t NP = P.size();
-      if (iteration == 1) {
+      if (iteration == 1) { // initial
         for (auto p = 0; p < initialNP; p++) {
           auto det1 = d.minloc(static_cast<size_t>(p + 1));
           P.emplace_back(Pvector{{det1, 1}});
         }
-      } else {
+      } else { // subsequent
         Presid(Pcoeff, gg); // augment residual with contributions from P space
         auto newP = solver.suggestP(ww, gg, (maxNP - NP));
         for (const auto &pp : P)

@@ -475,7 +475,7 @@ void MXM(double *Out,
 void Wavefunction::operatorOnWavefunction(const Operator &h,
                                           const Wavefunction &w,
                                           bool parallel_stringset) { // FIXME not really thoroughly checked if the symmetry of h is not zero.
-  auto prof = profiler->push("operatorOnWavefunction");
+  auto prof = profiler->push("operatorOnWavefunction"+std::string(m_sparse?"/sparse":"")+std::string(w.m_sparse?"/sparse":""));
   if (m_sparse) buffer_sparse.clear();
   if (parallel_rank == 0) {
     if (m_sparse) {
