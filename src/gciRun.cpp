@@ -380,6 +380,8 @@ std::vector<double> Run::run() {
 #endif
   } else if (method == "DIIS") {
     energies = DIIS(m_hamiltonian, prototype);
+  } else if (method == "RHF") {
+    RHF(m_hamiltonian, prototype);
   } else if (method == "HAMILTONIAN")
     HamiltonianMatrixPrint(m_hamiltonian, prototype);
   else if (method == "PROFILETEST") {
@@ -1374,6 +1376,37 @@ std::vector<double> Run::ISRSPT(
   //      xout << "Final g: "<<g.str(2)<<std::endl;
 //  return solver.incremental_energies(); // TODO
   return solver.eigenvalues();
+}
+
+double Run::RHF(const Operator &hamiltonian, const State &prototype,
+                             double thresh, int maxIterations)
+{
+  // I need:
+  //  - coefficient matrix, C
+  //  - density operator, P
+  //  - fock matrix, F
+  //  - diagonalisation routine
+  profiler->start("RHF");
+  profiler->start("RHF preamble");
+//  Wavefunction w(prototype);
+  std::vector<int> symmetries;
+  for (const auto &s : prototype.orbitalSpace->orbital_symmetries)
+    symmetries.push_back(s + 1); // only a common orbital space is implemented
+  dim_t dim;
+  for (const auto s: *prototype.orbitalSpace) dim.push_back(s);
+  Operator C(dim, symmetries, 1, false, prototype.symmetry, false, false, "MO");
+  // generate a spliced C matrix with only the occupied orbitals
+  // dimension of occupied space can be determined from the orbital energies,
+  // but I would have to calculate them first
+  // Later on I can include a separate line in fcidump for occupied space
+  // possibly even generalize this to a MOM like procedure
+  dim_t occ{4, 2, 1, 1, 0, 0, 0, 0};
+  SMat Csplice({dim, occ}, parityNone):
+  SMat Cmat = C.O1(true);
+
+// Once C has been constructed, it can be spliced and multiplied by itself to generate P
+  profiler->stop("RHF preamble");
+  profiler->stop("RHF");
 }
 
 void Run::HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity) {

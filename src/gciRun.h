@@ -77,6 +77,17 @@ class Run {
                            const State &prototype,
                            double energyThreshold = (double) -1, int maxIterations = -1);
 
+  /*!
+   * @brief Performs RHF calculation within the space of supplied MOs
+   * @param hamiltonian The hamiltonian
+   * @param prototype A State object specifying number of electrons, symmetry, spin
+   * If it is a Wavefunction , then that will be used also for specifying the configuration space, otherwise the default FCI
+   * @param threshold Convergence threshold
+   * @param maxIterations The maximum number of iterations to perform
+   * @return the energy of the state.
+   */
+  double RHF(const Operator &hamiltonian, const State &prototype, double thresh=1.0e-10, int maxIterations=100);
+
   void HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity = 0);
 
   Operator m_hamiltonian;
