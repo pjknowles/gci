@@ -34,7 +34,6 @@ struct residual {
 //        SMat natorb=x->naturalOrbitals();
       //    activeHamiltonian->rotate(&natorb);
 //        profiler->stop("density");
-      profiler->start("Hc");
       if (not append)
         g->zero();
 //        xout << "x in residual "<<x->str(2)<<std::endl;
@@ -45,10 +44,12 @@ struct residual {
 //          g->operatorOnWavefunction(*activeHamiltonian, *x, parallel_stringset);
 //        xout << "g "<<g->str(2)<<std::endl;
 //        g->zero();
-      g->operatorOnWavefunction(m_hamiltonian, *x, parallel_stringset);
+      if (psx.m_active[k]) {
+        auto prof = profiler->push("Hc");
+        g->operatorOnWavefunction(m_hamiltonian, *x, parallel_stringset);
 //        xout << "g "<<g->str(2)<<std::endl;
-      profiler->stop("Hc");
 //        xout << "g=Hc "<<g->str(2)<<std::endl;
+      }
       if (m_subtract_Energy) {
         double cc = x->dot(*x);
         double cg = x->dot(*g);
@@ -621,6 +622,8 @@ std::vector<double> Run::Davidson(
     resid(ww, gg);
     solver.addVector(ww, gg, Pcoeff);
   }
+  if (solver.m_verbosity > 0)
+    xout << "Number of actions of matrix on vector = " << solver.m_actions << std::endl;
   for (auto root = 0; root < nState; root++) {
     m_wavefunctions.push_back(std::static_pointer_cast<Wavefunction>(ww[root]));
     m_wavefunctions.back()->m_properties["ENERGY"] = solver.eigenvalues()[root];
