@@ -592,7 +592,7 @@ std::vector<double> Run::Davidson(
           P.emplace_back(Pvector{{det1, 1}});
       }
       const auto newNP = P.size();
-      if (solver.m_verbosity > 0 && newNP > NP)
+      if (solver.m_verbosity > 1 && newNP > NP)
         xout << "Adding " << newNP - NP << " P-space configurations (total " << newNP << ")" << std::endl;
       std::vector<double> addHPP(newNP * (newNP - NP), (double) 0);
       for (size_t p0 = NP; p0 < newNP; p0++) {
