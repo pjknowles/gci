@@ -471,12 +471,12 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
   profiler->start("DIIS preamble");
 //  xout << "on entry to Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
   if (maxIterations < 0)
-    maxIterations = options.parameter("MAXIT", std::vector<int>(1, 1000)).at(0);
+    maxIterations = options.parameter("MAXIT", 1000);
   xout << "MAXIT=" << maxIterations << std::endl;
   if (energyThreshold <= (double) 0)
-    energyThreshold = options.parameter("TOL", std::vector<double>(1, (double) 1e-12)).at(0);
+    energyThreshold = options.parameter("TOL", 1e-8);
   //  xout << "after options.parameter in Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
-  _residual_q = options.parameter("CHARGE", std::vector<double>{0}).at(0);
+  _residual_q = options.parameter("CHARGE", 0.0);
   if (_residual_q > 0) {
     xout << "q=" << _residual_q << std::endl;
     residual_Q.reset(ham.projector("Q", true));
@@ -489,6 +489,7 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
   size_t reference = d.minloc();
   ParameterVectorSet gg;
   gg.push_back(std::make_shared<Wavefunction>(prototype));
+  std::static_pointer_cast<Wavefunction>(gg.back())->allocate_buffer();
   ParameterVectorSet ww;
   ww.push_back(std::make_shared<Wavefunction>(prototype));
   std::static_pointer_cast<Wavefunction>(ww.back())->set((double) 0);
@@ -499,7 +500,7 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
   updater precon(d, true);
   residual resid(ham, true, residual_Q.get());
   LinearAlgebra::DIIS<scalar> solver;
-  solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
+  solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", 1);
   solver.m_thresh = energyThreshold;
   solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
   for (size_t iteration = 0; iteration < static_cast<size_t>(maxIterations); iteration++) {
@@ -526,11 +527,11 @@ std::vector<double> Run::Davidson(
 //  profiler->start("Davidson preamble");
   //  xout << "on entry to Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
   if (maxIterations < 0)
-    maxIterations = options.parameter("MAXIT", std::vector<int>(1, 1000)).at(0);
+    maxIterations = options.parameter("MAXIT", 1000);
   if (nState < 0)
-    nState = options.parameter("NSTATE", std::vector<int>(1, 1)).at(0);
+    nState = options.parameter("NSTATE", 1);
   if (energyThreshold <= (double) 0)
-    energyThreshold = options.parameter("TOL", std::vector<double>(1, (double) 1e-8)).at(0);
+    energyThreshold = options.parameter("TOL", 1e-8);
   xout << "Davidson eigensolver, maximum iterations=" << maxIterations;
   if (nState > 1) xout << "; number of states=" << nState;
   xout << "; energy threshold=" << std::scientific << std::setprecision(1) << energyThreshold << std::endl;
@@ -555,7 +556,7 @@ std::vector<double> Run::Davidson(
         options.parameter("BETATILESIZE", std::vector<int>(1, -1)).at(0));
     gg.push_back(g);
   }
-  solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
+  solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", 1);
   solver.m_thresh = energyThreshold;
   solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
   solver.m_roots = static_cast<size_t>(nState);
@@ -643,13 +644,13 @@ std::vector<double> Run::CSDavidson(const Operator &ham,
   profiler->start("Davidson preamble");
   // xout << "on entry to Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
   if (nState < 0)
-    nState = options.parameter("NSTATE", std::vector<int>(1, 1)).at(0);
+    nState = options.parameter("NSTATE", 1);
   xout << "nState " << nState << std::endl;
   if (maxIterations < 0)
-    maxIterations = options.parameter("MAXIT", std::vector<int>(1, 1000)).at(0);
+    maxIterations = options.parameter("MAXIT", 1000);
 //  xout << "MAXIT="<<maxIterations<<std::endl;
   if (energyThreshold <= (double) 0)
-    energyThreshold = options.parameter("TOL", std::vector<double>(1, (double) 1e-8)).at(0);
+    energyThreshold = options.parameter("TOL", 1e-8);
   // xout << "after options.parameter in Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
   double compressionK = options.parameter("COMPRESSIONK", std::vector<double>(1, 2)).at(0);
   int compressionL = options.parameter("COMPRESSIONL", std::vector<int>(1, 1)).at(0);
