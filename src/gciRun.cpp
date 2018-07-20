@@ -953,7 +953,7 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams,
     }
     {
       w = -g;
-      g.getw(h0file);
+      g.getAll(h0file);
 //    xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
       w.set(reference, (double) 0);
       w /= g;
