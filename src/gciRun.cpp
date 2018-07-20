@@ -577,7 +577,7 @@ std::vector<double> Run::Davidson(
       P.clear();
       Pcoeff.clear();
     }
-    if (maxNP > P.size()) { // find some more P space
+    if (static_cast<size_t>(maxNP) > P.size()) { // find some more P space
       size_t NP = P.size();
       if (iteration == 1) { // initial
         for (auto p = 0; p < initialNP; p++) {
