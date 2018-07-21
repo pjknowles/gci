@@ -1375,8 +1375,7 @@ std::vector<double> Run::ISRSPT(
 }
 
 double Run::RHF(const Operator &hamiltonian, const State &prototype,
-                             double thresh, int maxIterations)
-{
+                double thresh, int maxIterations) {
   // I need:
   //  - coefficient matrix, C
   //  - density operator, P
@@ -1386,8 +1385,9 @@ double Run::RHF(const Operator &hamiltonian, const State &prototype,
   profiler->start("RHF preamble");
 //  Wavefunction w(prototype);
   std::vector<int> symmetries;
-  for (const auto &s : prototype.orbitalSpace->orbital_symmetries)
-    symmetries.push_back(s + 1); // only a common orbital space is implemented
+  for (const auto &s : prototype.orbitalSpace->orbital_symmetries) {
+    symmetries.push_back(s + 1);
+  } // only a common orbital space is implemented
   dim_t dim;
   for (const auto s: *prototype.orbitalSpace) dim.push_back(s);
   Operator C(dim, symmetries, 1, false, prototype.symmetry, false, false, "MO");
@@ -1397,9 +1397,20 @@ double Run::RHF(const Operator &hamiltonian, const State &prototype,
   // Later on I can include a separate line in fcidump for occupied space
   // possibly even generalize this to a MOM like procedure
   dim_t occ{4, 2, 1, 1, 0, 0, 0, 0};
-  SMat Csplice({dim, occ}, parityNone):
-  SMat Cmat = C.O1(true);
-
+  SMat Csplice({dim, occ}, parityNone);
+  SMat &Cmat = C.O1(true);
+  // initiate to identity
+  memory::vector<double> block;
+  for (int rowSym = 0; rowSym < 8; ++rowSym) {
+    block = Cmat.block(rowSym);
+    for (int i = 0, n = 0; i < dim[rowSym]; ++i) {
+      for (int j = 0; j < dim[rowSym]; ++j, ++n) {
+        block[n] = 0.0;
+        if (i == j) block[n] = 1.0;
+      }
+    }
+  }
+  Csplice.splice(Cmat);
 // Once C has been constructed, it can be spliced and multiplied by itself to generate P
   profiler->stop("RHF preamble");
   profiler->stop("RHF");
