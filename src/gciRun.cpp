@@ -1404,9 +1404,8 @@ double Run::RHF(const Operator &hamiltonian, const State &prototype,
   SMat Csplice({dim, occ}, parityNone);
   SMat &Cmat = C.O1(true);
   // initiate to identity
-  memory::vector<double> block;
   for (int rowSym = 0; rowSym < 8; ++rowSym) {
-    block = Cmat.block(rowSym);
+    memory::vector<double> block = Cmat.block(rowSym);
     for (int i = 0, n = 0; i < dim[rowSym]; ++i) {
       for (int j = 0; j < dim[rowSym]; ++j, ++n) {
         block[n] = 0.0;
