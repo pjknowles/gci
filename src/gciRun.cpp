@@ -1411,6 +1411,11 @@ double Run::RHF(const Operator &hamiltonian, const State &prototype,
   }
   Csplice.splice(Cmat);
 // Once C has been constructed, it can be spliced and multiplied by itself to generate P
+  Operator P(dim, symmetries, 1, false, prototype.symmetry, false, false, "density");
+  SMat CspliceT(&Csplice, parityNone, 0, 2);
+  CspliceT = Csplice;
+  CspliceT.transpose();
+  P.O1(true) = Csplice * CspliceT;
   profiler->stop("RHF preamble");
   profiler->stop("RHF");
 }
