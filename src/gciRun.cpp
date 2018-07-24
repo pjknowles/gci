@@ -1376,53 +1376,44 @@ std::vector<double> Run::ISRSPT(
 
 double Run::RHF(const Operator &hamiltonian, const State &prototype,
                 double thresh, int maxIterations) {
-  // I need:
-  //  - coefficient matrix, C
-  //  - density operator, P
-  //  - fock matrix, F
-  //  - diagonalisation routine
   profiler->start("RHF");
   profiler->start("RHF preamble");
-//  Wavefunction w(prototype);
   std::vector<int> symmetries;
   for (const auto &s : prototype.orbitalSpace->orbital_symmetries) {
     symmetries.push_back(s + 1);
-  } // only a common orbital space is implemented
+  }
   dim_t dim;
   for (const auto s: *prototype.orbitalSpace) dim.push_back(s);
   Operator C(dim, symmetries, 1, false, prototype.symmetry, false, false, "MO");
-  // generate a spliced C matrix with only the occupied orbitals
-  // dimension of occupied space can be determined from the orbital energies,
-  // but I would have to calculate them first
-  // Later on I can include a separate line in fcidump for occupied space
-  // possibly even generalize this to a MOM like procedure
-  dim_t occ{4, 2, 1, 1, 0, 0, 0, 0};
+  // occupied space is hardcoded for now
+  dim_t occ{10, 0, 0, 0, 0, 0, 0, 0};
   SMat Csplice({dim, occ}, parityNone);
-  SMat &Cmat = C.O1(true);
-  // initiate to identity
-  for (int rowSym = 0; rowSym < 8; ++rowSym) {
-    memory::vector<double> block = Cmat.block(rowSym);
-    for (int i = 0, n = 0; i < dim[rowSym]; ++i) {
-      for (int j = 0; j < dim[rowSym]; ++j, ++n) {
-        block[n] = 0.0;
-        if (i == j) block[n] = 1.0;
-      }
-    }
-  }
-// Once C has been constructed, it can be spliced and multiplied by itself to generate P
-  Operator P(dim, symmetries, 1, false, prototype.symmetry, false, false, "density");
+  SMat Cmat = C.O1(true);
+  Cmat.setIdentity();
+  Operator P(dim, symmetries, 1, false, prototype.symmetry, false, true, "density");
   SMat CspliceT(&Csplice, parityNone, 0, 2);
+  double energy, energyPrev=0.0, err;
+  std::cout << "Iter " << " E " << " dE " << " res " << std::endl;
   for (int iIter = 0; iIter < maxIterations; ++iIter) {
     Csplice.splice(Cmat);
     CspliceT = Csplice;
     CspliceT.transpose();
-    P.O1(true) = Csplice * CspliceT;
-    // construct Fock matrix
+    P.O1(true) = 2.0 * (Csplice * CspliceT);
     Operator F = hamiltonian.fock(P, true, "Fock operator");
-    // check for convergence
+    energy = hamiltonian.m_O0 + 0.5 * ( P.O1() & (hamiltonian.O1() + F.O1()));
+    // identity FP == PF
     SMat res = (F.O1() * P.O1()) - (P.O1() * F.O1());
-    // diagonalise and sort the energiess
-    // update the C operator
+    err = 0.0;
+    for (int jSym = 0; jSym < 8; ++jSym) {
+      if (res.dimension(jSym) == 0) continue;
+      auto r = std::max_element(res.block(jSym).begin(),res.block(jSym).end());
+      if (std::abs(*r) > err) err = *r;
+    }
+    std::cout << iIter << "    " << energy << "    " << energy - energyPrev << "    " << err << std::endl;
+    if (err < thresh) break;
+    energyPrev = energy;
+    SMat eigVal({dim}, parityNone, -1, "Eigenvalues");
+    F.O1().ev(eigVal, &Cmat);
   }
   profiler->stop("RHF preamble");
   profiler->stop("RHF");
