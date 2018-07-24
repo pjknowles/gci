@@ -1409,13 +1409,21 @@ double Run::RHF(const Operator &hamiltonian, const State &prototype,
       }
     }
   }
-  Csplice.splice(Cmat);
 // Once C has been constructed, it can be spliced and multiplied by itself to generate P
   Operator P(dim, symmetries, 1, false, prototype.symmetry, false, false, "density");
   SMat CspliceT(&Csplice, parityNone, 0, 2);
-  CspliceT = Csplice;
-  CspliceT.transpose();
-  P.O1(true) = Csplice * CspliceT;
+  for (int iIter = 0; iIter < maxIterations; ++iIter) {
+    Csplice.splice(Cmat);
+    CspliceT = Csplice;
+    CspliceT.transpose();
+    P.O1(true) = Csplice * CspliceT;
+    // construct Fock matrix
+    Operator F = hamiltonian.fock(P, true, "Fock operator");
+    // check for convergence
+    SMat res = (F.O1() * P.O1()) - (P.O1() * F.O1());
+    // diagonalise and sort the energiess
+    // update the C operator
+  }
   profiler->stop("RHF preamble");
   profiler->stop("RHF");
 }
