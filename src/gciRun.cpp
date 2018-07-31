@@ -1390,7 +1390,15 @@ double Run::RHF(const Operator &hamiltonian, const State &prototype,
   for (const auto s: *prototype.orbitalSpace) dim.push_back(s);
   Operator C(dim, symmetries, 1, false, prototype.symmetry, false, false, "MO");
   // occupied space is hardcoded for now
-  dim_t occ{4, 1, 1, 0, 3, 1, 0, 0};
+  dim_t occ(8,0);
+  std::vector<int> occInt(8,0);
+  occInt = options.parameter("OCC",std::vector<int>{8});
+  for (unsigned j = 0; j< 8; ++j) occ[j] = (size_t) occInt[j];
+  xout << "OCC ";
+  for (int j = 0; j < 8; ++j) {
+    xout << occ[j] << ",";
+  }
+  xout << std::endl;
   SMat Csplice({dim, occ}, parityNone);
   SMat Cmat = C.O1(true);
   Cmat.setIdentity();
