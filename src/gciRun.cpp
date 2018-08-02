@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <algorithm>
 #include "IterativeSolver.h"
+#include "gciOperatorBBO.h"
 
 using namespace gci;
 
@@ -247,6 +248,7 @@ Run::Run(std::string fcidump)
   int lendata = 0;
   if (parallel_rank == 0) {
     options = Options(FCIdump(fcidump).data());
+    options.addParameter("FCIDUMP", fcidump);
     lendata = (int) options.data().size();
   }
   MPI_Bcast(&lendata, (int) 1, MPI_INT, 0, MPI_COMM_COMPUTE);
@@ -381,6 +383,9 @@ std::vector<double> Run::run() {
     energies = DIIS(m_hamiltonian, prototype);
   } else if (method == "RHF") {
     RHF(m_hamiltonian, prototype);
+  } else if (method == "BBO_RHF") {
+    std::string fcidump = options.parameter("FCIDUMP", std::vector<std::string>(1, "gci.fcidump")).at(0);
+    BBO_RHF();
   } else if (method == "HAMILTONIAN")
     HamiltonianMatrixPrint(m_hamiltonian, prototype);
   else if (method == "PROFILETEST") {
@@ -1385,7 +1390,6 @@ double Run::RHF(const Operator &hamiltonian, const State &prototype,
   dim_t dim;
   for (const auto s: *prototype.orbitalSpace) dim.push_back(s);
   Operator C(dim, symmetries, 1, false, prototype.symmetry, false, false, "MO");
-  // occupied space is hardcoded for now
   dim_t occ(8,0);
   std::vector<int> occInt(8,0);
   occInt = options.parameter("OCC",std::vector<int>{8});
@@ -1427,6 +1431,11 @@ double Run::RHF(const Operator &hamiltonian, const State &prototype,
   profiler->stop("RHF");
 }
 
+void Run::BBO_RHF() {
+  OperatorBBO molHam(options); // molecular Hamiltonian
+  xout << molHam << std::endl;
+}
+
 void Run::HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity) {
   Wavefunction w(&hamiltonian.m_orbitalSpaces[0], prototype.nelec, prototype.symmetry, prototype.ms2);
   Wavefunction g(w);
@@ -1443,3 +1452,4 @@ void Run::HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, 
     }
   }
 }
+

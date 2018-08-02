@@ -88,6 +88,12 @@ class Run {
    */
   double RHF(const Operator &hamiltonian, const State &prototype, double thresh=1.0e-4, int maxIterations=20);
 
+  /*!
+   * @brief Performs RHF calculation using the "Beyond BO" electron-vibration coupled Hamiltonian
+   * @param fcidump Root of the fcidump file name for electronic and interaction hamiltonians
+   */
+  void BBO_RHF();
+
   void HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity = 0);
 
   Operator m_hamiltonian;
@@ -97,6 +103,7 @@ class Run {
 
   std::vector<std::shared_ptr<Wavefunction> > m_wavefunctions;
   gci::Options options;
+
 };
 }
 
