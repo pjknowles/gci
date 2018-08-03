@@ -16,16 +16,16 @@ namespace gci {
 class OperatorBBO {
 public:
     std::string m_description; //! Description of the operator
+    int m_nMode; //! number of vibrational modes
+    int m_nModal; //! number of HO basis functions per mode
+    std::vector<int> m_vibOcc; //! Occupancy of vibrational modals (which modal is occupied, ground state = 0)
+    std::vector<int> m_symMode; //! symmetry of each mode
+    std::vector<double> m_freq; //! vibrational frequencies in a.u.
+    std::string m_fcidump; //! Root name of the fcidump files defining this Hamiltonian
     Operator m_Hel; //! Electronic Hamiltonian
     std::vector<Operator> m_Hvib; //! Vibrational Hamiltonian
     std::vector<Operator> m_HintEl; //! Electronic component of the interaction Hamiltonian
     std::vector<Operator> m_HintVib; //! Vibrational component of the interaction Hamiltonian
-    std::vector<int> m_symMode; //! symmetry of each mode
-    int m_nMode; //! number of vibrational modes
-    int m_nModal; //! number of HO basis functions per mode
-    std::vector<int> m_vibOcc; //! Occupancy of vibrational modals (which modal is occupied, ground state = 0)
-    std::vector<double> m_freq; //! vibrational frequencies in a.u.
-    std::string m_fcidump; //! Root name of the fcidump files defining this Hamiltonian
 
     /*!
      * @brief Initialises Hel, Hvib and Hint from fcidump files. The vibrational Hamiltonian is assumed to be harmonic.
