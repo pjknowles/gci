@@ -90,9 +90,11 @@ class Run {
 
   /*!
    * @brief Performs RHF calculation using the "Beyond BO" electron-vibration coupled Hamiltonian
+   * @param prototype A State object specifying number of electrons, symmetry, spin
+   * If it is a Wavefunction , then that will be used also for specifying the configuration space, otherwise the default FCI
    * @param fcidump Root of the fcidump file name for electronic and interaction hamiltonians
    */
-  void BBO_RHF();
+  void BBO_RHF(const State &prototype);
 
   void HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity = 0);
 

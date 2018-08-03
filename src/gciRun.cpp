@@ -5,7 +5,6 @@
 #include <iomanip>
 #include <algorithm>
 #include "IterativeSolver.h"
-#include "gciOperatorBBO.h"
 
 using namespace gci;
 
@@ -386,7 +385,7 @@ std::vector<double> Run::run() {
     RHF(m_hamiltonian, prototype);
   } else if (method == "BBO_RHF") {
     std::string fcidump = options.parameter("FCIDUMP", std::vector<std::string>(1, "gci.fcidump")).at(0);
-    BBO_RHF();
+    BBO_RHF(prototype);
   } else if (method == "HAMILTONIAN")
     HamiltonianMatrixPrint(m_hamiltonian, prototype);
   else if (method == "PROFILETEST") {
@@ -1386,7 +1385,6 @@ std::vector<double> Run::ISRSPT(
 double Run::RHF(const Operator &hamiltonian, const State &prototype,
                 double thresh, int maxIterations) {
   profiler->start("RHF");
-  profiler->start("RHF preamble");
   std::vector<int> symmetries;
   for (const auto &s : prototype.orbitalSpace->orbital_symmetries) {
     symmetries.push_back(s + 1);
@@ -1431,13 +1429,7 @@ double Run::RHF(const Operator &hamiltonian, const State &prototype,
     SMat eigVal({dim}, parityNone, -1, "Eigenvalues");
     F.O1().ev(eigVal, &Cmat);
   }
-  profiler->stop("RHF preamble");
   profiler->stop("RHF");
-}
-
-void Run::BBO_RHF() {
-  OperatorBBO molHam(options); // molecular Hamiltonian
-  xout << molHam << std::endl;
 }
 
 void Run::HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity) {
