@@ -1,61 +1,98 @@
 #include "gciRun.h"
 #include "gciBBO_RHF.h"
+
+#include <valarray>
+
 #include "gciOperatorBBO.h"
 
-using namespace gci;
+namespace gci {
 
 void Run::BBO_RHF(const State &prototype) {
-  int maxIterations;
-  double thresh;
-  maxIterations = options.parameter("HF_MAX_ITER", std::vector<int>{50}).at(0);
-  thresh = options.parameter("HF_E_THRESH", std::vector<double>{1.0e-8}).at(0);
-  OperatorBBO molHam(options); // molecular Hamiltonian
-//  xout << molHam << std::endl;
-  //time to do HF
-  // For now there is no need to be very smart about it.
-  // Just copy the RHF looping structure and split the body into an electronic
-  // and bosonic components.
-  // The MO vectors will be handled on the local level.
-  profiler->start("BBO_RHF");
-  std::vector<int> symmetries;
-  for (const auto &s : prototype.orbitalSpace->orbital_symmetries) {
-    symmetries.push_back(s + 1);
-  }
-  dim_t dim;
-  for (const auto s: *prototype.orbitalSpace) dim.push_back(s);
-  Operator C(dim, symmetries, 1, false, prototype.symmetry, false, false, "MO");
-  dim_t occ(8,0);
-  std::vector<int> occInt(8, 0);
-  occInt = options.parameter("OCC", std::vector<int>{8});
-  SMat Csplice({dim, occ}, parityNone);
-  SMat CspliceT(&Csplice, parityNone, 0, 2);
-  SMat Cmat = C.O1(true);
-  Cmat.setIdentity();
-  Operator P(dim, symmetries, 1, false, prototype.symmetry, false, true, "density");
-  vector<SMat> U; // vibrational modals
-  for (int iMod = 0; iMod < molHam.m_nMode; ++iMod){
-    dim.assign(8, 0);
-    dim[molHam.m_symMode[iMod] - 1] = (unsigned int) molHam.m_nModal;
-    U.push_back(SMat({dim, dim}, parityNone, molHam.m_symMode[iMod], "Modals for mode " + std::__cxx11::to_string(iMod + 1)));
-  }
-  double energy, energyPrev=0.0, err;
-  std::vector<double> energy, energyPrev=0.0, err;
-  std::cout << "Iter " << " E " << " dE " << std::endl;
-  // Energy and convergence check first.
-  for (int iIter = 0; iIter < maxIterations; ++iIter) {
-    Csplice.splice(Cmat);
-    CspliceT = Csplice;
-    CspliceT.transpose();
-    P.O1(true) = 2.0 * (Csplice * CspliceT);
-// Electronic contribution
-    Operator F = molHam.m_Hel.fock(P, true, "Fock operator");
-    energy = molHam.m_Hel.m_O0 + 0.5 * ( P.O1() & (molHam.m_Hel.O1() + F.O1()));
-    err = energy - energyPrev;
-    std::cout << iIter << "    " << energy << "    " << err << std::endl;
-    if (abs(err) < thresh) break;
-    energyPrev = energy;
-    SMat eigVal({dim}, parityNone, -1, "Eigenvalues");
-    F.O1().ev(eigVal, &Cmat);
-  }
-  profiler->stop("RHF");
+    // Preamble
+    profiler->start("BBO_RHF:preamble");
+    int maxIterations = options.parameter("HF_MAX_ITER", std::vector<int>{50}).at(0);
+    double thresh = options.parameter("HF_E_THRESH", std::vector<double>{1.0e-8}).at(0);
+    OperatorBBO molHam(options); // molecular Hamiltonian
+    std::vector<int> symmetries;
+    for (auto s : prototype.orbitalSpace->orbital_symmetries) {symmetries.push_back(s + 1);}
+    dim_t dim;
+    for (auto s: *prototype.orbitalSpace) dim.push_back(s);
+    dim_t occ(8, 0);
+    std::vector<int> occInt = options.parameter("OCC", std::vector<int>{8});
+    for (int i = 0; i < 8; ++i) {occ[i] = (size_t) occInt[i];}
+    nm_BBO_RHF::Density density(dim, occ, symmetries, prototype.symmetry);
+    std::vector<SMat> U; // vibrational modals
+    for (int iMod = 0; iMod < molHam.m_nMode; ++iMod) {
+        dim.assign(8, 0);
+        dim[molHam.m_symMode[iMod] - 1] = (size_t) molHam.m_nModal;
+        SMat Umat({dim, dim}, parityNone, molHam.m_symMode[iMod], "Modals for mode " + std::to_string(iMod + 1));
+        Umat.setIdentity();
+        U.push_back(Umat);
+    }
+    profiler->stop("BBO_RHF:preamble");
+
+    profiler->start("BBO_RHF:algorithm");
+    std::valarray<double> energy(4, 0), energyPrev(4, 0);
+    nm_BBO_RHF::writeFormat();
+    // Energy and convergence check first. Fock matrix evaluation second.
+    for (int iIter = 0; iIter < maxIterations; ++iIter) {
+        density.update();
+        molHam.energy(density.P, U, energy);
+        nm_BBO_RHF::writeIter(iIter, energy, energyPrev);
+//        if (abs(Etot - EtotPrev) < thresh) {
+        auto res = std::abs(energy - energyPrev);
+        if ( res.max() < thresh) {
+            xout << "Convergence achieved " << std::endl;
+            break;
+        };
+        energyPrev = energy;
+        nm_BBO_RHF::solveFock(molHam, density, U);
+    }
+    profiler->stop("RHF");
 }
+
+nm_BBO_RHF::Density::Density(dim_t &dim, dim_t &occ, std::vector<int> &symmetries, int symmetry) :
+        dim(dim), occ(occ), symmetries(symmetries), symmetry(symmetry),
+        Cmat(SMat({dim, dim}, parityNone)), Csplice(SMat({dim, occ}, parityNone)),
+        P(Operator(dim, symmetries, 1, false, (unsigned) symmetry, false, true, "density")) {
+    Cmat.setIdentity();
+    update();
+}
+
+void nm_BBO_RHF::Density::update() {
+    Csplice.splice(Cmat);
+    P.O1(true) = 2 * (Csplice * SymmetryMatrix::transpose(Csplice));
+}
+
+void nm_BBO_RHF::writeFormat() {
+    std::cout << "Iter " << " Etot " << " dE " << std::endl;
+    std::cout << "     " << " Eel " << " dE " << std::endl;
+    std::cout << "     " << " Evib " << " dE " << std::endl;
+    std::cout << "     " << " Eint " << " dE " << std::endl;
+}
+
+void nm_BBO_RHF::writeIter(int iIter, double eTot, double eTotPrev, std::vector<double> &energy,
+                           std::vector<double> &energyPrev) {
+    std::cout << iIter << "    " << eTot << "    " << eTot - eTotPrev << std::endl;
+    std::cout << "             " << energy[0] << "    " << energy[0] - energyPrev[0] << std::endl;
+    std::cout << "             " << energy[1] << "    " << energy[1] - energyPrev[1] << std::endl;
+    std::cout << "             " << energy[2] << "    " << energy[2] - energyPrev[2] << std::endl;
+}
+
+void nm_BBO_RHF::solveFock(OperatorBBO &molHam, Density &density, std::vector<SMat> &U) {
+    {
+        // Electronic degrees of freedom
+        Operator F = molHam.electronicFock(density.P, U);
+        SMat eigVal({density.dim}, parityNone, -1, "Eigenvalues");
+        F.O1().ev(eigVal, &density.Cmat);
+        density.update();
+    }
+    // Vibrational degrees of freedom
+    for (int iMode = 0; iMode < molHam.m_nMode; ++iMode) {
+        Operator F = molHam.vibrationalFock(density.P, U[iMode], iMode);
+        SMat eigVal({U[iMode].dimensions()[1]}, parityNone, -1, "Eigenvalues");
+        F.O1().ev(eigVal, &U[iMode]);
+    }
+}
+
+} // namespace gci

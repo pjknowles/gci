@@ -7,6 +7,7 @@
 #include <ostream>
 #include <vector>
 #include <string>
+#include <valarray>
 
 namespace gci {
 
@@ -34,11 +35,62 @@ public:
      * @param nModal Number of HO basis functions per mode
      * @param fcidump Root name of the fcidump files
      */
-//    explicit OperatorBBO(std::vector<unsigned int> &symMode, std::vector<int> &vibOcc, int nMode, int nModal,
-//                         std::string &fcidump, std::string &description);
     explicit OperatorBBO(Options &options, std::string description = "BBO Molecular Hamiltonian");
     ~OperatorBBO()=default;
+
+    /*!
+     * @brief Calculates electronic, vibrational and interaction component of the total energy
+     * @param density Electronic density matrix
+     * @param U Vector of vibrational modal coefficients
+     * @param energies Three energetic components
+     * @return Total energy (electronic + vibrational + interaction)
+     */
+    void energy(Operator &density, std::vector<SMat> &U, std::valarray<double> &energies);
+
+    /*!
+     * @brief Expectation value of electronic Hamiltonian over HF wavefunction
+     * @param density Electronic density matrix
+     * @param Hel Electronic Hamiltonian
+     * @return HF energy
+     */
+    double electronicEnergy (Operator &density, Operator &Hel);
+
+    /*!
+     * @brief Element of the similarity transformed vibrational Hamiltonian
+     * @param hamiltonian Original vibrational hamiltonian
+     * @param U Unitary transformation matrix
+     * @param r Row index
+     * @param s Column index
+     * @return matrix element = U.T[r,:] * H * U[:,s]
+     */
+    double transformedVibHamElement(Operator &hamiltonian, SMat &U, int r, int s);
+
+    /*!
+     * @brief Similarity transformation of the vibrational Hamiltonian to a modal basis
+     * @param hamiltonian Vibrational Hamiltonian in the harmonic oscillator basis
+     * @param U Modal coefficients
+     * @return
+     */
+    Operator transformedVibHam(Operator &hamiltonian, SMat &U);
+
+    /*!
+     * @brief Constructs the electronic Fock operator
+     * @param P Electron density matrix
+     * @param U Modal coefficients
+     * @return Fock matrix
+     */
+    Operator electronicFock(Operator &P, std::vector<SMat> &U);
+
+    /*!
+     * @brief Constructs the vibrational Fock operator
+     * @param P Electron density matrix
+     * @param U Modal coefficients
+     * @param iMode Correpsonding mode
+     * @return Fock matrix
+     */
+    Operator vibrationalFock(Operator &P, SMat &U, int iMode);
 };
+
 
 std::ostream &operator<<(std::ostream &os, const OperatorBBO &obj);
 
