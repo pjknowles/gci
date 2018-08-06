@@ -42,8 +42,7 @@ void writeFormat();
 /*!
  * @brief Writes the convergence print out during RHF iterations
  */
-void writeIter(int iIter, double eTot, double eTotPrev, std::vector<double> &energy,
-               std::vector<double> &energyPrev);
+void writeIter(int iIter, std::valarray<double> &energy, std::valarray<double> &energyPrev);
 
 /*!
  * @brief Solves the Fock equations, generating a new set of MO's and modals

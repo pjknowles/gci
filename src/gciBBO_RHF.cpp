@@ -38,10 +38,10 @@ void Run::BBO_RHF(const State &prototype) {
     for (int iIter = 0; iIter < maxIterations; ++iIter) {
         density.update();
         molHam.energy(density.P, U, energy);
-        nm_BBO_RHF::writeIter(iIter, energy, energyPrev);
+        nm_BBO_RHF::writeIter(iIter, <#initializer#>, <#initializer#>);
 //        if (abs(Etot - EtotPrev) < thresh) {
         auto res = std::abs(energy - energyPrev);
-        if ( res.max() < thresh) {
+        if (res.max() < thresh) {
             xout << "Convergence achieved " << std::endl;
             break;
         };
@@ -71,12 +71,11 @@ void nm_BBO_RHF::writeFormat() {
     std::cout << "     " << " Eint " << " dE " << std::endl;
 }
 
-void nm_BBO_RHF::writeIter(int iIter, double eTot, double eTotPrev, std::vector<double> &energy,
-                           std::vector<double> &energyPrev) {
-    std::cout << iIter << "    " << eTot << "    " << eTot - eTotPrev << std::endl;
-    std::cout << "             " << energy[0] << "    " << energy[0] - energyPrev[0] << std::endl;
+void nm_BBO_RHF::writeIter(int iIter, std::valarray<double> &energy, std::valarray<double> &energyPrev) {
+    std::cout << iIter << "    " << energy[0] << "    " << energy[0] - energyPrev[0] << std::endl;
     std::cout << "             " << energy[1] << "    " << energy[1] - energyPrev[1] << std::endl;
     std::cout << "             " << energy[2] << "    " << energy[2] - energyPrev[2] << std::endl;
+    std::cout << "             " << energy[3] << "    " << energy[3] - energyPrev[3] << std::endl;
 }
 
 void nm_BBO_RHF::solveFock(OperatorBBO &molHam, Density &density, std::vector<SMat> &U) {
