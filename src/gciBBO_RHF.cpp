@@ -38,8 +38,7 @@ void Run::BBO_RHF(const State &prototype) {
     for (int iIter = 0; iIter < maxIterations; ++iIter) {
         density.update();
         molHam.energy(density.P, U, energy);
-        nm_BBO_RHF::writeIter(iIter, <#initializer#>, <#initializer#>);
-//        if (abs(Etot - EtotPrev) < thresh) {
+        nm_BBO_RHF::writeIter(iIter, energy, energyPrev);
         auto res = std::abs(energy - energyPrev);
         if (res.max() < thresh) {
             xout << "Convergence achieved " << std::endl;
