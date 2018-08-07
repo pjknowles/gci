@@ -1382,56 +1382,6 @@ std::vector<double> Run::ISRSPT(
   return solver.eigenvalues();
 }
 
-double Run::RHF(const Operator &hamiltonian, const State &prototype,
-                double thresh, int maxIterations) {
-  profiler->start("RHF");
-  std::vector<int> symmetries;
-  for (const auto &s : prototype.orbitalSpace->orbital_symmetries) {
-    symmetries.push_back(s + 1);
-  }
-  dim_t dim;
-  for (const auto s: *prototype.orbitalSpace) dim.push_back(s);
-  Operator C(dim, symmetries, 1, false, prototype.symmetry, false, false, "MO");
-  dim_t occ(8,0);
-  std::vector<int> occInt(8,0);
-  occInt = options.parameter("OCC",std::vector<int>{8});
-  for (unsigned j = 0; j< 8; ++j) occ[j] = (size_t) occInt[j];
-  xout << "OCC ";
-  for (int j = 0; j < 8; ++j) {
-    xout << occ[j] << ",";
-  }
-  xout << std::endl;
-  SMat Csplice({dim, occ}, parityNone);
-  SMat Cmat = C.O1(true);
-  Cmat.setIdentity();
-  Operator P(dim, symmetries, 1, false, prototype.symmetry, false, true, "density");
-  SMat CspliceT(&Csplice, parityNone, 0, 2);
-  double energy, energyPrev=0.0, err;
-  std::cout << "Iter " << " E " << " dE " << " res " << std::endl;
-  for (int iIter = 0; iIter < maxIterations; ++iIter) {
-    Csplice.splice(Cmat);
-    CspliceT = Csplice;
-    CspliceT.transpose();
-    P.O1(true) = 2.0 * (Csplice * CspliceT);
-    Operator F = hamiltonian.fock(P, true, "Fock operator");
-    energy = hamiltonian.m_O0 + 0.5 * ( P.O1() & (hamiltonian.O1() + F.O1()));
-    // identity FP == PF
-    SMat res = (F.O1() * P.O1()) - (P.O1() * F.O1());
-    err = 0.0;
-    for (int jSym = 0; jSym < 8; ++jSym) {
-      if (res.dimension(jSym) == 0) continue;
-      auto r = std::max_element(res.block(jSym).begin(),res.block(jSym).end());
-      if (std::abs(*r) > err) err = *r;
-    }
-    std::cout << iIter << "    " << energy << "    " << energy - energyPrev << "    " << err << std::endl;
-    if (err < thresh) break;
-    energyPrev = energy;
-    SMat eigVal({dim}, parityNone, -1, "Eigenvalues");
-    F.O1().ev(eigVal, &Cmat);
-  }
-  profiler->stop("RHF");
-}
-
 void Run::HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity) {
   Wavefunction w(&hamiltonian.m_orbitalSpaces[0], prototype.nelec, prototype.symmetry, prototype.ms2);
   Wavefunction g(w);

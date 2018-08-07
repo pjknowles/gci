@@ -49,24 +49,21 @@ OperatorBBO::OperatorBBO(Options &options, std::string description) :
 void OperatorBBO::energy(Operator &density, std::vector<SMat> &U, std::valarray<double> &energy) {
     energy = 0;
     // Pure electronic energy
-    energy[1] = electronicEnergy(density, m_Hel);
+    nm_RHF::electronicEnergy(density, m_Hel, energy[1]);
     // Pure vibrational energy
     for (int iMode = 0; iMode < m_nMode; ++iMode) {
         energy[2] = transformedVibHamElement(m_Hvib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode]);
     }
     // Interaction energy
     for (int iMode = 0; iMode < m_nMode; ++iMode) {
-        double d = electronicEnergy(density, m_HintEl[iMode]);
-        double o = transformedVibHamElement(m_HintVib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode]);
+        double d, o;
+        nm_RHF::electronicEnergy(density, m_HintEl[iMode], d);
+        o = transformedVibHamElement(m_HintVib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode]);
         energy[3] += d * o;
     }
     energy[0] = energy[1] + energy[2] + energy[3];
 }
 
-double OperatorBBO::electronicEnergy(Operator &density, Operator &Hel) {
-    Operator F = Hel.fock(density, true, "Fock operator");
-    return Hel.m_O0 + 0.5 * (density.O1() & (Hel.O1() + F.O1()));
-};
 
 double OperatorBBO::transformedVibHamElement(Operator &hamiltonian, SMat &U, int r, int s) {
     //! @todo assert that there is only one symmetry block
@@ -108,11 +105,12 @@ Operator OperatorBBO::vibrationalFock(Operator &P, SMat &U, int iMode) {
     dim_t dimension(8);
     dimension[m_symMode[iMode] - 1] = (unsigned int) m_nModal;
     std::vector<int> orbital_symmetries(m_nModal, m_symMode[iMode]);
-    Operator F(dimension, orbital_symmetries, 1, false,(unsigned) m_symMode[iMode], true, true,
+    Operator F(dimension, orbital_symmetries, 1, false, (unsigned) m_symMode[iMode], true, true,
                "Vibrational Fock matrix, mode = " + std::to_string(iMode));
     F.O1(true) = transformedVibHam(m_HintVib[iMode], U).O1(true);
-    double d = 0.5 * electronicEnergy(P, m_HintEl[iMode]);
-    F.O1(true) *= d;
+    double d;
+    nm_RHF::electronicEnergy(P, m_HintEl[iMode], d);
+    F.O1(true) *= 0.5 * d;
     return F;
 }
 

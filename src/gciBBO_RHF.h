@@ -7,32 +7,12 @@
 #include "SMat.h"
 #include "gciOperator.h"
 #include "gciOperatorBBO.h"
+#include "gciRHF.h"
 
 namespace gci {
 namespace nm_BBO_RHF {
 
-/*!
- * @brief Utility class for storing the MO coefficients and constructing density operator
- */
-class Density {
-public:
-    dim_t dim; //! full dimensionality of MO's
-    dim_t occ; //! Occupied orbitals
-    std::vector<int> symmetries; //! symmetry of each orbital
-    int symmetry; //! symmetry of the target state
-    SMat Cmat; //! MO coefficients
-    SMat Csplice; //! Occupied MO's
-    Operator P;
-
-    Density(dim_t &dim, dim_t &occ, std::vector<int> &symmetries, int symmetry);
-
-    ~Density() = default;
-
-    /*!
-     * @brief Updates the density matrix. Should be called after Density::Cmat was modified.
-     */
-    void update();
-};
+using nm_RHF::Density;
 
 /*!
  * @brief Write the format for convergence print out during RHF iterations

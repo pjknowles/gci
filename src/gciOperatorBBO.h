@@ -3,6 +3,7 @@
 
 #include "gciOperator.h"
 #include "gciOptions.h"
+#include "gciRHF.h"
 
 #include <ostream>
 #include <vector>
@@ -47,13 +48,6 @@ public:
      */
     void energy(Operator &density, std::vector<SMat> &U, std::valarray<double> &energies);
 
-    /*!
-     * @brief Expectation value of electronic Hamiltonian over HF wavefunction
-     * @param density Electronic density matrix
-     * @param Hel Electronic Hamiltonian
-     * @return HF energy
-     */
-    double electronicEnergy (Operator &density, Operator &Hel);
 
     /*!
      * @brief Element of the similarity transformed vibrational Hamiltonian

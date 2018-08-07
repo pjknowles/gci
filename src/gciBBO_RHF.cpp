@@ -50,19 +50,6 @@ void Run::BBO_RHF(const State &prototype) {
     profiler->stop("RHF");
 }
 
-nm_BBO_RHF::Density::Density(dim_t &dim, dim_t &occ, std::vector<int> &symmetries, int symmetry) :
-        dim(dim), occ(occ), symmetries(symmetries), symmetry(symmetry),
-        Cmat(SMat({dim, dim}, parityNone)), Csplice(SMat({dim, occ}, parityNone)),
-        P(Operator(dim, symmetries, 1, false, (unsigned) symmetry, false, true, "density")) {
-    Cmat.setIdentity();
-    update();
-}
-
-void nm_BBO_RHF::Density::update() {
-    Csplice.splice(Cmat);
-    P.O1(true) = 2 * (Csplice * SymmetryMatrix::transpose(Csplice));
-}
-
 void nm_BBO_RHF::writeFormat() {
     std::cout << "Iter " << " Etot " << " dE " << std::endl;
     std::cout << "     " << " Eel " << " dE " << std::endl;
