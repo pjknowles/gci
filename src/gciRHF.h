@@ -37,7 +37,7 @@ public:
  * @param energy HF energy
  * @return Fock operator
  */
-Operator electronicEnergy(Operator &P, Operator &Hel, double &energy);
+Operator electronicEnergy(const Operator &P, const Operator &Hel, double &energy);
 
 } // namespace nm_RHF
 } // namespace gci

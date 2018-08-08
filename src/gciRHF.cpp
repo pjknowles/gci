@@ -25,12 +25,12 @@ double Run::RHF(const Operator &hamiltonian, const State &prototype,
     std::cout << "Iter " << " E " << " dE " << " res " << std::endl;
     for (int iIter = 0; iIter < maxIterations; ++iIter) {
         density.update();
-        energy = nm_RHF::electronicEnergy(density.P, hamiltonian);
+//        energy = nm_RHF::electronicEnergy(density.P, hamiltonian);
         Operator F = nm_RHF::electronicEnergy(density.P, hamiltonian, energy);
         // identity FP == PF
         SMat res = (F.O1() * density.P.O1()) - (density.P.O1() * F.O1());
         err = 0.0;
-        for (int jSym = 0; jSym < 8; ++jSym) {
+        for (unsigned jSym = 0; jSym < 8; ++jSym) {
             if (res.dimension(jSym) == 0) continue;
             auto r = std::max_element(res.block(jSym).begin(), res.block(jSym).end());
             if (abs(*r) > err) err = *r;
@@ -57,7 +57,7 @@ void nm_RHF::Density::update() {
     P.O1(true) = 2 * (Csplice * SymmetryMatrix::transpose(Csplice));
 }
 
-gci::Operator nm_RHF::electronicEnergy(Operator &P, Operator &Hel, double &energy) {
+gci::Operator nm_RHF::electronicEnergy(const Operator &P, const Operator &Hel, double &energy) {
     Operator F = Hel.fock(P, true, "Fock operator");
     energy = Hel.m_O0 + 0.5 * (P.O1() & (Hel.O1() + F.O1()));
     return F;

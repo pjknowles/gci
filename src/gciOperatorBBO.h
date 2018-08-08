@@ -14,6 +14,8 @@ namespace gci {
 
 /*!
  * @brief Full molecular Hamiltonian operator incorporating electronic, vibrational and interaction terms.
+ *
+ * Modal - Solution of the vibrational SCF equations (vibrational eqivalent of Molecular Orbital)
  */
 class OperatorBBO {
 public:
@@ -31,12 +33,12 @@ public:
 
     /*!
      * @brief Initialises Hel, Hvib and Hint from fcidump files. The vibrational Hamiltonian is assumed to be harmonic.
-     * @param symMode Symmetry of each mode
+     * @param symMode Symmetry of each mode [1-8]
      * @param nMode Total number of modes
      * @param nModal Number of HO basis functions per mode
      * @param fcidump Root name of the fcidump files
      */
-    explicit OperatorBBO(Options &options, std::string description = "BBO Molecular Hamiltonian");
+    explicit OperatorBBO(const Options &options, std::string description = "BBO Molecular Hamiltonian");
     ~OperatorBBO()=default;
 
     /*!
@@ -46,7 +48,7 @@ public:
      * @param energies Three energetic components
      * @return Total energy (electronic + vibrational + interaction)
      */
-    void energy(Operator &density, std::vector<SMat> &U, std::valarray<double> &energies);
+    void energy(const Operator &density, const std::vector<SMat> &U, std::valarray<double> &energies);
 
 
     /*!
@@ -57,7 +59,7 @@ public:
      * @param s Column index
      * @return matrix element = U.T[r,:] * H * U[:,s]
      */
-    double transformedVibHamElement(Operator &hamiltonian, SMat &U, int r, int s);
+    double transformedVibHamElement(const Operator &hamiltonian, const SMat &U, int r, int s, int symm);
 
     /*!
      * @brief Similarity transformation of the vibrational Hamiltonian to a modal basis
@@ -65,7 +67,7 @@ public:
      * @param U Modal coefficients
      * @return
      */
-    Operator transformedVibHam(Operator &hamiltonian, SMat &U);
+    Operator transformedVibHam(const Operator &hamiltonian, const SMat &U);
 
     /*!
      * @brief Constructs the electronic Fock operator
@@ -73,7 +75,7 @@ public:
      * @param U Modal coefficients
      * @return Fock matrix
      */
-    Operator electronicFock(Operator &P, std::vector<SMat> &U);
+    Operator electronicFock(const Operator &P, std::vector<SMat> &U);
 
     /*!
      * @brief Constructs the vibrational Fock operator
@@ -82,7 +84,14 @@ public:
      * @param iMode Correpsonding mode
      * @return Fock matrix
      */
-    Operator vibrationalFock(Operator &P, SMat &U, int iMode);
+    Operator vibrationalFock(const Operator &P, const SMat &U, int iMode);
+
+    /*!
+     * @brief Prints out useful information of the converged SCF state
+     * @param P Electronic density matrix
+     * @param U Modal coefficients
+     */
+    void analyzeResults(Operator &P, std::vector<SMat> &U, std::valarray<double> &energy);
 };
 
 

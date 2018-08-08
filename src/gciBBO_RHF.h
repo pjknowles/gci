@@ -21,8 +21,12 @@ void writeFormat();
 
 /*!
  * @brief Writes the convergence print out during RHF iterations
+ * @param iIter Number of SCF cycle
+ * @param energy Energies: electronic, vibrational (per mode), interaction (per mode)
+ * @param energyPrev Energies from a previous cycle
+ * @param nMode Number of modes
  */
-void writeIter(int iIter, std::valarray<double> &energy, std::valarray<double> &energyPrev);
+void writeIter(int iIter, std::valarray<double> &energy, std::valarray<double> &energyPrev, int nMode);
 
 /*!
  * @brief Solves the Fock equations, generating a new set of MO's and modals

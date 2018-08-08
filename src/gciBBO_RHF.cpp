@@ -25,21 +25,24 @@ void Run::BBO_RHF(const State &prototype) {
     for (int iMod = 0; iMod < molHam.m_nMode; ++iMod) {
         dim.assign(8, 0);
         dim[molHam.m_symMode[iMod] - 1] = (size_t) molHam.m_nModal;
-        SMat Umat({dim, dim}, parityNone, molHam.m_symMode[iMod], "Modals for mode " + std::to_string(iMod + 1));
+        SMat Umat({dim, dim}, parityNone, 0, "Modals for mode " + std::to_string(iMod + 1));
+//        SMat Umat({dim, dim}, parityNone, molHam.m_symMode[iMod], "Modals for mode " + std::to_string(iMod + 1));
         Umat.setIdentity();
         U.push_back(Umat);
     }
     profiler->stop("BBO_RHF:preamble");
 
     profiler->start("BBO_RHF:algorithm");
-    std::valarray<double> energy(4, 0), energyPrev(4, 0);
+    std::valarray<double> energy(0.0, (size_t) 2 + molHam.m_nMode * 2), energyPrev(0.0,
+                                                                                   (size_t) 2 + molHam.m_nMode * 2);
     nm_BBO_RHF::writeFormat();
     // Energy and convergence check first. Fock matrix evaluation second.
     for (int iIter = 0; iIter < maxIterations; ++iIter) {
         density.update();
         molHam.energy(density.P, U, energy);
-        nm_BBO_RHF::writeIter(iIter, energy, energyPrev);
-        auto res = std::abs(energy - energyPrev);
+        nm_BBO_RHF::writeIter(iIter, energy, energyPrev, molHam.m_nMode);
+        std::valarray<double> res(0.0, energy.size());
+        res = std::abs(energy - energyPrev);
         if (res.max() < thresh) {
             xout << "Convergence achieved " << std::endl;
             break;
@@ -47,21 +50,50 @@ void Run::BBO_RHF(const State &prototype) {
         energyPrev = energy;
         nm_BBO_RHF::solveFock(molHam, density, U);
     }
-    profiler->stop("RHF");
+    profiler->stop("BBO_RHF:algorithm");
+    molHam.analyzeResults(density.P, U, energy);
+// Let's change the occupancy of second mode and recalculate the energy
+    molHam.m_vibOcc[1] = 1;
+    molHam.energy(density.P, U, energy);
+    nm_BBO_RHF::writeIter(-1, energy, energyPrev, molHam.m_nMode);
 }
 
 void nm_BBO_RHF::writeFormat() {
-    std::cout << "Iter " << " Etot " << " dE " << std::endl;
-    std::cout << "     " << " Eel " << " dE " << std::endl;
-    std::cout << "     " << " Evib " << " dE " << std::endl;
-    std::cout << "     " << " Eint " << " dE " << std::endl;
+    xout << "Iter " << " Etot " << " dE " << std::endl;
+    xout << "     " << " Eel " << " dE " << std::endl;
+    xout << "     " << " Evib " << std::endl;
+    xout << "     " << " diff " << std::endl;
+    xout << "     " << " Eint " << std::endl;
+    xout << "     " << " diff " << std::endl;
+    xout << std::endl;
 }
 
-void nm_BBO_RHF::writeIter(int iIter, std::valarray<double> &energy, std::valarray<double> &energyPrev) {
-    std::cout << iIter << "    " << energy[0] << "    " << energy[0] - energyPrev[0] << std::endl;
-    std::cout << "             " << energy[1] << "    " << energy[1] - energyPrev[1] << std::endl;
-    std::cout << "             " << energy[2] << "    " << energy[2] - energyPrev[2] << std::endl;
-    std::cout << "             " << energy[3] << "    " << energy[3] - energyPrev[3] << std::endl;
+void nm_BBO_RHF::writeIter(int iIter, std::valarray<double> &energy, std::valarray<double> &energyPrev, int nMode) {
+    xout << iIter << "     Etot " << energy[0] << ", " << energy[0] - energyPrev[0] << ", " << std::endl;
+    xout << "      Eel " << energy[1] << ", " << energy[1] - energyPrev[1] << ", " << std::endl;
+//    std::cout << "      " << energy[2] << "    " << energy[2] - energyPrev[2] << std::endl;
+//    std::cout << "      " << energy[3] << "    " << energy[3] - energyPrev[3] << std::endl;
+    std::valarray<double> diff = energy - energyPrev;
+    xout << "      Evib ";
+    for (auto iter = std::begin(energy) + 2; iter < std::begin(energy) + 2 + nMode; ++iter) {
+        xout << *iter << ", ";
+    }
+    xout << std::endl;
+    xout << "      diff ";
+    for (auto iter = std::begin(diff) + 2; iter < std::begin(diff) + 2 + nMode; ++iter) {
+        xout << *iter << ", ";
+    }
+    xout << std::endl;
+    xout << "      Eint ";
+    for (auto iter = std::begin(energy) + nMode + 2; iter < std::begin(energy) + 2 + 2 * nMode; ++iter) {
+        xout << *iter << ", ";
+    }
+    xout << std::endl;
+    xout << "      diff ";
+    for (auto iter = std::begin(diff) + nMode + 2; iter < std::begin(diff) + 2 + 2 * nMode; ++iter) {
+        xout << *iter << ", ";
+    }
+    xout << "\n" << std::endl;
 }
 
 void nm_BBO_RHF::solveFock(OperatorBBO &molHam, Density &density, std::vector<SMat> &U) {
@@ -77,7 +109,12 @@ void nm_BBO_RHF::solveFock(OperatorBBO &molHam, Density &density, std::vector<SM
         Operator F = molHam.vibrationalFock(density.P, U[iMode], iMode);
         SMat eigVal({U[iMode].dimensions()[1]}, parityNone, -1, "Eigenvalues");
         F.O1().ev(eigVal, &U[iMode]);
+//        xout << eigVal.m_description;
+//        xout << F << std::endl;
     }
+//    if(true){
+//        xout << molHam.transformedVibHam(molHam.m_Hvib[1], U[1]);
+//    }
 }
 
 } // namespace gci

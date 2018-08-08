@@ -1,12 +1,13 @@
 #include "gciOperatorBBO.h"
 #include "gciConstants.h"
 #include <utility>
+#include <numeric>
 
 #include "FCIdump.h"
 
 namespace gci {
 
-OperatorBBO::OperatorBBO(Options &options, std::string description) :
+OperatorBBO::OperatorBBO(const Options &options, std::string description) :
         m_description(std::move(description)),
         m_nMode(options.parameter("NMODE", (int) 0)),
         m_nModal(options.parameter("NMODAL", (int) 0)),
@@ -46,28 +47,29 @@ OperatorBBO::OperatorBBO(Options &options, std::string description) :
     }
 }
 
-void OperatorBBO::energy(Operator &density, std::vector<SMat> &U, std::valarray<double> &energy) {
+void OperatorBBO::energy(const Operator &density, const std::vector<SMat> &U, std::valarray<double> &energy) {
     energy = 0;
     // Pure electronic energy
     nm_RHF::electronicEnergy(density, m_Hel, energy[1]);
     // Pure vibrational energy
     for (int iMode = 0; iMode < m_nMode; ++iMode) {
-        energy[2] = transformedVibHamElement(m_Hvib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode]);
+        energy[2+iMode] += transformedVibHamElement(m_Hvib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode],
+                                              m_symMode[iMode] - 1);
     }
     // Interaction energy
     for (int iMode = 0; iMode < m_nMode; ++iMode) {
         double d, o;
         nm_RHF::electronicEnergy(density, m_HintEl[iMode], d);
-        o = transformedVibHamElement(m_HintVib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode]);
-        energy[3] += d * o;
+        o = transformedVibHamElement(m_HintVib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode],
+                                     m_symMode[iMode] - 1);
+        energy[2 + m_nMode + iMode] += d * o;
     }
-    energy[0] = energy[1] + energy[2] + energy[3];
+    energy[0] = std::accumulate(std::begin(energy)+1, std::end(energy), 0.0);
 }
 
 
-double OperatorBBO::transformedVibHamElement(Operator &hamiltonian, SMat &U, int r, int s) {
+double OperatorBBO::transformedVibHamElement(const Operator &hamiltonian, const SMat &U, int r, int s, int symm) {
     //! @todo assert that there is only one symmetry block
-    auto symm = U.symmetry();
     dim_t dim{8, 0};
     dim[symm] = 1;
     SMat Usplice({U.dimensions()[1], dim}, parityNone, symm);
@@ -83,35 +85,48 @@ double OperatorBBO::transformedVibHamElement(Operator &hamiltonian, SMat &U, int
     return el.block((unsigned) symm)[0];
 }
 
-Operator OperatorBBO::transformedVibHam(Operator &hamiltonian, SMat &U) {
-    SMat Ut = U;
-    Ut.transpose();
+Operator OperatorBBO::transformedVibHam(const Operator &hamiltonian, const SMat &U) {
     Operator H(hamiltonian);
-    H.O1(true) = Ut * hamiltonian.O1(true) * U;
+    H.O1(true) = SymmetryMatrix::transpose(U) * hamiltonian.O1(true) * U;
     return H;
 }
 
-Operator OperatorBBO::electronicFock(Operator &P, std::vector<SMat> &U) {
+Operator OperatorBBO::electronicFock(const Operator &P, std::vector<SMat> &U) {
     Operator F = m_Hel.fock(P, true, "Fock operator");
     for (int iMode = 0; iMode < m_nMode; ++iMode) {
         Operator Fint = m_HintEl[iMode].fock(P, true, "interaction component of Fock operator");
-        double o = transformedVibHamElement(m_HintVib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode]);
+        double o = transformedVibHamElement(m_HintVib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode],
+                                            m_symMode[iMode] - 1);
         F.O1(true) += o * Fint.O1(true);
     }
     return F;
 }
 
-Operator OperatorBBO::vibrationalFock(Operator &P, SMat &U, int iMode) {
+Operator OperatorBBO::vibrationalFock(const Operator &P, const SMat &U, int iMode) {
     dim_t dimension(8);
     dimension[m_symMode[iMode] - 1] = (unsigned int) m_nModal;
     std::vector<int> orbital_symmetries(m_nModal, m_symMode[iMode]);
-    Operator F(dimension, orbital_symmetries, 1, false, (unsigned) m_symMode[iMode], true, true,
+    Operator F(dimension, orbital_symmetries, 1, false, (unsigned) m_symMode[iMode] - 1, true, true,
                "Vibrational Fock matrix, mode = " + std::to_string(iMode));
-    F.O1(true) = transformedVibHam(m_HintVib[iMode], U).O1(true);
+//    F.O1(true) = transformedVibHam(m_Hvib[iMode], U).O1(true);
+    F.O1(true) = m_Hvib[iMode].O1(true);
     double d;
     nm_RHF::electronicEnergy(P, m_HintEl[iMode], d);
-    F.O1(true) *= 0.5 * d;
+//    d -= m_HintEl[iMode].m_O0;
+//    F.O1(true) += 0.5 * d * transformedVibHam(m_HintVib[iMode], U).O1(true);
+    F.O1(true) += 0.5 * d * m_HintVib[iMode].O1(true);
     return F;
+}
+
+void OperatorBBO::analyzeResults(Operator &P, std::vector<SMat> &U, std::valarray<double> &energy) {
+    /* I'm interested in the vibrational energies for mode 2
+     For CO2 this is the only mode that interacts due to symmetry
+     What is the energy of the first vibrationally excited state?
+     I could calculate it by simply changing vibrational occupancy
+     and recalculating the total energy.
+     More accurate would be to redo SCF with the new occupancy.
+    */
+
 }
 
 std::ostream &operator<<(std::ostream &os, const OperatorBBO &obj) {
