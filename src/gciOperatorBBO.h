@@ -86,12 +86,6 @@ public:
      */
     Operator vibrationalFock(const Operator &P, const SMat &U, int iMode);
 
-    /*!
-     * @brief Prints out useful information of the converged SCF state
-     * @param P Electronic density matrix
-     * @param U Modal coefficients
-     */
-    void analyzeResults(Operator &P, std::vector<SMat> &U, std::valarray<double> &energy);
 };
 
 

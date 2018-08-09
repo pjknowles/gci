@@ -28,6 +28,7 @@ void Run::BBO_RHF(const State &prototype) {
         SMat Umat({dim, dim}, parityNone, 0, "Modals for mode " + std::to_string(iMod + 1));
 //        SMat Umat({dim, dim}, parityNone, molHam.m_symMode[iMod], "Modals for mode " + std::to_string(iMod + 1));
         Umat.setIdentity();
+//        nm_BBO_RHF::rotate(Umat, 0.5);
         U.push_back(Umat);
     }
     profiler->stop("BBO_RHF:preamble");
@@ -51,11 +52,25 @@ void Run::BBO_RHF(const State &prototype) {
         nm_BBO_RHF::solveFock(molHam, density, U);
     }
     profiler->stop("BBO_RHF:algorithm");
-    molHam.analyzeResults(density.P, U, energy);
 // Let's change the occupancy of second mode and recalculate the energy
-    molHam.m_vibOcc[1] = 1;
-    molHam.energy(density.P, U, energy);
-    nm_BBO_RHF::writeIter(-1, energy, energyPrev, molHam.m_nMode);
+    if (false) {
+        molHam.m_vibOcc[1] = 1;
+        molHam.energy(density.P, U, energy);
+        nm_BBO_RHF::writeIter(-1, energy, energyPrev, molHam.m_nMode);
+        for (int iIter = 0; iIter < maxIterations; ++iIter) {
+            density.update();
+            molHam.energy(density.P, U, energy);
+            nm_BBO_RHF::writeIter(iIter, energy, energyPrev, molHam.m_nMode);
+            std::valarray<double> res(0.0, energy.size());
+            res = std::abs(energy - energyPrev);
+            if (res.max() < thresh) {
+                xout << "Convergence achieved " << std::endl;
+                break;
+            };
+            energyPrev = energy;
+            nm_BBO_RHF::solveFock(molHam, density, U);
+        }
+    }
 }
 
 void nm_BBO_RHF::writeFormat() {
@@ -116,5 +131,53 @@ void nm_BBO_RHF::solveFock(OperatorBBO &molHam, Density &density, std::vector<SM
 //        xout << molHam.transformedVibHam(molHam.m_Hvib[1], U[1]);
 //    }
 }
+
+void nm_BBO_RHF::rotate(SMat &mat, double ang) {
+// For now lets do it only for the modals. The
+    SMat rot(mat);
+    rot.setIdentity();
+    int sym = rot.symmetry(), n = rot.dimension(sym);
+    std::vector<std::valarray<double> > vecs;
+    for (int i = 0; i < n; ++i) {
+        vecs.emplace_back(0.0, n);
+        vecs[i][i] = 1.0;
+    }
+    for (int i = 0; i < n - 1; ++i) {
+        vecs[i] = std::cos(ang) * vecs[i] + std::sin(ang) * vecs[i + 1];
+        vecs[i + 1] = -std::sin(ang) * vecs[i] + std::cos(ang) * vecs[i + 1];
+    }
+// Gram-Schmidt to orthonormalise
+    auto norm = [](std::valarray<double> &v1, std::valarray<double> &v2) {return (v1 * v2).sum();};
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < i; ++j) {
+            double d = norm(vecs[i], vecs[j]);
+            vecs[i] -= d * vecs[j];
+        }
+        double d = norm(vecs[i], vecs[i]);
+        vecs[i] /= std::sqrt(d);
+    }
+    memory::vector<double> v = rot.block(sym);
+    for (int i = 0; i < n; ++i) {
+        for (int jj = i * n, j = 0; jj < (i + 1) * n; ++jj, ++j) {
+            v[jj] = vecs[i][j];
+        }
+    }
+//    for(auto i: v) xout << ", " << i;
+//    xout << std::endl;
+    /*
+    for (int i = 1; i < n; ++i) {
+        for (int j = 0; j <= i; ++j) {
+            double d = norm(vecs[i], vecs[j]);
+            xout << i << " " << j << " " << d << std::endl;
+        }
+    }
+    for (int i = 0; i < n; ++i) {
+        xout << vecs[0].size();
+        for (auto &v:vecs[i]) {xout << " , " << v;}
+        xout << std::endl;
+    }
+    */
+}
+
 
 } // namespace gci

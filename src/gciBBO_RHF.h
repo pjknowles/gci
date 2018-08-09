@@ -36,6 +36,14 @@ void writeIter(int iIter, std::valarray<double> &energy, std::valarray<double> &
  */
 void solveFock(gci::OperatorBBO &molHam, Density &density, std::vector<SMat> &U);
 
+/*!
+ * @brief Rotates the unitary matrix, mixing the different orbitals
+ * @param mat Unitary matrix
+ * @param ang Rotation constan
+ */
+void rotate(SMat &mat, double ang);
+
+
 } // namespace nm_BBO_RHF
 } //  namespace gci
 

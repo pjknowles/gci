@@ -53,8 +53,8 @@ void OperatorBBO::energy(const Operator &density, const std::vector<SMat> &U, st
     nm_RHF::electronicEnergy(density, m_Hel, energy[1]);
     // Pure vibrational energy
     for (int iMode = 0; iMode < m_nMode; ++iMode) {
-        energy[2+iMode] += transformedVibHamElement(m_Hvib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode],
-                                              m_symMode[iMode] - 1);
+        energy[2 + iMode] += transformedVibHamElement(m_Hvib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode],
+                                                      m_symMode[iMode] - 1);
     }
     // Interaction energy
     for (int iMode = 0; iMode < m_nMode; ++iMode) {
@@ -64,24 +64,23 @@ void OperatorBBO::energy(const Operator &density, const std::vector<SMat> &U, st
                                      m_symMode[iMode] - 1);
         energy[2 + m_nMode + iMode] += d * o;
     }
-    energy[0] = std::accumulate(std::begin(energy)+1, std::end(energy), 0.0);
+    energy[0] = std::accumulate(std::begin(energy) + 1, std::end(energy), 0.0);
 }
 
 
 double OperatorBBO::transformedVibHamElement(const Operator &hamiltonian, const SMat &U, int r, int s, int symm) {
-    //! @todo assert that there is only one symmetry block
-    dim_t dim{8, 0};
+    dim_t dim(8, 0);
     dim[symm] = 1;
     SMat Usplice({U.dimensions()[1], dim}, parityNone, symm);
     SMat UspliceT({dim, U.dimensions()[1]}, parityNone, symm);
-    dim_t rowOffset(8, 0), colOffset(8, 0);
-    colOffset[symm] = (size_t) s;
-    Usplice.splice(U, rowOffset, colOffset);
-    colOffset.assign(8, 0);
-    rowOffset[symm] = (size_t) r;
-    UspliceT.splice(U, rowOffset, colOffset);
+    dim_t offset(8, 0);
+    dim_t zeroOffset(8,0);
+    offset[symm] = (size_t) s;
+    Usplice.splice(U, {zeroOffset, offset});
+    offset.assign(8, 0);
+    offset[symm] = (size_t) r;
+    UspliceT.splice(U, {offset, zeroOffset});
     SMat el = (UspliceT * hamiltonian.O1(true) * Usplice);
-    //! @todo check that this is a 1 by 1 matrix
     return el.block((unsigned) symm)[0];
 }
 
@@ -93,12 +92,15 @@ Operator OperatorBBO::transformedVibHam(const Operator &hamiltonian, const SMat 
 
 Operator OperatorBBO::electronicFock(const Operator &P, std::vector<SMat> &U) {
     Operator F = m_Hel.fock(P, true, "Fock operator");
+//    xout << F << std::endl;
     for (int iMode = 0; iMode < m_nMode; ++iMode) {
         Operator Fint = m_HintEl[iMode].fock(P, true, "interaction component of Fock operator");
         double o = transformedVibHamElement(m_HintVib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode],
                                             m_symMode[iMode] - 1);
         F.O1(true) += o * Fint.O1(true);
+//        xout << Fint << std::endl;
     }
+//    xout << F << std::endl;
     return F;
 }
 
@@ -114,19 +116,8 @@ Operator OperatorBBO::vibrationalFock(const Operator &P, const SMat &U, int iMod
     nm_RHF::electronicEnergy(P, m_HintEl[iMode], d);
 //    d -= m_HintEl[iMode].m_O0;
 //    F.O1(true) += 0.5 * d * transformedVibHam(m_HintVib[iMode], U).O1(true);
-    F.O1(true) += 0.5 * d * m_HintVib[iMode].O1(true);
+//    F.O1(true) += 0.5 * d * m_HintVib[iMode].O1(true);
     return F;
-}
-
-void OperatorBBO::analyzeResults(Operator &P, std::vector<SMat> &U, std::valarray<double> &energy) {
-    /* I'm interested in the vibrational energies for mode 2
-     For CO2 this is the only mode that interacts due to symmetry
-     What is the energy of the first vibrationally excited state?
-     I could calculate it by simply changing vibrational occupancy
-     and recalculating the total energy.
-     More accurate would be to redo SCF with the new occupancy.
-    */
-
 }
 
 std::ostream &operator<<(std::ostream &os, const OperatorBBO &obj) {
