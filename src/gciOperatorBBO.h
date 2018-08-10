@@ -25,6 +25,7 @@ public:
     std::vector<int> m_vibOcc; //! Occupancy of vibrational modals (which modal is occupied, ground state = 0)
     std::vector<int> m_symMode; //! symmetry of each mode
     std::vector<double> m_freq; //! vibrational frequencies in a.u.
+    std::vector<double> m_nmDisp; //! Displacement of electronic reference point from vibrational
     std::string m_fcidump; //! Root name of the fcidump files defining this Hamiltonian
     Operator m_Hel; //! Electronic Hamiltonian
     std::vector<Operator> m_Hvib; //! Vibrational Hamiltonian
