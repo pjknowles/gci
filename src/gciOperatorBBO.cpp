@@ -18,6 +18,9 @@ OperatorBBO::OperatorBBO(const Options &options, std::string description) :
         m_fcidump(options.parameter("FCIDUMP", std::vector<std::string>(1, "")).at(0)),
         m_Hel(Operator::construct(FCIdump(m_fcidump))) {
     for (auto iter = m_freq.begin(); iter < m_freq.end(); ++iter) *iter *= Constants::CM_TO_AU;
+    xout << "FREQ = ";
+    for (auto iter = m_freq.begin(); iter < m_freq.end(); ++iter) xout << *iter << ", ";
+    xout << std::endl;
     m_Hel.m_description = "Electronic Hamiltonian at the reference geometry";
     // initiate interaction and vibrational Hamiltonian
     for (int iMode = 0; iMode < m_nMode; ++iMode) {
@@ -45,7 +48,7 @@ OperatorBBO::OperatorBBO(const Options &options, std::string description) :
         std::string fcidumpN = m_fcidump + std::to_string(iMode + 1);
         Operator hIntEl(Operator::construct(FCIdump(fcidumpN)));
         hIntEl.m_O0 -= m_freq[iMode] * m_nmDisp[iMode];
-        m_Hel.m_O0 -= m_freq[iMode] * std::pow(m_nmDisp[iMode], 2.0);
+        m_Hel.m_O0 -= 0.5 * m_freq[iMode] * std::pow(m_nmDisp[iMode], 2.0);
 //        xout << hVib << std::endl;
 //        xout << hIntVib << std::endl;
         m_Hvib.push_back(hVib);
@@ -54,39 +57,20 @@ OperatorBBO::OperatorBBO(const Options &options, std::string description) :
     }
 }
 
-void OperatorBBO::energy(const Operator &density, const std::vector<SMat> &U, std::valarray<double> &energy) {
-    energy = 0;
-    // Pure electronic energy
-    nm_RHF::electronicEnergy(density, m_Hel, energy[1]);
-    // Pure vibrational energy
-    for (int iMode = 0; iMode < m_nMode; ++iMode) {
-        energy[2 + iMode] += transformedVibHamElement(m_Hvib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode],
-                                                      m_symMode[iMode] - 1);
-    }
-    // Interaction energy
-    for (int iMode = 0; iMode < m_nMode; ++iMode) {
-        double d, o;
-        nm_RHF::electronicEnergy(density, m_HintEl[iMode], d);
-        o = transformedVibHamElement(m_HintVib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode],
-                                     m_symMode[iMode] - 1);
-        energy[2 + m_nMode + iMode] += d * o;
-    }
-    energy[0] = std::accumulate(std::begin(energy) + 1, std::end(energy), 0.0);
-}
-
 
 double OperatorBBO::transformedVibHamElement(const Operator &hamiltonian, const SMat &U, int r, int s, int symm) {
     dim_t dim(8, 0);
     dim[symm] = 1;
     SMat Usplice({U.dimensions()[1], dim}, parityNone, symm);
-    SMat UspliceT({dim, U.dimensions()[1]}, parityNone, symm);
+    SMat UspliceT({U.dimensions()[1], dim}, parityNone, symm);
     dim_t offset(8, 0);
     dim_t zeroOffset(8,0);
     offset[symm] = (size_t) s;
     Usplice.splice(U, {zeroOffset, offset});
     offset.assign(8, 0);
     offset[symm] = (size_t) r;
-    UspliceT.splice(U, {offset, zeroOffset});
+    UspliceT.splice(U, {zeroOffset, offset});
+    UspliceT.transpose();
     SMat el = (UspliceT * hamiltonian.O1(true) * Usplice);
     return el.block((unsigned) symm)[0];
 }
@@ -97,12 +81,36 @@ Operator OperatorBBO::transformedVibHam(const Operator &hamiltonian, const SMat 
     return H;
 }
 
+void OperatorBBO::energy(const Operator &density, const std::vector<SMat> &U, std::valarray<double> &energy) {
+    energy = 0;
+    // Pure electronic energy
+    nm_RHF::electronicEnergy(density, m_Hel, energy[1]);
+    // Pure vibrational energy
+    for (int iMode = 0; iMode < m_nMode; ++iMode) {
+        energy[2 + iMode] += transformedVibHamElement(m_Hvib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode],
+                                                      m_symMode[iMode] - 1);
+//        xout << m_Hvib[iMode] << std::endl;
+//        xout << transformedVibHam(m_Hvib[iMode], U[iMode]);
+    }
+    // Interaction energy
+    for (int iMode = 0; iMode < m_nMode; ++iMode) {
+        double d, o;
+        nm_RHF::electronicEnergy(density, m_HintEl[iMode], d);
+        o = transformedVibHamElement(m_HintVib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode],
+                                     m_symMode[iMode] - 1);
+        energy[2 + m_nMode + iMode] += d * o;
+//        xout << "d " << d << ", o " << o << std::endl;
+    }
+    energy[0] = std::accumulate(std::begin(energy) + 1, std::end(energy), 0.0);
+}
+
 Operator OperatorBBO::electronicFock(const Operator &P, std::vector<SMat> &U) {
     Operator F = m_Hel.fock(P, true, "Fock operator");
     for (int iMode = 0; iMode < m_nMode; ++iMode) {
         Operator Fint = m_HintEl[iMode].fock(P, true, "interaction component of Fock operator");
         double o = transformedVibHamElement(m_HintVib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode],
                                             m_symMode[iMode] - 1);
+//        xout << Fint << std::endl;
         F.O1(true) += o * Fint.O1(true);
     }
     return F;

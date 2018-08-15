@@ -31,6 +31,8 @@ void Run::BBO_RHF(const State &prototype) {
 //        nm_BBO_RHF::rotate(Umat, 0.5);
         U.push_back(Umat);
     }
+//    nm_BBO_RHF::rotate(density.Cmat, 0.5);
+    density.update();
     profiler->stop("BBO_RHF:preamble");
 
     profiler->start("BBO_RHF:algorithm");
@@ -44,7 +46,7 @@ void Run::BBO_RHF(const State &prototype) {
         nm_BBO_RHF::writeIter(iIter, energy, energyPrev, molHam.m_nMode);
         std::valarray<double> res(0.0, energy.size());
         res = std::abs(energy - energyPrev);
-        if (res.max() < thresh) {
+        if (res.max() < thresh && iIter >= 5) {
             xout << "Convergence achieved " << std::endl;
             break;
         };
@@ -116,8 +118,13 @@ void nm_BBO_RHF::solveFock(OperatorBBO &molHam, Density &density, std::vector<SM
         // Electronic degrees of freedom
         Operator F = molHam.electronicFock(density.P, U);
         SMat eigVal({density.dim}, parityNone, -1, "Eigenvalues");
-        F.O1().ev(eigVal, &density.Cmat);
+        SMat cMat(density.Cmat);
+        F.O1().ev(eigVal, &cMat /*&density.Cmat*/, nullptr, nullptr, "lapack", "ascending");
+//        density.Cmat = cMat;
+//        xout << "Cmat " << cMat << std::endl;
         density.update();
+//        xout << F << std::endl;
+//        xout << density.Cmat << std::endl;
     }
     // Vibrational degrees of freedom
     for (int iMode = 0; iMode < molHam.m_nMode; ++iMode) {
@@ -125,7 +132,7 @@ void nm_BBO_RHF::solveFock(OperatorBBO &molHam, Density &density, std::vector<SM
         SMat eigVal({U[iMode].dimensions()[1]}, parityNone, -1, "Eigenvalues");
         F.O1().ev(eigVal, &U[iMode]);
 //        xout << eigVal.m_description;
-//        xout << F << std::endl;
+//        xout << SymmetryMatrix::transpose(U[iMode]) * F.O1(true) * U[iMode] << std::endl;
     }
 //    if(true){
 //        xout << molHam.transformedVibHam(molHam.m_Hvib[1], U[1]);
@@ -136,7 +143,7 @@ void nm_BBO_RHF::rotate(SMat &mat, double ang) {
 // For now lets do it only for the modals. The
     SMat rot(mat);
     rot.setIdentity();
-    int sym = rot.symmetry(), n = rot.dimension(sym);
+    int sym = rot.symmetry(), n = (int) rot.dimension(sym);
     std::vector<std::valarray<double> > vecs;
     for (int i = 0; i < n; ++i) {
         vecs.emplace_back(0.0, n);
