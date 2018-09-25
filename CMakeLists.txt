@@ -44,6 +44,7 @@ add_definitions(-DHAVE_MPI_H)
 # OpenMPI root guard: https://github.com/open-mpi/ompi/issues/4451
 if("$ENV{USER}" STREQUAL "root")
   set(MPIEXEC "${MPIEXEC} --allow-run-as-root")
+  message("root")
 endif()
 message("USER: $ENV{USER}")
 message("MPIEXEC: ${MPIEXEC}")
