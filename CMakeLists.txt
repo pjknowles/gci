@@ -42,7 +42,7 @@ include_directories(${MPI_CXX_INCLUDE_PATH})
 target_link_libraries(gci.exe ${MPI_CXX_LIBRARIES})
 add_definitions(-DHAVE_MPI_H)
 # OpenMPI root guard: https://github.com/open-mpi/ompi/issues/4451
-if("$ENV{USER}" STREQUAL "root" or "$ENV{HOME}" STREQUAL "/root")
+if("$ENV{USER}" STREQUAL "root" OR "$ENV{HOME}" STREQUAL "/root")
   set(MPIEXEC "${MPIEXEC} --allow-run-as-root")
   message("root")
 endif()
