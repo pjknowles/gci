@@ -104,14 +104,17 @@ void OperatorBBO::energy(const Operator &density, const std::vector<SMat> &U, st
     energy[0] = std::accumulate(std::begin(energy) + 1, std::end(energy), 0.0);
 }
 
-Operator OperatorBBO::electronicFock(const Operator &P, std::vector<SMat> &U) {
+Operator OperatorBBO::electronicFock(const Operator &P, std::vector<SMat> &U, const SMat Cmat) {
     Operator F = m_Hel.fock(P, true, "Fock operator");
+    xout << SymmetryMatrix::transpose(Cmat) * F.O1(true) * Cmat << std::endl;
     for (int iMode = 0; iMode < m_nMode; ++iMode) {
         Operator Fint = m_HintEl[iMode].fock(P, true, "interaction component of Fock operator");
         double o = transformedVibHamElement(m_HintVib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode],
                                             m_symMode[iMode] - 1);
 //        xout << Fint << std::endl;
         F.O1(true) += o * Fint.O1(true);
+        xout << "mode " << iMode << std::endl;
+        xout << SymmetryMatrix::transpose(Cmat) * Fint.O1(true) * Cmat << std::endl;
     }
     return F;
 }

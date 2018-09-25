@@ -116,14 +116,15 @@ void nm_BBO_RHF::writeIter(int iIter, std::valarray<double> &energy, std::valarr
 void nm_BBO_RHF::solveFock(OperatorBBO &molHam, Density &density, std::vector<SMat> &U) {
     {
         // Electronic degrees of freedom
-        Operator F = molHam.electronicFock(density.P, U);
+        Operator F = molHam.electronicFock(density.P, U, density.Cmat);
+//        xout << SymmetryMatrix::transpose(density.Cmat) * F.O1(true) * density.Cmat << std::endl;
         SMat eigVal({density.dim}, parityNone, -1, "Eigenvalues");
         SMat cMat(density.Cmat);
         F.O1().ev(eigVal, &cMat /*&density.Cmat*/, nullptr, nullptr, "lapack", "ascending");
-//        density.Cmat = cMat;
+        density.Cmat = cMat;
 //        xout << "Cmat " << cMat << std::endl;
         density.update();
-//        xout << F << std::endl;
+//        xout << SymmetryMatrix::transpose(cMat) * F.O1(true) * cMat << std::endl;
 //        xout << density.Cmat << std::endl;
     }
     // Vibrational degrees of freedom

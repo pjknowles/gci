@@ -76,7 +76,7 @@ public:
      * @param U Modal coefficients
      * @return Fock matrix
      */
-    Operator electronicFock(const Operator &P, std::vector<SMat> &U);
+    Operator electronicFock(const Operator &P, std::vector<SMat> &U, const SMat Cmat);
 
     /*!
      * @brief Constructs the vibrational Fock operator
