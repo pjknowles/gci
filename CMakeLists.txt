@@ -45,7 +45,7 @@ add_definitions(-DHAVE_MPI_H)
 if("$ENV{USER}" STREQUAL "root")
   set(MPIEXEC "${MPIEXEC} --allow-run-as-root")
 endif()
-message("USER: ${USER}")
+message("USER: $ENV{USER}")
 message("MPIEXEC: ${MPIEXEC}")
 
 find_package(MKL)
