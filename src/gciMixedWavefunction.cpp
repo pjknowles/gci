@@ -21,6 +21,10 @@ MixedWavefunction::MixedWavefunction(const State &state, int nMode, int nModal, 
     }
 }
 
+void MixedWavefunction::operatorOnWavefunction(const gci::Operator &h, const Wavefunction &w, bool parallel_stringset) {
+
+}
+
 bool MixedWavefunction::compatible(const MixedWavefunction &w2) const {
     bool b_size = (m_wfn.size() == w2.m_wfn.size());
     if (!b_size) return b_size;
@@ -43,12 +47,12 @@ void MixedWavefunction::axpy(double a, const LinearAlgebra::vector<double> &othe
     }
 }
 
-std::tuple<std::vector<size_t>, std::vector<double> >
-MixedWavefunction::select(const LinearAlgebra::vector<double> &measure,
-                          const size_t maximumNumber = 1000,
-                          const double threshold = 0) const {
-
-}
+//std::tuple<std::vector<size_t>, std::vector<double> >
+//MixedWavefunction::select(const LinearAlgebra::vector<double> &measure,
+//                          const size_t maximumNumber,
+//                          const double threshold) const {
+//
+//}
 
 void MixedWavefunction::scal(double a) {
     for (auto &el: m_wfn) el.scal(a);

@@ -79,7 +79,7 @@ public:
        * \param w the wavefunction
        * \param parallel_stringset whether to use parallel algorithm in StringSet construction
        */
-    void operatorOnWavefunction(const gci::Operator &h, const Wavefunction &w, bool parallel_stringset = false);
+    void operatorOnWavefunction(const MixedOperator &h, const MixedWavefunction &w, bool parallel_stringset = false);
 
     void diagonalOperator(const Operator &op); //!< set this object to the diagonal elements of the hamiltonian
 
@@ -125,6 +125,9 @@ public:
         throw std::logic_error("Cannot assume sparse vector is a map");
     }
 
+    /*!
+     * @copydoc LinearAlgebra::vector::select
+     */
     std::tuple<std::vector<size_t>, std::vector<double>>
     select(const vector<double> &measure, const size_t maximumNumber = 1000,
            const double threshold = 0) const override {return {{0}, {0}};};
