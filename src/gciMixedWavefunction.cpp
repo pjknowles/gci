@@ -21,10 +21,6 @@ MixedWavefunction::MixedWavefunction(const State &state, int nMode, int nModal, 
     }
 }
 
-void MixedWavefunction::operatorOnWavefunction(const gci::Operator &h, const Wavefunction &w, bool parallel_stringset) {
-
-}
-
 bool MixedWavefunction::compatible(const MixedWavefunction &w2) const {
     bool b_size = (m_wfn.size() == w2.m_wfn.size());
     if (!b_size) return b_size;
@@ -37,7 +33,7 @@ bool MixedWavefunction::compatible(const MixedWavefunction &w2) const {
 }
 
 void MixedWavefunction::allocate_buffer() {
-    for(auto & el: m_wfn) el.allocate_buffer();
+    for (auto &el: m_wfn) el.allocate_buffer();
 }
 
 void MixedWavefunction::axpy(double a, const LinearAlgebra::vector<double> &other) {
@@ -46,13 +42,6 @@ void MixedWavefunction::axpy(double a, const LinearAlgebra::vector<double> &othe
         m_wfn[i].axpy(a, x.m_wfn[i]);
     }
 }
-
-//std::tuple<std::vector<size_t>, std::vector<double> >
-//MixedWavefunction::select(const LinearAlgebra::vector<double> &measure,
-//                          const size_t maximumNumber,
-//                          const double threshold) const {
-//
-//}
 
 void MixedWavefunction::scal(double a) {
     for (auto &el: m_wfn) el.scal(a);
@@ -116,7 +105,7 @@ void MixedWavefunction::times(const LinearAlgebra::vector<double> *a, const Line
     const auto bb = dynamic_cast<const MixedWavefunction &> (*b);
     assert(compatible(aa) && compatible(bb) && "All vectors must be compatible");
     for (int i = 0; i < m_wfn.size(); ++i) {
-        m_wfn[i].times(aa.m_wfn[i], bb.m_wfn[i]);
+        m_wfn[i].times(&aa.m_wfn[i], &bb.m_wfn[i]);
     }
 }
 
@@ -127,7 +116,7 @@ void MixedWavefunction::divide(const LinearAlgebra::vector<double> *a, const Lin
     const auto bb = dynamic_cast<const MixedWavefunction &> (*b);
     assert(compatible(aa) && compatible(bb) && "All vectors must be compatible");
     for (int i = 0; i < m_wfn.size(); ++i) {
-        m_wfn[i].divide(aa.m_wfn[i], bb.m_wfn[i], shift, append, negative);
+        m_wfn[i].divide(&aa.m_wfn[i], &bb.m_wfn[i], shift, append, negative);
     }
 }
 
@@ -139,6 +128,46 @@ double operator*(const MixedWavefunction &w1, const MixedWavefunction &w2) {
         result += w1.m_wfn[i] * w2.m_wfn[i];
     }
     return result;
+}
+
+void MixedWavefunction::operatorOnWavefunction(const MixedOperator &hamiltonian, const MixedWavefunction &w,
+                                               bool parallel_stringset) {
+    for (auto iMode = 0, iWfn = 0; iMode < m_nMode; ++iMode) {
+        for (auto iModal = 0; iModal < m_nModal; ++iModal, ++iWfn) {
+            // Hvib
+            m_wfn[iWfn] += O_Hvib(hamiltonian, iMode, iModal) * w.m_wfn[iWfn];
+            // Hel
+            m_wfn[iWfn].operatorOnWavefunction(hamiltonian.Hel, w.m_wfn[iWfn], parallel_stringset);
+            Wavefunction wfn_scaled(m_wfn[iWfn]);
+            //TODO <K| O_A |L> and <L| O_A |K> are related by scaling. Hardcode that symmetry and only loop over diff = 1
+            for (auto diff = -1; diff <= 1; diff += 2) {
+                auto jModal = iModal + diff;
+                if (jModal < 0 || jModal > m_nModal) continue;
+                // H'el(A)
+                wfn_scaled = O_Q(hamiltonian, iMode, iModal, jModal) * m_wfn[iWfn + diff];
+                m_wfn[iWfn].operatorOnWavefunction(hamiltonian.Hel_A[iMode], wfn_scaled, parallel_stringset);
+                // Hs(A)
+                wfn_scaled = O_dQ(hamiltonian, iMode, iModal, jModal) * m_wfn[iWfn + diff];
+                m_wfn[iWfn].operatorOnWavefunction(hamiltonian.Hs_A[iMode], wfn_scaled, parallel_stringset);
+            }
+        }
+    }
+}
+
+double MixedWavefunction::O_Hvib(const MixedOperator &hamiltonian, int mode, int modal) {
+    return hamiltonian.zpe + 0.5 * hamiltonian.freq[mode] * modal;
+}
+
+double MixedWavefunction::O_Q(const MixedOperator &hamiltonian, int mode, int iModal, int jModal) {
+    assert(std::abs(iModal - jModal) == 1 && "Operator out of range");
+    double n = iModal > jModal ? iModal : jModal;
+    return std::sqrt(n / (2.0 * hamiltonian.freq[mode]));
+}
+
+double MixedWavefunction::O_dQ(const MixedOperator &hamiltonian, int mode, int iModal, int jModal) {
+    double n = iModal > jModal ? iModal : jModal;
+    int sign = iModal > jModal ? -1 : 1;
+    return sign * std::sqrt(0.5 * hamiltonian.freq[mode] * n);
 }
 
 MixedWavefunction operator+(const MixedWavefunction &w1, const MixedWavefunction &w2) {

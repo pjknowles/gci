@@ -9,28 +9,31 @@
  * @brief Mixed fermionic-bosonic Hamiltonian operator. Specialised to second-order expansion of the molecular
  * Hamiltonian in the BBO project.
  *
- * H = H'_el + H_vib + H_el(A) Q_A + H_s(A) dQ_A
+ * H = H'el + Hvib + Hel(A) Q_A + Hs(A) dQ_A
  *
- * H`_el = H_el + H_s(A,A)
+ * H`el = Hel + Hs(A,A)
  *  -- first term is the electronic Hamiltonian at expansion point
  *  -- second term is the diagonal born oppenheimer correction <dQ_A Ph_I| dQ_A Ph_J>
  *
- * H_vib -- vibrational Harmonic oscillator Hamiltonian
+ * Hvib -- vibrational Harmonic oscillator Hamiltonian
  *
- * H_el(A) = dH_el/dQ_A
+ * Hel(A) = dHel/dQ_A
  *  -- derivative of the electronic Hamiltonian
  *
  *
  */
 class MixedOperator {
+public:
     MixedOperator(const FCIdump &fcidump);
+    ~MixedOperator()=default;
 
     int nMode; //!< Number of vibrational modes
-    Operator H_el; //!< Electronic Hamiltonian
-    Operator H_vib; //!< Vibrational Hamiltonian
-    std::vector<Operator> Hel_A; //!< First order expansion of electronic Hamiltonian
-    std::vector<Operator> Hs_A; //!< First order kinetic energy coupling term
-    std::vector<Operator> Hs_AA; //!< Second order kinetic energy coupling term
+    std::vector<double> freq; //!< Harmonic frequencies
+    double zpe; //!< Vibrational zero point energy at HO level
+    gci::Operator Hel; //!< Electronic Hamiltonian
+    std::vector<gci::Operator> Hel_A; //!< First order expansion of electronic Hamiltonian
+    std::vector<gci::Operator> Hs_A; //!< First order kinetic energy coupling term
+    std::vector<gci::Operator> Hs_AA; //!< Second order kinetic energy coupling term
 };
 
 

@@ -5,6 +5,7 @@
 
 #include <LinearAlgebra.h>
 #include "gciWavefunction.h"
+#include "gciMixedOperator.h"
 
 namespace gci {
 /*!
@@ -56,7 +57,7 @@ public:
     MixedWavefunction(const MixedWavefunction &other, int option) {*this = other;}
     ~MixedWavefunction() override = default;
 
-    size_t size() {return m_dimension;}
+    size_t size() const {return m_dimension;}
     void allocate_buffer(); //!< allocate buffer to full size
 
     /*!
@@ -98,28 +99,51 @@ private:
      * mode A.
      */
     std::vector<Wavefunction> m_wfn;
+
+    /*!
+     * @brief Expectation value of vibrational Hamiltonian <HO| Hvib | HO>
+     * @param hamiltonian Coupled electronic-vibrational Hamiltonian
+     * @param mode Vibrational mode
+     * @param modal Harmonic Oscillator modal index
+     */
+    double O_Hvib(const MixedOperator &hamiltonian, int mode, int modal);
+
+    /*!
+     * @brief Expectation value of Q_A
+     * @param hamiltonian Coupled electronic-vibrational Hamiltonian
+     * @param mode Vibrational mode
+     * @param iModal Modal for bra
+     * @param jModal Modal for ket
+     * @return
+     */
+    double O_Q(const MixedOperator &hamiltonian, int mode, int iModal, int jModal);
+
+    /*!
+     * @brief Expectation value of d/dQ_A
+     * @param hamiltonian Coupled electronic-vibrational Hamiltonian
+     * @param mode Vibrational mode
+     * @param iModal Modal for bra
+     * @param jModal Modal for ket
+     * @return
+     */
+    double O_dQ(const MixedOperator &hamiltonian, int mode, int iModal, int jModal);
+
 public:
     /*!
      * @brief Checks that the two wavefunctions are of the same electronic State and of the same dimension.
      */
     bool compatible(const MixedWavefunction &other) const;
-    /*! @copydoc gci::LinearAlgebra::axpy
+    /*! @copydoc LinearAlgebra::vector::axpy
      */
     void axpy(double a, const LinearAlgebra::vector<double> &other) override;
-
     /*!
-     * @brief
-     * @param a
-     * @param x
+     * @copydoc LinearAlgebra::vector::axpy(scalar,const vector<scalar>&)
      */
-    void axpy(double a, const std::shared_ptr<LinearAlgebra::vector<double> > &x) {
-        axpy(a, *x);
+    void axpy(double a, const std::shared_ptr<LinearAlgebra::vector<double> > &other) {
+        axpy(a, *other);
     }
-
     /*!
-     * @brief
-     * @param a
-     * @param other
+     * @copydoc LinearAlgebra::vector::axpy(scalar,const std::map<size_t,scalar>& )
      */
     void axpy(double a, const std::map<size_t, double> &other) override {
         throw std::logic_error("Cannot assume sparse vector is a map");
@@ -133,49 +157,64 @@ public:
            const double threshold = 0) const override {return {{0}, {0}};};
 
     /*!
-     * @brief
-     * @param a
+     * @copydoc LinearAlgebra::vector::scal
      */
     void scal(double a) override;
+
     /*!
-     * @brief
-     * @param other
-     * @return
+     * @copydoc LinearAlgebra::vector::dot
      */
     double dot(const LinearAlgebra::vector<double> &other) const override;
 
-    double dot(const std::shared_ptr<LinearAlgebra::vector<double> > other) const {
+    /*!
+     * @overload
+     */
+    double dot(const std::shared_ptr<LinearAlgebra::vector<double> > &other) const {
         return dot(*other);
     }
 
-    double dot(const std::unique_ptr<LinearAlgebra::vector<double> > other) const {
+    /*!
+     * @overload
+     */
+    double dot(const std::unique_ptr<LinearAlgebra::vector<double> > &other) const {
         return dot(*other);
     }
 
+    /*!
+     * @overload
+     */
     double dot(const std::map<size_t, double> &other) const override {
         throw std::logic_error("Cannot assume sparse vector is a map");
     }
 
+    /*!
+     * @copydoc LinearAlgebra::vector::zero
+     */
     void zero() override;
 
     /*!
-     * @brief
-     * @param option
-     * @return
+     * @copydoc LinearAlgebra::vector::zero
      */
     MixedWavefunction *clone(int option = 0) const override {return new MixedWavefunction(*this, option);}
 
-    MixedWavefunction &operator*=(const double &value); ///< multiply by a scalar
-    MixedWavefunction &operator+=(const MixedWavefunction &other); ///< add another wavefunction
-    MixedWavefunction &operator-=(const MixedWavefunction &other); ///< subtract another wavefunction
-    MixedWavefunction &operator-=(double); ///< subtract a scalar from every element
-    MixedWavefunction &operator-(); ///< unary minus
+    MixedWavefunction &operator*=(const double &value); //!< multiply by a scalar
+    MixedWavefunction &operator+=(const MixedWavefunction &other); //!< add another wavefunction
+    MixedWavefunction &operator-=(const MixedWavefunction &other); //!< subtract another wavefunction
+    MixedWavefunction &operator-=(double); //!< subtract a scalar from every element
+    MixedWavefunction &operator-(); //!< unary minus
     MixedWavefunction &
-    operator/=(const MixedWavefunction &other); ///< element-by-element division by another wavefunction
-
+    operator/=(const MixedWavefunction &other); //!< element-by-element division by another wavefunction
+    /*!
+     * @brief form a perturbation-theory update, and return the predicted energy change.
+     * @param diagonalH Diagonal of the Hamiltonian matrix
+     * @param eTruncated Energy change lost by truncation
+     * @param dEmax
+     * @return
+     */
     double update(const Wavefunction &diagonalH,
                   double &eTruncated,
-                  const double dEmax = (double) 0) { }; ///< form a perturbation-theory update, and return the predicted energy change. eTruncated is the energy change lost by truncation
+                  const double dEmax = 0.0) { };
+
     /*!
      * \brief addAbsPower Evaluate this[i] += factor * abs(c[I])^k * c[I]
      * \param c
@@ -210,7 +249,7 @@ public:
     std::map<std::string, double> m_properties;
 
     void settilesize(int t = -1, int a = -1, int b = -1) { };
-};
+};  // class MixedWavefunction
 
 double operator*(const MixedWavefunction &w1, const MixedWavefunction &w2);///< inner product of two wavefunctions
 MixedWavefunction operator+(const MixedWavefunction &w1, const MixedWavefunction &w2); ///< add two wavefunctions
