@@ -1,4 +1,5 @@
 #include "gciMixedWavefunction.h"
+#include <assert.h>
 
 namespace gci {
 MixedWavefunction::MixedWavefunction(const State &state, int nMode, int nModal, int modeCoupling)
@@ -74,6 +75,11 @@ MixedWavefunction &MixedWavefunction::operator-=(const MixedWavefunction &other)
     return *this;
 }
 
+MixedWavefunction &MixedWavefunction::operator+=(double value) {
+    for (auto &el: m_wfn) el += value;
+    return *this;
+}
+
 MixedWavefunction &MixedWavefunction::operator-=(double value) {
     for (auto &el: m_wfn) el -= value;
     return *this;
@@ -139,7 +145,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperator &hamiltonian,
             // Hel
             m_wfn[iWfn].operatorOnWavefunction(hamiltonian.Hel, w.m_wfn[iWfn], parallel_stringset);
             Wavefunction wfn_scaled(m_wfn[iWfn]);
-            //TODO <K| O_A |L> and <L| O_A |K> are related by scaling. Hardcode that symmetry and only loop over diff = 1
+            //TODO <K| O_A |L> and <L| O_A |K> are related by scaling. Hardcode that symmetry and only use diff = 1
             for (auto diff = -1; diff <= 1; diff += 2) {
                 auto jModal = iModal + diff;
                 if (jModal < 0 || jModal > m_nModal) continue;
@@ -154,8 +160,22 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperator &hamiltonian,
     }
 }
 
+void MixedWavefunction::diagonalOperator(const MixedOperator &hamiltonian) {
+    m_wfn[0].diagonalOperator(hamiltonian.Hel);
+    for (auto iMode = 0, iWfn = 0; iMode < m_nMode; ++iMode) {
+        for (auto iModal = 0; iModal < m_nModal; ++iModal, ++iWfn) {
+            if (iWfn == 0) continue;
+            // Hel
+            m_wfn[iWfn] = m_wfn[0];
+            // Hvib
+            m_wfn[iWfn] += O_Hvib(hamiltonian, iMode, iModal);
+        }
+    }
+
+}
+
 double MixedWavefunction::O_Hvib(const MixedOperator &hamiltonian, int mode, int modal) {
-    return hamiltonian.zpe + 0.5 * hamiltonian.freq[mode] * modal;
+    return 0.5 * hamiltonian.freq[mode] * modal;
 }
 
 double MixedWavefunction::O_Q(const MixedOperator &hamiltonian, int mode, int iModal, int jModal) {
@@ -168,6 +188,18 @@ double MixedWavefunction::O_dQ(const MixedOperator &hamiltonian, int mode, int i
     double n = iModal > jModal ? iModal : jModal;
     int sign = iModal > jModal ? -1 : 1;
     return sign * std::sqrt(0.5 * hamiltonian.freq[mode] * n);
+}
+
+void MixedWavefunction::set(const double val) {
+    for (auto &el:m_wfn) el.set(val);
+}
+
+size_t MixedWavefunction::minloc(size_t n) const {
+    return 0;
+}
+
+double MixedWavefunction::at(size_t offset) const {
+    return 0;
 }
 
 MixedWavefunction operator+(const MixedWavefunction &w1, const MixedWavefunction &w2) {

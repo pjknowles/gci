@@ -204,6 +204,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
   Wavefunction &operator*=(const double &value); ///< multiply by a scalar
   Wavefunction &operator+=(const Wavefunction &other); ///< add another wavefunction
   Wavefunction &operator-=(const Wavefunction &other); ///< subtract another wavefunction
+  Wavefunction &operator+=(double); ///< add a scalar to every element
   Wavefunction &operator-=(double); ///< subtract a scalar from every element
   Wavefunction &operator-(); ///< unary minus
   Wavefunction &operator/=(const Wavefunction &other); ///< element-by-element division by another wavefunction

@@ -82,7 +82,11 @@ public:
        */
     void operatorOnWavefunction(const MixedOperator &h, const MixedWavefunction &w, bool parallel_stringset = false);
 
-    void diagonalOperator(const Operator &op); //!< set this object to the diagonal elements of the hamiltonian
+    /*!
+     * @brief set this object to the diagonal elements of the hamiltonian
+     * @param op
+     */
+    void diagonalOperator(const MixedOperator &hamiltonian);
 
 private:
     int m_nMode; //!< number of vibrational modes
@@ -197,13 +201,16 @@ public:
      */
     MixedWavefunction *clone(int option = 0) const override {return new MixedWavefunction(*this, option);}
 
+    void set(double val);///< set all elements to a scalar
     MixedWavefunction &operator*=(const double &value); //!< multiply by a scalar
     MixedWavefunction &operator+=(const MixedWavefunction &other); //!< add another wavefunction
     MixedWavefunction &operator-=(const MixedWavefunction &other); //!< subtract another wavefunction
+    MixedWavefunction &operator+=(double); //!< add a scalar to every element
     MixedWavefunction &operator-=(double); //!< subtract a scalar from every element
     MixedWavefunction &operator-(); //!< unary minus
     MixedWavefunction &
     operator/=(const MixedWavefunction &other); //!< element-by-element division by another wavefunction
+
     /*!
      * @brief form a perturbation-theory update, and return the predicted energy change.
      * @param diagonalH Diagonal of the Hamiltonian matrix

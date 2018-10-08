@@ -210,6 +210,11 @@ Wavefunction &Wavefunction::operator-=(const Wavefunction &other) {
   return *this;
 }
 
+Wavefunction &Wavefunction::operator+=(const double other) {
+  for (auto &b : buffer) b += other;
+  return *this;
+}
+
 Wavefunction &Wavefunction::operator-=(const double other) {
   for (auto &b : buffer) b -= other;
   return *this;
