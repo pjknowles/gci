@@ -13,6 +13,8 @@ namespace gci {
  * space of Slater Determenants and Hartree Product of modals. It implements storage of the wavefunction
  * coefficients and application of the Hamiltonitan ( r = H c).
  *
+ * Vibrational basis is specified by mode coupling level, CIS, CISD etc, and maximum excitation level.
+ *
  * Nomenclature:
  *      modal - one particle vibrational basis function
  *
@@ -29,14 +31,16 @@ namespace gci {
  * H1_int = (d/dX_A H_el) dX_A + (m_dg n d_mn) d/dX_A
  * couples electronic degrees of freedom with a single vibrational mode.
  * Due to the nature of HO basis, only adjacent vibrational states are coupled
- * Requires use of vibrational basis with no mode coupling.
  *
  * H2_int = (d/dX_A d/dX_B H_el) dX_A dX_B
  * couples electronic degrees of freedom with two vibrational modes
- * Requires use of vibrational basis with two mode coupling.
+ *
+ * This introduces a lot of sparsity in Hamiltonian, but the wavefunction remains coupled.
  *
  * Wavefunction with only 1 mode coupling:
  * Psi = sum_A C_{p,q,I_A} |p,q> |I_A> |0_B> |0_C> ...
+ *
+ *
  *
  * In practice the coefficients C_{p,q,I_A} are stored as a vector<C_{p,q}>(n = nModes * nModals).
  * This class is in fact mostly a wrapper of gci::Wavefunction with a few hardcoded expressions for the vibrational
