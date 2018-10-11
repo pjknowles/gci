@@ -139,7 +139,7 @@ gci::Operator gci::Operator::construct(const char *dump) {
   return gci::Operator(so, os);
 }
 
-FCIdump gci::Operator::FCIDump(const std::string filename) const {
+void gci::Operator::FCIDump(const std::string filename) const {
   FCIdump dump;
   int verbosity = 0;
   std::vector<int> orbital_symmetries;
@@ -226,7 +226,6 @@ FCIdump gci::Operator::FCIDump(const std::string filename) const {
       }
   dump.writeIntegral(0, 0, 0, 0, m_O0);
 
-  return dump;
 }
 
 gci::Operator *gci::Operator::projector(const std::string special, const bool forceSpinUnrestricted) const {
