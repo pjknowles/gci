@@ -34,10 +34,6 @@ public:
 
     /*!
      * @brief Initialises Hel, Hvib and Hint from fcidump files. The vibrational Hamiltonian is assumed to be harmonic.
-     * @param symMode Symmetry of each mode [1-8]
-     * @param nMode Total number of modes
-     * @param nModal Number of HO basis functions per mode
-     * @param fcidump Root name of the fcidump files
      */
     explicit OperatorBBO(const Options &options, std::string description = "BBO Molecular Hamiltonian");
     ~OperatorBBO()=default;

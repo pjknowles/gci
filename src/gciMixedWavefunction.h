@@ -88,7 +88,7 @@ public:
 
     /*!
      * @brief set this object to the diagonal elements of the hamiltonian
-     * @param op
+     * @param hamiltonian
      */
     void diagonalOperator(const MixedOperator &hamiltonian);
 
