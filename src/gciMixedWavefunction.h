@@ -40,7 +40,13 @@ namespace gci {
  * Wavefunction with only 1 mode coupling:
  * Psi = sum_A C_{p,q,I_A} |p,q> |I_A> |0_B> |0_C> ...
  *
- *
+ * Order of vibrational product basis:
+ *  - index(CIS) < index(CISD)
+ *  - size(CIS, mode_A) = nModal_A
+ *  - Let Phi_mode_A be hartree products with mode A excited
+ *    - CIS = {Phi_mode_1, Phi_mode_2, ...}
+ *    - CISD = {Phi_mode_12, Phi_mode_13, ..., Phi_mode_23, ...}
+ *  - and continued for CISDT, CISDTQ etc.
  *
  * In practice the coefficients C_{p,q,I_A} are stored as a vector<C_{p,q}>(n = nModes * nModals).
  * This class is in fact mostly a wrapper of gci::Wavefunction with a few hardcoded expressions for the vibrational
@@ -58,7 +64,7 @@ public:
      * BBO Hamiltonian determines whether two-mode coupling is required or not in the vibrational basis.
      */
     MixedWavefunction(const State &state, int nMode, int nModal, int modeCoupling = 1);
-    MixedWavefunction(const MixedWavefunction &other, int option) {*this = other;}
+//    MixedWavefunction(const MixedWavefunction &other, int option) {*this = other;}
     ~MixedWavefunction() override = default;
 
     size_t size() const {return m_dimension;}
@@ -96,8 +102,21 @@ private:
     int m_nMode; //!< number of vibrational modes
     int m_nModal; //!< number of modals per mode
     int m_modeCoupling; //!< level of mode-mode coupling = 1, or 2
-    size_t m_elecWfnSize; //!< size of the electronic Wavefunction vector. When we include symmetry each wfn might have different size
+    size_t m_elDim; //!< Dimension of the electronic (slater determinant) space
+    size_t m_vibDim; //!< Dimension of the vibrational space
+    std::vector<size_t> m_vibExcLvlDim; //! Dimension of the vibrational space per excitation level, counting from 0th level
     size_t m_dimension; //!< Overall dimension of the direct product Fock space
+
+    /*!
+     * @brief Identifies a Hartree product basis function by excitations, <iMode, iModal>, out of the ground state
+     */
+    using HartreeProduct = std::vector<std::vector<int>> ;
+
+    /*!
+     * @brief Index to the electronic wfn corresponding to a vibrational basis
+     * @param phi  Vibrational basis function
+     */
+    size_t indexVibWfn(HartreeProduct phi);
 
     /*!
      * @brief Overall wavefunction.
@@ -107,6 +126,11 @@ private:
      * mode A.
      */
     std::vector<Wavefunction> m_wfn;
+
+    /*!
+     * @brief Sets the dimensionality of the vibrational space
+     */
+    void setVibDim();
 
     /*!
      * @brief Expectation value of vibrational Hamiltonian <HO| Hvib | HO>

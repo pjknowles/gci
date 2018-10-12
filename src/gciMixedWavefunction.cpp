@@ -1,36 +1,69 @@
 #include "gciMixedWavefunction.h"
+
 #include <assert.h>
 
 namespace gci {
 MixedWavefunction::MixedWavefunction(const State &state, int nMode, int nModal, int modeCoupling)
-        : m_nMode(nMode), m_nModal(nModal), m_modeCoupling(modeCoupling), m_elecWfnSize(0), m_dimension(0) {
-    assert((modeCoupling == 1 || modeCoupling == 2) && "Current Hamiltonian assumes 1 or 2 mode coupling");
+        : m_nMode(nMode), m_nModal(nModal), m_modeCoupling(modeCoupling), m_elDim(0), m_vibDim(0),
+          m_vibExcLvlDim(modeCoupling + 1, 0), m_dimension(0) {
     // Zeroth order
     m_wfn.emplace_back(state);
-    m_elecWfnSize = m_wfn[0].size();
-    m_dimension = m_elecWfnSize;
-    // First order coupling
-    for (int iMode = 0; iMode < m_nMode; ++iMode) {
-        for (int iModal = 0; iModal < m_nModal; ++iModal) {
-            m_wfn.emplace_back(state);
-        }
+    m_elDim = m_wfn[0].size();
+    m_dimension = m_elDim;
+    // Vibrationally coupled states
+    if (m_modeCoupling > 2) {
+        throw std::logic_error("modeCoupling > 2 is not supported yet");
     }
-    m_dimension += m_nMode * m_nModal * m_elecWfnSize;
-    // Second order coupling
-    if (m_modeCoupling > 1) {
-        throw std::logic_error("modeCoupling > 1 is not yet implemented");
+    setVibDim();
+    m_wfn.resize(m_vibDim, m_wfn[0]);
+    m_dimension += m_vibDim * m_elDim;
+}
+
+void MixedWavefunction::setVibDim() {
+    // This can be generalized
+    m_vibExcLvlDim[0] = (size_t) 0;
+    if (m_modeCoupling >= 1) {
+        m_vibExcLvlDim[1] = (size_t) m_nMode * (m_nModal - 1);
     }
+    if (m_modeCoupling >= 2) {
+        m_vibExcLvlDim[2] = (size_t) m_vibExcLvlDim[1] * (m_nMode - 1) / 2 * (m_nModal - 1);
+    }
+    m_vibDim = std::accumulate(m_vibExcLvlDim.cbegin(), m_vibExcLvlDim.cend(), (size_t) 0);
+}
+
+// TODO Implement unit testing
+size_t MixedWavefunction::indexVibWfn(HartreeProduct phi) {
+    if (phi.empty() == 0) return 0;
+    else if (phi.size() == 1) {
+        if (phi[0][0] == 0) return indexVibWfn({}); // Excitation is a ground state
+        auto iMode = phi[0][0];
+        auto iModal = phi[0][1];
+        return (size_t) iMode * (m_nModal - 1) + iModal;
+    } else if (phi.size() == 2) {
+        if (phi[0][0] == 0) return indexVibWfn({phi[1]}); // First excitation is a ground state
+        if (phi[1][0] == 0) return indexVibWfn({phi[0]}); // Second excitation is a ground state
+        if (phi[0][0] == phi[1][0]) throw std::logic_error("Double excitation of the same mode is not allowed");
+        if (phi[0][0] < phi[1][0]) phi[0].swap(phi[1]);
+        auto iMode = phi[0][0];
+        auto iModal = phi[0][1];
+        auto jMode = phi[1][0];
+        auto jModal = phi[1][1];
+        auto index = (size_t) m_vibExcLvlDim[1];
+        index += iMode * (iMode + 1) / 2 * (m_nModal - 1) * (m_nModal - 1);
+        index += (iModal - 1) * m_nModal + (jModal - 1);
+        return index;
+    } else throw std::logic_error("Vibrational basis is currently restricted to double excitations only");
 }
 
 bool MixedWavefunction::compatible(const MixedWavefunction &w2) const {
-    bool b_size = (m_wfn.size() == w2.m_wfn.size());
-    if (!b_size) return b_size;
-    bool b_electronic_wfn = true;
+    bool sameSize = (m_wfn.size() == w2.m_wfn.size());
+    if (!sameSize) return sameSize;
+    bool sameElectronicWfn = true;
     for (int i = 0; i < m_wfn.size(); ++i) {
-        b_electronic_wfn = b_electronic_wfn && m_wfn[i].compatible(w2.m_wfn[i]);
+        sameElectronicWfn = sameElectronicWfn && m_wfn[i].compatible(w2.m_wfn[i]);
     }
-    bool b_vib_basis = (m_nMode == w2.m_nMode) && (m_nModal == w2.m_nModal) && (m_modeCoupling == w2.m_modeCoupling);
-    return b_size && b_electronic_wfn && b_vib_basis;
+    bool sameVibBasis = (m_nMode == w2.m_nMode) && (m_nModal == w2.m_nModal) && (m_modeCoupling == w2.m_modeCoupling);
+    return sameSize && sameElectronicWfn && sameVibBasis;
 }
 
 void MixedWavefunction::allocate_buffer() {
@@ -138,23 +171,40 @@ double operator*(const MixedWavefunction &w1, const MixedWavefunction &w2) {
 
 void MixedWavefunction::operatorOnWavefunction(const MixedOperator &hamiltonian, const MixedWavefunction &w,
                                                bool parallel_stringset) {
-    for (auto iMode = 0, iWfn = 0; iMode < m_nMode; ++iMode) {
-        for (auto iModal = 0; iModal < m_nModal; ++iModal, ++iWfn) {
+    // Vibrational ground state
+    m_wfn[0].operatorOnWavefunction(hamiltonian.Hel, w.m_wfn[0], parallel_stringset);
+    // Vibrational CIS
+    Wavefunction wfn_scaled(m_wfn[0]);
+    for (auto iMode = 0; iMode < m_nMode; ++iMode) {
+        for (auto iModal = 0; iModal < m_nModal; ++iModal) {
+            auto iWfn = indexVibWfn({{iMode, iModal}});
             // Hvib
-            m_wfn[iWfn] += O_Hvib(hamiltonian, iMode, iModal) * w.m_wfn[iWfn];
+            m_wfn[iWfn].axpy(O_Hvib(hamiltonian, iMode, iModal), w.m_wfn[iWfn]);
             // Hel
             m_wfn[iWfn].operatorOnWavefunction(hamiltonian.Hel, w.m_wfn[iWfn], parallel_stringset);
-            Wavefunction wfn_scaled(m_wfn[iWfn]);
-            //TODO <K| O_A |L> and <L| O_A |K> are related by scaling. Hardcode that symmetry and only use diff = 1
-            for (auto diff = -1; diff <= 1; diff += 2) {
+            1
+            for (int diff = -1; diff < 2; diff += 2) {
                 auto jModal = iModal + diff;
-                if (jModal < 0 || jModal > m_nModal) continue;
+                if (jModal < 0 || jModal >= m_nModal) continue;
+                auto jWfn = indexVibWfn({{iMode, jModal}});
                 // H'el(A)
-                wfn_scaled = O_Q(hamiltonian, iMode, iModal, jModal) * m_wfn[iWfn + diff];
+                wfn_scaled = O_Q(hamiltonian, iMode, iModal, jModal) * m_wfn[jWfn];
                 m_wfn[iWfn].operatorOnWavefunction(hamiltonian.Hel_A[iMode], wfn_scaled, parallel_stringset);
                 // Hs(A)
-                wfn_scaled = O_dQ(hamiltonian, iMode, iModal, jModal) * m_wfn[iWfn + diff];
+                wfn_scaled = O_dQ(hamiltonian, iMode, iModal, jModal) * m_wfn[jWfn];
                 m_wfn[iWfn].operatorOnWavefunction(hamiltonian.Hs_A[iMode], wfn_scaled, parallel_stringset);
+            }
+        }
+    }
+    // TODO implement Hel(A,B) matrix elements.
+    for (auto iMode = 0; iMode < m_nMode; ++iMode) {
+        for (auto iModal = 0; iModal < m_nModal; ++iModal) {
+            for (auto jMode = 0; jMode < m_nMode; ++jMode) {
+                for (auto jModal = 0; jModal < m_nModal; ++jModal) {
+                    for (const auto jWfn : connectedVibBasis({{iMode, iModal}, {jMode, jModal}})) {
+
+                    }
+                }
             }
         }
     }
@@ -185,6 +235,7 @@ double MixedWavefunction::O_Q(const MixedOperator &hamiltonian, int mode, int iM
 }
 
 double MixedWavefunction::O_dQ(const MixedOperator &hamiltonian, int mode, int iModal, int jModal) {
+    assert(std::abs(iModal - jModal) == 1 && "Operator out of range");
     double n = iModal > jModal ? iModal : jModal;
     int sign = iModal > jModal ? -1 : 1;
     return sign * std::sqrt(0.5 * hamiltonian.freq[mode] * n);
