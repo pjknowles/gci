@@ -6,8 +6,10 @@
 #include <LinearAlgebra.h>
 #include "gciWavefunction.h"
 #include "gciMixedOperator.h"
+#include "gciHProductSet.h"
 
 namespace gci {
+
 
 /*!
  * @brief Mixed bosonic and fermionic wavefunction represented as configuration expansion in the direct product
@@ -57,14 +59,11 @@ class MixedWavefunction : public LinearAlgebra::vector<double> {
     // Inhereting the vector class brings the functions that need to be implemented for linera algebra solver to work.
 public:
     /*!
-     * @brief Constructs the wavefunction using a State prototype for the electronic component.
-     *
-     * Should take some parameters defining the electronic state and excitation level of the vibrational basis,
-     * together with a BBO Hamiltonian.
-     *
-     * BBO Hamiltonian determines whether two-mode coupling is required or not in the vibrational basis.
+     * @brief Constructs the mixed wavefunction.
+     * @param state Electronic state
+     * @param vibSate Vibrational state
      */
-    MixedWavefunction(const State &state, int nMode, int nModal, int modeCoupling = 1);
+    MixedWavefunction(const State &state, const VibSpace &vibSpace);
 //    MixedWavefunction(const MixedWavefunction &other, int option) {*this = other;}
     ~MixedWavefunction() override = default;
 
@@ -100,58 +99,11 @@ public:
     void diagonalOperator(const MixedOperator &hamiltonian);
 
 protected:
-    /*!
-     * @brief Represents a Hartree product for vibrational basis as occupation numbers for excited states.
-     *
-     * Excitations are stored as {{modeIndex, modalIndex}, ...}:
-     *      - modeIndex  -- mode outside of its ground state
-     *      - modalIndex -- index for the occupied excitated state basis function
-     *
-     * Order:
-     *      - only one basis per mode (no modeIndex occurs twice)
-     *      - modeIndex in increasing order
-     *      - modalIndex != 0, since this is the assumed value for the ground state.
-     */
-    class HartreeProduct{
-    public:
-        using t_Modal = std::vector<int>;
-        using t_Product = std::vector<t_Modal>;
-//        HartreeProduct(HartreeProduct& phi) = delete;
-        HartreeProduct(t_Product phi);
 
-        //! Checks if the product is empty. This implies ground state.
-        bool empty() const {return m_prod.empty();}
-
-        //! Number of excited modes.
-        auto size() const {return m_prod.size();}
-
-        const auto& operator[](size_t i) const { return m_prod[i];}
-
-        /*!
-         * @brief Excites a mode by one level.
-         * @param iMode Index of the mode to be excited
-         * @return
-         */
-        HartreeProduct excite(int iMode) const;
-
-        /*!
-         * @brief List of excited modes in the current product
-         */
-        std::vector<int> excitedModes() const;
-    protected:
-        t_Product m_prod; //!< excitations representing the Hartree product
-
-        //! Enforces ordering of the HartreeProduct and thows an error if cannot be done.
-        void reorder(t_Product &prod);
-    };
-
-    /*!
-     * @brief enumerators for vibrational operators
-     *
-     * HO -- Harmonic oscillator operator
-     * The rest are self-explanatory
-     */
-    enum class vibOp{ HO, Q, dQ, Qsq};
+    VibSpace m_vibSpace; //!< Parameters defining the vibrational space of current wavefunction
+    HProductSet m_vibBasis; //!< Vibrational basis for the full space of current wavefunction
+    size_t m_elDim; //!< Dimension of the electronic (slater determinant) space
+    size_t m_dimension; //!< Overall dimension of the direct product Fock space
 
     /*!
      * @brief Overall wavefunction.
@@ -161,57 +113,6 @@ protected:
      * mode A.
      */
     std::vector<Wavefunction> m_wfn;
-
-    /*!
-     * @brief Sets the dimensionality of the vibrational space
-     */
-    void setVibDim();
-
-    /*!
-     * @brief Generates the vibrational basis functions for the current state of the wavefunction.
-     */
-    void generateVibrationalSpace();
-
-    /*!
-     * @brief Index to the electronic wfn corresponding to a vibrational basis
-     * @param phi  Vibrational basis function
-     */
-    size_t indexVibWfn(const HartreeProduct &phi);
-
-    /*!
-     * @brief Expectation value of vibrational Hamiltonian <HO| Hvib | HO>
-     * @param hamiltonian Coupled electronic-vibrational Hamiltonian
-     * @param bra Vibrational mode
-     * @param modal Harmonic Oscillator modal index
-     */
-    double O_Hvib(const MixedOperator &hamiltonian, const HartreeProduct &bra);
-
-    /*!
-     * @brief Expectation value of Q_A
-     * @param hamiltonian Coupled electronic-vibrational Hamiltonian
-     * @param bra Vibrational Hartree product for the bra
-     * @param ket Vibrational Hartree product for the ket
-     * @return
-     */
-    double O_Q(const MixedOperator &hamiltonian, const HartreeProduct &bra, const HartreeProduct &ket);
-
-    /*!
-     * @brief Expectation value of d/dQ_A
-     * @param hamiltonian Coupled electronic-vibrational Hamiltonian
-     * @param bra Vibrational Hartree product for the bra
-     * @param ket Vibrational Hartree product for the ket
-     * @return
-     */
-    double O_dQ(const MixedOperator &hamiltonian, const HartreeProduct &bra, const HartreeProduct &ket);
-
-    int m_nMode; //!< number of vibrational modes
-    int m_nModal; //!< number of modals per mode
-    int m_modeCoupling; //!< level of mode-mode coupling = 1, or 2
-    size_t m_elDim; //!< Dimension of the electronic (slater determinant) space
-    size_t m_vibDim; //!< Dimension of the vibrational space
-    std::vector<size_t> m_vibExcLvlDim; //! Number of vibrational basis functions up to each excitation level, counting from 0th level
-    std::vector<HartreeProduct> m_vibBasis; //!< full set of Hartree product defining the vibrational Fock space
-    size_t m_dimension; //!< Overall dimension of the direct product Fock space
 
 public:
     /*!
