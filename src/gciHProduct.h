@@ -5,6 +5,8 @@
 
 #include "gciVibSpace.h"
 
+namespace gci {
+
 /*!
  * @brief Hartree product is a single vibrational basis represented as occupation numbers for excited states.
  *
@@ -26,24 +28,43 @@ public:
     t_Product::const_iterator begin() const {return m_prod.cbegin();}
     t_Product::const_iterator end() const {return m_prod.cend();}
 
-    bool operator==(const HProduct &other) const {return m_prod == other.m_prod;};
-    bool operator!=(const HProduct &other) const {return !(*this == other)};
+    bool operator==(const HProduct &other) const {return m_prod == other.m_prod;}
+    bool operator!=(const HProduct &other) const {return !(*this == other);}
 
     //! Checks if the product is empty. This implies ground state.
     bool empty() const {return m_prod.empty();}
 
     //! Number of excited modes
-    auto modeCouplingLvl() const {return m_prod.size();}
+    auto excLvl() const {return m_prod.size();}
+
+    //! Excitation level of a mode
+    int excLvl(int iMode) const;
 
     const auto &operator[](unsigned long i) const {return m_prod[i];}
 
     /*!
      * @brief Excites a mode by one level.
+     * @note No check is made whether the resultant product is still within some desired Fock space
      * @param iMode Index of the mode to be excited
-     * @param maxModal Maximum number of modal, specifying the maximum excitation level
-     * @return
+     * @return Excited HProduct
      */
-    HProduct excite(int iMode) const;
+    void raise(int iMode) {changeModal(iMode, +1);}
+
+    /*!
+     * @brief Loweres a mode by one level.
+     * @note No check is made whether the resultant product is still within some desired Fock space
+     * @param iMode Index of the mode to be excited
+     * @return Excited HProduct
+     */
+    void lower(int iMode) {changeModal(iMode, -1);}
+
+    /*!
+     * @brief Changes occupied modal by `diff` excitations.
+     * @param iMode Mode to be changed
+     * @param diff Relative number of excitations(de-excitations positive/negative values
+     * @return Excited Hartree product
+     */
+    void changeModal(int iMode, int diff);
 
     /*!
      * @brief Checks that the product is within a specified space
@@ -59,9 +80,14 @@ public:
 protected:
     t_Product m_prod; //!< excitations representing the Hartree product
 
-    //! Enforces ordering of the HartreeProduct and throws an error if cannot be done.
-    void reorder(t_Product &prod);
+    //! Enforces ordering of the HartreeProduct..
+    void reorder(t_Product &prod) const;
+
+    //! Checks that the product makes sense. @warning Assumes that product is ordered
+    void check(t_Product &prod) const;
+
 };
+}//  namespace gci
 
 #include <vector>
 

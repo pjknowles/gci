@@ -4,23 +4,22 @@
 
 namespace gci {
 
-HProductSet::HProductSet(const VibSpace &vibSpace, const HProduct &bra, MixedOperator::VibOp vibOp)
-        : m_vibSpace(vibSpace), m_basis(), m_vibDim(0), m_vibExcLvlDim() {
-    switch (vibOp) {
-        case MixedOperator::VibOp::HO: {
+HProductSet::HProductSet(const VibSpace &vibSpace, const HProduct &bra, const VibOp &vibOp)
+        : m_vibSpace(vibSpace), m_basis(), m_vibDim(0), m_vibExcLvlDim(), m_connectedSet(true) {
+    switch (vibOp.type) {
+        case VibOpType::HO: {
             m_basis.emplace_back(bra);
             break;
         }
-        case MixedOperator::VibOp::Q:
-        case MixedOperator::VibOp::dQ: {
-        }
-        case MixedOperator::VibOp::Qsq: {
-        }
+        case VibOpType::Q:
+        case VibOpType::dQ: generateQcoupledSpace(bra, vibOp);
+        case VibOpType::Qsq: generateQsqCoupledSpace(bra, vibOp);
     }
     m_vibDim = m_basis.size();
 }
 
 void HProductSet::setVibDim() {
+    if (m_connectedSet) throw std::logic_error("Cannot be called for a connectedSet.");
     // This can be generalized
     auto vibExcLvlDim = m_vibExcLvlDim;
     vibExcLvlDim[0] = (size_t) 1;
@@ -39,6 +38,7 @@ void HProductSet::setVibDim() {
 }
 
 void HProductSet::generateFullSpace() {
+    if (m_connectedSet) throw std::logic_error("Cannot be called for a connectedSet.");
     setVibDim();
     m_basis.reserve(m_vibDim);
     m_basis.emplace_back(HProduct::t_Modal{{}});
@@ -52,7 +52,9 @@ void HProductSet::generateFullSpace() {
             for (int iMode = 0; iMode < endMode; ++iMode) {
                 auto *prevProduct = &base;
                 for (int iModal = 1; iModal < m_vibSpace.nModal; ++iModal) {
-                    m_basis.emplace_back(prevProduct->excite(iMode));
+                    auto newProd = HProduct(*prevProduct);
+                    newProd.raise(iMode);
+                    m_basis.emplace_back(newProd);
                     prevProduct = &(m_basis.back());
                     ++iWfn;
                 }
@@ -64,14 +66,15 @@ void HProductSet::generateFullSpace() {
 }
 
 size_t HProductSet::index(const HProduct &phi) {
+    if (m_connectedSet) throw std::logic_error("Cannot be called for a connectedSet.");
     size_t index = 0;
     if (phi.empty()) index = 0;
-    else if (phi.modeCouplingLvl() == 1) {
+    else if (phi.excLvl() == 1) {
         auto iMode = phi[0][0];
         auto iModal = phi[0][1];
         index = m_vibExcLvlDim[0];
         index += (size_t) iMode * m_vibSpace.nModal + (iModal - 1);
-    } else if (phi.modeCouplingLvl() == 2) {
+    } else if (phi.excLvl() == 2) {
         auto iMode = phi[0][0];
         auto iModal = phi[0][1];
         auto jMode = phi[1][0];
@@ -83,4 +86,104 @@ size_t HProductSet::index(const HProduct &phi) {
     return index;
 }
 
+void HProductSet::generateQcoupledSpace(const HProduct &bra, const VibOp &vibOp) {
+    if (vibOp.type != VibOpType::Q && vibOp.type != VibOpType::dQ) throw std::logic_error("Mismatch of operator type");
+    // Rase and lower by one
+    auto excLvl = bra.excLvl(vibOp.mode[0]);
+    if (excLvl >= 1) {
+        auto newProd = bra;
+        newProd.lower(vibOp.mode[0]);
+        m_basis.emplace_back(newProd);
+    }
+    if (excLvl < m_vibSpace.nModal - 1) {
+        auto newProd = bra;
+        newProd.raise(vibOp.mode[0]);
+        m_basis.emplace_back(newProd);
+    }
+}
+
+void HProductSet::generateQsqCoupledSpace(const HProduct &bra, const VibOp &vibOp) {
+    if (vibOp.type != VibOpType::Qsq) throw std::logic_error("Mismatch of operator type");
+    if (vibOp.mode.size() == 1) {
+        // Q_A * Q_A
+        auto excLvl = bra.excLvl(vibOp.mode[0]);
+        if (excLvl >= 2){
+            auto newProd = bra;
+            newProd.changeModal(vibOp.mode[0],-2);
+            m_basis.emplace_back(newProd);
+        }
+        m_basis.push_back(bra);
+        if (excLvl < m_vibSpace.nModal - 2) {
+            auto newProd = bra;
+            newProd.changeModal(vibOp.mode[0],+2);
+            m_basis.emplace_back(newProd);
+        }
+    } else {
+        // Q_A * Q_B
+        auto excLvlA = bra.excLvl(vibOp.mode[0]);
+        auto excLvlB = bra.excLvl(vibOp.mode[1]);
+        // lower, lower
+        if (excLvlA >= 1 && excLvlB >= 1){
+            auto newProd = bra;
+            newProd.lower(vibOp.mode[0]);
+            newProd.lower(vibOp.mode[1]);
+            m_basis.emplace_back(newProd);
+        }
+        // raise, lower
+        if (excLvlA < m_vibSpace.nModal - 1 && excLvlB >= 1){
+            auto newProd = bra;
+            newProd.raise(vibOp.mode[0]);
+            newProd.lower(vibOp.mode[1]);
+            m_basis.emplace_back(newProd);
+        }
+        // lower, raise
+        if (excLvlA >= 1 && excLvlB < m_vibSpace.nModal - 1){
+            auto newProd = bra;
+            newProd.lower(vibOp.mode[0]);
+            newProd.raise(vibOp.mode[1]);
+            m_basis.emplace_back(newProd);
+        }
+        // raise, raise
+        if (excLvlA < m_vibSpace.nModal - 1 && excLvlB < m_vibSpace.nModal - 1){
+            auto newProd = bra;
+            newProd.raise(vibOp.mode[0]);
+            newProd.raise(vibOp.mode[1]);
+            m_basis.emplace_back(newProd);
+        }
+    }
+}
+
 }  // namespace gci
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

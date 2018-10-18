@@ -7,6 +7,38 @@
 #include "gciHProduct.h"
 
 namespace gci {
+
+/*!
+ * @brief enumerators for vibrational operators
+ *
+ * HO -- Harmonic oscillator operator
+ * The rest are self-explanatory
+ */
+enum class VibOpType {
+    HO, Q, dQ, Qsq
+};
+
+/*!
+ * @brief Specifies one of ther hardcoded vibrational operators
+ */
+class VibOp {
+public:
+    VibOp(const VibOp &other) : type(other.type), mode(other.mode) {
+        bool pass = false;
+        switch (type) {
+            case VibOpType::HO: if (mode.empty()) pass = true;
+            case VibOpType::Q: if (mode.size() == 1) pass = true;
+            case VibOpType::dQ: if (mode.size() == 1) pass = true;
+            case VibOpType::Qsq: if (mode.size() <= 2) pass = true;
+//            default: throw std::logic_error("Operator not implemented");
+        }
+        if (!pass) throw std::logic_error("Inconsistent dimensionality of the operator");
+    }
+
+    const VibOpType type; //!< Operator type
+    const std::vector<int> mode; //!< indices of the operator (i.e for Q_A, mode = A)
+};
+
 /*!
  * @brief Mixed fermionic-bosonic Hamiltonian operator. Specialised to second-order expansion of the molecular
  * Hamiltonian in the BBO project.
@@ -30,19 +62,10 @@ public:
     ~MixedOperator() = default;
 
     /*!
-     * @brief enumerators for vibrational operators
-     *
-     * HO -- Harmonic oscillator operator
-     * The rest are self-explanatory
-     */
-    enum class VibOp {
-        HO, Q, dQ, Qsq
-    };
-
-    /*!
      * @brief Returns the expectation value for one of the implemented operators
+     * @result <bra| vibOp | ket>
      */
-    double expectVal(const HProduct &bra, const HProduct &ket, VibOp);
+    double expectVal(const HProduct &bra, const HProduct &ket, const VibOp &vibOp);
 
 
     int nMode; //!< Number of vibrational modes
@@ -50,34 +73,31 @@ public:
     double zpe; //!< Vibrational zero point energy at HO level
     gci::Operator Hel; //!< Electronic Hamiltonian
     std::vector<gci::Operator> Hel_A; //!< First order expansion of electronic Hamiltonian
+    std::vector<gci::Operator> Hel_AB; //!< First order expansion of electronic Hamiltonian
     std::vector<gci::Operator> Hs_A; //!< First order kinetic energy coupling term
     std::vector<gci::Operator> Hs_AA; //!< Second order kinetic energy coupling term
 protected:
     /*!
      * @brief Expectation value of vibrational Hamiltonian <HO| Hvib | HO>
-     * @param hamiltonian Coupled electronic-vibrational Hamiltonian
-     * @param bra Vibrational mode
-     * @param modal Harmonic Oscillator modal index
      */
     double O_Hvib(const HProduct &bra, const HProduct &ket) const;
 
     /*!
      * @brief Expectation value of Q_A
-     * @param hamiltonian Coupled electronic-vibrational Hamiltonian
-     * @param bra Vibrational Hartree product for the bra
-     * @param ket Vibrational Hartree product for the ket
      * @return
      */
-    double O_Q(const HProduct &bra, const HProduct &ket) const;
+    double O_Q(const HProduct &bra, const HProduct &ket, const VibOp &vibOp) const;
 
     /*!
      * @brief Expectation value of d/dQ_A
-     * @param hamiltonian Coupled electronic-vibrational Hamiltonian
-     * @param bra Vibrational Hartree product for the bra
-     * @param ket Vibrational Hartree product for the ket
      * @return
      */
-    double O_dQ(const HProduct &bra, const HProduct &ket) const;
+    double O_dQ(const HProduct &bra, const HProduct &ket, const VibOp &vibOp) const;
+
+    /*!
+     * @brief Expectation value of Q_A*Q_B
+     */
+    double O_Qsq(const HProduct &bra, const HProduct &ket, const VibOp &vibOp) const;
 
     /*!
      * @brief Body for evaluation of operators Q and dQ
@@ -86,28 +106,8 @@ protected:
      * @param ket Vibrational Hartree product for the ket
      * @return
      */
-    template<class Func>
-    double QtypeOperator(const HProduct &bra, const HProduct &ket, const Func &func) const {
-        if (bra.modeCouplingLvl() != ket.modeCouplingLvl())
-            throw std::logic_error("Bra and Ket are of different mode-coupling level. Always 0.");
-        double O_Q = 0.0;
-        auto nExc = bra.modeCouplingLvl();
-        for (int i = 0; i < nExc; ++i) {
-            if (bra[i][0] != ket[i][0])
-                throw std::logic_error("Bra and Ket excite different modes. Always 0.");
-            auto mode = bra[i][0];
-            auto iModal = bra[i][1];
-            auto jModal = ket[i][1];
-            auto diff = iModal - jModal;
-            if (diff == 0) continue;
-            if (std::abs(diff) != 1)
-                throw std::logic_error("Bra and Ket are separated by more than 1 excitation. Always 0.");
-            double n = diff > 0 ? iModal : jModal;
-            O_Q += func(mode, n, diff);
-        }
-        return O_Q;
-
-    }
+    double QtypeOperator(const HProduct &bra, const HProduct &ket, const std::function<double(double, int, int)> &func,
+                         int targetMode) const;
 };
 
 }  // namespace gci
