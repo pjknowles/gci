@@ -4,7 +4,7 @@
 
 namespace gci {
 
-HProductSet::HProductSet(const VibSpace &vibSpace, const HProduct &bra, const VibOp &vibOp)
+HProductSet::HProductSet(const HProduct &bra, const VibSpace &vibSpace, const VibOp &vibOp)
         : m_vibSpace(vibSpace), m_basis(), m_vibDim(0), m_vibExcLvlDim(), m_connectedSet(true) {
     switch (vibOp.type) {
         case VibOpType::HO: {
@@ -107,15 +107,15 @@ void HProductSet::generateQsqCoupledSpace(const HProduct &bra, const VibOp &vibO
     if (vibOp.mode.size() == 1) {
         // Q_A * Q_A
         auto excLvl = bra.excLvl(vibOp.mode[0]);
-        if (excLvl >= 2){
+        if (excLvl >= 2) {
             auto newProd = bra;
-            newProd.changeModal(vibOp.mode[0],-2);
+            newProd.changeModal(vibOp.mode[0], -2);
             m_basis.emplace_back(newProd);
         }
         m_basis.push_back(bra);
         if (excLvl < m_vibSpace.nModal - 2) {
             auto newProd = bra;
-            newProd.changeModal(vibOp.mode[0],+2);
+            newProd.changeModal(vibOp.mode[0], +2);
             m_basis.emplace_back(newProd);
         }
     } else {
@@ -123,28 +123,28 @@ void HProductSet::generateQsqCoupledSpace(const HProduct &bra, const VibOp &vibO
         auto excLvlA = bra.excLvl(vibOp.mode[0]);
         auto excLvlB = bra.excLvl(vibOp.mode[1]);
         // lower, lower
-        if (excLvlA >= 1 && excLvlB >= 1){
+        if (excLvlA >= 1 && excLvlB >= 1) {
             auto newProd = bra;
             newProd.lower(vibOp.mode[0]);
             newProd.lower(vibOp.mode[1]);
             m_basis.emplace_back(newProd);
         }
         // raise, lower
-        if (excLvlA < m_vibSpace.nModal - 1 && excLvlB >= 1){
+        if (excLvlA < m_vibSpace.nModal - 1 && excLvlB >= 1) {
             auto newProd = bra;
             newProd.raise(vibOp.mode[0]);
             newProd.lower(vibOp.mode[1]);
             m_basis.emplace_back(newProd);
         }
         // lower, raise
-        if (excLvlA >= 1 && excLvlB < m_vibSpace.nModal - 1){
+        if (excLvlA >= 1 && excLvlB < m_vibSpace.nModal - 1) {
             auto newProd = bra;
             newProd.lower(vibOp.mode[0]);
             newProd.raise(vibOp.mode[1]);
             m_basis.emplace_back(newProd);
         }
         // raise, raise
-        if (excLvlA < m_vibSpace.nModal - 1 && excLvlB < m_vibSpace.nModal - 1){
+        if (excLvlA < m_vibSpace.nModal - 1 && excLvlB < m_vibSpace.nModal - 1) {
             auto newProd = bra;
             newProd.raise(vibOp.mode[0]);
             newProd.raise(vibOp.mode[1]);

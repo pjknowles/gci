@@ -23,13 +23,14 @@ enum class VibOpType {
  */
 class VibOp {
 public:
-    VibOp(const VibOp &other) : type(other.type), mode(other.mode) {
+//    VibOp(const VibOp &other) : type(other.type), mode(other.mode) {
+    VibOp(const VibOpType &type, const std::vector<int> &mode) : type(type), mode(mode) {
         bool pass = false;
         switch (type) {
             case VibOpType::HO: if (mode.empty()) pass = true;
             case VibOpType::Q: if (mode.size() == 1) pass = true;
             case VibOpType::dQ: if (mode.size() == 1) pass = true;
-            case VibOpType::Qsq: if (mode.size() <= 2) pass = true;
+            case VibOpType::Qsq: if (mode.size() == 2) pass = true;
 //            default: throw std::logic_error("Operator not implemented");
         }
         if (!pass) throw std::logic_error("Inconsistent dimensionality of the operator");
@@ -65,7 +66,7 @@ public:
      * @brief Returns the expectation value for one of the implemented operators
      * @result <bra| vibOp | ket>
      */
-    double expectVal(const HProduct &bra, const HProduct &ket, const VibOp &vibOp);
+    double expectVal(const HProduct &bra, const HProduct &ket, const VibOp &vibOp) const;
 
 
     int nMode; //!< Number of vibrational modes

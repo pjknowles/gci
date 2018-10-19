@@ -86,17 +86,17 @@ public:
 
     /*!
        * \brief Add to this object the action of an operator on another wavefunction
-       * \param h the operator
-       * \param w the wavefunction
+       * \param ham Hamiltonian operator
+       * \param w Wavefunction
        * \param parallel_stringset whether to use parallel algorithm in StringSet construction
        */
-    void operatorOnWavefunction(const MixedOperator &h, const MixedWavefunction &w, bool parallel_stringset = false);
+    void operatorOnWavefunction(const MixedOperator &ham, const MixedWavefunction &w, bool parallel_stringset = false);
 
     /*!
      * @brief set this object to the diagonal elements of the hamiltonian
-     * @param hamiltonian
+     * @param ham
      */
-    void diagonalOperator(const MixedOperator &hamiltonian);
+    void diagonalOperator(const MixedOperator &ham, bool parallel_stringset = false);
 
 protected:
 

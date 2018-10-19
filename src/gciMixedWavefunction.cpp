@@ -14,11 +14,6 @@ MixedWavefunction::MixedWavefunction(const State &state, const VibSpace &vibSpac
     m_dimension += m_vibBasis.vibDim() * m_elDim;
 }
 
-
-std::vector<HProduct> MixedWavefunction::connectedVibBasis(const HProduct &phi) {
-
-}
-
 bool MixedWavefunction::compatible(const MixedWavefunction &w2) const {
     bool sameSize = (m_wfn.size() == w2.m_wfn.size());
     if (!sameSize) return sameSize;
@@ -133,85 +128,58 @@ double operator*(const MixedWavefunction &w1, const MixedWavefunction &w2) {
     return result;
 }
 
-void MixedWavefunction::operatorOnWavefunction(const MixedOperator &hamiltonian, const MixedWavefunction &w,
+void MixedWavefunction::operatorOnWavefunction(const MixedOperator &ham, const MixedWavefunction &w,
                                                bool parallel_stringset) {
-    for (const auto &bra : m_vibBasis) {
-        auto iWfn = indexVibWfn(bra);
-        // Hvib
-        m_wfn[iWfn].axpy(O_Hvib(hamiltonian, bra), w.m_wfn[iWfn]);
-        // Hel
-        m_wfn[iWfn].operatorOnWavefunction(hamiltonian.Hel, w.m_wfn[iWfn], parallel_stringset);
-        // Q and dQ operators connect CIS and CISD basis
-        // Hint * Q[iMode]
-        for (const auto &ket : connectedVibBasis(bra, vibOp::Q, iMode)) {
-            auto jWfn = indexVibWfn(ket);
-            // H'el(A)
-            wfn_scaled = O_Q(hamiltonian, bra, ket) * m_wfn[jWfn];
-            m_wfn[iWfn].operatorOnWavefunction(hamiltonian.Hel_A[iMode], wfn_scaled, parallel_stringset);
-            // Hs(A)
-            wfn_scaled = O_dQ(hamiltonian, bra, ket) * m_wfn[jWfn];
-            m_wfn[iWfn].operatorOnWavefunction(hamiltonian.Hs_A[iMode], wfn_scaled, parallel_stringset);
-        }
-    }
-
-// Vibrational CIS
     Wavefunction wfn_scaled(m_wfn[0]);
-    for (auto iMode = 0; iMode < m_nMode; ++iMode) {
-        for (auto iModal = 0; iModal < m_nModal; ++iModal) {
-            auto bra = HartreeProduct({{iMode, iModal}});
-            auto iWfn = indexVibWfn(bra);
-            // Hvib
-            m_wfn[iWfn].axpy(O_Hvib(hamiltonian, bra), w.m_wfn[iWfn]);
-            // Hel
-            m_wfn[iWfn].operatorOnWavefunction(hamiltonian.Hel, w.m_wfn[iWfn], parallel_stringset);
-            // Q and dQ operators connect CIS and CISD basis
-            // Hint * Q[iMode]
-            for (const auto &ket : connectedVibBasis(bra, vibOp::Q, iMode)) {
-                auto jWfn = indexVibWfn(ket);
-                // H'el(A)
-                wfn_scaled = O_Q(hamiltonian, bra, ket) * m_wfn[jWfn];
-                m_wfn[iWfn].operatorOnWavefunction(hamiltonian.Hel_A[iMode], wfn_scaled, parallel_stringset);
-                // Hs(A)
-                wfn_scaled = O_dQ(hamiltonian, bra, ket) * m_wfn[jWfn];
-                m_wfn[iWfn].operatorOnWavefunction(hamiltonian.Hs_A[iMode], wfn_scaled, parallel_stringset);
+    for (const auto &bra : m_vibBasis) {
+        auto iWfn = m_vibBasis.index(bra);
+        m_wfn[iWfn].axpy(ham.expectVal(bra, bra, VibOp(VibOpType::HO, {})), w.m_wfn[iWfn]); // Hvib
+        m_wfn[iWfn].operatorOnWavefunction(ham.Hel, w.m_wfn[iWfn], parallel_stringset); // Hel
+        // Q and dQ operators
+        for (int mode = 0; mode < m_vibSpace.nMode; ++mode) {
+            auto opQ = VibOp(VibOpType::Q, {mode});
+            auto opdQ = VibOp(VibOpType::dQ, {mode});
+            for (const auto &ket : HProductSet(bra, m_vibBasis.vibSpace(), opQ)) {
+                auto jWfn = m_vibBasis.index(ket);
+                wfn_scaled = ham.expectVal(bra, ket, opQ) * m_wfn[jWfn]; // H'el(A)
+                m_wfn[iWfn].operatorOnWavefunction(ham.Hel_A[mode], wfn_scaled, parallel_stringset);
+                wfn_scaled = ham.expectVal(bra, ket, opdQ) * m_wfn[jWfn]; // Hs(A)
+                m_wfn[iWfn].operatorOnWavefunction(ham.Hs_A[mode], wfn_scaled, parallel_stringset);
             }
         }
-    }
-// Vibrational CID component
-    for (auto iMode = 0; iMode < m_nMode; ++iMode) {
-        for (auto iModal = 1; iModal < m_nModal; ++iModal) {
-            for (auto jMode = iMode + 1; jMode < m_nMode; ++jMode) {
-                for (auto jModal = 1; jModal < m_nModal; ++jModal) {
-                    auto bra = HartreeProduct({{iMode, iModal}, {jMode, jModal}});
-                    auto iWfn = indexVibWfn(bra);
-                    // Hvib
-                    m_wfn[iWfn].axpy(O_Hvib(hamiltonian, bra), w.m_wfn[iWfn]);
-                    // Hel
-                    m_wfn[iWfn].operatorOnWavefunction(hamiltonian.Hel, w.m_wfn[iWfn], parallel_stringset);
-                    // Hint * Q[iMode]
-                    for (const auto ket : connectedVibBasis(bra, "Q", 0)) {
-                    }
-                    // Hint * Q[1]
-                    for (const auto ket : connectedVibBasis(bra, "Q", 1)) {
-                    }
+        // Qsq
+        for (int iMode = 0, hamInd = 0; iMode < m_vibSpace.nMode; ++iMode) {
+            for (int jMode = 0; jMode <= iMode; ++jMode, ++hamInd) {
+                auto opQsq = VibOp(VibOpType::Qsq, {iMode, jMode});
+                for (const auto &ket : HProductSet(bra, m_vibBasis.vibSpace(), opQsq)) {
+                    auto jWfn = m_vibBasis.index(ket);
+                    wfn_scaled = 0.5 * ham.expectVal(bra, ket, opQsq) * m_wfn[jWfn]; // H''el(A,B)
+                    m_wfn[iWfn].operatorOnWavefunction(ham.Hel_AB[hamInd], wfn_scaled, parallel_stringset);
                 }
             }
         }
     }
 }
 
-void MixedWavefunction::diagonalOperator(const MixedOperator &hamiltonian) {
-    m_wfn[0].diagonalOperator(hamiltonian.Hel);
-    for (auto iMode = 0, iWfn = 0; iMode < m_nMode; ++iMode) {
-        for (auto iModal = 0; iModal < m_nModal; ++iModal, ++iWfn) {
-            if (iWfn == 0) continue;
-            // Hel
-            m_wfn[iWfn] = m_wfn[0];
-            // Hvib
-            m_wfn[iWfn] += O_Hvib(hamiltonian, iMode);
+void MixedWavefunction::diagonalOperator(const MixedOperator &ham, bool parallel_stringset) {
+    Wavefunction wfn_scaled(m_wfn[0]);
+    m_wfn[0].diagonalOperator(ham.Hel);
+    for (const auto &bra : m_vibBasis) {
+        auto iWfn = m_vibBasis.index(bra);
+        m_wfn[iWfn].axpy(ham.expectVal(bra, bra, VibOp(VibOpType::HO, {})), m_wfn[iWfn]); // Hvib
+        m_wfn[iWfn].operatorOnWavefunction(ham.Hel, m_wfn[iWfn], parallel_stringset); // Hel
+        // Q and dQ operators
+        // Qsq
+        for (int iMode = 0, hamInd = 0; iMode < m_vibSpace.nMode; ++iMode) {
+            auto opQsq = VibOp(VibOpType::Qsq, {iMode, iMode});
+            for (const auto &ket : HProductSet(bra, m_vibBasis.vibSpace(), opQsq)) {
+                auto jWfn = m_vibBasis.index(ket);
+                wfn_scaled = 0.5 * ham.expectVal(bra, ket, opQsq) * m_wfn[jWfn]; // H''el(A,B)
+                m_wfn[iWfn].operatorOnWavefunction(ham.Hel_AB[hamInd], wfn_scaled, parallel_stringset);
+            }
         }
-    }
 
+    }
 }
 
 void MixedWavefunction::set(const double val) {

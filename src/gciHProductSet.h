@@ -24,7 +24,10 @@ public:
      * @param bra Reference product
      * @param vibOp Operator connecting reference to products in this set
      */
-    HProductSet(const VibSpace &vibSpace, const HProduct &bra, const VibOp &vibOp);
+    HProductSet(const HProduct &bra, const VibSpace &vibSpace, const VibOp &vibOp);
+
+    std::vector<HProduct>::const_iterator begin() const {return m_basis.cbegin();}
+    std::vector<HProduct>::const_iterator end() const {return m_basis.cend();}
 
     /*!
      * @brief Sets the dimensionality of the vibrational space
