@@ -1,0 +1,16 @@
+FetchContent_GetProperties(googletest)
+if (NOT googletest_POPULATED)
+    FetchContent_Populate(googletest)
+    add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
+
+#add_executable(test_gci)
+#target_link_libraries(test_gci PUBLIC gci-lib gmock_main)
+
+enable_testing()
+configure_file(${CMAKE_SOURCE_DIR}/gci.fcidump gci.fcidump COPYONLY)
+set(TESTS he2.fcidump he2n.fcidump hedz.fcidump hevdz.fcidump nevdz.fcidump)
+foreach(fil ${TESTS})
+    get_filename_component(nam ${fil} NAME_WE)
+    add_test(${nam} ${MPIEXEC} ${MPIOPTIONS} ${MPIEXEC_NUMPROC_FLAG} ${NPROC} ${CMAKE_CURRENT_BINARY_DIR}/gci.exe ${fil})
+endforeach()
