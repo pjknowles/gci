@@ -25,14 +25,14 @@ set(CTEST_BUILD_FLAGS -j${NPROC})
 file (GLOB SRCS src/*.cpp
     submodules/Profiler/Profiler.cpp
     submodules/memory/bytestreamC.cpp
-    submodules/symmetry_matrix/SMat.cpp submodules/symmetry_matrix/SMatfunction.cpp submodules/symmetry_matrix/Operator.cpp submodules/symmetry_matrix/SMatMat.cpp
+    submodules/symmetry_matrix/src/SMat.cpp submodules/symmetry_matrix/src/SMatfunction.cpp submodules/symmetry_matrix/src/Operator.cpp submodules/symmetry_matrix/src/SMatMat.cpp
     submodules/FCIdump/FCIdump.cpp
     submodules/molpro-plugin/PluginGuest.cpp
     submodules/IterativeSolver/IterativeSolver.cpp
     )
 add_definitions(-DNOMAIN)
 add_executable(gci.exe ${SRCS})
-include_directories(src submodules/Profiler submodules/FCIdump submodules/IterativeSolver submodules/symmetry_matrix submodules/memory submodules/molpro-plugin)
+include_directories(src submodules/Profiler submodules/FCIdump submodules/IterativeSolver submodules/symmetry_matrix/src submodules/memory submodules/molpro-plugin)
 
 find_package (Eigen3 3.3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
