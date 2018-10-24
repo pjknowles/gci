@@ -3,7 +3,7 @@
 # Only use spaces to indent your .yml configuration.
 # -----
 # You can specify a custom docker image from Docker Hub as your build environment.
-image: pjknowles/opensuse:tumbleweed
+image: pjknowles/opensuse:2018-10-24
 
 pipelines:
   default:
@@ -13,9 +13,6 @@ pipelines:
         script: # Modify the commands below to build your repository.
           - # zypper -n install eigen3-devel cmake gcc-fortran gcc-c++ openmpi-devel openmpi-libs blas-devel libblas3 git doxygen texlive-epstopdf ghostscript
           - ln -s /usr /usr/usr
-          - zypper refresh
-          - zypper -n update cmake
-          - cmake --version
           - git submodule update --init --recursive
           - mkdir -p build && cd build
           - cmake ..
