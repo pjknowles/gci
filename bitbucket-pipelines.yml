@@ -15,6 +15,7 @@ pipelines:
           - ln -s /usr /usr/usr
           - echo $PATH
           - ls /usr/bin
+          - ls /usr/local/bin
           - ps
           - which git
           - cmake --version
