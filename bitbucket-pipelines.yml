@@ -19,7 +19,7 @@ pipelines:
           - git submodule update --init --recursive
           - mkdir -p build && cd build
           - cmake ..
-          - make -C CMakeFiles/gci-lib.dir/__/submodules/symmetry_matrix/ -f build.make -j1 SMat.cpp.o SMatfunction.cpp.o
+          - make -f CMakeFiles/gci-lib.dir/__/submodules/symmetry_matrix/build.make -j1 CMakeFiles/gci-lib.dir/__/submodules/symmetry_matrix/SMat.cpp.o CMakeFiles/gci-lib.dir/__/submodules/symmetry_matrix/SMatfunction.cpp.o
           - make -j
           - ctest -V
 definitions:
