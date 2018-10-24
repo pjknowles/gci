@@ -25,17 +25,17 @@ add_library(gci-lib
         ${CMAKE_SOURCE_DIR}/submodules/memory/bytestreamC.cpp
         ${CMAKE_SOURCE_DIR}/submodules/molpro-plugin/PluginGuest.cpp
         ${CMAKE_SOURCE_DIR}/submodules/Profiler/Profiler.cpp
-        ${CMAKE_SOURCE_DIR}/submodules/symmetry_matrix/SMat.cpp
-        ${CMAKE_SOURCE_DIR}/submodules/symmetry_matrix/SMatfunction.cpp
-        ${CMAKE_SOURCE_DIR}/submodules/symmetry_matrix/Operator.cpp
-        ${CMAKE_SOURCE_DIR}/submodules/symmetry_matrix/SMatMat.cpp
+        ${CMAKE_SOURCE_DIR}/submodules/symmetry_matrix/src/SMat.cpp
+        ${CMAKE_SOURCE_DIR}/submodules/symmetry_matrix/src/SMatfunction.cpp
+        ${CMAKE_SOURCE_DIR}/submodules/symmetry_matrix/src/Operator.cpp
+        ${CMAKE_SOURCE_DIR}/submodules/symmetry_matrix/src/SMatMat.cpp
         )
 target_include_directories(gci-lib
         PUBLIC
         ${CMAKE_SOURCE_DIR}/submodules/Profiler
         ${CMAKE_SOURCE_DIR}/submodules/FCIdump
         ${CMAKE_SOURCE_DIR}/submodules/IterativeSolver
-        ${CMAKE_SOURCE_DIR}/submodules/symmetry_matrix
+        ${CMAKE_SOURCE_DIR}/submodules/symmetry_matrix/src
         ${CMAKE_SOURCE_DIR}/submodules/memory
         ${CMAKE_SOURCE_DIR}/submodules/molpro-plugin
         INTERFACE
