@@ -2,7 +2,7 @@
 #include "gciOperator.h"
 #include <algorithm>
 
-gci::Operator gci::Operator::construct(const FCIdump& dump) {
+gci::Operator gci::Operator::construct(const FCIdump &dump) {
   std::vector<char> portableByteStream;
   int lPortableByteStream;
   int rank = 0;
@@ -12,23 +12,9 @@ gci::Operator gci::Operator::construct(const FCIdump& dump) {
   if (rank == 0) {
     int verbosity = 0;
     std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
-    if (orbital_symmetries.front() == 0) throw std::runtime_error("missing orbital symmetries in FCIdump");
     dim_t dim(8);
-    for (const auto& s : orbital_symmetries)
+    for (const auto &s : orbital_symmetries)
       dim.at(s - 1)++;
-    std::map<int, int> orbital_offset;
-    std::map<int, int> orbital_symmetry;
-    size_t offset = 0;
-    for (auto sym = 0; sym < 8; sym++) {
-      const auto offsets = offset;
-      for (auto i = 0; i < orbital_symmetries.size(); i++) {
-        if (orbital_symmetries[i] == sym + 1) {
-          orbital_offset[i] = offset - offsets;
-          orbital_symmetry[i] = sym;
-          offset++;
-        }
-      }
-    }
 
     gci::Operator result(dim, orbital_symmetries, 2, dump.parameter("IUHF")[0] > 0, 0, true, true, "Hamiltonian");
 //  for (auto i=0; i<orbital_symmetries.size(); i++) xout << "i="<<i+1<<", symmetry="<<orbital_symmetries[i]<<", offset="<<result.offset(i+1)<<std::endl;;
@@ -37,13 +23,13 @@ gci::Operator gci::Operator::construct(const FCIdump& dump) {
     double value;
     FCIdump::integralType type;
     int i, j, k, l;
-    auto& integrals_a = result.O1(true);
+    auto &integrals_a = result.O1(true);
     integrals_a.assign(0);
-    auto& integrals_b = result.O1(false);
+    auto &integrals_b = result.O1(false);
     integrals_b.assign(0);
-    auto& integrals_aa = result.O2(true, true);
-    auto& integrals_ab = result.O2(true, false);
-    auto& integrals_bb = result.O2(false, false);
+    auto &integrals_aa = result.O2(true, true);
+    auto &integrals_ab = result.O2(true, false);
+    auto &integrals_bb = result.O2(false, false);
     if (verbosity > 0) {
       xout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
       xout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
@@ -52,14 +38,14 @@ gci::Operator gci::Operator::construct(const FCIdump& dump) {
            << std::endl;
     }
     while ((type = dump.nextIntegral(i, j, k, l, value)) != FCIdump::endOfFile) {
-      auto oi = orbital_offset[i];
-      auto oj = orbital_offset[j];
-      auto ok = orbital_offset[k];
-      auto ol = orbital_offset[l];
-      auto si = i < 1 ? 0 : orbital_symmetry[i];
-      auto sj = j < 1 ? 0 : orbital_symmetry[j];
-      auto sk = k < 1 ? 0 : orbital_symmetry[k];
-      auto sl = l < 1 ? 0 : orbital_symmetry[l];
+      auto oi = result.offset(i);
+      auto oj = result.offset(j);
+      auto ok = result.offset(k);
+      auto ol = result.offset(l);
+      auto si = i < 1 ? 0 : result.m_orbitalSpaces[0].orbital_symmetries[i - 1];
+      auto sj = j < 1 ? 0 : result.m_orbitalSpaces[0].orbital_symmetries[j - 1];
+      auto sk = k < 1 ? 0 : result.m_orbitalSpaces[0].orbital_symmetries[k - 1];
+      auto sl = l < 1 ? 0 : result.m_orbitalSpaces[0].orbital_symmetries[l - 1];
 //      xout << "ijkl "<<i<<j<<k<<l<<std::endl;
 //      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
@@ -125,7 +111,7 @@ gci::Operator gci::Operator::construct(const FCIdump& dump) {
 #ifdef HAVE_MPI_H
   MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, MPI_COMM_COMPUTE);
 #endif
-  char* buf = (rank == 0) ? portableByteStream.data() : (char*) malloc(lPortableByteStream);
+  char *buf = (rank == 0) ? portableByteStream.data() : (char *) malloc(lPortableByteStream);
 #ifdef HAVE_MPI_H
   MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, MPI_COMM_COMPUTE);
 #endif
@@ -134,7 +120,7 @@ gci::Operator gci::Operator::construct(const FCIdump& dump) {
   return result;
 }
 
-gci::Operator gci::Operator::construct(const char* dump) {
+gci::Operator gci::Operator::construct(const char *dump) {
   class bytestream bs(dump);
   auto so = SymmetryMatrix::Operator::construct(bs);
   std::vector<OrbitalSpace> os;
@@ -143,7 +129,7 @@ gci::Operator gci::Operator::construct(const char* dump) {
   for (auto i = 0; i < nos; i++) {
     auto s = bs.ints();
     std::vector<int> syms;
-    for (auto& ss : s) syms.push_back(ss + 1);
+    for (auto &ss : s) syms.push_back(ss + 1);
 //    std::cout << "syms "<<syms.size()<<so.m_uhf<<std::endl;
 //    for (auto& ss : syms) std::cout << " "<<ss; std::cout<<std::endl;
 //    std::cout << "OrbitalSpace "<<OrbitalSpace(syms,so.m_uhf)<<std::endl;
@@ -166,11 +152,11 @@ void gci::Operator::FCIDump(const std::string filename) const {
   dump.write(filename);
   dump.rewind();
   size_t i, j, k, l;
-  const auto& integrals_a = O1(true);
-  const auto& integrals_b = O1(false);
-  const auto& integrals_aa = O2(true, true);
-  const auto& integrals_ab = O2(true, false);
-  const auto& integrals_bb = O2(false, false);
+  const auto &integrals_a = O1(true);
+  const auto &integrals_b = O1(false);
+  const auto &integrals_aa = O2(true, true);
+  const auto &integrals_ab = O2(true, false);
+  const auto &integrals_bb = O2(false, false);
   if (verbosity > 0) {
     xout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
     xout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
@@ -242,9 +228,9 @@ void gci::Operator::FCIDump(const std::string filename) const {
 
 }
 
-gci::Operator* gci::Operator::projector(const std::string special, const bool forceSpinUnrestricted) const {
+gci::Operator *gci::Operator::projector(const std::string special, const bool forceSpinUnrestricted) const {
   std::vector<int> symmetries;
-  for (const auto& s : m_orbitalSpaces[0].orbital_symmetries) symmetries.push_back(s + 1);
+  for (const auto &s : m_orbitalSpaces[0].orbital_symmetries) symmetries.push_back(s + 1);
   auto result = new gci::Operator(m_dimensions[0],
                                   symmetries,
                                   1,
@@ -337,10 +323,9 @@ Eigen::MatrixXd gci::Operator::intK(int spin) const {
   return result;
 }
 
-gci::Operator gci::Operator::fockOperator(const Determinant& reference, const std::string description) const {
+gci::Operator gci::Operator::fockOperator(const Determinant &reference, const std::string description) const {
   std::vector<int> symmetries;
-//  throw std::logic_error("fockOperator");
-  for (const auto& s : m_orbitalSpaces[0].orbital_symmetries) symmetries.push_back(s + 1);
+  for (const auto &s : m_orbitalSpaces[0].orbital_symmetries) symmetries.push_back(s + 1);
   Operator f(m_dimensions[0],
              symmetries,
              1,
@@ -361,7 +346,7 @@ gci::Operator gci::Operator::fockOperator(const Determinant& reference, const st
   f.m_orbitalSpaces[0].orbital_symmetries = m_orbitalSpaces[0].orbital_symmetries;
   unsigned int basisSize = m_orbitalSpaces[0].orbital_symmetries.size();
   // xout <<"reference.stringAlpha.orbitals ";for (size_t i=0; i < reference.stringAlpha.orbitals().size(); i++) xout <<reference.stringAlpha.orbitals()[i]<<" ";xout <<std::endl;
-  for (const auto& o : refAlphaOrbitals) {
+  for (const auto &o : refAlphaOrbitals) {
 //       xout << "gci::Operator::fockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
 //       xout<< "f alpha, alpha occ: " <<*o << std::endl;
     unsigned int os = m_orbitalSpaces[0].orbital_symmetries[o - 1];
@@ -396,7 +381,7 @@ gci::Operator gci::Operator::fockOperator(const Determinant& reference, const st
                         true);
       }
   }
-  for (const auto& o : refBetaOrbitals) {
+  for (const auto &o : refBetaOrbitals) {
     // xout<< "f alpha, beta occ: " <<*o << std::endl;
     unsigned int os = m_orbitalSpaces[0].orbital_symmetries[o - 1];
     unsigned int oo = offset(o);
@@ -421,7 +406,7 @@ gci::Operator gci::Operator::fockOperator(const Determinant& reference, const st
       }
   }
   if (f.m_uhf) {
-    for (const auto& o : refBetaOrbitals) {
+    for (const auto &o : refBetaOrbitals) {
       // xout<< "f beta, beta occ: " <<*o << std::endl;
       unsigned int os = m_orbitalSpaces[0].orbital_symmetries[o - 1];
       unsigned int oo = offset(o);
@@ -455,7 +440,7 @@ gci::Operator gci::Operator::fockOperator(const Determinant& reference, const st
                           false);
         }
     }
-    for (const auto& o : refAlphaOrbitals) {
+    for (const auto &o : refAlphaOrbitals) {
       // xout<< "f beta, alpha occ: " <<*o << std::endl;
       unsigned int os = m_orbitalSpaces[0].orbital_symmetries[o - 1];
       unsigned int oo = offset(o);
@@ -483,9 +468,9 @@ gci::Operator gci::Operator::fockOperator(const Determinant& reference, const st
   return f;
 }
 
-gci::Operator gci::Operator::sameSpinOperator(const Determinant& reference, const std::string description) const {
+gci::Operator gci::Operator::sameSpinOperator(const Determinant &reference, const std::string description) const {
   std::vector<int> symmetries;
-  for (const auto& s : m_orbitalSpaces[0].orbital_symmetries) symmetries.push_back(s + 1);
+  for (const auto &s : m_orbitalSpaces[0].orbital_symmetries) symmetries.push_back(s + 1);
   Operator result(m_dimensions[0],
                   symmetries,
                   m_rank,
@@ -511,7 +496,7 @@ gci::Operator gci::Operator::sameSpinOperator(const Determinant& reference, cons
 
   *result.O2(true, true).data() = *O2(true, true).data();
   *result.O2(false, false).data() = *O2(false, false).data();
-  for (auto& s : *result.O2(true, false).data()) s = 0;
+  for (auto &s : *result.O2(true, false).data()) s = 0;
   result.m_dirac_out_of_date = true;
   return result;
 }
@@ -538,7 +523,7 @@ void gci::Operator::gsum() {
 bytestream gci::Operator::bytestream() {
   class bytestream bs = SymmetryMatrix::Operator::bytestream();
   bs.append(m_orbitalSpaces.size());
-  for (auto& s : m_orbitalSpaces)
+  for (auto &s : m_orbitalSpaces)
     bs.append(s.orbital_symmetries);
   return bs;
 }
