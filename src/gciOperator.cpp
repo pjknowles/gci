@@ -60,9 +60,9 @@ gci::Operator gci::Operator::construct(const FCIdump& dump) {
       auto sj = j < 1 ? 0 : orbital_symmetry[j];
       auto sk = k < 1 ? 0 : orbital_symmetry[k];
       auto sl = l < 1 ? 0 : orbital_symmetry[l];
-//      xout << "ijkl "<<i<<j<<k<<l<<std::endl;
-//      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
-//      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
+      xout << "ijkl "<<i<<j<<k<<l<<std::endl;
+      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
+      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
       if (si < sj || (si == sj && oi < oj)) {
         std::swap(oi, oj);
         std::swap(si, sj);
