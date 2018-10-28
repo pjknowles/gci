@@ -4,15 +4,16 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 project(gci)
 enable_language(CXX)
+#TODO Need to split dependency libraries into CXX and Fortran  components and only compile the one that's needed
+enable_language(Fortran)
 
-###############################
-### Options
-###############################
+########## Options ##########
+
 add_definitions(-DNOMAIN) # Do we want it global? Thish should really be a variable passed to a specific target
 
-###############################
-### Global Compiler Flags
-###############################
+
+########## Global Compiler Flags ##########
+
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-O3 -march=native" _native)
 if (_native)
@@ -32,19 +33,22 @@ message("Number of processors ${NPROC}")
 set(CTEST_BUILD_FLAGS -j${NPROC})
 
 
-###############################
-### Dependencies
-###############################
+########## Dependencies ##########
+
+include(FetchContent)
+add_subdirectory(dependencies)
 
 find_package(Eigen3 3.3 REQUIRED)
 
-find_package(MPI REQUIRED)
-add_definitions(-DHAVE_MPI_H)                                                       # Should add this to target
+find_package(MPI REQUIRED CXX Fortran)
+#TODO should this be added to the appropriate targets only, or is this needed by everyone?
+add_definitions(-DHAVE_MPI_H)
 # OpenMPI root guard: https://github.com/open-mpi/ompi/issues/4451
 if ("$ENV{USER}" STREQUAL "root" OR "$ENV{HOME}" STREQUAL "/root")
     set(MPIOPTIONS "--allow-run-as-root") # used in tests
 endif ()
 
+#TODO this should only be needed by the libraries and they should define their own dependencies
 find_package(MKL)
 if (MKL_FOUND)
     add_definitions(-DEIGEN_USE_MKL_ALL)
@@ -56,12 +60,14 @@ else (MKL_FOUND)
     endif (BLAS_FOUND)
 endif (MKL_FOUND)
 
-include(FetchContent)
-FetchContent_Declare(
-        googletest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG "release-1.8.1"
-)
+
+########## Targets ##########
+
+add_subdirectory(src)
+add_subdirectory(test)
+
+
+########## Documentation ##########
 
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
@@ -78,15 +84,3 @@ if (DOXYGEN_FOUND)
             )
 endif (DOXYGEN_FOUND)
 
-###############################
-### Targets
-###############################
-
-add_subdirectory(src)
-
-
-###############################
-### Tests
-###############################
-
-add_subdirectory(test)

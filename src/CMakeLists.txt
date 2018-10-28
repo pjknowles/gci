@@ -1,8 +1,40 @@
-###############################
-### Library of the project
-###############################
+########## Dependencies ##########
 
-add_library(gci-lib
+FetchContent_GetProperties(fcidump_dep)
+if (NOT fcidump_dep_POPULATED)
+    FetchContent_Populate(fcidump_dep)
+    add_subdirectory(${fcidump_dep_SOURCE_DIR} ${fcidump_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
+FetchContent_GetProperties(iterativesolver_dep)
+if (NOT iterativesolver_dep_POPULATED)
+    FetchContent_Populate(iterativesolver_dep)
+    add_subdirectory(${iterativesolver_dep_SOURCE_DIR} ${iterativesolver_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
+FetchContent_GetProperties(memory_dep)
+if (NOT memory_dep_POPULATED)
+    FetchContent_Populate(memory_dep)
+    add_subdirectory(${memory_dep_SOURCE_DIR} ${memory_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
+FetchContent_GetProperties(molpro_plugin_dep)
+if (NOT molpro_plugin_dep_POPULATED)
+    FetchContent_Populate(molpro_plugin_dep)
+    add_subdirectory(${molpro_plugin_dep_SOURCE_DIR} ${molpro_plugin_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
+FetchContent_GetProperties(profiler_dep)
+if (NOT profiler_dep_POPULATED)
+    FetchContent_Populate(profiler_dep)
+    add_subdirectory(${profiler_dep_SOURCE_DIR} ${profiler_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
+FetchContent_GetProperties(symmetry_matrix_dep)
+if (NOT symmetry_matrix_dep_POPULATED)
+    FetchContent_Populate(symmetry_matrix_dep)
+    add_subdirectory(${symmetry_matrix_dep_SOURCE_DIR} ${symmetry_matrix_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
+
+
+########## Target ##########
+
+add_library(gci
         gciDeterminant.cpp gciDeterminant.h
         gciExcitationSet.cpp gciExcitationSet.h
         gciFile.cpp gciFile.h
@@ -20,51 +52,34 @@ add_library(gci-lib
         gciTransitionDensity.cpp gciTransitionDensity.h
         gciWavefunction.cpp gciWavefunction.h
         sharedCounter.cpp sharedCounter.h
-        ${CMAKE_SOURCE_DIR}/submodules/FCIdump/FCIdump.cpp
-        ${CMAKE_SOURCE_DIR}/submodules/IterativeSolver/IterativeSolver.cpp
-        ${CMAKE_SOURCE_DIR}/submodules/memory/bytestreamC.cpp
-        ${CMAKE_SOURCE_DIR}/submodules/molpro-plugin/PluginGuest.cpp
-        ${CMAKE_SOURCE_DIR}/submodules/Profiler/Profiler.cpp
-        ${CMAKE_SOURCE_DIR}/submodules/symmetry_matrix/src/SMat.cpp
-        ${CMAKE_SOURCE_DIR}/submodules/symmetry_matrix/src/SMatfunction.cpp
-        ${CMAKE_SOURCE_DIR}/submodules/symmetry_matrix/src/Operator.cpp
-        ${CMAKE_SOURCE_DIR}/submodules/symmetry_matrix/src/SMatMat.cpp
         )
-target_include_directories(gci-lib
-        PUBLIC
-        ${CMAKE_SOURCE_DIR}/submodules/Profiler
-        ${CMAKE_SOURCE_DIR}/submodules/FCIdump
-        ${CMAKE_SOURCE_DIR}/submodules/IterativeSolver
-        ${CMAKE_SOURCE_DIR}/submodules/symmetry_matrix/src
-        ${CMAKE_SOURCE_DIR}/submodules/memory
-        ${CMAKE_SOURCE_DIR}/submodules/molpro-plugin
-        INTERFACE
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        )
+target_include_directories(gci INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-### Dependencies
+target_link_libraries(gci PUBLIC Eigen3::Eigen Profiler FCIdump IterativeSolver symmetry_matrix memory molpro_plugin)
 
-target_link_libraries(gci-lib PUBLIC Eigen3::Eigen)
-
-target_include_directories(gci-lib PUBLIC ${MPI_CXX_INCLUDE_PATH})
-target_link_libraries(gci-lib PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
-target_compile_options(gci-lib PUBLIC ${MPI_CXX_COMPILE_FLAGS})
+target_include_directories(gci PUBLIC ${MPI_CXX_INCLUDE_PATH})
+target_link_libraries(gci PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
+target_compile_options(gci PUBLIC ${MPI_CXX_COMPILE_FLAGS})
 
 if (MKL_FOUND)
-    target_include_directories(gci-lib PRIVATE ${MKL_INCLUDE_DIRS})
-    target_link_libraries(gci-lib PRIVATE ${MKL_LIBRARIES})
-else (MKL_FOUND)
+    target_include_directories(gci PRIVATE ${MKL_INCLUDE_DIRS})
+    target_link_libraries(gci PRIVATE ${MKL_LIBRARIES})
+else ()
     if (BLAS_FOUND)
-        target_include_directories(gci-lib PRIVATE ${BLAS_INCLUDE_DIRS})
-        target_link_libraries(gci-lib PUBLIC ${BLAS_LIBRARY} -lm -ldl)
-    else (BLAS_FOUND)
-        target_link_libraries(gci-lib PUBLIC -llapack -lm -ldl)
-    endif (BLAS_FOUND)
-endif (MKL_FOUND)
+        target_include_directories(gci PRIVATE ${BLAS_INCLUDE_DIRS})
+        target_link_libraries(gci PUBLIC ${BLAS_LIBRARY} -lm -ldl)
+    else ()
+        target_link_libraries(gci PUBLIC -llapack -lm -ldl)
+    endif ()
+endif ()
 
-###############################
-### Main executable
-###############################
+if (MPI_CXX_FOUND)
+    target_link_libraries(gci PUBLIC MPI::MPI_CXX)
+endif ()
+
+
+########## Main executable ##########
 
 add_executable(gci.exe gci.cpp gci.h)
-target_link_libraries(gci.exe PUBLIC gci-lib)
+target_link_libraries(gci.exe PUBLIC gci)
+set_target_properties(gci.exe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
