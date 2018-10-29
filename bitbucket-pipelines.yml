@@ -18,6 +18,7 @@ pipelines:
           - cmake ..
           - make -C src __/submodules/symmetry_matrix/src/SMat.cpp.o __/submodules/symmetry_matrix/src/SMatfunction.cpp.o
           - make -j
+          - cd test
           - ctest -V
 definitions:
   caches:

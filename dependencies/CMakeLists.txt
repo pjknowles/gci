@@ -1,3 +1,11 @@
+FetchContent_Declare(
+        eigen3_dep
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/Eigen3"
+        GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror.git
+        GIT_TAG "3.3.0"
+        GIT_SHALLOW TRUE
+)
+
 file(STRINGS "FCIdump_SHA1" FCIdump_GIT_TAG)
 message("FCIdump_GIT_TAG = ${FCIdump_GIT_TAG}")
 FetchContent_Declare(
@@ -25,7 +33,7 @@ FetchContent_Declare(
         GIT_TAG ${memory_GIT_TAG}
 )
 
-file(STRINGS "molpro_plugin_SHA1" molpro_plugin_GIT_TAG)
+file(STRINGS "molpro-plugin_SHA1" molpro_plugin_GIT_TAG)
 message("molpro_plugin_GIT_TAG = ${molpro_plugin_GIT_TAG}")
 FetchContent_Declare(
         molpro_plugin_dep
@@ -54,6 +62,8 @@ FetchContent_Declare(
 
 FetchContent_Declare(
         googletest_dep
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/googletest"
         GIT_REPOSITORY https://github.com/google/googletest.git
         GIT_TAG "release-1.8.1"
+        GIT_SHALLOW TRUE
 )

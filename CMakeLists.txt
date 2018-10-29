@@ -38,7 +38,17 @@ set(CTEST_BUILD_FLAGS -j${NPROC})
 include(FetchContent)
 add_subdirectory(dependencies)
 
-find_package(Eigen3 3.3 REQUIRED)
+#find_package(Eigen3 3.3)
+if (NOT TARGET Eigen3::Eigen)
+    FetchContent_GetProperties(eigen3_dep)
+    if (NOT eigen3_dep_POPULATED)
+        FetchContent_Populate(eigen3_dep)
+        add_library(ExternalEigen3 INTERFACE)
+        target_include_directories(ExternalEigen3 INTERFACE ${CMAKE_SOURCE_DIR}/dependencies/Eigen3)
+        add_library(Eigen3::Eigen ALIAS ExternalEigen3)
+        message("Using external Eigen3 library")
+    endif ()
+endif ()
 
 find_package(MPI REQUIRED CXX Fortran)
 #TODO should this be added to the appropriate targets only, or is this needed by everyone?
