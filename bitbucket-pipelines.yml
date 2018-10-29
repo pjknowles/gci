@@ -17,8 +17,8 @@ pipelines:
           - git submodule update --init --recursive
           - mkdir -p build && cd build
           - cmake ..
-          - make -C src __/submodules/symmetry_matrix/src/SMat.cpp.o __/submodules/symmetry_matrix/src/SMatfunction.cpp.o
-          - make -j
+#          - make -C src __/submodules/symmetry_matrix/src/SMat.cpp.o __/submodules/symmetry_matrix/src/SMatfunction.cpp.o
+          - cmake --build .
           - cd test
           - ctest -V
 definitions:
