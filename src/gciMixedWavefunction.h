@@ -181,7 +181,7 @@ public:
     /*!
      * @copydoc LinearAlgebra::vector::zero
      */
-    MixedWavefunction *clone(int option = 0) const override {return new MixedWavefunction(*this, option);}
+    MixedWavefunction *clone(int option = 0) const override {return new MixedWavefunction(*this);}
 
     void set(double val);///< set all elements to a scalar
     MixedWavefunction &operator*=(const double &value); //!< multiply by a scalar

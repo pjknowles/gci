@@ -52,6 +52,14 @@ add_library(gci
         gciTransitionDensity.cpp gciTransitionDensity.h
         gciWavefunction.cpp gciWavefunction.h
         sharedCounter.cpp sharedCounter.h
+        gciRHF.cpp gciRHF.h
+        gciBBO_RHF.cpp gciBBO_RHF.h
+        gciHProduct.cpp gciHProduct.h
+        gciHProductSet.cpp gciHProductSet.h
+        gciMixedOperator.cpp gciMixedOperator.h
+        gciMixedWavefunction.cpp gciMixedWavefunction.h
+        gciOperatorBBO.cpp gciOperatorBBO.h
+        gciVibSpace.h
         )
 target_include_directories(gci INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 

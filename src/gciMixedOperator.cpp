@@ -5,7 +5,7 @@
 
 namespace gci {
 
-MixedOperator::MixedOperator(const FCIdump &fcidump) {
+MixedOperator::MixedOperator(const FCIdump &fcidump) : Hel(Operator::construct(fcidump)){
 
 }
 

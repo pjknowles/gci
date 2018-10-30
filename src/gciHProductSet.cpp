@@ -41,7 +41,7 @@ void HProductSet::generateFullSpace() {
     if (m_connectedSet) throw std::logic_error("Cannot be called for a connectedSet.");
     setVibDim();
     m_basis.reserve(m_vibDim);
-    m_basis.emplace_back(HProduct::t_Modal{{}});
+    m_basis.emplace_back(HProduct::t_Product{{{}}});
     unsigned long iWfn = 1;
     for (int exc = 1; exc < m_vibExcLvlDim.size() - 1; ++exc) {
         for (auto iBase = m_vibExcLvlDim[exc - 1]; iBase < m_vibExcLvlDim[exc]; ++iBase) {

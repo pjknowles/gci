@@ -4,5 +4,8 @@ if (NOT googletest_dep_POPULATED)
     add_subdirectory(${googletest_dep_SOURCE_DIR} ${googletest_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif ()
 
-#add_executable(test_gci)
-#target_link_libraries(test_gci PUBLIC gci-lib gmock_main)
+add_executable(test-gci testHProduct.cpp)
+target_link_libraries(test-gci PUBLIC gci gmock_main)
+
+include(GoogleTest)
+gtest_discover_tests(test-gci)
