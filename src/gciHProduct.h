@@ -8,16 +8,13 @@
 namespace gci {
 
 /*!
- * @brief Hartree product is a single vibrational basis represented as occupation numbers for excited states.
+ * @brief Hartree product is a single vibrational basis represented as excitations out of the ground state.
  *
  * Excitations are stored as {{modeIndex, modalIndex}, ...}:
- *      - modeIndex  -- mode outside of its ground state
- *      - modalIndex -- index for the occupied excitated state basis function
+ *      - modeIndex  -- index of excited mode
+ *      - modalIndex -- index of the excitated modal
  *
  * Order:
- *      - only one basis per mode (no modeIndex occurs twice)
- *      - modeIndex in increasing order
- *      - modalIndex != 0, since this is the assumed value for the ground state.
  */
 class HProduct {
 public:
@@ -73,18 +70,25 @@ public:
      */
     bool withinSpace(const VibSpace &vibSpace);
 
-    /*!
-     * @brief List of excited modes in the current product
-     */
+    //! @brief List of excited modes in `this` product
     std::vector<int> excitedModes() const;
 protected:
     t_Product m_prod; //!< excitations representing the Hartree product
 
-    //! Enforces ordering of the HartreeProduct..
-    void reorder(t_Product &prod) const;
+    /*!
+     * @brief Order's `this` Hartree product
+     *      - only one basis per mode (no modeIndex occurs twice)
+     *      - modeIndex in increasing order
+     *      - modalIndex != 0, since this is the assumed value for the ground state.
+     * @param prod
+     */
+    void order();
 
-    //! Checks that the product makes sense. @warning Assumes that product is ordered
-    void check(t_Product &prod) const;
+    /*!
+     * @brief Checks that `this` product is legitimate.
+     * @warning Assumes that the product is ordered
+     */
+    void check() const;
 
 };
 }//  namespace gci

@@ -59,7 +59,7 @@ add_library(gci
         gciMixedOperator.cpp gciMixedOperator.h
         gciMixedWavefunction.cpp gciMixedWavefunction.h
         gciOperatorBBO.cpp gciOperatorBBO.h
-        gciVibSpace.h
+        gciVibSpace.cpp gciVibSpace.h
         )
 target_include_directories(gci INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 

@@ -5,8 +5,9 @@
 
 namespace gci {
 HProduct::HProduct(t_Product phi) : m_prod(std::move(phi)) {
-    reorder(m_prod);
-    check(m_prod);
+    if (m_prod.size() == 1 && m_prod[0].empty()) m_prod = t_Product{};
+    order();
+    check();
 }
 
 int HProduct::excLvl(int iMode) const {
@@ -15,15 +16,17 @@ int HProduct::excLvl(int iMode) const {
     else return (*index)[1];
 }
 
-void HProduct::reorder(t_Product &prod) const {
+void HProduct::order() {
+    if (empty()) return;
     // remove any modalIndex == 0
-    auto newEnd = std::remove_if(prod.begin(), prod.end(), [](const t_Modal &modal) {return modal[1] == 0;});
-    prod.erase(newEnd, prod.end());
+    auto newEnd = std::remove_if(m_prod.begin(), m_prod.end(), [](const t_Modal &modal) {return modal[1] == 0;});
+    m_prod.erase(newEnd, m_prod.end());
     // sort by modeIndex
-    std::sort(prod.begin(), prod.end(), [](t_Modal &modalA, t_Modal &modalB) {return modalA[0] < modalB[0];});
+    std::sort(m_prod.begin(), m_prod.end(), [](t_Modal &modalA, t_Modal &modalB) {return modalA[0] < modalB[0];});
 }
 
-void HProduct::check(t_Product &prod) const {
+void HProduct::check() const {
+    if (empty()) return;
     if (std::any_of(m_prod.cbegin(), m_prod.cend(), [](const t_Modal &modal) {return modal[0] < 0 || modal[1] < 0;}))
         throw std::logic_error("Product indices must be positive integers.");
     for (auto modal = m_prod.begin(); modal != m_prod.end() - 1; ++modal) {
@@ -50,11 +53,11 @@ void HProduct::changeModal(const int iMode, const int diff) {
                               [&iMode](const t_Modal &el) {return (el[0] == iMode);});
     if (modal == m_prod.end()) {
         m_prod.emplace_back(t_Modal({iMode, diff}));
-        reorder(m_prod);
     } else {
         (*modal)[1] += diff;
-        check(m_prod);
     }
+    order();
+    check();
 }
 
 }  // namespace gci
