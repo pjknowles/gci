@@ -3,24 +3,27 @@
 # Only use spaces to indent your .yml configuration.
 # -----
 # You can specify a custom docker image from Docker Hub as your build environment.
-image: pjknowles/opensuse:tumbleweed
+image: pjknowles/opensuse:2018-10-24
 
 pipelines:
   default:
     - step:
         caches:
           - cmake
+          - dependencies
         script: # Modify the commands below to build your repository.
           - # zypper -n install eigen3-devel cmake gcc-fortran gcc-c++ openmpi-devel openmpi-libs blas-devel libblas3 git doxygen texlive-epstopdf ghostscript
           - ln -s /usr /usr/usr
           - git submodule update --init --recursive
           - mkdir -p build && cd build
           - cmake ..
-          - make -f CMakeFiles/gci.exe.dir/build.make -j1 CMakeFiles/gci.exe.dir/submodules/symmetry_matrix/SMat.cpp.o CMakeFiles/gci.exe.dir/submodules/symmetry_matrix/SMatfunction.cpp.o
-          - make -j
+#          - make -C src __/submodules/symmetry_matrix/src/SMat.cpp.o __/submodules/symmetry_matrix/src/SMatfunction.cpp.o
+          - cmake --build .
+          - cd test
           - ctest -V
 definitions:
   caches:
     cmake: build
+    dependencies: build
 options:
   max-time: 10
