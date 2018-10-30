@@ -1,88 +1,96 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.11)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 project(gci)
 enable_language(CXX)
+#TODO Need to split dependency libraries into CXX and Fortran  components and only compile the one that's needed
+enable_language(Fortran)
+
+########## Options ##########
+
+add_definitions(-DNOMAIN) # Do we want it global? Thish should really be a variable passed to a specific target
+
+
+########## Global Compiler Flags ##########
+
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-O3 -march=native" _native)
 if (_native)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native")
-set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native")
-endif()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native")
+endif ()
 include(ProcessorCount)
 ProcessorCount(NPROC)
-if(NPROC EQUAL 0)
-  set(NPROC 1)
-endif()
-if(NPROC EQUAL 8)
-#    hack to avoid overload on workstation / CI
-  set(NPROC 4)
-endif()
+if (NPROC EQUAL 0)
+    set(NPROC 1)
+endif ()
+if (NPROC EQUAL 8)
+    #    hack to avoid overload on workstation / CI
+    set(NPROC 4)
+endif ()
 message("Number of processors ${NPROC}")
 set(CTEST_BUILD_FLAGS -j${NPROC})
 
-file (GLOB SRCS src/*.cpp
-    submodules/Profiler/lib/Profiler.cpp
-    submodules/memory/lib/bytestreamC.cpp
-    submodules/symmetry_matrix/lib/SMat.cpp submodules/symmetry_matrix/lib/SMatfunction.cpp submodules/symmetry_matrix/lib/Operator.cpp submodules/symmetry_matrix/lib/SMatMat.cpp
-    submodules/FCIdump/lib/FCIdump.cpp
-    submodules/molpro-plugin/lib/PluginGuest.cpp
-    submodules/IterativeSolver/lib/IterativeSolver.cpp
-    )
-add_definitions(-DNOMAIN)
-add_executable(gci.exe ${SRCS})
-include_directories(src submodules/Profiler/lib submodules/FCIdump/lib submodules/IterativeSolver/lib submodules/symmetry_matrix/lib submodules/memory/lib submodules/molpro-plugin/lib)
 
-find_package (Eigen3 3.3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR})
+########## Dependencies ##########
 
-find_package(MPI REQUIRED)
-include_directories(${MPI_CXX_INCLUDE_PATH})
-target_link_libraries(gci.exe ${MPI_CXX_LIBRARIES})
+include(FetchContent)
+add_subdirectory(dependencies)
+
+#find_package(Eigen3 3.3)
+if (NOT TARGET Eigen3::Eigen)
+    FetchContent_GetProperties(eigen3_dep)
+    if (NOT eigen3_dep_POPULATED)
+        FetchContent_Populate(eigen3_dep)
+        add_library(ExternalEigen3 INTERFACE)
+        target_include_directories(ExternalEigen3 INTERFACE ${CMAKE_SOURCE_DIR}/dependencies/Eigen3)
+        add_library(Eigen3::Eigen ALIAS ExternalEigen3)
+        message("Using external Eigen3 library")
+    endif ()
+endif ()
+
+find_package(MPI REQUIRED CXX Fortran)
+#TODO should this be added to the appropriate targets only, or is this needed by everyone?
 add_definitions(-DHAVE_MPI_H)
 # OpenMPI root guard: https://github.com/open-mpi/ompi/issues/4451
-if("$ENV{USER}" STREQUAL "root" OR "$ENV{HOME}" STREQUAL "/root")
-  set(MPIOPTIONS "--allow-run-as-root")
-endif()
+if ("$ENV{USER}" STREQUAL "root" OR "$ENV{HOME}" STREQUAL "/root")
+    set(MPIOPTIONS "--allow-run-as-root") # used in tests
+endif ()
 
+#TODO this should only be needed by the libraries and they should define their own dependencies
 find_package(MKL)
 if (MKL_FOUND)
-include_directories(${MKL_INCLUDE_DIRS})
-add_definitions(-DEIGEN_USE_MKL_ALL)
-message("MKL link libraries are ${MKL_LIBRARIES}")
-target_link_libraries(gci.exe ${MKL_LIBRARIES})
+    add_definitions(-DEIGEN_USE_MKL_ALL)
+    message("MKL link libraries are ${MKL_LIBRARIES}")
 else (MKL_FOUND)
-find_package(BLAS REQUIRED)
-if (BLAS_FOUND)
-include_directories(${BLAS_INCLUDE_DIRS})
-target_link_libraries(gci.exe ${BLAS_LIBRARY} -lm -ldl)
-message("Blas link library is ${BLAS_LIBRARIES}")
-else (BLAS_FOUND)
-target_link_libraries(gci.exe -llapack -lm -ldl)
-endif (BLAS_FOUND)
+    find_package(BLAS REQUIRED)
+    if (BLAS_FOUND)
+        message("Blas link library is ${BLAS_LIBRARIES}")
+    endif (BLAS_FOUND)
 endif (MKL_FOUND)
 
-configure_file(gci.fcidump gci.fcidump COPYONLY)
+
+########## Targets ##########
+
+add_subdirectory(src)
+add_subdirectory(test)
+
+
+########## Documentation ##########
 
 find_package(Doxygen)
-if(DOXYGEN_FOUND)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-add_custom_target(${PROJECT_NAME}-doc ALL
-    DEPENDS  ${CMAKE_CURRENT_BINARY_DIR}/html/index.xhtml
-    )
-file(GLOB headers src/*.h)
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/html/index.xhtml
-COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-DEPENDS ${SRC_LIST} ${headers} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-COMMENT "Generating API documentation with Doxygen" VERBATIM
-)
-endif(DOXYGEN_FOUND)
+if (DOXYGEN_FOUND)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+    add_custom_target(${PROJECT_NAME}-doc ALL
+            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/html/index.xhtml
+            )
+    file(GLOB headers src/*.h)
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/html/index.xhtml
+            COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+            DEPENDS ${SRC_LIST} ${headers} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Generating API documentation with Doxygen" VERBATIM
+            )
+endif (DOXYGEN_FOUND)
 
-enable_testing()
-file (GLOB TESTS test/*.fcidump)
-foreach(fil ${TESTS})
-  get_filename_component(nam ${fil} NAME_WE)
-  add_test(${nam} ${MPIEXEC} ${MPIOPTIONS} ${MPIEXEC_NUMPROC_FLAG} ${NPROC} ${CMAKE_CURRENT_BINARY_DIR}/gci.exe ${fil})
-endforeach()
