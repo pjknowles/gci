@@ -38,7 +38,7 @@ set(CTEST_BUILD_FLAGS -j${NPROC})
 include(FetchContent)
 add_subdirectory(dependencies)
 
-#find_package(Eigen3 3.3)
+find_package(Eigen3 3.3)
 if (NOT TARGET Eigen3::Eigen)
     FetchContent_GetProperties(eigen3_dep)
     if (NOT eigen3_dep_POPULATED)
