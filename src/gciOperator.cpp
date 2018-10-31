@@ -38,17 +38,17 @@ gci::Operator gci::Operator::construct(const FCIdump &dump) {
            << std::endl;
     }
     while ((type = dump.nextIntegral(i, j, k, l, value)) != FCIdump::endOfFile) {
-      auto oi = orbital_offset[i];
-      auto oj = orbital_offset[j];
-      auto ok = orbital_offset[k];
-      auto ol = orbital_offset[l];
-      auto si = i < 1 ? 0 : orbital_symmetry[i];
-      auto sj = j < 1 ? 0 : orbital_symmetry[j];
-      auto sk = k < 1 ? 0 : orbital_symmetry[k];
-      auto sl = l < 1 ? 0 : orbital_symmetry[l];
-      xout << "ijkl "<<i<<j<<k<<l<<std::endl;
-      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
-      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
+      auto oi = dump.orbital_offset(i);
+      auto oj = dump.orbital_offset(j);
+      auto ok = dump.orbital_offset(k);
+      auto ol = dump.orbital_offset(l);
+      auto si = i < 1 ? 0 : dump.orbital_symmetry(i);
+      auto sj = j < 1 ? 0 : dump.orbital_symmetry(j);
+      auto sk = k < 1 ? 0 : dump.orbital_symmetry(k);
+      auto sl = l < 1 ? 0 : dump.orbital_symmetry(l);
+//      xout << "ijkl "<<i<<j<<k<<l<<std::endl;
+//      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
+//      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
       if (si < sj || (si == sj && oi < oj)) {
         std::swap(oi, oj);
         std::swap(si, sj);
