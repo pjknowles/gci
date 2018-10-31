@@ -285,7 +285,7 @@ std::vector<double> Run::run() {
   State prototype;
   { // so that w goes out of scope
     auto p = profiler->push("find reference");
-    Wavefunction w(State(m_hamiltonian.m_orbitalSpaces[0],
+    Wavefunction w(State(m_hamiltonian,
                          options.parameter("NELEC"),
                          options.parameter("ISYM") - 1,
                          options.parameter("MS2")));
@@ -296,7 +296,7 @@ std::vector<double> Run::run() {
     xout << std::fixed;
     xout << "Lowest energy determinant " << referenceDeterminant << " with energy " << w.at(referenceLocation)
          << std::endl;
-    prototype = State(m_hamiltonian.m_orbitalSpaces[0], w.nelec, w.symmetry, w.ms2);
+    prototype = State(m_hamiltonian, w.nelec, w.symmetry, w.ms2);
   }
   if (options.parameter("EXPLICIT1") == 0 && method != "RSPT") throw std::runtime_error("EXPLICIT1 has been retired");
   //hh.constructBraKet(
@@ -1377,7 +1377,7 @@ std::vector<double> Run::ISRSPT(
 }
 
 void Run::HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity) {
-  Wavefunction w(&hamiltonian.m_orbitalSpaces[0], prototype.nelec, prototype.symmetry, prototype.ms2);
+  Wavefunction w(hamiltonian, prototype.nelec, prototype.symmetry, prototype.ms2);
   Wavefunction g(w);
   xout << std::endl << "Full Hamiltonian matrix" << std::endl;
   if (verbosity >= 0) {

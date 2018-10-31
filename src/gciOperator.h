@@ -138,7 +138,9 @@ class Operator : public SymmetryMatrix::Operator {
    */
   class memory::bytestream bytestream();
 
+ private:
   std::vector<OrbitalSpace> m_orbitalSpaces;
+ public:
 
   const Operator operator+(const Operator &other) const {
     Operator copy(*this);
