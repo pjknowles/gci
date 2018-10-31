@@ -12,8 +12,8 @@
 #include "gciFile.h"
 #include "gciDeterminant.h"
 #include "memory.h"
-#include "SMat.h"
-#include "LinearAlgebra.h"
+#include <SMat.h>
+#include <LinearAlgebra.h>
 #include "gciOrbitals.h"
 
 namespace gci {
