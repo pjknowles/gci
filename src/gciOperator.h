@@ -158,18 +158,6 @@ class Operator : public SymmetryMatrix::Operator {
 
   void gsum();
 
- private:
-
-  /*!
-   * \brief offset Return the number of orbitals of the same symmetry before the given one.
-   * \param i Absolute number (starting with 1) of the orbital.
-   * \return
-   */
-  size_t offset(unsigned int i) const {
-    return static_cast<size_t>(i < 1 ? 0 : std::count(m_orbitalSpaces[0].orbital_symmetries.begin(),
-                                                      m_orbitalSpaces[0].orbital_symmetries.begin() + i - 1,
-                                                      m_orbitalSpaces[0].orbital_symmetries[i - 1]));
-  }
 };
 
 }
