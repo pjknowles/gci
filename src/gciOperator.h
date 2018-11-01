@@ -68,27 +68,6 @@ class Operator : public SymmetryMatrix::Operator {
   }
 
 
-  /*!
-     * \brief int1 Generate array of diagonal one-electron integrals
-     * \param spin positive for alpha, negative for beta
-     * \return one-dimensional array with h(i,i) at i-1
-     */
-  Eigen::VectorXd int1(int spin) const;
-
-  /*!
-     * \brief intJ Generate array of two-electron exchange integrals
-     * \param spini positive for alpha, negative for beta, first index
-     * \param spinj positive for alpha, negative for beta, second index
-     * \return array with (ii|jj)
-     */
-  Eigen::MatrixXd intJ(int spini, int spinj) const;
-  /*!
-     * \brief intK Generate array of two-electron Coulomb integrals
-     * \param spin positive for alpha, negative for beta
-     * \return array with (ij|ji)
-     */
-  Eigen::MatrixXd intK(int spin) const;
-
 };
 
 /*!
@@ -125,6 +104,31 @@ SymmetryMatrix::Operator *projector(const SymmetryMatrix::Operator& source, std:
  * @param orbital_symmetries
  */
 void FCIDump(const SymmetryMatrix::Operator& op, const std::string filename, std::vector<int> orbital_symmetries=std::vector<int>(0));
+
+/*!
+   * \brief int1 Generate array of diagonal one-electron integrals
+   * \param hamiltonian The hamiltonian
+   * \param spin positive for alpha, negative for beta
+   * \return one-dimensional array with h(i,i) at i-1
+   */
+Eigen::VectorXd int1(const SymmetryMatrix::Operator& hamiltonian, int spin);
+
+/*!
+   * \brief intJ Generate array of two-electron exchange integrals
+   * \param hamiltonian The hamiltonian
+   * \param spini positive for alpha, negative for beta, first index
+   * \param spinj positive for alpha, negative for beta, second index
+   * \return array with (ii|jj)
+   */
+Eigen::MatrixXd intJ(const SymmetryMatrix::Operator& hamiltonian, int spini, int spinj);
+/*!
+   * \brief intK Generate array of two-electron Coulomb integrals
+   * \param hamiltonian The hamiltonian
+   * \param spin positive for alpha, negative for beta
+   * \return array with (ij|ji)
+   */
+Eigen::MatrixXd intK(const SymmetryMatrix::Operator& hamiltonian, int spin);
+
 }
 
 #endif // GCIOPERATOR_H

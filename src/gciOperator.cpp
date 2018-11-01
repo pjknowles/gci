@@ -95,9 +95,9 @@ gci::Operator gci::Operator::construct(const FCIdump &dump) {
         result.m_O0 = value;
     }
     if (verbosity > 0) xout << result << std::endl;
-    if (verbosity > 1) xout << "int1:\n" << result.int1(1) << std::endl;
-    if (verbosity > 1) xout << "intJ:\n" << result.intJ(1, 1) << std::endl;
-    if (verbosity > 1) xout << "intK:\n" << result.intK(1) << std::endl;
+    if (verbosity > 1) xout << "int1:\n" << int1(result,1) << std::endl;
+    if (verbosity > 1) xout << "intJ:\n" << intJ(result,1, 1) << std::endl;
+    if (verbosity > 1) xout << "intK:\n" << intK(result,1) << std::endl;
     portableByteStream = result.bytestream().data();
     lPortableByteStream = portableByteStream.size();
   }
@@ -251,57 +251,57 @@ SymmetryMatrix::Operator* gci::projector(const SymmetryMatrix::Operator& source,
   return result;
 }
 
-Eigen::VectorXd gci::Operator::int1(int spin) const {
+Eigen::VectorXd gci::int1(const SymmetryMatrix::Operator& hamiltonian, int spin) {
   size_t basisSize = 0;
   for (auto si=0; si<8; si++)
-    basisSize += O1(spin>0).dimension(si);
+    basisSize += hamiltonian.O1(spin>0).dimension(si);
   Eigen::VectorXd result(basisSize);
   size_t off=0;
   for (auto si=0; si<8; si++)
-    for (auto oi=0; oi<m_dimensions[0][si]; oi++)
-      result[off++] = O1(spin>0).block(si)[(oi+1)*(oi+2)/2-1];
+    for (auto oi=0; oi<hamiltonian.m_dimensions[0][si]; oi++)
+      result[off++] = hamiltonian.O1(spin>0).block(si)[(oi+1)*(oi+2)/2-1];
   return result;
 }
 
-Eigen::MatrixXd gci::Operator::intJ(int spini, int spinj) const {
-  if (spinj > spini) return intJ(spinj, spini).transpose();
+Eigen::MatrixXd gci::intJ(const SymmetryMatrix::Operator& hamiltonian, int spini, int spinj) {
+  if (spinj > spini) return intJ(hamiltonian,spinj, spini).transpose();
   size_t basisSize = 0;
   for (auto si=0; si<8; si++)
-    basisSize += O1().dimension(si);
+    basisSize += hamiltonian.O1().dimension(si);
   Eigen::MatrixXd result(basisSize, basisSize);
   size_t i = 0;
   for (auto si = 0; si < 8; si++)
-    for (auto oi = 0; oi < dimension(si, 0, spini > 0); oi++) {
+    for (auto oi = 0; oi < hamiltonian.dimension(si, 0, spini > 0); oi++) {
       size_t j = 0;
       for (auto sj = 0; sj < 8; sj++)
-        for (auto oj = 0; oj < dimension(sj, 0, spinj > 0); oj++)
-          result(j++, i) = O2(spini > 0, spinj > 0).smat(0, si, oi, oi)->block(sj)[(oj + 2) * (oj + 1) / 2 - 1];
+        for (auto oj = 0; oj < hamiltonian.dimension(sj, 0, spinj > 0); oj++)
+          result(j++, i) = hamiltonian.O2(spini > 0, spinj > 0).smat(0, si, oi, oi)->block(sj)[(oj + 2) * (oj + 1) / 2 - 1];
       i++;
     }
   return result;
 }
 
-Eigen::MatrixXd gci::Operator::intK(int spin) const {
+Eigen::MatrixXd gci::intK(const SymmetryMatrix::Operator& hamiltonian, int spin) {
   size_t basisSize = 0;
   for (auto si=0; si<8; si++)
-    basisSize += O1().dimension(si);
+    basisSize += hamiltonian.O1().dimension(si);
   Eigen::MatrixXd result(basisSize, basisSize);
   size_t i = 0;
   for (auto si = 0; si < 8; si++)
-    for (auto oi = 0; oi < dimension(si, 0, spin > 0); oi++) {
+    for (auto oi = 0; oi < hamiltonian.dimension(si, 0, spin > 0); oi++) {
       size_t j = 0;
       for (auto sj = 0; sj < 8; sj++)
-        for (auto oj = 0; oj < dimension(sj, 0, spin > 0); oj++)
+        for (auto oj = 0; oj < hamiltonian.dimension(sj, 0, spin > 0); oj++)
           result(j++, i) =
               ((si < sj) ?
-               O2(spin > 0, spin > 0).smat(si ^ sj, si, oi, oj)->blockMap(si)(oi, oj)
+               hamiltonian.O2(spin > 0, spin > 0).smat(si ^ sj, si, oi, oj)->blockMap(si)(oi, oj)
                          :
                ((si > sj) ?
-                O2(spin > 0, spin > 0).smat(si ^ sj, sj, oj, oi)->blockMap(sj)(oj, oi)
+                hamiltonian.O2(spin > 0, spin > 0).smat(si ^ sj, sj, oj, oi)->blockMap(sj)(oj, oi)
                           : ((i > j) ?
-                             O2(spin > 0, spin > 0).smat(0, si, oi, oj)->block(si)[(oi * (oi + 1)) / 2 + oj]
+                             hamiltonian.O2(spin > 0, spin > 0).smat(0, si, oi, oj)->block(si)[(oi * (oi + 1)) / 2 + oj]
                                      :
-                             O2(spin > 0, spin > 0).smat(0, sj, oj, oi)->block(sj)[(oj * (oj + 1)) / 2 + oi]
+                             hamiltonian.O2(spin > 0, spin > 0).smat(0, sj, oj, oi)->block(sj)[(oj * (oj + 1)) / 2 + oi]
                 )));
       i++;
     }

@@ -59,19 +59,19 @@ void Wavefunction::set(const double value) {
 
 void Wavefunction::diagonalOperator(const Operator &op) {
   auto p = profiler->push("diagonalOperator");
-  auto ha = op.int1(true);
-  auto hbb = op.int1(false);
+  auto ha = int1(op,true);
+  auto hbb = int1(op,false);
   Eigen::MatrixXd Jaa;
   Eigen::MatrixXd Jab;
   Eigen::MatrixXd Jbb;
   Eigen::MatrixXd Kaa;
   Eigen::MatrixXd Kbb;
   if (op.m_rank > 1) {
-    Jaa = op.intJ(true, true);
-    Jab = op.intJ(true, false);
-    Jbb = op.intJ(false, false);
-    Kaa = op.intK(true);
-    Kbb = op.intK(false);
+    Jaa = intJ(op,true, true);
+    Jab = intJ(op,true, false);
+    Jbb = intJ(op,false, false);
+    Kaa = intK(op,true);
+    Kbb = intK(op,false);
   }
   size_t offset = 0;
   set(op.m_O0);
