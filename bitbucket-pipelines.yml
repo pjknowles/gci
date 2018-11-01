@@ -17,7 +17,9 @@ pipelines:
           - mkdir -p build && cd build
           - cmake ..
 #          - make -C src __/submodules/symmetry_matrix/src/SMat.cpp.o __/submodules/symmetry_matrix/src/SMatfunction.cpp.o
-          - cmake --build . --target Profiler FCIdump IterativeSolver -- -j 16
+          - cmake --build . --target Profiler -- -j 16
+          - cmake --build . --target FCIdump -- -j 16
+          - cmake --build . --target IterativeSolver -- -j 16
           - cmake --build . --target symmetry_matrix
           - cmake --build . -- -j 16
           - cd test
