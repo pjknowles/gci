@@ -519,9 +519,7 @@ void TransitionDensity::action(Wavefunction &w) const {
 gci::Operator TransitionDensity::density(const Wavefunction &w) const {
   dim_t dimension;
   for (auto i = 0; i < 8; i++) dimension[i] = w[i];
-  std::vector<int> symmetries;
-  for (const auto &s : w.orbitalSpace->orbital_symmetries) symmetries.push_back(s + 1);
-  gci::Operator result(dimension, symmetries, 1, !(m_hasAlpha && m_hasBeta), m_symexc);
+  gci::Operator result(dimension, 1, !(m_hasAlpha && m_hasBeta), m_symexc);
 
   unsigned int syma = m_alphaStringsBegin->computed_symmetry();
   unsigned int symb = m_betaStringsBegin->computed_symmetry();

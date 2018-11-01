@@ -23,7 +23,6 @@ class Operator : public SymmetryMatrix::Operator {
    * \param description A string describing the object.
    */
   explicit Operator(const dim_t &dimension,
-                    const std::vector<int> &orbital_symmetries,
                     int rank = 2,
                     bool uhf = false,
                     unsigned int symmetry = 0,
@@ -38,13 +37,10 @@ class Operator : public SymmetryMatrix::Operator {
                                  symmetry,
                                  covariant,
                                  std::move(description)) {
-    for (auto i = 0; i < 4; i++)
-      m_orbitalSpaces.emplace_back(orbital_symmetries,
-                                   uhf); // in this implementation, all four orbital spaces are the same
   }
 
-  Operator(const SymmetryMatrix::Operator &source, std::vector<OrbitalSpace> orbitalSpaces)
-      : SymmetryMatrix::Operator(source), m_orbitalSpaces(std::move(orbitalSpaces)) {}
+  Operator(const SymmetryMatrix::Operator &source)
+      : SymmetryMatrix::Operator(source) {}
 
   /*!
    * \brief Construct an object from what is produced by bytestream(). If the bytestream
@@ -120,7 +116,7 @@ class Operator : public SymmetryMatrix::Operator {
    * \return
    */
   Operator fock(const Operator &density, bool oneElectron = true, std::string description = "") const {
-    Operator result(SymmetryMatrix::Operator::fock(density, oneElectron, std::move(description)), m_orbitalSpaces);
+    Operator result(SymmetryMatrix::Operator::fock(density, oneElectron, std::move(description)));
     return result;
   }
 
@@ -137,10 +133,6 @@ class Operator : public SymmetryMatrix::Operator {
    * \return the serialised representation of the object
    */
   class memory::bytestream bytestream();
-
- private:
-  std::vector<OrbitalSpace> m_orbitalSpaces;
- public:
 
   const Operator operator+(const Operator &other) const {
     Operator copy(*this);

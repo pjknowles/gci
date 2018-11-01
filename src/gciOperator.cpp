@@ -17,7 +17,7 @@ gci::Operator gci::Operator::construct(const FCIdump &dump) {
     for (const auto &s : orbital_symmetries)
       dim.at(s - 1)++;
 
-    gci::Operator result(dim, orbital_symmetries, 2, dump.parameter("IUHF")[0] > 0, 0, true, true, "Hamiltonian");
+    gci::Operator result(dim, 2, dump.parameter("IUHF")[0] > 0, 0, true, true, "Hamiltonian");
 //  for (auto i=0; i<orbital_symmetries.size(); i++) xout << "i="<<i+1<<", symmetry="<<orbital_symmetries[i]<<", offset="<<result.offset(i+1)<<std::endl;;
 
     dump.rewind();
@@ -116,20 +116,7 @@ gci::Operator gci::Operator::construct(const FCIdump &dump) {
 gci::Operator gci::Operator::construct(const char *dump) {
   class bytestream bs(dump);
   auto so = SymmetryMatrix::Operator::construct(bs);
-  std::vector<OrbitalSpace> os;
-  auto nos = bs.ints()[0];
-//  std::cout << "nos="<<nos<<std::endl;
-  for (auto i = 0; i < nos; i++) {
-    auto s = bs.ints();
-    std::vector<int> syms;
-    for (auto &ss : s) syms.push_back(ss + 1);
-//    std::cout << "syms "<<syms.size()<<so.m_uhf<<std::endl;
-//    for (auto& ss : syms) std::cout << " "<<ss; std::cout<<std::endl;
-//    std::cout << "OrbitalSpace "<<OrbitalSpace(syms,so.m_uhf)<<std::endl;
-    os.emplace_back(OrbitalSpace(syms, so.m_uhf));
-//    std::cout << "pushed to os "<<os.size()<<std::endl;;
-  }
-  return gci::Operator(so, os);
+  return gci::Operator(so);
 }
 
 void gci::Operator::FCIDump(const std::string filename, std::vector<int> orbital_symmetries) const {
@@ -224,12 +211,7 @@ void gci::Operator::FCIDump(const std::string filename, std::vector<int> orbital
 }
 
 gci::Operator *gci::Operator::projector(const std::string special, const bool forceSpinUnrestricted) const {
-  std::vector<int> symmetries;
-  for (auto sym = 0; sym < 8; sym++)
-    for (auto i = 0; i < m_dimensions[0][sym]; i++)
-      symmetries.push_back(sym);
   auto result = new gci::Operator(m_dimensions[0],
-                                  symmetries,
                                   1,
                                   m_uhf > 0 || forceSpinUnrestricted,
                                   0,
@@ -327,10 +309,7 @@ Eigen::MatrixXd gci::Operator::intK(int spin) const {
 }
 
 gci::Operator gci::Operator::fockOperator(const Determinant &reference, const std::string description) const {
-  std::vector<int> symmetries;
-  for (const auto &s : m_orbitalSpaces[0].orbital_symmetries) symmetries.push_back(s + 1);
   Operator f(m_dimensions[0],
-             symmetries,
              1,
              m_uhf,
              m_symmetry,
@@ -346,7 +325,6 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
   f.m_O0 = m_O0;
   f.O1(true) = O1(true);
   if (m_uhf) f.O1(false) = O1(false);
-  f.m_orbitalSpaces[0].orbital_symmetries = m_orbitalSpaces[0].orbital_symmetries;
   size_t basisSize = 0;
   for (auto si=0; si<8; si++)
     basisSize += O1().dimension(si);
@@ -475,10 +453,7 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
 }
 
 gci::Operator gci::Operator::sameSpinOperator(const Determinant &reference, const std::string description) const {
-  std::vector<int> symmetries;
-  for (const auto &s : m_orbitalSpaces[0].orbital_symmetries) symmetries.push_back(s + 1);
   Operator result(m_dimensions[0],
-                  symmetries,
                   m_rank,
                   true,
                   m_symmetry,
@@ -528,8 +503,5 @@ void gci::Operator::gsum() {
 
 bytestream gci::Operator::bytestream() {
   class bytestream bs = SymmetryMatrix::Operator::bytestream();
-  bs.append(m_orbitalSpaces.size());
-  for (auto &s : m_orbitalSpaces)
-    bs.append(s.orbital_symmetries);
   return bs;
 }
