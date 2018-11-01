@@ -73,6 +73,7 @@ endif (MKL_FOUND)
 
 ########## Targets ##########
 
+add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(test)
 

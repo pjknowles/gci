@@ -1,13 +1,7 @@
 #include "sharedCounter.h"
+//TODO a cleaner separation of library-internal headers
 #include "gci.h"
-#include "gciFile.h"
-#include "gciDeterminant.h"
-#include "gciWavefunction.h"
-#include "gciStringSet.h"
-#include "gciExcitationSet.h"
-#include "gciOrbitalSpace.h"
 #include "gciRun.h"
-#include "FCIdump.h"
 #include <iostream>
 #include <sstream>
 #include <iomanip>
