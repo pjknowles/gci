@@ -27,7 +27,7 @@ class OrbitalSpace : public SymmetrySpace {
   OrbitalSpace(const SymmetryMatrix::Operator& o, int verbosity = 0) {
     std::vector<int> syms;
     for (auto sym = 0; sym < 8; sym++)
-      for (auto i = 0; i < o.m_dimensions.back()[sym]; i++)
+      for (auto i = 0; i < o.dimension(sym,0,0); i++)
         syms.push_back(sym + 1);
     load(syms, o.m_uhf, verbosity);
   }

@@ -1409,7 +1409,10 @@ void Run::HamiltonianMatrixPrint(SymmetryMatrix::Operator &hamiltonian, const St
 }
 
 SymmetryMatrix::Operator* gci::projector(const SymmetryMatrix::Operator& source, const std::string special, const bool forceSpinUnrestricted) {
-  auto result = new SymmetryMatrix::Operator(source.m_dimensions[0],
+  dim_t dims;
+  for (auto s=0; s<8; s++)
+    dims.push_back(source.dimension(s,0,0));
+  auto result = new SymmetryMatrix::Operator(dims,
                                              1,
                                              source.m_uhf > 0 || forceSpinUnrestricted,
                                              0,
@@ -1429,9 +1432,9 @@ SymmetryMatrix::Operator* gci::projector(const SymmetryMatrix::Operator& source,
     unsigned int uncoupled_orbital_symmetry = 0;
     double min_rowsum = 1e50;
     for (unsigned int sym = 0; sym < 8; sym++) {
-      for (size_t k = 0; k < source.m_dimensions[0][sym]; k++) {
+      for (size_t k = 0; k < source.dimension(sym); k++) {
         double rowsum = 0;
-        for (size_t l = 0; l < source.m_dimensions[0][sym]; l++)
+        for (size_t l = 0; l < source.dimension(sym); l++)
           rowsum += source.O1(true).block(sym)[k > l ? k * (k + 1) / 2 + l : l * (l + 1) / 2 + k];
         if (std::fabs(rowsum) < min_rowsum) {
           min_rowsum = std::fabs(rowsum);
@@ -1455,7 +1458,7 @@ Eigen::VectorXd gci::int1(const SymmetryMatrix::Operator& hamiltonian, int spin)
   Eigen::VectorXd result(basisSize);
   size_t off=0;
   for (auto si=0; si<8; si++)
-    for (auto oi=0; oi<hamiltonian.m_dimensions[0][si]; oi++)
+    for (auto oi=0; oi<hamiltonian.dimension(si); oi++)
       result[off++] = hamiltonian.O1(spin>0).block(si)[(oi+1)*(oi+2)/2-1];
   return result;
 }
@@ -1619,7 +1622,7 @@ void gci::FCIDump(const SymmetryMatrix::Operator& op, const std::string filename
   int verbosity = 0;
   if (orbital_symmetries.empty())
     for (auto sym = 0; sym < 8; sym++)
-      for (auto i = 0; i < op.m_dimensions[0][sym]; i++)
+      for (auto i = 0; i < op.dimension(sym); i++)
         orbital_symmetries.push_back(sym);
   size_t n = orbital_symmetries.size();
   dump.addParameter("IUHF", op.m_uhf ? 1 : 0);
@@ -1706,7 +1709,10 @@ void gci::FCIDump(const SymmetryMatrix::Operator& op, const std::string filename
 }
 
 SymmetryMatrix::Operator gci::fockOperator(const SymmetryMatrix::Operator& hamiltonian, const Determinant &reference, const std::string description) {
-  Operator f(hamiltonian.m_dimensions[0],
+  dim_t dims;
+  for (auto s=0; s<8; s++)
+    dims.push_back(hamiltonian.dimension(s,0,0));
+  Operator f(dims,
              1,
              hamiltonian.m_uhf,
              hamiltonian.m_symmetry,
@@ -1849,7 +1855,10 @@ SymmetryMatrix::Operator gci::fockOperator(const SymmetryMatrix::Operator& hamil
 }
 
 SymmetryMatrix::Operator gci::sameSpinOperator(const SymmetryMatrix::Operator& hamiltonian, const Determinant &reference, const std::string description) {
-  Operator result(hamiltonian.m_dimensions[0],
+  dim_t dims;
+  for (auto s=0; s<8; s++)
+    dims.push_back(hamiltonian.dimension(s,0,0));
+  Operator result(dims,
                   hamiltonian.m_rank,
                   true,
                   hamiltonian.m_symmetry,
