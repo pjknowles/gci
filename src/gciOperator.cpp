@@ -1,5 +1,6 @@
 #include "gci.h"
 #include "gciOperator.h"
+#include <numeric>
 #include <algorithm>
 
 gci::Operator gci::Operator::construct(const FCIdump &dump) {
@@ -131,11 +132,13 @@ gci::Operator gci::Operator::construct(const char *dump) {
   return gci::Operator(so, os);
 }
 
-void gci::Operator::FCIDump(const std::string filename) const {
+void gci::Operator::FCIDump(const std::string filename, std::vector<int> orbital_symmetries) const {
   FCIdump dump;
   int verbosity = 0;
-  std::vector<int> orbital_symmetries;
-  for (auto s : m_orbitalSpaces[0].orbital_symmetries) orbital_symmetries.push_back(s + 1);
+  if (orbital_symmetries.empty())
+    for (auto sym = 0; sym < 8; sym++)
+      for (auto i = 0; i < m_dimensions[0][sym]; i++)
+        orbital_symmetries.push_back(sym);
   size_t n = orbital_symmetries.size();
   dump.addParameter("IUHF", m_uhf ? 1 : 0);
   dump.addParameter("ORBSYM", orbital_symmetries);
@@ -222,7 +225,9 @@ void gci::Operator::FCIDump(const std::string filename) const {
 
 gci::Operator *gci::Operator::projector(const std::string special, const bool forceSpinUnrestricted) const {
   std::vector<int> symmetries;
-  for (const auto &s : m_orbitalSpaces[0].orbital_symmetries) symmetries.push_back(s + 1);
+  for (auto sym = 0; sym < 8; sym++)
+    for (auto i = 0; i < m_dimensions[0][sym]; i++)
+      symmetries.push_back(sym);
   auto result = new gci::Operator(m_dimensions[0],
                                   symmetries,
                                   1,
@@ -265,7 +270,9 @@ gci::Operator *gci::Operator::projector(const std::string special, const bool fo
 }
 
 Eigen::VectorXd gci::Operator::int1(int spin) const {
-  size_t basisSize = m_orbitalSpaces[0].orbital_symmetries.size();
+  size_t basisSize = 0;
+  for (auto si=0; si<8; si++)
+    basisSize += O1(spin>0).dimension(si);
   Eigen::VectorXd result(basisSize);
   size_t off=0;
   for (auto si=0; si<8; si++)
@@ -276,42 +283,44 @@ Eigen::VectorXd gci::Operator::int1(int spin) const {
 
 Eigen::MatrixXd gci::Operator::intJ(int spini, int spinj) const {
   if (spinj > spini) return intJ(spinj, spini).transpose();
-  size_t basisSize = m_orbitalSpaces[0].orbital_symmetries.size();
+  size_t basisSize = 0;
+  for (auto si=0; si<8; si++)
+    basisSize += O1().dimension(si);
   Eigen::MatrixXd result(basisSize, basisSize);
   size_t i = 0;
   for (auto si = 0; si < 8; si++)
-    for (auto oi = 0; oi < m_dimensions[0][si]; oi++) {
+    for (auto oi = 0; oi < dimension(si, 0, spini > 0); oi++) {
       size_t j = 0;
       for (auto sj = 0; sj < 8; sj++)
-        for (auto oj = 0; oj < m_dimensions[0][sj]; oj++) {
+        for (auto oj = 0; oj < dimension(sj, 0, spinj > 0); oj++)
           result(j++, i) = O2(spini > 0, spinj > 0).smat(0, si, oi, oi)->block(sj)[(oj + 2) * (oj + 1) / 2 - 1];
-        }
       i++;
     }
   return result;
 }
 
 Eigen::MatrixXd gci::Operator::intK(int spin) const {
-  size_t basisSize = m_orbitalSpaces[0].orbital_symmetries.size();
+  size_t basisSize = 0;
+  for (auto si=0; si<8; si++)
+    basisSize += O1().dimension(si);
   Eigen::MatrixXd result(basisSize, basisSize);
   size_t i = 0;
   for (auto si = 0; si < 8; si++)
-    for (auto oi = 0; oi < m_dimensions[0][si]; oi++) {
+    for (auto oi = 0; oi < dimension(si, 0, spin > 0); oi++) {
       size_t j = 0;
       for (auto sj = 0; sj < 8; sj++)
-        for (auto oj = 0; oj < m_dimensions[0][sj]; oj++) {
+        for (auto oj = 0; oj < dimension(sj, 0, spin > 0); oj++)
           result(j++, i) =
-          ((si < sj) ?
-           O2(spin > 0, spin > 0).smat(si ^ sj, si, oi, oj)->blockMap(si)(oi, oj)
-                     :
-           ((si > sj) ?
-            O2(spin > 0, spin > 0).smat(si ^ sj, sj, oj, oi)->blockMap(sj)(oj, oi)
-                      : ((i > j) ?
-                         O2(spin > 0, spin > 0).smat(0, si, oi, oj)->block(si)[(oi * (oi + 1)) / 2 + oj]
-                                 :
-                         O2(spin > 0, spin > 0).smat(0, sj, oj, oi)->block(sj)[(oj * (oj + 1)) / 2 + oi]
-            )));
-        }
+              ((si < sj) ?
+               O2(spin > 0, spin > 0).smat(si ^ sj, si, oi, oj)->blockMap(si)(oi, oj)
+                         :
+               ((si > sj) ?
+                O2(spin > 0, spin > 0).smat(si ^ sj, sj, oj, oi)->blockMap(sj)(oj, oi)
+                          : ((i > j) ?
+                             O2(spin > 0, spin > 0).smat(0, si, oi, oj)->block(si)[(oi * (oi + 1)) / 2 + oj]
+                                     :
+                             O2(spin > 0, spin > 0).smat(0, sj, oj, oi)->block(sj)[(oj * (oj + 1)) / 2 + oi]
+                )));
       i++;
     }
   return result;
@@ -338,7 +347,9 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
   f.O1(true) = O1(true);
   if (m_uhf) f.O1(false) = O1(false);
   f.m_orbitalSpaces[0].orbital_symmetries = m_orbitalSpaces[0].orbital_symmetries;
-  unsigned int basisSize = m_orbitalSpaces[0].orbital_symmetries.size();
+  size_t basisSize = 0;
+  for (auto si=0; si<8; si++)
+    basisSize += O1().dimension(si);
   // xout <<"reference.stringAlpha.orbitals ";for (size_t i=0; i < reference.stringAlpha.orbitals().size(); i++) xout <<reference.stringAlpha.orbitals()[i]<<" ";xout <<std::endl;
   for (const auto &o : refAlphaOrbitals) {
 //       xout << "gci::Operator::fockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;

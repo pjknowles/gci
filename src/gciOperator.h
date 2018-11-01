@@ -80,7 +80,7 @@ class Operator : public SymmetryMatrix::Operator {
    */
   Operator *projector(std::string special, bool forceSpinUnrestricted) const;
 
-  void FCIDump(const std::string filename) const;
+  void FCIDump(const std::string filename, std::vector<int> orbital_symmetries=std::vector<int>(0)) const;
 
   /*!
      * \brief int1 Generate array of diagonal one-electron integrals
