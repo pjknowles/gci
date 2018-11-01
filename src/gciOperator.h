@@ -134,22 +134,6 @@ class Operator : public SymmetryMatrix::Operator {
    */
   class memory::bytestream bytestream();
 
-  const Operator operator+(const Operator &other) const {
-    Operator copy(*this);
-    copy += other;
-    return copy;
-  }
-  const Operator operator-(const Operator &other) const {
-    Operator copy(*this);
-    copy -= other;
-    return copy;
-  }
-  const Operator operator*(double other) const {
-    Operator copy(*this);
-    copy *= other;
-    return copy;
-  }
-
   void gsum();
 
 };
