@@ -240,7 +240,7 @@ struct updater {
 };
 
 Run::Run(std::string fcidump)
-    : m_hamiltonian(Operator::construct(FCIdump(fcidump))) {
+    : m_hamiltonian(constructOperator(FCIdump(fcidump))) {
 #ifdef HAVE_MPI_H
   MPI_Comm_rank(MPI_COMM_COMPUTE, &parallel_rank);
   MPI_Comm_size(MPI_COMM_COMPUTE, &parallel_size);

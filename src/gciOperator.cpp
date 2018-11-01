@@ -3,7 +3,7 @@
 #include <numeric>
 #include <algorithm>
 
-gci::Operator gci::Operator::construct(const FCIdump &dump) {
+SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
   std::vector<char> portableByteStream;
   int lPortableByteStream;
   int rank = 0;
@@ -108,15 +108,10 @@ gci::Operator gci::Operator::construct(const FCIdump &dump) {
 #ifdef HAVE_MPI_H
   MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, MPI_COMM_COMPUTE);
 #endif
-  auto result = Operator::construct(buf);
+  class bytestream bs(buf);
+  auto result = SymmetryMatrix::Operator::construct(bs);
   if (rank != 0) free(buf);
   return result;
-}
-
-gci::Operator gci::Operator::construct(const char *dump) {
-  class bytestream bs(dump);
-  auto so = SymmetryMatrix::Operator::construct(bs);
-  return gci::Operator(so);
 }
 
 void gci::FCIDump(const SymmetryMatrix::Operator& op, const std::string filename, std::vector<int> orbital_symmetries) {

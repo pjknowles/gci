@@ -43,32 +43,26 @@ class Operator : public SymmetryMatrix::Operator {
       : SymmetryMatrix::Operator(source) {}
 
   /*!
-   * \brief Construct an object from what is produced by bytestream(). If the bytestream
-   * contains data, it will be loaded, otherwise the contents of the object are undefined,
-   * and only the dimensions and parameters are loaded.
-   * \param dump The raw buffer of a bytestream produced by bytestream()
-   */
-  static Operator construct(const char *dump);
-  /*!
-   * \brief Construct an object from what is produced by bytestream(). If the bytestream
+   * \brief Construct an Operator from what is produced by bytestream(). If the bytestream
    * contains data, it will be loaded, otherwise the contents of the object are undefined,
    * and only the dimensions and parameters are loaded.
    * \param bs The bytestream produced by bytestream()
    */
-  static Operator construct(const class bytestream &bs) { return construct(&(bs.data()[0])); }
+//  static Operator construct(const class bytestream &bs) { return construct(&(bs.data()[0])); }
+
+
+};
+
   /*!
-   * \brief Construct an object from an FCIdump. If the FCIdump
+   * \brief Construct an Operator from an FCIdump. If the FCIdump
    * contains data, it will be loaded, otherwise the contents of the object are undefined,
    * and only the dimensions and parameters are loaded.
    * \param dump The raw buffer of a FCIdump.
    */
-  static Operator construct(const FCIdump &dump);
-  static Operator construct(FCIdump &&dump) {
-    return construct(dump);
+  SymmetryMatrix::Operator constructOperator(const FCIdump &dump);
+  inline SymmetryMatrix::Operator constructOperator(FCIdump &&dump) {
+    return constructOperator(dump);
   }
-
-
-};
 
 /*!
  * \brief Build a Fock operator from the density arising from a single Slater determinant
