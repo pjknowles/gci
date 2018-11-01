@@ -354,55 +354,55 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
   for (const auto &o : refAlphaOrbitals) {
 //       xout << "gci::Operator::fockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
 //       xout<< "f alpha, alpha occ: " <<*o << std::endl;
-    unsigned int os = m_orbitalSpaces[0].orbital_symmetries[o - 1];
-    unsigned int oo = m_orbitalSpaces[0].orbitalIndex(o);
+    unsigned int os = reference.orbitalSpace->orbital_symmetries[o - 1];
+    unsigned int oo = reference.orbitalSpace->orbitalIndex(o);
 //    unsigned int oo = offset(o);
     for (unsigned int i = 1; i <= basisSize; i++)
       for (unsigned int j = 1; j <= i; j++) {
-        if (m_orbitalSpaces[0].orbital_symmetries[i - 1] != m_orbitalSpaces[0].orbital_symmetries[j - 1]) continue;
-        f.element(m_orbitalSpaces[0].orbitalIndex(i),
-                  m_orbitalSpaces[0].orbital_symmetries[i - 1],
-                  m_orbitalSpaces[0].orbitalIndex(j),
-                  m_orbitalSpaces[0].orbital_symmetries[j - 1],
+        if (reference.orbitalSpace->orbital_symmetries[i - 1] != reference.orbitalSpace->orbital_symmetries[j - 1]) continue;
+        f.element(reference.orbitalSpace->orbitalIndex(i),
+                  reference.orbitalSpace->orbital_symmetries[i - 1],
+                  reference.orbitalSpace->orbitalIndex(j),
+                  reference.orbitalSpace->orbital_symmetries[j - 1],
                   true) +=
-            element(m_orbitalSpaces[0].orbitalIndex(i),
-                    m_orbitalSpaces[0].orbital_symmetries[i - 1],
-                    m_orbitalSpaces[0].orbitalIndex(j),
-                    m_orbitalSpaces[0].orbital_symmetries[j - 1],
+            element(reference.orbitalSpace->orbitalIndex(i),
+                    reference.orbitalSpace->orbital_symmetries[i - 1],
+                    reference.orbitalSpace->orbitalIndex(j),
+                    reference.orbitalSpace->orbital_symmetries[j - 1],
                     oo,
                     os,
                     oo,
                     os,
                     true,
                     true) -
-                element(m_orbitalSpaces[0].orbitalIndex(i),
-                        m_orbitalSpaces[0].orbital_symmetries[i - 1],
+                element(reference.orbitalSpace->orbitalIndex(i),
+                        reference.orbitalSpace->orbital_symmetries[i - 1],
                         oo,
                         os,
                         oo,
                         os,
-                        m_orbitalSpaces[0].orbitalIndex(j),
-                        m_orbitalSpaces[0].orbital_symmetries[j - 1],
+                        reference.orbitalSpace->orbitalIndex(j),
+                        reference.orbitalSpace->orbital_symmetries[j - 1],
                         true,
                         true);
       }
   }
   for (const auto &o : refBetaOrbitals) {
     // xout<< "f alpha, beta occ: " <<*o << std::endl;
-    unsigned int os = m_orbitalSpaces[0].orbital_symmetries[o - 1];
-    unsigned int oo = m_orbitalSpaces[0].orbitalIndex(o);
+    unsigned int os = reference.orbitalSpace->orbital_symmetries[o - 1];
+    unsigned int oo = reference.orbitalSpace->orbitalIndex(o);
     for (unsigned int i = 1; i <= basisSize; i++)
       for (unsigned int j = 1; j <= i; j++) {
-        if (m_orbitalSpaces[0].orbital_symmetries[i - 1] != m_orbitalSpaces[0].orbital_symmetries[j - 1]) continue;
-        f.element(m_orbitalSpaces[0].orbitalIndex(i),
-                  m_orbitalSpaces[0].orbital_symmetries[i - 1],
-                  m_orbitalSpaces[0].orbitalIndex(j),
-                  m_orbitalSpaces[0].orbital_symmetries[j - 1],
+        if (reference.orbitalSpace->orbital_symmetries[i - 1] != reference.orbitalSpace->orbital_symmetries[j - 1]) continue;
+        f.element(reference.orbitalSpace->orbitalIndex(i),
+                  reference.orbitalSpace->orbital_symmetries[i - 1],
+                  reference.orbitalSpace->orbitalIndex(j),
+                  reference.orbitalSpace->orbital_symmetries[j - 1],
                   true) +=
-            element(m_orbitalSpaces[0].orbitalIndex(i),
-                    m_orbitalSpaces[0].orbital_symmetries[i - 1],
-                    m_orbitalSpaces[0].orbitalIndex(j),
-                    m_orbitalSpaces[0].orbital_symmetries[j - 1],
+            element(reference.orbitalSpace->orbitalIndex(i),
+                    reference.orbitalSpace->orbital_symmetries[i - 1],
+                    reference.orbitalSpace->orbitalIndex(j),
+                    reference.orbitalSpace->orbital_symmetries[j - 1],
                     oo,
                     os,
                     oo,
@@ -414,58 +414,58 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
   if (f.m_uhf) {
     for (const auto &o : refBetaOrbitals) {
       // xout<< "f beta, beta occ: " <<*o << std::endl;
-      unsigned int os = m_orbitalSpaces[0].orbital_symmetries[o - 1];
-      unsigned int oo = m_orbitalSpaces[0].orbitalIndex(o);
+      unsigned int os = reference.orbitalSpace->orbital_symmetries[o - 1];
+      unsigned int oo = reference.orbitalSpace->orbitalIndex(o);
       for (unsigned int i = 1; i <= basisSize; i++)
         for (unsigned int j = 1; j <= i; j++) {
-          if (m_orbitalSpaces[0].orbital_symmetries[i - 1] != m_orbitalSpaces[0].orbital_symmetries[j - 1]) continue;
-          f.element(m_orbitalSpaces[0].orbitalIndex(i),
-                    m_orbitalSpaces[0].orbital_symmetries[i - 1],
-                    m_orbitalSpaces[0].orbitalIndex(j),
-                    m_orbitalSpaces[0].orbital_symmetries[j - 1],
+          if (reference.orbitalSpace->orbital_symmetries[i - 1] != reference.orbitalSpace->orbital_symmetries[j - 1]) continue;
+          f.element(reference.orbitalSpace->orbitalIndex(i),
+                    reference.orbitalSpace->orbital_symmetries[i - 1],
+                    reference.orbitalSpace->orbitalIndex(j),
+                    reference.orbitalSpace->orbital_symmetries[j - 1],
                     false) +=
-              element(m_orbitalSpaces[0].orbitalIndex(i),
-                      m_orbitalSpaces[0].orbital_symmetries[i - 1],
-                      m_orbitalSpaces[0].orbitalIndex(j),
-                      m_orbitalSpaces[0].orbital_symmetries[j - 1],
+              element(reference.orbitalSpace->orbitalIndex(i),
+                      reference.orbitalSpace->orbital_symmetries[i - 1],
+                      reference.orbitalSpace->orbitalIndex(j),
+                      reference.orbitalSpace->orbital_symmetries[j - 1],
                       oo,
                       os,
                       oo,
                       os,
                       false,
                       false) -
-                  element(m_orbitalSpaces[0].orbitalIndex(i),
-                          m_orbitalSpaces[0].orbital_symmetries[i - 1],
+                  element(reference.orbitalSpace->orbitalIndex(i),
+                          reference.orbitalSpace->orbital_symmetries[i - 1],
                           oo,
                           os,
                           oo,
                           os,
-                          m_orbitalSpaces[0].orbitalIndex(j),
-                          m_orbitalSpaces[0].orbital_symmetries[j - 1],
+                          reference.orbitalSpace->orbitalIndex(j),
+                          reference.orbitalSpace->orbital_symmetries[j - 1],
                           false,
                           false);
         }
     }
     for (const auto &o : refAlphaOrbitals) {
       // xout<< "f beta, alpha occ: " <<*o << std::endl;
-      unsigned int os = m_orbitalSpaces[0].orbital_symmetries[o - 1];
-      unsigned int oo = m_orbitalSpaces[0].orbitalIndex(o);
+      unsigned int os = reference.orbitalSpace->orbital_symmetries[o - 1];
+      unsigned int oo = reference.orbitalSpace->orbitalIndex(o);
       for (unsigned int i = 1; i <= basisSize; i++)
         for (unsigned int j = 1; j <= i; j++) {
-          if (m_orbitalSpaces[0].orbital_symmetries[i - 1] != m_orbitalSpaces[0].orbital_symmetries[j - 1]) continue;
-          f.element(m_orbitalSpaces[0].orbitalIndex(i),
-                    m_orbitalSpaces[0].orbital_symmetries[i - 1],
-                    m_orbitalSpaces[0].orbitalIndex(j),
-                    m_orbitalSpaces[0].orbital_symmetries[j - 1],
+          if (reference.orbitalSpace->orbital_symmetries[i - 1] != reference.orbitalSpace->orbital_symmetries[j - 1]) continue;
+          f.element(reference.orbitalSpace->orbitalIndex(i),
+                    reference.orbitalSpace->orbital_symmetries[i - 1],
+                    reference.orbitalSpace->orbitalIndex(j),
+                    reference.orbitalSpace->orbital_symmetries[j - 1],
                     false) +=
               element(oo,
                       os,
                       oo,
                       os,
-                      m_orbitalSpaces[0].orbitalIndex(i),
-                      m_orbitalSpaces[0].orbital_symmetries[i - 1],
-                      m_orbitalSpaces[0].orbitalIndex(j),
-                      m_orbitalSpaces[0].orbital_symmetries[j - 1],
+                      reference.orbitalSpace->orbitalIndex(i),
+                      reference.orbitalSpace->orbital_symmetries[i - 1],
+                      reference.orbitalSpace->orbitalIndex(j),
+                      reference.orbitalSpace->orbital_symmetries[j - 1],
                       true,
                       false);
         }
