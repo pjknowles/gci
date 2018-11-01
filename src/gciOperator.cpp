@@ -119,36 +119,36 @@ gci::Operator gci::Operator::construct(const char *dump) {
   return gci::Operator(so);
 }
 
-void gci::Operator::FCIDump(const std::string filename, std::vector<int> orbital_symmetries) const {
+void gci::FCIDump(const SymmetryMatrix::Operator& op, const std::string filename, std::vector<int> orbital_symmetries) {
   FCIdump dump;
   int verbosity = 0;
   if (orbital_symmetries.empty())
     for (auto sym = 0; sym < 8; sym++)
-      for (auto i = 0; i < m_dimensions[0][sym]; i++)
+      for (auto i = 0; i < op.m_dimensions[0][sym]; i++)
         orbital_symmetries.push_back(sym);
   size_t n = orbital_symmetries.size();
-  dump.addParameter("IUHF", m_uhf ? 1 : 0);
+  dump.addParameter("IUHF", op.m_uhf ? 1 : 0);
   dump.addParameter("ORBSYM", orbital_symmetries);
   dump.addParameter("NORB", int(orbital_symmetries.size()));
 
   dump.write(filename);
   dump.rewind();
   size_t i, j, k, l;
-  const auto &integrals_a = O1(true);
-  const auto &integrals_b = O1(false);
-  const auto &integrals_aa = O2(true, true);
-  const auto &integrals_ab = O2(true, false);
-  const auto &integrals_bb = O2(false, false);
+  const auto &integrals_a = op.O1(true);
+  const auto &integrals_b = op.O1(false);
+  const auto &integrals_aa = op.O2(true, true);
+  const auto &integrals_ab = op.O2(true, false);
+  const auto &integrals_bb = op.O2(false, false);
   if (verbosity > 0) {
     xout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
     xout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
     xout << "integral addresses " << &integrals_aa << " " << &integrals_ab << " " << &integrals_bb << std::endl;
 //      xout << "integral sizes "<< integrals_aa.size()<<" "<<integrals_ab.size()<<" "<<integrals_bb.size()<<std::endl;
     xout << "n=" << n << std::endl;
-    xout << "m_rank=" << m_rank << std::endl;
+    xout << "m_rank=" << op.m_rank << std::endl;
   }
-  if (m_uhf) throw std::logic_error("UHF not supported");
-  if (m_rank > 1) { // xout << "2 electron"<<std::endl;
+  if (op.m_uhf) throw std::logic_error("UHF not supported");
+  if (op.m_rank > 1) { // xout << "2 electron"<<std::endl;
     for (i = 1; i <= n; i++)
       for (j = 1; j <= i; j++) { // xout << "j="<<j<<std::endl;
         for (k = 1; k <= i; k++) { // xout << "k="<<k<<std::endl;
@@ -174,7 +174,7 @@ void gci::Operator::FCIDump(const std::string filename, std::vector<int> orbital
             }
             unsigned int sij = si ^sj;
             unsigned int skl = sk ^sl;
-            if ((sij ^ skl) != m_symmetry) continue;
+            if ((sij ^ skl) != op.m_symmetry) continue;
 //      xout << "\nvalue: "<<value<<std::endl;
 //      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
@@ -192,7 +192,7 @@ void gci::Operator::FCIDump(const std::string filename, std::vector<int> orbital
       }
   }
 //  xout << "n="<<n<<std::endl;
-  if (m_rank > 0)
+  if (op.m_rank > 0)
     for (size_t ii = 1; ii <= n; ii++)
       for (size_t jj = 1; jj <= ii; jj++) {
 //        xout << "ii="<<ii<<", jj="<<jj<<std::endl;
@@ -200,20 +200,20 @@ void gci::Operator::FCIDump(const std::string filename, std::vector<int> orbital
         auto oj = dump.orbital_offset(jj);
         auto si = dump.orbital_symmetry(ii);
         auto sj = dump.orbital_symmetry(jj);
-        if ((si ^ sj) == m_symmetry) {
+        if ((si ^ sj) == op.m_symmetry) {
           auto value = integrals_a.block(si).at(oi * (oi + 1) / 2 + oj);
           if (std::abs(value) > 1e-15)
             dump.writeIntegral(ii, jj, 0, 0, value);
         }
       }
-  dump.writeIntegral(0, 0, 0, 0, m_O0);
+  dump.writeIntegral(0, 0, 0, 0, op.m_O0);
 
 }
 
-gci::Operator *gci::Operator::projector(const std::string special, const bool forceSpinUnrestricted) const {
-  auto result = new gci::Operator(m_dimensions[0],
+SymmetryMatrix::Operator* gci::projector(const SymmetryMatrix::Operator& source, const std::string special, const bool forceSpinUnrestricted) {
+  auto result = new gci::Operator(source.m_dimensions[0], //TODO make a smart pointer!
                                   1,
-                                  m_uhf > 0 || forceSpinUnrestricted,
+                                  source.m_uhf > 0 || forceSpinUnrestricted,
                                   0,
                                   true,
                                   true,
@@ -225,17 +225,17 @@ gci::Operator *gci::Operator::projector(const std::string special, const bool fo
       result->O1(true).setIdentity();
     else
       result->O1(true).assign(0);
-    if (m_uhf)
+    if (source.m_uhf)
       result->O1(false) = result->O1(true);
     // determine the uncoupled orbital
     size_t uncoupled_orbital = 0;
     unsigned int uncoupled_orbital_symmetry = 0;
     double min_rowsum = 1e50;
     for (unsigned int sym = 0; sym < 8; sym++) {
-      for (size_t k = 0; k < m_dimensions[0][sym]; k++) {
+      for (size_t k = 0; k < source.m_dimensions[0][sym]; k++) {
         double rowsum = 0;
-        for (size_t l = 0; l < m_dimensions[0][sym]; l++)
-          rowsum += O1(true).block(sym)[k > l ? k * (k + 1) / 2 + l : l * (l + 1) / 2 + k];
+        for (size_t l = 0; l < source.m_dimensions[0][sym]; l++)
+          rowsum += source.O1(true).block(sym)[k > l ? k * (k + 1) / 2 + l : l * (l + 1) / 2 + k];
         if (std::fabs(rowsum) < min_rowsum) {
           min_rowsum = std::fabs(rowsum);
           uncoupled_orbital = k;

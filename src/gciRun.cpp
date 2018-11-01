@@ -20,11 +20,11 @@ static double _residual_q;
 static bool parallel_stringset;
 struct residual {
  protected:
-  const gci::Operator &m_hamiltonian;
+  const SymmetryMatrix::Operator &m_hamiltonian;
   const bool m_subtract_Energy;
-  const gci::Operator *m_Q;
+  const SymmetryMatrix::Operator *m_Q;
  public:
-  residual(const gci::Operator &hamiltonian, bool subtract_Energy, gci::Operator *Q = nullptr) : m_hamiltonian(
+  residual(const SymmetryMatrix::Operator &hamiltonian, bool subtract_Energy, SymmetryMatrix::Operator *Q = nullptr) : m_hamiltonian(
       hamiltonian), m_subtract_Energy(subtract_Energy), m_Q(Q) {}
   void operator()(const ParameterVectorSet &psx, ParameterVectorSet &outputs, bool append = false) const {
     for (size_t k = 0; k < psx.size(); k++) {
@@ -85,10 +85,10 @@ struct residual {
 using Pvector = std::map<size_t, double>;
 struct Presidual {
  private:
-  const gci::Operator &m_hamiltonian;
+  const SymmetryMatrix::Operator &m_hamiltonian;
   const std::vector<Pvector> &m_P;
  public:
-  Presidual(const gci::Operator &hamiltonian, const std::vector<Pvector> &P) : m_hamiltonian(hamiltonian), m_P(P) {}
+  Presidual(const SymmetryMatrix::Operator &hamiltonian, const std::vector<Pvector> &P) : m_hamiltonian(hamiltonian), m_P(P) {}
   void operator()(const std::vector<std::vector<double> > &Pcoeff, ParameterVectorSet &outputs) const {
     for (size_t k = 0; k < Pcoeff.size(); k++) {
       assert(m_P.size() == Pcoeff[k].size());
@@ -103,15 +103,15 @@ struct Presidual {
   }
 };
 
-static std::vector<gci::Operator> _IPT_Fock;
+static std::vector<SymmetryMatrix::Operator> _IPT_Fock;
 static std::vector<double> _IPT_Epsilon;
 static std::vector<double> _IPT_eta;
 static std::vector<Wavefunction> _IPT_c;
 static std::unique_ptr<Wavefunction> _IPT_b0m;
-static std::unique_ptr<gci::Operator> _IPT_Q;
+static std::unique_ptr<SymmetryMatrix::Operator> _IPT_Q;
 struct meanfield_residual : residual {
  public:
-  meanfield_residual(const gci::Operator &hamiltonian, bool subtract_Energy, gci::Operator *Q = nullptr)
+  meanfield_residual(const SymmetryMatrix::Operator &hamiltonian, bool subtract_Energy, SymmetryMatrix::Operator *Q = nullptr)
       : residual(hamiltonian, subtract_Energy, Q) {}
   void operator()(const ParameterVectorSet &psx,
                   ParameterVectorSet &outputs,
@@ -312,22 +312,22 @@ std::vector<double> Run::run() {
          << " of same spin" << std::endl;
     xout << "Second-order hamiltonian contains " << 1 - scs_opposite << " of opposite-spin and " << 1 - scs_same
          << " of same spin" << std::endl;
-    gci::Operator h0 = fockOperator(m_hamiltonian,referenceDeterminant);
+    SymmetryMatrix::Operator h0 = fockOperator(m_hamiltonian,referenceDeterminant);
 //    xout <<"h0="<<h0<<std::endl;
-    gci::Operator ssh = sameSpinOperator(m_hamiltonian,referenceDeterminant);
+    SymmetryMatrix::Operator ssh = sameSpinOperator(m_hamiltonian,referenceDeterminant);
 //    xout <<"ssh="<<ssh<<std::endl;
-    gci::Operator osh = m_hamiltonian;
+    SymmetryMatrix::Operator osh = m_hamiltonian;
     osh -= ssh;
     osh -= h0; // spinUnrestricted not yet implemented
 //    xout <<"osh="<<osh<<std::endl;
-    gci::Operator h1 = osh * scs_opposite;
+    SymmetryMatrix::Operator h1 = osh * scs_opposite;
     h1 += ssh * scs_same;
 //    xout <<"h1="<<h1<<std::endl;
-    gci::Operator h2(m_hamiltonian); // spinUnrestricted not yet implemented
+    SymmetryMatrix::Operator h2(m_hamiltonian); // spinUnrestricted not yet implemented
     h2 -= h1;
     h2 -= h0;
 //    xout <<"h2="<<h2<<std::endl;
-    std::vector<gci::Operator *> hams;
+    std::vector<SymmetryMatrix::Operator *> hams;
     hams.push_back(&h0);
     hams.push_back(&h1);
     if (scs_opposite != (double) 1 || scs_same != (double) 1) hams.push_back(&h2);
@@ -466,8 +466,8 @@ Run::~Run() {
 using namespace itf;
 #endif
 
-std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, double energyThreshold, int maxIterations) {
-  std::unique_ptr<gci::Operator> residual_Q;
+std::vector<double> Run::DIIS(const SymmetryMatrix::Operator &ham, const State &prototype, double energyThreshold, int maxIterations) {
+  std::unique_ptr<SymmetryMatrix::Operator> residual_Q;
   profiler->start("DIIS");
   profiler->start("DIIS preamble");
 //  xout << "on entry to Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
@@ -480,7 +480,7 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
   _residual_q = options.parameter("CHARGE", 0.0);
   if (_residual_q > 0) {
     xout << "q=" << _residual_q << std::endl;
-    residual_Q.reset(ham.projector("Q", true));
+    residual_Q.reset(projector(ham,"Q", true));
 //      xout << "Q operator" <<std::endl<<residual_Q<<std::endl;
   }
 //  Operator P("P",hamiltonian,true);
@@ -521,7 +521,7 @@ std::vector<double> Run::DIIS(const Operator &ham, const State &prototype, doubl
 }
 
 std::vector<double> Run::Davidson(
-    const Operator &ham,
+    const SymmetryMatrix::Operator &ham,
     const State &prototype,
     double energyThreshold, int nState, int maxIterations) {
   auto p = profiler->push("Davidson");
@@ -640,7 +640,7 @@ std::vector<double> Run::Davidson(
   return solver.eigenvalues();
 }
 
-std::vector<double> Run::CSDavidson(const Operator &ham,
+std::vector<double> Run::CSDavidson(const SymmetryMatrix::Operator &ham,
                                     const State &prototype,
                                     double energyThreshold, int nState, int maxIterations) {
   profiler->start("Davidson");
@@ -886,7 +886,7 @@ std::vector<double> Run::CSDavidson(const Operator &ham,
   return e;
 }
 
-std::vector<double> Run::RSPT(const std::vector<Operator *> &hams,
+std::vector<double> Run::RSPT(const std::vector<SymmetryMatrix::Operator *> &hams,
                               const State &prototype,
                               int maxOrder,
                               double energyThreshold,
@@ -977,12 +977,12 @@ std::vector<double> Run::RSPT(const std::vector<Operator *> &hams,
   return e;
 }
 
-void Run::IPT(const gci::Operator &ham, const State &prototype, const size_t referenceLocation) {
+void Run::IPT(const SymmetryMatrix::Operator &ham, const State &prototype, const size_t referenceLocation) {
   int maxOrder = options.parameter("MAXORDER", std::vector<int>(1, 3)).at(0);
   std::vector<double> energies;
   Wavefunction d(prototype);
   xout << "IPT wavefunction size=" << d.size() << std::endl;
-  _IPT_Q = std::unique_ptr<gci::Operator>(ham.projector("Q", true));
+  _IPT_Q = std::unique_ptr<SymmetryMatrix::Operator>(projector(ham,"Q", true));
   int continuumOrbitalSymmetry;
   size_t continuumOrbitalOffset;
   for (continuumOrbitalSymmetry = 0; continuumOrbitalSymmetry < 8; continuumOrbitalSymmetry++)
@@ -1010,7 +1010,7 @@ void Run::IPT(const gci::Operator &ham, const State &prototype, const size_t ref
   _IPT_Epsilon.push_back(d.at(referenceLocation));
   _IPT_Epsilon.push_back(0);
   _IPT_c.emplace_back(Wavefunction(prototype)); // c[1]
-  gci::Operator excK(_IPT_Fock[0]);
+  SymmetryMatrix::Operator excK(_IPT_Fock[0]);
   excK.O1() *= 0;
   excK.O1(false) *= 0;
   excK.m_description = "excK";
@@ -1055,7 +1055,7 @@ void Run::IPT(const gci::Operator &ham, const State &prototype, const size_t ref
   for (int m = 2; m <= maxOrder; m++) {
     xout << "Start orbital relaxation order m=" << m << std::endl;
     // construct F0m*
-    _IPT_Fock.emplace_back(gci::Operator(_IPT_Fock[0]));
+    _IPT_Fock.emplace_back(SymmetryMatrix::Operator(_IPT_Fock[0]));
     _IPT_Fock.back().zero();
     _IPT_Fock.back().m_description = "F0" + std::to_string(m) + "*";
     for (int j = 1; j < m; j++) {
@@ -1253,7 +1253,7 @@ void Run::IPT(const gci::Operator &ham, const State &prototype, const size_t ref
     }
 
     if (true) { // check idempotency
-      gci::Operator idem = _IPT_c[0].density(1, true, true, &_IPT_c[0], "", parallel_stringset);
+      SymmetryMatrix::Operator idem = _IPT_c[0].density(1, true, true, &_IPT_c[0], "", parallel_stringset);
       idem.zero();
       for (int k = 0; k < m; k++) {
         idem -=
@@ -1332,8 +1332,8 @@ void Run::IPT(const gci::Operator &ham, const State &prototype, const size_t ref
 }
 
 std::vector<double> Run::ISRSPT(
-    const gci::Operator &ham,
-    const gci::Operator &ham0,
+    const SymmetryMatrix::Operator &ham,
+    const SymmetryMatrix::Operator &ham0,
     const State &prototype,
     int maxOrder,
     double energyThreshold,
@@ -1376,7 +1376,7 @@ std::vector<double> Run::ISRSPT(
   return solver.eigenvalues();
 }
 
-void Run::HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity) {
+void Run::HamiltonianMatrixPrint(SymmetryMatrix::Operator &hamiltonian, const State &prototype, int verbosity) {
   Wavefunction w(hamiltonian, prototype.nelec, prototype.symmetry, prototype.ms2);
   Wavefunction g(w);
   xout << std::endl << "Full Hamiltonian matrix" << std::endl;

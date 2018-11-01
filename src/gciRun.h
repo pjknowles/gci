@@ -35,17 +35,17 @@ class Run {
    * \param maxIterations The maximum number of iterations to perform
    * \return the energies order by order
    */
-  std::vector<double> RSPT(const std::vector<Operator *> &hams,
+  std::vector<double> RSPT(const std::vector<SymmetryMatrix::Operator *> &hams,
                            const State &prototype,
                            int maxOrder = -1,
                            double energyThreshold = -1,
                            int maxIterations = -1);
-  std::vector<double> ISRSPT(const gci::Operator &ham, const gci::Operator &ham0,
+  std::vector<double> ISRSPT(const SymmetryMatrix::Operator &ham, const SymmetryMatrix::Operator &ham0,
                              const State &prototype,
                              int maxOrder = -1,
                              double energyThreshold = -1,
                              int maxIterations = -1);
-  void IPT(const gci::Operator &ham,
+  void IPT(const SymmetryMatrix::Operator &ham,
            const State &prototype, size_t referenceLocation);
 
   /*!
@@ -58,10 +58,10 @@ class Run {
    * \param maxIterations The maximum number of iterations to perform
    * \return the energies for each state. Note that only the first nState energies are considered converged
    */
-  std::vector<double> Davidson(const Operator &ham,
+  std::vector<double> Davidson(const SymmetryMatrix::Operator &ham,
                                const State &prototype,
                                double energyThreshold = (double) -1, int nState = -1, int maxIterations = -1);
-  std::vector<double> CSDavidson(const Operator &ham,
+  std::vector<double> CSDavidson(const SymmetryMatrix::Operator &ham,
                                  const State &prototype,
                                  double energyThreshold = (double) -1, int nState = -1, int maxIterations = -1);
   /*!
@@ -73,16 +73,16 @@ class Run {
    * \param maxIterations The maximum number of iterations to perform
    * \return the energy of the state.
    */
-  std::vector<double> DIIS(const Operator &ham,
+  std::vector<double> DIIS(const SymmetryMatrix::Operator &ham,
                            const State &prototype,
                            double energyThreshold = (double) -1, int maxIterations = -1);
 
-  void HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity = 0);
+  void HamiltonianMatrixPrint(SymmetryMatrix::Operator &hamiltonian, const State &prototype, int verbosity = 0);
 
-  Operator m_hamiltonian;
+  SymmetryMatrix::Operator m_hamiltonian;
  public:
-  std::unique_ptr<Operator> m_densityMatrix; // the (state-averaged) density matrix
-  std::vector<Operator> m_densityMatrices; // the individual state density matrices
+  std::unique_ptr<SymmetryMatrix::Operator> m_densityMatrix; // the (state-averaged) density matrix
+  std::vector<SymmetryMatrix::Operator> m_densityMatrices; // the individual state density matrices
 
   std::vector<std::shared_ptr<Wavefunction> > m_wavefunctions;
   gci::Options options;

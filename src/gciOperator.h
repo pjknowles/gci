@@ -67,16 +67,6 @@ class Operator : public SymmetryMatrix::Operator {
     return construct(dump);
   }
 
-  /*!
-   * \brief Construct an operator templated on this, but with a special specification
-   * \param special
-   * - "Q" projector onto space containing satellite orbital
-   * - "P" 1-Q
-   * \param forceSpinUnrestricted whether to force conversion to a UHF object
-   */
-  Operator *projector(std::string special, bool forceSpinUnrestricted) const;
-
-  void FCIDump(const std::string filename, std::vector<int> orbital_symmetries=std::vector<int>(0)) const;
 
   /*!
      * \brief int1 Generate array of diagonal one-electron integrals
@@ -119,6 +109,22 @@ void gsum(SymmetryMatrix::Operator& op);
 SymmetryMatrix::Operator sameSpinOperator(const SymmetryMatrix::Operator& hamiltonian, const Determinant &reference,
                           std::string description = "Same Spin Hamiltonian");
 
+/*!
+ * \brief Construct an operator templated on source, but with a special specification
+ * \param special
+ * - "Q" projector onto space containing satellite orbital
+ * - "P" 1-Q
+ * \param forceSpinUnrestricted whether to force conversion to a UHF object
+ */
+SymmetryMatrix::Operator *projector(const SymmetryMatrix::Operator& source, std::string special, bool forceSpinUnrestricted) ;
+
+/*!
+ * @brief Write an Operator to an FCIdump
+ * @param op The operator
+ * @param filename
+ * @param orbital_symmetries
+ */
+void FCIDump(const SymmetryMatrix::Operator& op, const std::string filename, std::vector<int> orbital_symmetries=std::vector<int>(0));
 }
 
 #endif // GCIOPERATOR_H

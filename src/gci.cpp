@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
       size_t pos = std::min(densityname.rfind('.'), densityname.size());
       densityname.replace(pos, densityname.size() - pos, ".density.");
       densityname += std::to_string(state + 1) + ".fcidump";
-      run.m_densityMatrices[state].FCIDump(densityname);
+      FCIDump(run.m_densityMatrices[state],densityname);
       if (plugin.active()) { // send the density back
         if (plugin.send("TAKE DENSITY FCIDUMP"))
           plugin.send(densityname);
