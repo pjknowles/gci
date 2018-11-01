@@ -1,4 +1,5 @@
 #include "gci.h"
+#include "gciRun.h"
 #include "gciWavefunction.h"
 #include <sstream>
 #include <iostream>
@@ -56,6 +57,7 @@ void Wavefunction::set(const double value) {
   allocate_buffer();
   for (auto &b : buffer) b = value;
 }
+
 
 void Wavefunction::diagonalOperator(const Operator &op) {
   auto p = profiler->push("diagonalOperator");
@@ -1147,3 +1149,5 @@ std::vector<StringSet> Wavefunction::activeStrings(bool spinUp) const {
 //  }
   return results;
 }
+
+

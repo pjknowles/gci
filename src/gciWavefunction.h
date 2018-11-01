@@ -5,7 +5,6 @@
 #include <tuple>
 #include <string>
 #include "gci.h"
-#include "gciOperator.h"
 #include "gciState.h"
 #include "gciStringSet.h"
 #include "gciPrintable.h"

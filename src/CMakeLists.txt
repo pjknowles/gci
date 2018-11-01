@@ -39,7 +39,6 @@ add_library(gci
         gciExcitationSet.cpp gciExcitationSet.h
         gciFile.cpp gciFile.h
         gciMolpro.cpp gciMolpro.h
-        gciOperator.cpp gciOperator.h
         gciOptions.cpp gciOptions.h
         gciOrbitals.h
         gciOrbitalSpace.cpp gciOrbitalSpace.h

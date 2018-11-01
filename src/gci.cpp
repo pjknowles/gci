@@ -1,7 +1,6 @@
 #include "sharedCounter.h"
 #include "gci.h"
 #include "gciFile.h"
-#include "gciOperator.h"
 #include "gciDeterminant.h"
 #include "gciWavefunction.h"
 #include "gciStringSet.h"
