@@ -766,7 +766,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
   }
 }
 
-gci::Operator Wavefunction::density(int rank,
+SymmetryMatrix::Operator Wavefunction::density(int rank,
                                     bool uhf,
                                     bool hermitian,
                                     const Wavefunction *bra,
@@ -777,7 +777,7 @@ gci::Operator Wavefunction::density(int rank,
 
   dim_t dim;
   for (const auto s: *orbitalSpace) dim.push_back(s);
-  Operator result(dim, rank, uhf, symmetry ^ bra->symmetry, false, hermitian, description);
+  Operator result(dims_t{dim,dim,dim,dim}, rank, uhf, (hermitian ? std::vector<int>{1,1} : std::vector<int>{0,0}), {-1,-1}, symmetry ^ bra->symmetry, false, description);
 //  std::cout << "result\n"<<result.str("result",3)<<std::endl;
   result.zero();
   result.m_O0 = (*this) * (*bra);

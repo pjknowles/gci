@@ -516,10 +516,10 @@ void TransitionDensity::action(Wavefunction &w) const {
 
 #include "gciMolpro.h"
 
-gci::Operator TransitionDensity::density(const Wavefunction &w) const {
+SymmetryMatrix::Operator TransitionDensity::density(const Wavefunction &w) const {
   dim_t dimension;
   for (auto i = 0; i < 8; i++) dimension[i] = w[i];
-  gci::Operator result(dimension, 1, !(m_hasAlpha && m_hasBeta), m_symexc);
+  SymmetryMatrix::Operator result(dimension, 1, !(m_hasAlpha && m_hasBeta), m_symexc);
 
   unsigned int syma = m_alphaStringsBegin->computed_symmetry();
   unsigned int symb = m_betaStringsBegin->computed_symmetry();

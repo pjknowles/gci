@@ -16,9 +16,7 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
     dim_t dim(8);
     for (const auto &s : orbital_symmetries)
       dim.at(s - 1)++;
-
-    gci::Operator result(dim, 2, dump.parameter("IUHF")[0] > 0, 0, true, true, "Hamiltonian");
-//  for (auto i=0; i<orbital_symmetries.size(); i++) xout << "i="<<i+1<<", symmetry="<<orbital_symmetries[i]<<", offset="<<result.offset(i+1)<<std::endl;;
+    SymmetryMatrix::Operator result(dim, 2, dump.parameter("IUHF")[0] > 0, 0, true, "Hamiltonian");
 
     dump.rewind();
     double value;
@@ -206,11 +204,10 @@ void gci::FCIDump(const SymmetryMatrix::Operator& op, const std::string filename
 }
 
 SymmetryMatrix::Operator* gci::projector(const SymmetryMatrix::Operator& source, const std::string special, const bool forceSpinUnrestricted) {
-  auto result = new gci::Operator(source.m_dimensions[0], //TODO make a smart pointer!
+  auto result = new SymmetryMatrix::Operator(source.m_dimensions[0],
                                   1,
                                   source.m_uhf > 0 || forceSpinUnrestricted,
                                   0,
-                                  true,
                                   true,
                                   special + " projector");
   result->m_O0 = 0;
@@ -309,7 +306,6 @@ SymmetryMatrix::Operator gci::fockOperator(const SymmetryMatrix::Operator& hamil
              1,
              hamiltonian.m_uhf,
              hamiltonian.m_symmetry,
-             true,
              true,
              description);
   // xout << "gci::Operator::fockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
@@ -453,7 +449,6 @@ SymmetryMatrix::Operator gci::sameSpinOperator(const SymmetryMatrix::Operator& h
                   hamiltonian.m_rank,
                   true,
                   hamiltonian.m_symmetry,
-                  true,
                   true,
                   description);
   {

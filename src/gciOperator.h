@@ -9,50 +9,6 @@
 
 namespace gci {
 
-class Operator : public SymmetryMatrix::Operator {
- public:
-  /*!
-   * \brief Construct a real hermitian fermionic operator
-   * \param dimension Numbers of orbitals in each symmetry block.
-   * \param orbital_symmetries Symmetries of orbitals, in the range 1 to 8
-   * \param rank The rank (0, 1 or 2) of the operator.
-   * \param uhf Whether the underlying 1-particle spaces are different for alpha and beta spin.
-   * \param symmetry Overall symmetry of operator (0-7).
-   * \param covariant Whether the operator transforms like spatial basis functions, rather than like a density matrix
-   * \param hermitian Whether the representation of the operator is hermitian.
-   * \param description A string describing the object.
-   */
-  explicit Operator(const dim_t &dimension,
-                    int rank = 2,
-                    bool uhf = false,
-                    unsigned int symmetry = 0,
-                    bool covariant = true,
-                    bool hermitian = true,
-                    std::string description = "")
-      : SymmetryMatrix::Operator(dims_t{dimension, dimension, dimension, dimension},
-                                 rank,
-                                 uhf,
-                                 std::vector<int>{hermitian ? 1 : 0, hermitian ? 1 : 0},
-                                 std::vector<int>{-1, -1},
-                                 symmetry,
-                                 covariant,
-                                 std::move(description)) {
-  }
-
-  Operator(const SymmetryMatrix::Operator &source)
-      : SymmetryMatrix::Operator(source) {}
-
-  /*!
-   * \brief Construct an Operator from what is produced by bytestream(). If the bytestream
-   * contains data, it will be loaded, otherwise the contents of the object are undefined,
-   * and only the dimensions and parameters are loaded.
-   * \param bs The bytestream produced by bytestream()
-   */
-//  static Operator construct(const class bytestream &bs) { return construct(&(bs.data()[0])); }
-
-
-};
-
   /*!
    * \brief Construct an Operator from an FCIdump. If the FCIdump
    * contains data, it will be loaded, otherwise the contents of the object are undefined,

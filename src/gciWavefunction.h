@@ -100,7 +100,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
      * \param w the wavefunction
      * \param parallel_stringset whether to use parallel algorithm in StringSet construction
      */
-  void operatorOnWavefunction(const gci::Operator &h, const Wavefunction &w, bool parallel_stringset = false);
+  void operatorOnWavefunction(const SymmetryMatrix::Operator &h, const Wavefunction &w, bool parallel_stringset = false);
  public:
 
   /*!
@@ -113,7 +113,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
    * \param parallel_stringset whether to use parallel algorithm in StringSet construction
    * \return
    */
-  gci::Operator density(int rank = 2,
+  SymmetryMatrix::Operator density(int rank = 2,
                         bool uhf = false,
                         bool hermitian = true,
                         const Wavefunction *bra = nullptr,
