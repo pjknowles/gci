@@ -99,44 +99,25 @@ class Operator : public SymmetryMatrix::Operator {
      */
   Eigen::MatrixXd intK(int spin) const;
 
-//  std::vector<unsigned int> orbital_symmetries() const { return m_orbitalSpaces[0].orbital_symmetries; }
-
-  /*!
-   * \brief Build a Fock operator from the density arising from a single Slater determinant
-   * \param reference The Slater determinant
-   * \param description Descriptive text
-   */
-  Operator fockOperator(const Determinant &reference, std::string description = "Fock") const;
-
-  /*!
-   * \brief Construct the Fock operator for this operator with a given density matrix
-   * \param density The density matrix.
-   * \param oneElectron Whether to use the one-electron part of this operator, or zero
-   * \param description Descriptive text
-   * \return
-   */
-  Operator fock(const Operator &density, bool oneElectron = true, std::string description = "") const {
-    Operator result(SymmetryMatrix::Operator::fock(density, oneElectron, std::move(description)));
-    return result;
-  }
-
-  /*!
-   * \brief Build a same-spin operator from the density arising from a single Slater determinant
-   * \param reference The Slater determinant
-   * \param description Descriptive text
-   */
-  Operator sameSpinOperator(const Determinant &reference,
-                            std::string description = "Same Spin Hamiltonian") const;
-
-  /*!
-   * \brief Serialise the object to a stream of bytes
-   * \return the serialised representation of the object
-   */
-  class memory::bytestream bytestream();
-
-  void gsum();
-
 };
+
+/*!
+ * \brief Build a Fock operator from the density arising from a single Slater determinant
+ * \param hamiltonian The hamiltonian
+ * \param reference The Slater determinant
+ * \param description Descriptive text
+ */
+SymmetryMatrix::Operator fockOperator(const SymmetryMatrix::Operator& hamiltonian, const Determinant &reference, std::string description = "Fock");
+
+void gsum(SymmetryMatrix::Operator& op);
+
+/*!
+ * \brief Build a same-spin operator from the density arising from a single Slater determinant
+ * \param reference The Slater determinant
+ * \param description Descriptive text
+ */
+SymmetryMatrix::Operator sameSpinOperator(const SymmetryMatrix::Operator& hamiltonian, const Determinant &reference,
+                          std::string description = "Same Spin Hamiltonian");
 
 }
 

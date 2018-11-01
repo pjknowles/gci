@@ -312,9 +312,9 @@ std::vector<double> Run::run() {
          << " of same spin" << std::endl;
     xout << "Second-order hamiltonian contains " << 1 - scs_opposite << " of opposite-spin and " << 1 - scs_same
          << " of same spin" << std::endl;
-    gci::Operator h0 = m_hamiltonian.fockOperator(referenceDeterminant);
+    gci::Operator h0 = fockOperator(m_hamiltonian,referenceDeterminant);
 //    xout <<"h0="<<h0<<std::endl;
-    gci::Operator ssh = m_hamiltonian.sameSpinOperator(referenceDeterminant);
+    gci::Operator ssh = sameSpinOperator(m_hamiltonian,referenceDeterminant);
 //    xout <<"ssh="<<ssh<<std::endl;
     gci::Operator osh = m_hamiltonian;
     osh -= ssh;
@@ -356,7 +356,7 @@ std::vector<double> Run::run() {
 //    energies.resize(1); energies[0] = totalEnergy;
   } else if (method == "ISRSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
-    Operator h0 = m_hamiltonian.fockOperator(referenceDeterminant);
+    Operator h0 = fockOperator(m_hamiltonian,referenceDeterminant);
     std::vector<double> emp = ISRSPT(m_hamiltonian, h0, prototype);
     xout << std::fixed << std::setprecision(8);
     xout << "MP energies";

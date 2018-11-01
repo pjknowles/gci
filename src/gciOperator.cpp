@@ -308,11 +308,12 @@ Eigen::MatrixXd gci::Operator::intK(int spin) const {
   return result;
 }
 
-gci::Operator gci::Operator::fockOperator(const Determinant &reference, const std::string description) const {
-  Operator f(m_dimensions[0],
+
+SymmetryMatrix::Operator gci::fockOperator(const SymmetryMatrix::Operator& hamiltonian, const Determinant &reference, const std::string description) {
+  Operator f(hamiltonian.m_dimensions[0],
              1,
-             m_uhf,
-             m_symmetry,
+             hamiltonian.m_uhf,
+             hamiltonian.m_symmetry,
              true,
              true,
              description);
@@ -322,12 +323,12 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
   //  xout << "gci::Operator::fockOperator Reference alpha=beta: "<<closed<<std::endl;
   auto refAlphaOrbitals = reference.stringAlpha.orbitals();
   auto refBetaOrbitals = reference.stringBeta.orbitals();
-  f.m_O0 = m_O0;
-  f.O1(true) = O1(true);
-  if (m_uhf) f.O1(false) = O1(false);
+  f.m_O0 = hamiltonian.m_O0;
+  f.O1(true) = hamiltonian.O1(true);
+  if (hamiltonian.m_uhf) f.O1(false) = hamiltonian.O1(false);
   size_t basisSize = 0;
   for (auto si=0; si<8; si++)
-    basisSize += O1().dimension(si);
+    basisSize += hamiltonian.O1().dimension(si);
   // xout <<"reference.stringAlpha.orbitals ";for (size_t i=0; i < reference.stringAlpha.orbitals().size(); i++) xout <<reference.stringAlpha.orbitals()[i]<<" ";xout <<std::endl;
   for (const auto &o : refAlphaOrbitals) {
 //       xout << "gci::Operator::fockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
@@ -343,7 +344,7 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
                   reference.orbitalSpace->orbitalIndex(j),
                   reference.orbitalSpace->orbital_symmetries[j - 1],
                   true) +=
-            element(reference.orbitalSpace->orbitalIndex(i),
+            hamiltonian.element(reference.orbitalSpace->orbitalIndex(i),
                     reference.orbitalSpace->orbital_symmetries[i - 1],
                     reference.orbitalSpace->orbitalIndex(j),
                     reference.orbitalSpace->orbital_symmetries[j - 1],
@@ -353,7 +354,7 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
                     os,
                     true,
                     true) -
-                element(reference.orbitalSpace->orbitalIndex(i),
+                hamiltonian.element(reference.orbitalSpace->orbitalIndex(i),
                         reference.orbitalSpace->orbital_symmetries[i - 1],
                         oo,
                         os,
@@ -377,7 +378,7 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
                   reference.orbitalSpace->orbitalIndex(j),
                   reference.orbitalSpace->orbital_symmetries[j - 1],
                   true) +=
-            element(reference.orbitalSpace->orbitalIndex(i),
+            hamiltonian.element(reference.orbitalSpace->orbitalIndex(i),
                     reference.orbitalSpace->orbital_symmetries[i - 1],
                     reference.orbitalSpace->orbitalIndex(j),
                     reference.orbitalSpace->orbital_symmetries[j - 1],
@@ -402,7 +403,7 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
                     reference.orbitalSpace->orbitalIndex(j),
                     reference.orbitalSpace->orbital_symmetries[j - 1],
                     false) +=
-              element(reference.orbitalSpace->orbitalIndex(i),
+              hamiltonian.element(reference.orbitalSpace->orbitalIndex(i),
                       reference.orbitalSpace->orbital_symmetries[i - 1],
                       reference.orbitalSpace->orbitalIndex(j),
                       reference.orbitalSpace->orbital_symmetries[j - 1],
@@ -412,7 +413,7 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
                       os,
                       false,
                       false) -
-                  element(reference.orbitalSpace->orbitalIndex(i),
+                  hamiltonian.element(reference.orbitalSpace->orbitalIndex(i),
                           reference.orbitalSpace->orbital_symmetries[i - 1],
                           oo,
                           os,
@@ -436,7 +437,7 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
                     reference.orbitalSpace->orbitalIndex(j),
                     reference.orbitalSpace->orbital_symmetries[j - 1],
                     false) +=
-              element(oo,
+              hamiltonian.element(oo,
                       os,
                       oo,
                       os,
@@ -452,56 +453,50 @@ gci::Operator gci::Operator::fockOperator(const Determinant &reference, const st
   return f;
 }
 
-gci::Operator gci::Operator::sameSpinOperator(const Determinant &reference, const std::string description) const {
-  Operator result(m_dimensions[0],
-                  m_rank,
+SymmetryMatrix::Operator gci::sameSpinOperator(const SymmetryMatrix::Operator& hamiltonian, const Determinant &reference, const std::string description) {
+  Operator result(hamiltonian.m_dimensions[0],
+                  hamiltonian.m_rank,
                   true,
-                  m_symmetry,
+                  hamiltonian.m_symmetry,
                   true,
                   true,
                   description);
   {
     Determinant ra = reference;
     ra.stringBeta.nullify();
-    auto f = this->fockOperator(ra);
-    for (size_t i = 0; i < O1(true).size(); i++)
-      (*result.O1(true).data())[i] = (*O1(true).data())[i] - (*f.O1(true).data())[i];
+    auto f = fockOperator(hamiltonian,ra);
+    for (size_t i = 0; i < hamiltonian.O1(true).size(); i++)
+      (*result.O1(true).data())[i] = (*hamiltonian.O1(true).data())[i] - (*f.O1(true).data())[i];
   }
   {
     Determinant ra = reference;
     ra.stringAlpha.nullify();
-    auto f = this->fockOperator(ra);
-    for (size_t i = 0; i < O1(false).size(); i++)
-      (*result.O1(false).data())[i] = (*O1(false).data())[i] - (*f.O1(false).data())[i];
+    auto f = fockOperator(hamiltonian,ra);
+    for (size_t i = 0; i < hamiltonian.O1(false).size(); i++)
+      (*result.O1(false).data())[i] = (*hamiltonian.O1(false).data())[i] - (*f.O1(false).data())[i];
   }
 
-  *result.O2(true, true).data() = *O2(true, true).data();
-  *result.O2(false, false).data() = *O2(false, false).data();
+  *result.O2(true, true).data() = *hamiltonian.O2(true, true).data();
+  *result.O2(false, false).data() = *hamiltonian.O2(false, false).data();
   for (auto &s : *result.O2(true, false).data()) s = 0;
-  result.m_dirac_out_of_date = true;
   return result;
 }
 
-void gci::Operator::gsum() {
+void gci::gsum(SymmetryMatrix::Operator& op) {
   std::vector<double> O0;
-  O0.push_back(m_O0);
+  O0.push_back(op.m_O0);
   ::gci::gsum(O0);
-  m_O0 = O0[0];
-  if (m_rank > 0) {
-    ::gci::gsum(*O1(true).data());
-    if (m_uhf)
-      ::gci::gsum(*O1(false).data());
+  op.m_O0 = O0[0];
+  if (op.m_rank > 0) {
+    ::gci::gsum(*op.O1(true).data());
+    if (op.m_uhf)
+      ::gci::gsum(*op.O1(false).data());
   }
-  if (m_rank > 1) {
-    ::gci::gsum(*O2(true, true).data());
-    if (m_uhf) {
-      ::gci::gsum(*O2(true, false).data());
-      ::gci::gsum(*O2(false, false).data());
+  if (op.m_rank > 1) {
+    ::gci::gsum(*op.O2(true, true).data());
+    if (op.m_uhf) {
+      ::gci::gsum(*op.O2(true, false).data());
+      ::gci::gsum(*op.O2(false, false).data());
     }
   }
-}
-
-bytestream gci::Operator::bytestream() {
-  class bytestream bs = SymmetryMatrix::Operator::bytestream();
-  return bs;
 }

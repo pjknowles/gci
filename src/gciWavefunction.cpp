@@ -970,7 +970,7 @@ gci::Operator Wavefunction::density(int rank,
 
   EndTasks();
 
-  result.gsum();
+gsum(result);
 //  std::cout << "Density before from_dirac:\n"<<result<<std::endl;
   result.mulliken_from_dirac();
   if (result.m_rank > 1 && result.m_hermiticity == std::vector<int>{1, 1}) {
