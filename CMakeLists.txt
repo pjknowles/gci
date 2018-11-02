@@ -11,6 +11,9 @@ enable_language(Fortran)
 
 add_definitions(-DNOMAIN) # Do we want it global? Thish should really be a variable passed to a specific target
 
+# Allow messages from scripts to be shown
+set(FETCHCONTENT_QUIET OFF)
+
 
 ########## Global Compiler Flags ##########
 
@@ -73,6 +76,7 @@ endif (MKL_FOUND)
 
 ########## Targets ##########
 
+add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(test)
 

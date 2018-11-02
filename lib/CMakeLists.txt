@@ -1,14 +1,45 @@
 ########## Dependencies ##########
 
+FetchContent_GetProperties(fcidump_dep)
+if (NOT fcidump_dep_POPULATED)
+    FetchContent_Populate(fcidump_dep)
+    add_subdirectory(${fcidump_dep_SOURCE_DIR} ${fcidump_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
+FetchContent_GetProperties(iterativesolver_dep)
+if (NOT iterativesolver_dep_POPULATED)
+    FetchContent_Populate(iterativesolver_dep)
+    add_subdirectory(${iterativesolver_dep_SOURCE_DIR} ${iterativesolver_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
+FetchContent_GetProperties(memory_dep)
+if (NOT memory_dep_POPULATED)
+    FetchContent_Populate(memory_dep)
+    add_subdirectory(${memory_dep_SOURCE_DIR} ${memory_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
+FetchContent_GetProperties(molpro_plugin_dep)
+if (NOT molpro_plugin_dep_POPULATED)
+    FetchContent_Populate(molpro_plugin_dep)
+    add_subdirectory(${molpro_plugin_dep_SOURCE_DIR} ${molpro_plugin_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
+FetchContent_GetProperties(profiler_dep)
+if (NOT profiler_dep_POPULATED)
+    FetchContent_Populate(profiler_dep)
+    add_subdirectory(${profiler_dep_SOURCE_DIR} ${profiler_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
+FetchContent_GetProperties(symmetry_matrix_dep)
+if (NOT symmetry_matrix_dep_POPULATED)
+    FetchContent_Populate(symmetry_matrix_dep)
+    add_subdirectory(${symmetry_matrix_dep_SOURCE_DIR} ${symmetry_matrix_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
+
 
 ########## Target ##########
 
 add_library(gci
+        gci.h
         gciDeterminant.cpp gciDeterminant.h
         gciExcitationSet.cpp gciExcitationSet.h
         gciFile.cpp gciFile.h
         gciMolpro.cpp gciMolpro.h
-        gciOperator.cpp gciOperator.h
         gciOptions.cpp gciOptions.h
         gciOrbitals.h
         gciOrbitalSpace.cpp gciOrbitalSpace.h
@@ -21,14 +52,6 @@ add_library(gci
         gciTransitionDensity.cpp gciTransitionDensity.h
         gciWavefunction.cpp gciWavefunction.h
         sharedCounter.cpp sharedCounter.h
-        gciRHF.cpp gciRHF.h
-        gciBBO_RHF.cpp gciBBO_RHF.h
-        gciHProduct.cpp gciHProduct.h
-        gciHProductSet.cpp gciHProductSet.h
-        gciMixedOperator.cpp gciMixedOperator.h
-        gciMixedWavefunction.cpp gciMixedWavefunction.h
-        gciOperatorBBO.cpp gciOperatorBBO.h
-        gciVibSpace.cpp gciVibSpace.h
         )
 target_include_directories(gci INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -55,8 +78,3 @@ if (MPI_CXX_FOUND)
 endif ()
 
 
-########## Main executable ##########
-
-add_executable(gci.exe gci.cpp)
-target_link_libraries(gci.exe PUBLIC gci)
-set_target_properties(gci.exe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})

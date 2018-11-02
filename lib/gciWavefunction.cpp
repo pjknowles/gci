@@ -1,4 +1,5 @@
 #include "gci.h"
+#include "gciRun.h"
 #include "gciWavefunction.h"
 #include <sstream>
 #include <iostream>
@@ -57,21 +58,22 @@ void Wavefunction::set(const double value) {
   for (auto &b : buffer) b = value;
 }
 
+
 void Wavefunction::diagonalOperator(const Operator &op) {
   auto p = profiler->push("diagonalOperator");
-  auto ha = op.int1(true);
-  auto hbb = op.int1(false);
+  auto ha = int1(op,true);
+  auto hbb = int1(op,false);
   Eigen::MatrixXd Jaa;
   Eigen::MatrixXd Jab;
   Eigen::MatrixXd Jbb;
   Eigen::MatrixXd Kaa;
   Eigen::MatrixXd Kbb;
   if (op.m_rank > 1) {
-    Jaa = op.intJ(true, true);
-    Jab = op.intJ(true, false);
-    Jbb = op.intJ(false, false);
-    Kaa = op.intK(true);
-    Kbb = op.intK(false);
+    Jaa = intJ(op,true, true);
+    Jab = intJ(op,true, false);
+    Jbb = intJ(op,false, false);
+    Kaa = intK(op,true);
+    Kbb = intK(op,false);
   }
   size_t offset = 0;
   set(op.m_O0);
@@ -771,7 +773,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
   }
 }
 
-gci::Operator Wavefunction::density(int rank,
+SymmetryMatrix::Operator Wavefunction::density(int rank,
                                     bool uhf,
                                     bool hermitian,
                                     const Wavefunction *bra,
@@ -780,12 +782,9 @@ gci::Operator Wavefunction::density(int rank,
   if (bra == nullptr) bra = this;
   auto prof = profiler->push("density");
 
-  std::vector<int> symmetries;
-  for (const auto &s : orbitalSpace->orbital_symmetries)
-    symmetries.push_back(s + 1); // only a common orbital space is implemented
   dim_t dim;
   for (const auto s: *orbitalSpace) dim.push_back(s);
-  Operator result(dim, symmetries, rank, uhf, symmetry ^ bra->symmetry, false, hermitian, description);
+  Operator result(dims_t{dim,dim,dim,dim}, rank, uhf, (hermitian ? std::vector<int>{1,1} : std::vector<int>{0,0}), {-1,-1}, symmetry ^ bra->symmetry, false, description);
 //  std::cout << "result\n"<<result.str("result",3)<<std::endl;
   result.zero();
   result.m_O0 = (*this) * (*bra);
@@ -978,7 +977,7 @@ gci::Operator Wavefunction::density(int rank,
 
   EndTasks();
 
-  result.gsum();
+gsum(result);
 //  std::cout << "Density before from_dirac:\n"<<result<<std::endl;
   result.mulliken_from_dirac();
   if (result.m_rank > 1 && result.m_hermiticity == std::vector<int>{1, 1}) {
@@ -1155,3 +1154,5 @@ std::vector<StringSet> Wavefunction::activeStrings(bool spinUp) const {
 //  }
   return results;
 }
+
+

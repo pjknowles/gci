@@ -10,17 +10,18 @@ pipelines:
     - step:
         caches:
           - cmake
-          - dependencies
+#          - dependencies
         script: # Modify the commands below to build your repository.
           - # zypper -n install eigen3-devel cmake gcc-fortran gcc-c++ openmpi-devel openmpi-libs blas-devel libblas3 git doxygen texlive-epstopdf ghostscript
           - ln -s /usr /usr/usr
-          - git submodule update --init --recursive
           - mkdir -p build && cd build
           - cmake ..
-#          - make -C src __/submodules/symmetry_matrix/src/SMat.cpp.o __/submodules/symmetry_matrix/src/SMatfunction.cpp.o
-          - cmake --build .
+          - cmake --build . --target IterativeSolver -- -j 16
+          - cmake --build . --target symmetry_matrix -- -j 2 # all because this one is memory-hungry
+          - cmake --build . -- -j 16
           - cd test
           - ctest -V
+          - cat /proc/cpuinfo
 definitions:
   caches:
     cmake: build

@@ -5,7 +5,6 @@
 #include <tuple>
 #include <string>
 #include "gci.h"
-#include "gciOperator.h"
 #include "gciState.h"
 #include "gciStringSet.h"
 #include "gciPrintable.h"
@@ -30,6 +29,9 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
      * \param symmetry Spatial symmetry
      * \param ms2 Sz quantum number times 2
      */
+  Wavefunction(OrbitalSpace h, int n, int s, int m2) : State(h, n, s, m2), m_sparse(false) {
+    buildStrings();
+  }
   Wavefunction(OrbitalSpace *h, int nelec, int symmetry, int ms2);
 
   /*!
@@ -97,7 +99,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
      * \param w the wavefunction
      * \param parallel_stringset whether to use parallel algorithm in StringSet construction
      */
-  void operatorOnWavefunction(const gci::Operator &h, const Wavefunction &w, bool parallel_stringset = false);
+  void operatorOnWavefunction(const SymmetryMatrix::Operator &h, const Wavefunction &w, bool parallel_stringset = false);
  public:
 
   /*!
@@ -110,7 +112,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
    * \param parallel_stringset whether to use parallel algorithm in StringSet construction
    * \return
    */
-  gci::Operator density(int rank = 2,
+  SymmetryMatrix::Operator density(int rank = 2,
                         bool uhf = false,
                         bool hermitian = true,
                         const Wavefunction *bra = nullptr,

@@ -2,10 +2,10 @@
 #define GCIRUN_H
 #include <vector>
 #include "gci.h"
-#include "gciOperator.h"
 #include "gciState.h"
 #include "gciWavefunction.h"
 #include "gciOptions.h"
+#include "FCIdump.h"
 #include <cstdint>
 
 namespace gci {
@@ -35,17 +35,17 @@ class Run {
    * \param maxIterations The maximum number of iterations to perform
    * \return the energies order by order
    */
-  std::vector<double> RSPT(const std::vector<Operator *> &hams,
+  std::vector<double> RSPT(const std::vector<SymmetryMatrix::Operator *> &hams,
                            const State &prototype,
                            int maxOrder = -1,
                            double energyThreshold = -1,
                            int maxIterations = -1);
-  std::vector<double> ISRSPT(const gci::Operator &ham, const gci::Operator &ham0,
+  std::vector<double> ISRSPT(const SymmetryMatrix::Operator &ham, const SymmetryMatrix::Operator &ham0,
                              const State &prototype,
                              int maxOrder = -1,
                              double energyThreshold = -1,
                              int maxIterations = -1);
-  void IPT(const gci::Operator &ham,
+  void IPT(const SymmetryMatrix::Operator &ham,
            const State &prototype, size_t referenceLocation);
 
   /*!
@@ -58,10 +58,10 @@ class Run {
    * \param maxIterations The maximum number of iterations to perform
    * \return the energies for each state. Note that only the first nState energies are considered converged
    */
-  std::vector<double> Davidson(const Operator &ham,
+  std::vector<double> Davidson(const SymmetryMatrix::Operator &ham,
                                const State &prototype,
                                double energyThreshold = (double) -1, int nState = -1, int maxIterations = -1);
-  std::vector<double> CSDavidson(const Operator &ham,
+  std::vector<double> CSDavidson(const SymmetryMatrix::Operator &ham,
                                  const State &prototype,
                                  double energyThreshold = (double) -1, int nState = -1, int maxIterations = -1);
   /*!
@@ -73,10 +73,11 @@ class Run {
    * \param maxIterations The maximum number of iterations to perform
    * \return the energy of the state.
    */
-  std::vector<double> DIIS(const Operator &ham,
+  std::vector<double> DIIS(const SymmetryMatrix::Operator &ham,
                            const State &prototype,
                            double energyThreshold = (double) -1, int maxIterations = -1);
 
+  void HamiltonianMatrixPrint(SymmetryMatrix::Operator &hamiltonian, const State &prototype, int verbosity = 0);
   /*!
    * @brief Performs RHF calculation within the space of supplied MOs
    * @param hamiltonian The hamiltonian
@@ -98,15 +99,79 @@ class Run {
 
   void HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity = 0);
 
-  Operator m_hamiltonian;
+  SymmetryMatrix::Operator m_hamiltonian;
  public:
-  std::unique_ptr<Operator> m_densityMatrix; // the (state-averaged) density matrix
-  std::vector<Operator> m_densityMatrices; // the individual state density matrices
+  std::unique_ptr<SymmetryMatrix::Operator> m_densityMatrix; // the (state-averaged) density matrix
+  std::vector<SymmetryMatrix::Operator> m_densityMatrices; // the individual state density matrices
 
   std::vector<std::shared_ptr<Wavefunction> > m_wavefunctions;
   gci::Options options;
 
 };
+
+/*!
+   * \brief int1 Generate array of diagonal one-electron integrals
+   * \param hamiltonian The hamiltonian
+   * \param spin positive for alpha, negative for beta
+   * \return one-dimensional array with h(i,i) at i-1
+   */
+Eigen::VectorXd int1(const SymmetryMatrix::Operator& hamiltonian, int spin);
+
+/*!
+   * \brief intJ Generate array of two-electron exchange integrals
+   * \param hamiltonian The hamiltonian
+   * \param spini positive for alpha, negative for beta, first index
+   * \param spinj positive for alpha, negative for beta, second index
+   * \return array with (ii|jj)
+   */
+Eigen::MatrixXd intJ(const SymmetryMatrix::Operator& hamiltonian, int spini, int spinj);
+/*!
+   * \brief intK Generate array of two-electron Coulomb integrals
+   * \param hamiltonian The hamiltonian
+   * \param spin positive for alpha, negative for beta
+   * \return array with (ij|ji)
+   */
+Eigen::MatrixXd intK(const SymmetryMatrix::Operator& hamiltonian, int spin);
+
+
+
+  /*!
+   * \brief Construct an Operator from an FCIdump. If the FCIdump
+   * contains data, it will be loaded, otherwise the contents of the object are undefined,
+   * and only the dimensions and parameters are loaded.
+   * \param dump The raw buffer of a FCIdump.
+   */
+  SymmetryMatrix::Operator constructOperator(const FCIdump &dump);
+  inline SymmetryMatrix::Operator constructOperator(FCIdump &&dump) {
+    return constructOperator(dump);
+  }
+
+/*!
+ * \brief Build a Fock operator from the density arising from a single Slater determinant
+ * \param hamiltonian The hamiltonian
+ * \param reference The Slater determinant
+ * \param description Descriptive text
+ */
+SymmetryMatrix::Operator fockOperator(const SymmetryMatrix::Operator& hamiltonian, const Determinant &reference, std::string description = "Fock");
+
+void gsum(SymmetryMatrix::Operator& op);
+
+/*!
+ * \brief Build a same-spin operator from the density arising from a single Slater determinant
+ * \param reference The Slater determinant
+ * \param description Descriptive text
+ */
+SymmetryMatrix::Operator sameSpinOperator(const SymmetryMatrix::Operator& hamiltonian, const Determinant &reference,
+                          std::string description = "Same Spin Hamiltonian");
+
+/*!
+ * @brief Write an Operator to an FCIdump
+ * @param op The operator
+ * @param filename
+ * @param orbital_symmetries
+ */
+void FCIDump(const SymmetryMatrix::Operator& op, const std::string filename, std::vector<int> orbital_symmetries=std::vector<int>(0));
+
 }
 
 using namespace gci;

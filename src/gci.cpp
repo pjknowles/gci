@@ -1,14 +1,7 @@
 #include "sharedCounter.h"
+//TODO a cleaner separation of library-internal headers
 #include "gci.h"
-#include "gciFile.h"
-#include "gciOperator.h"
-#include "gciDeterminant.h"
-#include "gciWavefunction.h"
-#include "gciStringSet.h"
-#include "gciExcitationSet.h"
-#include "gciOrbitalSpace.h"
 #include "gciRun.h"
-#include "FCIdump.h"
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -113,7 +106,7 @@ int main(int argc, char *argv[])
       size_t pos = std::min(densityname.rfind('.'), densityname.size());
       densityname.replace(pos, densityname.size() - pos, ".density.");
       densityname += std::to_string(state + 1) + ".fcidump";
-      run.m_densityMatrices[state].FCIDump(densityname);
+      FCIDump(run.m_densityMatrices[state],densityname);
       if (plugin.active()) { // send the density back
         if (plugin.send("TAKE DENSITY FCIDUMP"))
           plugin.send(densityname);

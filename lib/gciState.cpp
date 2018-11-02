@@ -18,7 +18,6 @@ State::State(OrbitalSpace& h, int n, int s, int m2)
 {
 }
 
-
 void State::load(const Options &dump)
 {
   nelec = dump.parameter("NELEC");

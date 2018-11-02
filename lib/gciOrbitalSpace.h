@@ -3,6 +3,7 @@
 #include "gciSymmetrySpace.h"
 #include "gciOptions.h"
 #include <map>
+#include "Operator.h"
 
 namespace gci {
 /*!
@@ -22,6 +23,15 @@ class OrbitalSpace : public SymmetrySpace {
   OrbitalSpace(const std::vector<int> syms, bool uhf = false, int verbosity = 0) {
     load(syms, uhf, verbosity);
   }
+
+  OrbitalSpace(const SymmetryMatrix::Operator& o, int verbosity = 0) {
+    std::vector<int> syms;
+    for (auto sym = 0; sym < 8; sym++)
+      for (auto i = 0; i < o.m_dimensions.back()[sym]; i++)
+        syms.push_back(sym + 1);
+    load(syms, o.m_uhf, verbosity);
+  }
+
   virtual ~OrbitalSpace() {}
 
   void load(const Options &options, int verbosity = 0);

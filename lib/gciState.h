@@ -36,6 +36,8 @@ class State : public Printable {
      */
   explicit State(OrbitalSpace *os, int nelec = 0, int symmetry = 1, int ms2 = 0);
   explicit State(OrbitalSpace &os, int nelec = 0, int symmetry = 1, int ms2 = 0);
+  explicit State(const SymmetryMatrix::Operator& o, int n, int s, int m2)
+      : orbitalSpace(new OrbitalSpace(o)), nelec(n), ms2(m2), symmetry(s) {}
 
   virtual ~State() = default;
   /*!
