@@ -32,7 +32,7 @@ struct residual {
       const std::shared_ptr<Wavefunction> x = std::static_pointer_cast<Wavefunction>(psx[k]);
       std::shared_ptr<Wavefunction> g = std::static_pointer_cast<Wavefunction>(outputs[k]);
 //        profiler->start("density");
-//        SMat natorb=x->naturalOrbitals();
+//        SymmetryMatrix::SMat natorb=x->naturalOrbitals();
       //    activeHamiltonian->rotate(&natorb);
 //        profiler->stop("density");
       if (not append)
@@ -357,7 +357,7 @@ std::vector<double> Run::run() {
 //    energies.resize(1); energies[0] = totalEnergy;
   } else if (method == "ISRSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
-    Operator h0 = fockOperator(m_hamiltonian,referenceDeterminant);
+    SymmetryMatrix::Operator h0 = fockOperator(m_hamiltonian,referenceDeterminant);
     std::vector<double> emp = ISRSPT(m_hamiltonian, h0, prototype);
     xout << std::fixed << std::setprecision(8);
     xout << "MP energies";
@@ -445,7 +445,7 @@ std::vector<double> Run::run() {
 //          xout << "td0\n"<<td0<<std::endl;
       auto td = w->density(1, false, false, m_wavefunctions[0].get());
 //          xout << "td\n"<<td<<std::endl;
-      SMat td1(dims_t{{td.O1().size()}, {1}});
+      SymmetryMatrix::SMat td1(SymmetryMatrix::dims_t{{td.O1().size()}, {1}});
       std::copy(td.O1().block(0).begin(), td.O1().block(0).end(), td1.block(0).begin());
 //          xout << "td1\n"<<td1<<std::endl;
 //          xout << "metricInverse*td1\n"<<(metricInverse*td1)<<std::endl;
@@ -1515,7 +1515,7 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
   if (rank == 0) {
     int verbosity = 0;
     std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
-    dim_t dim(8);
+    SymmetryMatrix::dim_t dim(8);
     for (const auto &s : orbital_symmetries)
       dim.at(s - 1)++;
     SymmetryMatrix::Operator result(dim, 2, dump.parameter("IUHF")[0] > 0, 0, true, "Hamiltonian");
@@ -1706,7 +1706,7 @@ void gci::FCIDump(const SymmetryMatrix::Operator& op, const std::string filename
 }
 
 SymmetryMatrix::Operator gci::fockOperator(const SymmetryMatrix::Operator& hamiltonian, const Determinant &reference, const std::string description) {
-  Operator f(hamiltonian.m_dimensions[0],
+  SymmetryMatrix::Operator f(hamiltonian.m_dimensions[0],
              1,
              hamiltonian.m_uhf,
              hamiltonian.m_symmetry,
@@ -1849,7 +1849,7 @@ SymmetryMatrix::Operator gci::fockOperator(const SymmetryMatrix::Operator& hamil
 }
 
 SymmetryMatrix::Operator gci::sameSpinOperator(const SymmetryMatrix::Operator& hamiltonian, const Determinant &reference, const std::string description) {
-  Operator result(hamiltonian.m_dimensions[0],
+  SymmetryMatrix::Operator result(hamiltonian.m_dimensions[0],
                   hamiltonian.m_rank,
                   true,
                   hamiltonian.m_symmetry,

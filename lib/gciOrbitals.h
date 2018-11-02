@@ -10,9 +10,9 @@
 class Orbitals : public Printable {
  public:
   Orbitals(const OrbitalSpace &orbitalSpace)
-      : m_orbitals(dims_t{orbitalSpace, orbitalSpace}, parityNone, 0, "orbitals"),
-        m_energies(dims_t{orbitalSpace}, parityNone, -1, "energies"),
-        m_occupations(dims_t{orbitalSpace}, parityNone, -1, "occupations") {}
+      : m_orbitals(SymmetryMatrix::dims_t{orbitalSpace, orbitalSpace}, SymmetryMatrix::parityNone, 0, "orbitals"),
+        m_energies(SymmetryMatrix::dims_t{orbitalSpace}, SymmetryMatrix::parityNone, -1, "energies"),
+        m_occupations(SymmetryMatrix::dims_t{orbitalSpace}, SymmetryMatrix::parityNone, -1, "occupations") {}
   std::string str(int verbosity = 0, unsigned int columns = UINT_MAX) const {
     std::ostringstream s;
     if (std::accumulate(m_orbitals.data()->begin(), m_orbitals.data()->end(), 0) != 0)
@@ -26,9 +26,9 @@ class Orbitals : public Printable {
  private:
   Orbitals();
  public:
-  SMat m_orbitals;
-  SMat m_energies;
-  SMat m_occupations;
+  SymmetryMatrix::SMat m_orbitals;
+  SymmetryMatrix::SMat m_energies;
+  SymmetryMatrix::SMat m_occupations;
 };
 
 #endif // GCIORBITALS_H

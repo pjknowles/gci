@@ -59,7 +59,7 @@ void Wavefunction::set(const double value) {
 }
 
 
-void Wavefunction::diagonalOperator(const Operator &op) {
+void Wavefunction::diagonalOperator(const SymmetryMatrix::Operator &op) {
   auto p = profiler->push("diagonalOperator");
   auto ha = int1(op,true);
   auto hbb = int1(op,false);
@@ -474,7 +474,7 @@ void MXM(double *Out,
   }
 }
 
-void Wavefunction::operatorOnWavefunction(const Operator &h,
+void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                                           const Wavefunction &w,
                                           bool parallel_stringset) { // FIXME not really thoroughly checked if the symmetry of h is not zero.
   auto prof = profiler->push("operatorOnWavefunction"+std::string(m_sparse?"/sparse":"")+std::string(w.m_sparse?"/sparse":""));
@@ -539,7 +539,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                                 aa0,
                                 aa1,
                                 w.betaStrings[symb].begin(), w.betaStrings[symb].end(),
-                                parityEven, true, false);
+                                SymmetryMatrix::parityEven, true, false);
 //            xout << "alpha transition density" << d << "\n" << w.betaStrings[symb].size() << aa1 - aa0 << " "
 //                 << d.size() << std::endl;
             TransitionDensity e(d);
@@ -569,7 +569,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                                 w.alphaStrings[syma].begin(),
                                 w.alphaStrings[syma].end(),
                                 bb0, bb1,
-                                parityEven, false, true);
+                                SymmetryMatrix::parityEven, false, true);
             //            xout << "beta transition density"<<d<<std::endl;
             TransitionDensity e(d);
             MXM(&e[0],
@@ -623,7 +623,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                                   aa0,
                                   aa1,
                                   bb0, bb1,
-                                  parityEven, true, !h.m_uhf);
+                                  SymmetryMatrix::parityEven, true, !h.m_uhf);
               if (nsb == bb.size())
                 MXM(&buffer[offset], &d[0], &(*h.O1(true).data())[0],
                     nsa * nsb, w.orbitalSpace->total(0, 1), 1, true);
@@ -642,7 +642,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                                   aa0,
                                   aa1,
                                   bb0, bb1,
-                                  parityEven, false, true);
+                                  SymmetryMatrix::parityEven, false, true);
               MXM(&buffer[offset], &d[0], &(*h.O1(false).data())[0],
                   nsa * nsb, w.orbitalSpace->total(0, 1), 1, true);
             }
@@ -678,7 +678,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
              aa0 = aa1) { // loop over alpha batches
           size_t nsa = aa1 - aa0;
           TransitionDensity
-              d(w, aa0, aa1, w.betaStrings[symb].begin(), w.betaStrings[symb].end(), parityOddPacked, false, false);
+              d(w, aa0, aa1, w.betaStrings[symb].begin(), w.betaStrings[symb].end(), SymmetryMatrix::parityOddPacked, false, false);
           TransitionDensity e(d);
           MXM(&e[0], &d[0], &h.O2(true, true, false).block(symexc)[0], nsa * nsb, nexc, nexc, false);
           e.action(*this);
@@ -711,7 +711,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                   w.alphaStrings[syma].end(),
                   bb0,
                   bb1,
-                  parityOddPacked,
+                  SymmetryMatrix::parityOddPacked,
                   false,
                   false);
             TransitionDensity e(d);
@@ -747,7 +747,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                  bb0 = bb1) { // loop over beta batches
               size_t nsb = bb1 - bb0;
               if (!NextTask()) continue;
-              TransitionDensity d(w, aa0, aa1, bb0, bb1, parityNone, false, false);
+              TransitionDensity d(w, aa0, aa1, bb0, bb1, SymmetryMatrix::parityNone, false, false);
               TransitionDensity e(d);
               MXM(&e[0], &d[0], &h.O2(true, false, false).block(symexc)[0], nsa * nsb, nexc, nexc, false);
               e.action(*this);
@@ -777,9 +777,9 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
   if (bra == nullptr) bra = this;
   auto prof = profiler->push("density");
 
-  dim_t dim;
+  SymmetryMatrix::dim_t dim;
   for (const auto s: *orbitalSpace) dim.push_back(s);
-  Operator result(dims_t{dim,dim,dim,dim}, rank, uhf, (hermitian ? std::vector<int>{1,1} : std::vector<int>{0,0}), {-1,-1}, symmetry ^ bra->symmetry, false, description);
+  SymmetryMatrix::Operator result(SymmetryMatrix::dims_t{dim,dim,dim,dim}, rank, uhf, (hermitian ? std::vector<int>{1,1} : std::vector<int>{0,0}), {-1,-1}, symmetry ^ bra->symmetry, false, description);
 //  std::cout << "result\n"<<result.str("result",3)<<std::endl;
   result.zero();
   result.m_O0 = (*this) * (*bra);
@@ -802,12 +802,12 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
                             alphaStrings[syma].end(),
                             betaStrings[symb].begin(),
                             betaStrings[symb].end(),
-                            (hermitian ? parityEven : parityNone), true, !result.m_uhf);
+                            (hermitian ? SymmetryMatrix::parityEven : SymmetryMatrix::parityNone), true, !result.m_uhf);
 //      xout << "Transition density\n"<<d<<std::endl;
         MXM(&((*result.O1(true).data())[0]),
             &d[0],
             &(bra->buffer[offset]),
-            orbitalSpace->total(0, (hermitian ? parityEven : parityNone)),
+            orbitalSpace->total(0, (hermitian ? SymmetryMatrix::parityEven : SymmetryMatrix::parityNone)),
             nsa * nsb,
             1,
             true,
@@ -819,11 +819,11 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
                             alphaStrings[syma].end(),
                             betaStrings[symb].begin(),
                             betaStrings[symb].end(),
-                            (hermitian ? parityEven : parityNone), false, true);
+                            (hermitian ? SymmetryMatrix::parityEven : SymmetryMatrix::parityNone), false, true);
         MXM(&((*result.O1(false).data())[0]),
             &d[0],
             &(bra->buffer[offset]),
-            orbitalSpace->total(0, (hermitian ? parityEven : parityNone)),
+            orbitalSpace->total(0, (hermitian ? SymmetryMatrix::parityEven : SymmetryMatrix::parityNone)),
             nsa * nsb,
             1,
             true,
@@ -833,7 +833,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
     std::vector<bool> spincases(1, true);
     if (result.m_uhf) spincases.push_back(false);
     for (auto spincase : spincases)
-      if (result.O1(spincase).parity() == parityEven) {
+      if (result.O1(spincase).parity() == SymmetryMatrix::parityEven) {
         if (result.O1(spincase).symmetry() == 0) {
 //          result.O1(spincase) *=.5;
 //          for (uint isym=0; isym<8; isym++)
@@ -869,9 +869,9 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
              aa0 = aa1) { // loop over alpha batches
           size_t nsa = aa1 - aa0;
           TransitionDensity
-              d(*this, aa0, aa1, betaStrings[symb].begin(), betaStrings[symb].end(), parityOddPacked, false, false);
+              d(*this, aa0, aa1, betaStrings[symb].begin(), betaStrings[symb].end(), SymmetryMatrix::parityOddPacked, false, false);
           TransitionDensity
-              e(*bra, aa0, aa1, betaStrings[symb].begin(), betaStrings[symb].end(), parityOddPacked, false, false);
+              e(*bra, aa0, aa1, betaStrings[symb].begin(), betaStrings[symb].end(), SymmetryMatrix::parityOddPacked, false, false);
 //                      xout <<"Daa: "<<d.str(2)<<std::endl;
 //                      xout <<"Eaa: "<<e.str(2)<<std::endl;
 //                xout << "result goes to "<<&result.O2(true,true).block(symexc)[0]<<std::endl;
@@ -909,9 +909,9 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
              bb0 = bb1) { // loop over beta batches
           size_t nsb = bb1 - bb0;
           TransitionDensity
-              d(*this, alphaStrings[syma].begin(), alphaStrings[syma].end(), bb0, bb1, parityOddPacked, false, false);
+              d(*this, alphaStrings[syma].begin(), alphaStrings[syma].end(), bb0, bb1, SymmetryMatrix::parityOddPacked, false, false);
           TransitionDensity
-              e(*bra, alphaStrings[syma].begin(), alphaStrings[syma].end(), bb0, bb1, parityOddPacked, false, false);
+              e(*bra, alphaStrings[syma].begin(), alphaStrings[syma].end(), bb0, bb1, SymmetryMatrix::parityOddPacked, false, false);
           MXM(&result.O2(false, false, false).block(symexc)[0],
               &d[0],
               &e[0],
@@ -948,8 +948,8 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
                  bb0 = bb1) { // loop over beta batches
               size_t nsb = bb1 - bb0;
               if (!NextTask()) continue;
-              TransitionDensity d(*this, aa0, aa1, bb0, bb1, parityNone, false, false);
-              TransitionDensity e(*bra, aa0, aa1, bb0, bb1, parityNone, false, false);
+              TransitionDensity d(*this, aa0, aa1, bb0, bb1, SymmetryMatrix::parityNone, false, false);
+              TransitionDensity e(*bra, aa0, aa1, bb0, bb1, SymmetryMatrix::parityNone, false, false);
 //                      xout <<"D: "<<d.str(2)<<std::endl;
 //                      xout <<"E: "<<e.str(2)<<std::endl;
 //                      xout << "ab result before MXM"<<result.O2(true,false,false).str("result",2)<<std::endl;
@@ -988,7 +988,7 @@ gsum(result);
 
 Orbitals Wavefunction::naturalOrbitals() {
   Orbitals orb(*orbitalSpace);
-  SMat dens1 = density(1).O1();
+  SymmetryMatrix::SMat dens1 = density(1).O1();
   dens1.ev(orb.m_occupations, &orb.m_orbitals, nullptr, nullptr, "lapack", "descending");
   orb.m_orbitals.m_description = "Natural orbitals";
   orb.m_occupations.m_description = "Natural orbital occupation numbers";

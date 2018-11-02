@@ -33,7 +33,7 @@ class TransitionDensity : public memory::vector<double>, public Printable {
                     const StringSet::const_iterator &alphaStringsEnd,
                     const StringSet::const_iterator &betaStringsBegin,
                     const StringSet::const_iterator &betaStringsEnd,
-                    parity_t parity, bool doAlpha = true, bool doBeta = true);
+                    SymmetryMatrix::parity_t parity, bool doAlpha = true, bool doBeta = true);
   /*!
    * \brief Collapse onto a configuration-space residual
    * w(I) += E(K,exc) <I|exc|K>
@@ -53,7 +53,7 @@ class TransitionDensity : public memory::vector<double>, public Printable {
   const StringSet::const_iterator m_alphaStringsEnd;
   const StringSet::const_iterator m_betaStringsBegin;
   const StringSet::const_iterator m_betaStringsEnd;
-  const parity_t m_parity;
+  const SymmetryMatrix::parity_t m_parity;
   const size_t m_nsa; ///< number of alpha strings
   const size_t m_nsb; ///< number of beta strings
   const unsigned int m_syma;

@@ -8,7 +8,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
                                      const StringSet::const_iterator &alphaStringsEnd,
                                      const StringSet::const_iterator &betaStringsBegin,
                                      const StringSet::const_iterator &betaStringsEnd,
-                                     const parity_t parity, const bool doAlpha, const bool doBeta)
+                                     const SymmetryMatrix::parity_t parity, const bool doAlpha, const bool doBeta)
     : m_alphaStringsBegin(alphaStringsBegin),
       m_alphaStringsEnd(alphaStringsEnd),
       m_betaStringsBegin(betaStringsBegin),
@@ -210,7 +210,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
   } else if (m_deltaAlpha == 1
       && m_deltaBeta == 1) { // wavefunction has 1 more alpha and beta electrons than interacting states
     auto prof2 = profiler->push("TransitionDensity_alpha_beta");
-    if (m_parity != parityNone) throw std::logic_error("wrong parity in alpha-beta");
+    if (m_parity != SymmetryMatrix::parityNone) throw std::logic_error("wrong parity in alpha-beta");
     m_hasAlpha = true;
     m_hasBeta = true;
     for (unsigned int wsyma = 0; wsyma < 8; wsyma++) {
@@ -446,7 +446,7 @@ void TransitionDensity::action(Wavefunction &w) const {
     }
   } else if (m_deltaAlpha == 1
       && m_deltaBeta == 1) { // wavefunction has 1 more alpha and beta electrons than interacting states
-    if (m_parity) throw std::logic_error("wrong parity in alpha-beta");
+    if (m_parity != SymmetryMatrix::parityNone) throw std::logic_error("wrong parity in alpha-beta");
     for (unsigned int wsyma = 0; wsyma < 8; wsyma++) {
       unsigned int wsymb = w.symmetry ^wsyma;
       unsigned int symexca = wsyma ^m_syma;
@@ -517,7 +517,7 @@ void TransitionDensity::action(Wavefunction &w) const {
 #include "gciMolpro.h"
 
 SymmetryMatrix::Operator TransitionDensity::density(const Wavefunction &w) const {
-  dim_t dimension;
+  SymmetryMatrix::dim_t dimension;
   for (auto i = 0; i < 8; i++) dimension[i] = w[i];
   SymmetryMatrix::Operator result(dimension, 1, !(m_hasAlpha && m_hasBeta), m_symexc);
 
