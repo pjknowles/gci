@@ -7,8 +7,9 @@
 ### If working with DEVELOPMENT or DEBUG version:
 ###     x) Print warnings, and exit without error
 ### Otherwise, do not checkout if:
-###    1) dependency has uncommited changes 
-###    2) current hash == stored hash
+###    1) dependency has not being cloned yet
+###    2) dependency has uncommited changes 
+###    3) current hash == stored hash
 #
 ###################
 
@@ -29,6 +30,10 @@ cd $dep_dir
 
 fname="${rep_name}_SHA1"
 stored_hash=$(cat $fname)
+if [ ! -d "${rep_name}" ]
+then
+    exit 0
+fi
 cd "$rep_name"
 
 

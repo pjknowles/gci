@@ -18,6 +18,10 @@ cd $dep_dir
 for fname in *_SHA1
 do
     rep_name="${f%%_SHA1}"
+    if [ ! -d "${rep_name}" ]
+    then
+        continue 
+    fi
     if ! (./checkout.sh "${rep_name}" "${build_type}")
     then 
         exit 1

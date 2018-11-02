@@ -16,6 +16,10 @@ for fname in *_SHA1
 do
     rep_name="${fname%%_SHA1}"
     stored_hash=$(cat $fname)
+    if [ ! -d "${rep_name}" ]
+    then
+        continue 
+    fi
     cd "$rep_name"
 # 1)
     out=`git diff-index HEAD --`

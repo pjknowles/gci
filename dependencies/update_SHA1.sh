@@ -14,6 +14,10 @@ cd $dep_dir
 for fname in *_SHA1
 do
     rep_name="${fname%%_SHA1}"
+    if [ ! -d "${rep_name}" ]
+    then
+        continue 
+    fi
     cd "${rep_name}"
     sha1=$(git rev-parse HEAD)
     cd ../
