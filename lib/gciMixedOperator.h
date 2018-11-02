@@ -2,8 +2,9 @@
 #define GCI_GCIMIXEDOPERATOR_H
 
 #include <vector>
+#include <Operator.h>
+#include <FCIdump.h>
 
-#include "gciOperator.h"
 #include "gciHProduct.h"
 
 namespace gci {
@@ -72,11 +73,11 @@ public:
     int nMode; //!< Number of vibrational modes
     std::vector<double> freq; //!< Harmonic frequencies
     double zpe; //!< Vibrational zero point energy at HO level
-    gci::Operator Hel; //!< Electronic Hamiltonian
-    std::vector<gci::Operator> Hel_A; //!< First order expansion of electronic Hamiltonian
-    std::vector<gci::Operator> Hel_AB; //!< First order expansion of electronic Hamiltonian
-    std::vector<gci::Operator> Hs_A; //!< First order kinetic energy coupling term
-    std::vector<gci::Operator> Hs_AA; //!< Second order kinetic energy coupling term
+    SymmetryMatrix::Operator Hel; //!< Electronic Hamiltonian
+    std::vector<SymmetryMatrix::Operator> Hel_A; //!< First order expansion of electronic Hamiltonian
+    std::vector<SymmetryMatrix::Operator> Hel_AB; //!< First order expansion of electronic Hamiltonian
+    std::vector<SymmetryMatrix::Operator> Hs_A; //!< First order kinetic energy coupling term
+    std::vector<SymmetryMatrix::Operator> Hs_AA; //!< Second order kinetic energy coupling term
 protected:
     /*!
      * @brief Expectation value of vibrational Hamiltonian <HO| Hvib | HO>

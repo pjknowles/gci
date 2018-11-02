@@ -1,7 +1,7 @@
 #ifndef GCI_GCIRHF_H
 #define GCI_GCIRHF_H
 
-#include "gciOperator.h"
+#include <Operator.h>
 #include <vector>
 
 namespace gci{
@@ -12,15 +12,15 @@ namespace nm_RHF{
  */
 class Density {
 public:
-    dim_t dim; //! full dimensionality of MO's
-    dim_t occ; //! Occupied orbitals
+    SymmetryMatrix::dim_t dim; //! full dimensionality of MO's
+    SymmetryMatrix::dim_t occ; //! Occupied orbitals
     std::vector<int> symmetries; //! symmetry of each orbital
     int symmetry; //! symmetry of the target state
-    SMat Cmat; //! MO coefficients
-    SMat Csplice; //! Occupied MO's
-    Operator P;
+    SymmetryMatrix::SMat Cmat; //! MO coefficients
+    SymmetryMatrix::SMat Csplice; //! Occupied MO's
+    SymmetryMatrix::Operator P;
 
-    Density(dim_t &dim, dim_t &occ, std::vector<int> &symmetries, int symmetry);
+    Density(SymmetryMatrix::dim_t &dim, SymmetryMatrix::dim_t &occ, std::vector<int> &symmetries, int symmetry);
 
     ~Density() = default;
 
@@ -37,7 +37,7 @@ public:
  * @param energy HF energy
  * @return Fock operator
  */
-Operator electronicEnergy(const Operator &P, const Operator &Hel, double &energy);
+SymmetryMatrix::Operator electronicEnergy(const SymmetryMatrix::Operator &P, const SymmetryMatrix::Operator &Hel, double &energy);
 
 } // namespace nm_RHF
 } // namespace gci

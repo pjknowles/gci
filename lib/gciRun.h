@@ -5,7 +5,8 @@
 #include "gciState.h"
 #include "gciWavefunction.h"
 #include "gciOptions.h"
-#include "FCIdump.h"
+#include <FCIdump.h>
+#include <SMat.h>
 #include <cstdint>
 
 namespace gci {
@@ -96,8 +97,6 @@ class Run {
    * @param fcidump Root of the fcidump file name for electronic and interaction hamiltonians
    */
   void BBO_RHF(const State &prototype);
-
-  void HamiltonianMatrixPrint(Operator &hamiltonian, const State &prototype, int verbosity = 0);
 
   SymmetryMatrix::Operator m_hamiltonian;
  public:

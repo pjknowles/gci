@@ -1,10 +1,10 @@
 #ifndef GCI_GCIOPERATORBBO_H
 #define GCI_GCIOPERATORBBO_H
 
-#include "gciOperator.h"
 #include "gciOptions.h"
 #include "gciRHF.h"
 
+#include <Operator.h>
 #include <ostream>
 #include <vector>
 #include <string>

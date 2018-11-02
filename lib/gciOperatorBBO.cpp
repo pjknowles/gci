@@ -1,9 +1,10 @@
 #include "gciOperatorBBO.h"
 #include "gciConstants.h"
+#include "gciRun.h"
+
 #include <utility>
 #include <numeric>
-
-#include "FCIdump.h"
+#include <FCIdump.h>
 
 namespace gci {
 
@@ -16,11 +17,11 @@ OperatorBBO::OperatorBBO(const Options &options, std::string description) :
         m_freq(options.parameter("FREQ", std::vector<double>(m_nMode, 0))),
         m_nmDisp(options.parameter("NM_DISP", std::vector<double>(m_nMode, 0))),
         m_fcidump(options.parameter("FCIDUMP", std::vector<std::string>(1, "")).at(0)),
-        m_Hel(Operator::construct(FCIdump(m_fcidump))) {
+        m_Hel(constructOperator(FCIdump(m_fcidump))) {
     for (auto iter = m_freq.begin(); iter < m_freq.end(); ++iter) *iter *= Constants::CM_TO_AU;
-    xout << "FREQ = ";
-    for (auto iter = m_freq.begin(); iter < m_freq.end(); ++iter) xout << *iter << ", ";
-    xout << std::endl;
+    std::cout << "FREQ = ";
+    for (auto iter = m_freq.begin(); iter < m_freq.end(); ++iter) std::cout << *iter << ", ";
+    std::cout << std::endl;
     m_Hel.m_description = "Electronic Hamiltonian at the reference geometry";
     // initiate interaction and vibrational Hamiltonian
     for (int iMode = 0; iMode < m_nMode; ++iMode) {
@@ -29,24 +30,24 @@ OperatorBBO::OperatorBBO(const Options &options, std::string description) :
         std::vector<int> orbital_symmetries(m_nModal, m_symMode[iMode]);
         std::string descr;
         descr = "Vibrational Hamiltonian: mode = " + std::to_string(iMode);
-        Operator hVib(dimension, orbital_symmetries, 1, false, (unsigned int) m_symMode[iMode] - 1, true, true, descr);
+        Operator hVib(dimension, 1, false, (unsigned int) m_symMode[iMode] - 1, true, descr);
         descr = "Vibrational component of Interaction Hamiltonian: mode = " + std::to_string(iMode);
-        Operator hIntVib(dimension, orbital_symmetries, 1, false, (unsigned int) m_symMode[iMode] - 1, true, true,
-                         descr);
+        Operator hIntVib(dimension, 1, false, (unsigned int) m_symMode[iMode] - 1, true, descr);
         hVib.O1(true).assign(0.0);
         hIntVib.O1(true).assign(0.0);
         for (int jModal = 0; jModal < m_nModal; ++jModal) {
-            double *elVib_jj = &(hVib.element(jModal, m_symMode[iMode]-1, jModal, m_symMode[iMode]-1));
+            double *elVib_jj = &(hVib.element(jModal, m_symMode[iMode] - 1, jModal, m_symMode[iMode] - 1));
             *elVib_jj = m_freq[iMode] * (jModal + 0.5);
-            double *elIntVib_jj = &(hIntVib.element(jModal, m_symMode[iMode]-1, jModal, m_symMode[iMode]-1));
-            *elIntVib_jj = - m_nmDisp[iMode];
+            double *elIntVib_jj = &(hIntVib.element(jModal, m_symMode[iMode] - 1, jModal, m_symMode[iMode] - 1));
+            *elIntVib_jj = -m_nmDisp[iMode];
             if (jModal > 0) {
-                double *elIntVib_jjm1 = &(hIntVib.element(jModal, m_symMode[iMode]-1, jModal-1, m_symMode[iMode]-1));
+                double *elIntVib_jjm1 = &(hIntVib.element(jModal, m_symMode[iMode] - 1, jModal - 1,
+                                                          m_symMode[iMode] - 1));
                 *elIntVib_jjm1 = std::sqrt((double) jModal) / std::sqrt(2.0 * m_freq[iMode]);
             }
         }
         std::string fcidumpN = m_fcidump + std::to_string(iMode + 1);
-        Operator hIntEl(Operator::construct(FCIdump(fcidumpN)));
+        Operator hIntEl(constructOperator(FCIdump(fcidumpN)));
         hIntEl.m_O0 -= m_freq[iMode] * m_nmDisp[iMode];
         m_Hel.m_O0 -= 0.5 * m_freq[iMode] * std::pow(m_nmDisp[iMode], 2.0);
 //        xout << hVib << std::endl;
@@ -64,7 +65,7 @@ double OperatorBBO::transformedVibHamElement(const Operator &hamiltonian, const 
     SMat Usplice({U.dimensions()[1], dim}, parityNone, symm);
     SMat UspliceT({U.dimensions()[1], dim}, parityNone, symm);
     dim_t offset(8, 0);
-    dim_t zeroOffset(8,0);
+    dim_t zeroOffset(8, 0);
     offset[symm] = (size_t) s;
     Usplice.splice(U, {zeroOffset, offset});
     offset.assign(8, 0);
@@ -106,15 +107,15 @@ void OperatorBBO::energy(const Operator &density, const std::vector<SMat> &U, st
 
 Operator OperatorBBO::electronicFock(const Operator &P, std::vector<SMat> &U, const SMat Cmat) {
     Operator F = m_Hel.fock(P, true, "Fock operator");
-    xout << SymmetryMatrix::transpose(Cmat) * F.O1(true) * Cmat << std::endl;
+    std::cout << SymmetryMatrix::transpose(Cmat) * F.O1(true) * Cmat << std::endl;
     for (int iMode = 0; iMode < m_nMode; ++iMode) {
         Operator Fint = m_HintEl[iMode].fock(P, true, "interaction component of Fock operator");
         double o = transformedVibHamElement(m_HintVib[iMode], U[iMode], m_vibOcc[iMode], m_vibOcc[iMode],
                                             m_symMode[iMode] - 1);
 //        xout << Fint << std::endl;
         F.O1(true) += o * Fint.O1(true);
-        xout << "mode " << iMode << std::endl;
-        xout << SymmetryMatrix::transpose(Cmat) * Fint.O1(true) * Cmat << std::endl;
+        std::cout << "mode " << iMode << std::endl;
+        std::cout << SymmetryMatrix::transpose(Cmat) * Fint.O1(true) * Cmat << std::endl;
     }
     return F;
 }
@@ -123,7 +124,7 @@ Operator OperatorBBO::vibrationalFock(const Operator &P, const SMat &U, int iMod
     dim_t dimension(8);
     dimension[m_symMode[iMode] - 1] = (unsigned int) m_nModal;
     std::vector<int> orbital_symmetries(m_nModal, m_symMode[iMode]);
-    Operator F(dimension, orbital_symmetries, 1, false, (unsigned) m_symMode[iMode] - 1, true, true,
+    Operator F(dimension, 1, false, (unsigned) m_symMode[iMode] - 1, true,
                "Vibrational Fock matrix, mode = " + std::to_string(iMode));
 //    F.O1(true) = transformedVibHam(m_Hvib[iMode], U).O1(true);
     F.O1(true) = m_Hvib[iMode].O1(true);

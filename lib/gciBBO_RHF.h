@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "SMat.h"
-#include "gciOperator.h"
 #include "gciOperatorBBO.h"
 #include "gciRHF.h"
 

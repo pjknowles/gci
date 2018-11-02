@@ -1,11 +1,12 @@
 #include "gciMixedOperator.h"
+#include "gciRun.h"
 
 #include <stdexcept>
 #include <valarray>
 
 namespace gci {
 
-MixedOperator::MixedOperator(const FCIdump &fcidump) : Hel(Operator::construct(fcidump)){
+MixedOperator::MixedOperator(const FCIdump &fcidump) : Hel(constructOperator(fcidump)){
 
 }
 
