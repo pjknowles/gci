@@ -1,9 +1,22 @@
 #!/usr/bin/env bash
 
-cwd=$(pwd)
-for f in ./*/
+###################
+#
+### For each dependency, update the commit's hash number
+### and git add the new hash
+#
+###################
+
+dep_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+cd $dep_dir
+
+for fname in *_SHA1
 do
-    cd "${cwd}/${f}"
-    fname="${cwd}/${f%%/}_SHA1"
-    $(git rev-parse HEAD > $fname)
+    rep_name="${fname%%_SHA1}"
+    cd "${rep_name}"
+    sha1=$(git rev-parse HEAD)
+    cd ../
+    echo "$sha1" > $fname
+    $(git add $fname)
 done
