@@ -62,6 +62,4 @@ class State : public Printable {
 };
 }
 
-using namespace gci;
-
 #endif // GCIState_H

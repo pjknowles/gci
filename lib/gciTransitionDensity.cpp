@@ -3,6 +3,8 @@
 #include <sstream>
 #include <iterator>
 
+using TransitionDensity = gci::TransitionDensity;
+
 TransitionDensity::TransitionDensity(const Wavefunction &w,
                                      const StringSet::const_iterator &alphaStringsBegin,
                                      const StringSet::const_iterator &alphaStringsEnd,

@@ -153,6 +153,4 @@ void FCIDump(const SymmetryMatrix::Operator& op, const std::string filename, std
 
 }
 
-using namespace gci;
-
 #endif // GCIRUN_H

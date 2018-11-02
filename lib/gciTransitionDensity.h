@@ -67,6 +67,4 @@ class TransitionDensity : public memory::vector<double>, public Printable {
 };
 }
 
-using namespace gci;
-
 #endif // GCITRANSITIONDENSITY_H

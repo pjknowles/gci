@@ -7,9 +7,9 @@
 #include <iostream>
 #include <numeric>
 
-class Orbitals : public Printable {
+class Orbitals : public gci::Printable {
  public:
-  Orbitals(const OrbitalSpace &orbitalSpace)
+  Orbitals(const gci::OrbitalSpace &orbitalSpace)
       : m_orbitals(SymmetryMatrix::dims_t{orbitalSpace, orbitalSpace}, SymmetryMatrix::parityNone, 0, "orbitals"),
         m_energies(SymmetryMatrix::dims_t{orbitalSpace}, SymmetryMatrix::parityNone, -1, "energies"),
         m_occupations(SymmetryMatrix::dims_t{orbitalSpace}, SymmetryMatrix::parityNone, -1, "occupations") {}

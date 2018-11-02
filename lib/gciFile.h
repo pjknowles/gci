@@ -51,6 +51,4 @@ class File {
 
 }
 
-using namespace gci;
-
 #endif // GCIFILE_H

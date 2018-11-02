@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <sstream>
 #include <utility>
+
+using SymmetrySpace = gci::SymmetrySpace;
+
 SymmetrySpace::SymmetrySpace(std::string title, int maxrank_) : std::vector<size_t>(8, 0),
                                                                 maxrank(maxrank_),
                                                                 Title(std::move(title)) {

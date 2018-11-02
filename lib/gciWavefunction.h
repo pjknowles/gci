@@ -303,6 +303,4 @@ Wavefunction operator/(const Wavefunction &w1,
 Wavefunction operator*(const Wavefunction &w1, const double &value);///< multiply by a scalar
 Wavefunction operator*(const double &value, const Wavefunction &w1);///< multiply by a scalar
 }
-using namespace gci;
-
 #endif // GCIWAVEFUNCTION_H

@@ -183,6 +183,4 @@ class String : public State {
 };
 }
 
-using namespace gci;
-
 #endif // GCISTRING_H

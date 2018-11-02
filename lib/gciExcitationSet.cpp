@@ -2,6 +2,8 @@
 #include <iostream>
 #include <sstream>
 
+using ExcitationSet = gci::ExcitationSet;
+
 ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihilations, int creations, SymmetryMatrix::parity_t parity)
     : From(from), To(to) {
   constexpr String::orbital_type one = 1;

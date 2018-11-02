@@ -63,6 +63,4 @@ class SymmetrySpace : public std::vector<size_t>, public gci::Printable {
 };
 }
 
-using namespace gci;
-
 #endif // GCISYMMETRYSPACE_H

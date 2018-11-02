@@ -5,6 +5,8 @@
 #include <sstream>
 #include <string.h>
 
+using String = gci::String;
+
 size_t gci::String::StringNotFound = (size_t) -1; ///< conventional null value for index
 size_t gci::String::keyUnassigned = (size_t) -1; ///< conventional null value for key
 

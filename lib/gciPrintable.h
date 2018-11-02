@@ -29,6 +29,5 @@ class Printable {
 */
 inline std::ostream &operator<<(std::ostream &os, Printable const &obj) { return os << obj.str(); }
 }
-using namespace gci;
 
 #endif // GCIPRINTABLE_H

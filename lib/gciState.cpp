@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 
+using State = gci::State;
 State::State(const Options& dump)
 {
   load(dump);
