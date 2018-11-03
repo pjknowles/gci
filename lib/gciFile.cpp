@@ -5,6 +5,8 @@
 #include "gciFile.h"
 #include <unistd.h>
 
+using File = gci::File;
+
 File::File() {
   char tmpname[16];
   sprintf(tmpname, "tmp%6.6dXXXXXX", parallel_rank);

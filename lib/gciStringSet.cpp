@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cstring>
 
+using StringSet = gci::StringSet;
+
 StringSet::StringSet() : memory::vector<String>() {
 //      xout <<parallel_rank<<"StringSet default constructor"<<std::endl;
 }
@@ -351,7 +353,7 @@ std::string StringSet::str(int verbosity, unsigned int columns) const {
   return s.str();
 }
 
-std::vector<ExcitationSet> StringSet::allExcitations(StringSet &to, int annihilations, int creations) {
+std::vector<gci::ExcitationSet> StringSet::allExcitations(StringSet &to, int annihilations, int creations) {
   std::vector<ExcitationSet> set;
   for (auto ff : *this) {
     set.emplace_back(ff, to, annihilations, creations);

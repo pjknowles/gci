@@ -89,6 +89,4 @@ class OrbitalSpace : public SymmetrySpace {
 };
 }
 
-using namespace gci;
-
 #endif // GCIORBITALSPACE_H

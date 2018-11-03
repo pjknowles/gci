@@ -11,6 +11,8 @@
 #include <assert.h>
 #include "gciOrbitals.h"
 
+using Wavefunction = gci::Wavefunction;
+
 Wavefunction::Wavefunction(OrbitalSpace *h, int n, int s, int m2) : State(h, n, s, m2), m_sparse(false) {
   buildStrings();
 }
@@ -20,7 +22,7 @@ Wavefunction::Wavefunction(const State &state) : State(state), m_sparse(false) {
 }
 
 void Wavefunction::buildStrings() {
-  profiler->start("buildStrings");
+  gci::profiler->start("buildStrings");
   alphaStrings.resize(8);
   betaStrings.resize(8);
   dimension = 0;
@@ -36,7 +38,7 @@ void Wavefunction::buildStrings() {
     _blockOffset[syma] = dimension;
     dimension += alphaStrings[syma].size() * betaStrings[symb].size();
   }
-  profiler->stop("buildStrings");
+  gci::profiler->stop("buildStrings");
 }
 
 void Wavefunction::allocate_buffer() {
@@ -59,8 +61,8 @@ void Wavefunction::set(const double value) {
 }
 
 
-void Wavefunction::diagonalOperator(const Operator &op) {
-  auto p = profiler->push("diagonalOperator");
+void Wavefunction::diagonalOperator(const SymmetryMatrix::Operator &op) {
+  auto p = gci::profiler->push("diagonalOperator");
   auto ha = int1(op,true);
   auto hbb = int1(op,false);
   Eigen::MatrixXd Jaa;
@@ -388,7 +390,7 @@ double Wavefunction::at(size_t offset) const {
   return buffer.at(offset);
 }
 
-Determinant Wavefunction::determinantAt(size_t offset) const {
+gci::Determinant Wavefunction::determinantAt(size_t offset) const {
   size_t address = 0;
   for (unsigned int syma = 0; syma < 8; syma++) {
     unsigned int symb = syma ^symmetry;
@@ -396,7 +398,7 @@ Determinant Wavefunction::determinantAt(size_t offset) const {
     if (offset >= address && offset < newaddress) {
       size_t a = (offset - address) / betaStrings[symb].size();
       size_t b = offset - address - a * betaStrings[symb].size();
-      return Determinant(this, &alphaStrings[syma][a], &betaStrings[symb][b]);
+      return gci::Determinant(this, &alphaStrings[syma][a], &betaStrings[symb][b]);
     }
     address = newaddress;
   }
@@ -455,7 +457,7 @@ void MXM(double *Out,
          bool AddToDest,
          int nStrideLink = -1) {
   const bool debug = false;
-  auto prof = profiler->push("MXM");
+  auto prof = gci::profiler->push("MXM");
   prof += 2 * nLink * nCols * nRows;
   if (nStrideLink < 0) {
     if (debug && AddToDest)
@@ -474,10 +476,10 @@ void MXM(double *Out,
   }
 }
 
-void Wavefunction::operatorOnWavefunction(const Operator &h,
+void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                                           const Wavefunction &w,
                                           bool parallel_stringset) { // FIXME not really thoroughly checked if the symmetry of h is not zero.
-  auto prof = profiler->push("operatorOnWavefunction"+std::string(m_sparse?"/sparse":"")+std::string(w.m_sparse?"/sparse":""));
+  auto prof = gci::profiler->push("operatorOnWavefunction"+std::string(m_sparse?"/sparse":"")+std::string(w.m_sparse?"/sparse":""));
   if (m_sparse) buffer_sparse.clear();
   if (parallel_rank == 0) {
     if (m_sparse) {
@@ -503,7 +505,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
 //  for (const auto& s : betaActiveStrings) for (const auto& ss : s) xout <<ss<<std::endl;
 
   if (true) {
-    auto p = profiler->push("1-electron RI");
+    auto p = gci::profiler->push("1-electron RI");
     size_t nsaaMax = 1000000000;
     size_t nsbbMax = 1000000000;
     std::vector<StringSet> bbs;
@@ -539,7 +541,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                                 aa0,
                                 aa1,
                                 w.betaStrings[symb].begin(), w.betaStrings[symb].end(),
-                                parityEven, true, false);
+                                SymmetryMatrix::parityEven, true, false);
 //            xout << "alpha transition density" << d << "\n" << w.betaStrings[symb].size() << aa1 - aa0 << " "
 //                 << d.size() << std::endl;
             TransitionDensity e(d);
@@ -569,7 +571,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                                 w.alphaStrings[syma].begin(),
                                 w.alphaStrings[syma].end(),
                                 bb0, bb1,
-                                parityEven, false, true);
+                                SymmetryMatrix::parityEven, false, true);
             //            xout << "beta transition density"<<d<<std::endl;
             TransitionDensity e(d);
             MXM(&e[0],
@@ -588,7 +590,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
     }
 
   } else {
-    auto p = profiler->push("1-electron");
+    auto p = gci::profiler->push("1-electron");
     auto tilesize = m_tilesize;
     auto alphatilesize = m_alphatilesize;
     auto betatilesize = m_betatilesize;
@@ -623,7 +625,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                                   aa0,
                                   aa1,
                                   bb0, bb1,
-                                  parityEven, true, !h.m_uhf);
+                                  SymmetryMatrix::parityEven, true, !h.m_uhf);
               if (nsb == bb.size())
                 MXM(&buffer[offset], &d[0], &(*h.O1(true).data())[0],
                     nsa * nsb, w.orbitalSpace->total(0, 1), 1, true);
@@ -642,7 +644,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                                   aa0,
                                   aa1,
                                   bb0, bb1,
-                                  parityEven, false, true);
+                                  SymmetryMatrix::parityEven, false, true);
               MXM(&buffer[offset], &d[0], &(*h.O1(false).data())[0],
                   nsa * nsb, w.orbitalSpace->total(0, 1), 1, true);
             }
@@ -657,17 +659,17 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
   //  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
 
   if (h.m_rank > 1) { // two-electron contribution, alpha-alpha
-    auto p = profiler->push("aa integrals");
+    auto p = gci::profiler->push("aa integrals");
     size_t nsbbMax = 64; // temporary static
     for (unsigned int syma = 0; syma < 8; syma++) {
-      profiler->start("StringSet aa");
+      gci::profiler->start("StringSet aa");
       StringSet aa(alphaActiveStrings, 2, 0, syma, parallel_stringset);
-      profiler->stop("StringSet aa");
+      gci::profiler->stop("StringSet aa");
 //      xout << "number of alpha-alpha-excited strings=" << aa.size() << std::endl;
       if (aa.empty()) continue;
       for (unsigned int symb = 0; symb < 8; symb++) {
         if (!NextTask()) continue;
-        auto praa = profiler->push("aa1 loop");
+        auto praa = gci::profiler->push("aa1 loop");
         unsigned int symexc = syma ^symb ^w.symmetry;
         //size_t nexc = h.pairSpace.find(-1)->second[symexc];
         size_t nexc = h.O2(true, true, false).block_size(symexc);
@@ -678,7 +680,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
              aa0 = aa1) { // loop over alpha batches
           size_t nsa = aa1 - aa0;
           TransitionDensity
-              d(w, aa0, aa1, w.betaStrings[symb].begin(), w.betaStrings[symb].end(), parityOddPacked, false, false);
+              d(w, aa0, aa1, w.betaStrings[symb].begin(), w.betaStrings[symb].end(), SymmetryMatrix::parityOddPacked, false, false);
           TransitionDensity e(d);
           MXM(&e[0], &d[0], &h.O2(true, true, false).block(symexc)[0], nsa * nsb, nexc, nexc, false);
           e.action(*this);
@@ -690,7 +692,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
 
   if (h.m_rank > 1)
     if (true || h.m_uhf) { // two-electron contribution, beta-beta
-      auto p = profiler->push("bb integrals");
+      auto p = gci::profiler->push("bb integrals");
       size_t nsbbMax = 64; // temporary static
       for (unsigned int symb = 0; symb < 8; symb++) {
         StringSet bb(betaActiveStrings, 2, 0, symb, parallel_stringset);
@@ -711,7 +713,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                   w.alphaStrings[syma].end(),
                   bb0,
                   bb1,
-                  parityOddPacked,
+                  SymmetryMatrix::parityOddPacked,
                   false,
                   false);
             TransitionDensity e(d);
@@ -724,7 +726,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
     }
 
   if (h.m_rank > 1) { // two-electron contribution, alpha-beta
-    auto p = profiler->push("ab integrals");
+    auto p = gci::profiler->push("ab integrals");
     size_t nsaaMax = 640; // temporary static
     size_t nsbbMax = 640; // temporary static
     for (unsigned int symb = 0; symb < 8; symb++) {
@@ -737,7 +739,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
         size_t nexc = h.O2(true, false, false).block_size(symexc);
         {
           //              xout << "syma="<<syma<<", symb="<<symb<<", symexc="<<symexc<<std::endl;
-          auto pro = profiler->push("StringSet iterator loops");
+          auto pro = gci::profiler->push("StringSet iterator loops");
           for (StringSet::iterator aa1, aa0 = aa.begin();
                aa1 = aa0 + nsaaMax > aa.end() ? aa.end() : aa0 + nsaaMax, aa0 < aa.end();
                aa0 = aa1) { // loop over alpha batches
@@ -747,7 +749,7 @@ void Wavefunction::operatorOnWavefunction(const Operator &h,
                  bb0 = bb1) { // loop over beta batches
               size_t nsb = bb1 - bb0;
               if (!NextTask()) continue;
-              TransitionDensity d(w, aa0, aa1, bb0, bb1, parityNone, false, false);
+              TransitionDensity d(w, aa0, aa1, bb0, bb1, SymmetryMatrix::parityNone, false, false);
               TransitionDensity e(d);
               MXM(&e[0], &d[0], &h.O2(true, false, false).block(symexc)[0], nsa * nsb, nexc, nexc, false);
               e.action(*this);
@@ -775,11 +777,11 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
                                     std::string description,
                                     bool parallel_stringset) {
   if (bra == nullptr) bra = this;
-  auto prof = profiler->push("density");
+  auto prof = gci::profiler->push("density");
 
-  dim_t dim;
+  SymmetryMatrix::dim_t dim;
   for (const auto s: *orbitalSpace) dim.push_back(s);
-  Operator result(dims_t{dim,dim,dim,dim}, rank, uhf, (hermitian ? std::vector<int>{1,1} : std::vector<int>{0,0}), {-1,-1}, symmetry ^ bra->symmetry, false, description);
+  SymmetryMatrix::Operator result(SymmetryMatrix::dims_t{dim,dim,dim,dim}, rank, uhf, (hermitian ? std::vector<int>{1,1} : std::vector<int>{0,0}), {-1,-1}, symmetry ^ bra->symmetry, false, description);
 //  std::cout << "result\n"<<result.str("result",3)<<std::endl;
   result.zero();
   result.m_O0 = (*this) * (*bra);
@@ -788,7 +790,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
   DivideTasks(99999999, 1, 1);
 
   {
-    auto p = profiler->push("1-electron");
+    auto p = gci::profiler->push("1-electron");
     size_t offset = 0, nsa = 0, nsb = 0;
     for (unsigned int syma = 0; syma < 8; syma++) {
       offset += nsa * nsb;
@@ -802,12 +804,12 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
                             alphaStrings[syma].end(),
                             betaStrings[symb].begin(),
                             betaStrings[symb].end(),
-                            (hermitian ? parityEven : parityNone), true, !result.m_uhf);
+                            (hermitian ? SymmetryMatrix::parityEven : SymmetryMatrix::parityNone), true, !result.m_uhf);
 //      xout << "Transition density\n"<<d<<std::endl;
         MXM(&((*result.O1(true).data())[0]),
             &d[0],
             &(bra->buffer[offset]),
-            orbitalSpace->total(0, (hermitian ? parityEven : parityNone)),
+            orbitalSpace->total(0, (hermitian ? SymmetryMatrix::parityEven : SymmetryMatrix::parityNone)),
             nsa * nsb,
             1,
             true,
@@ -819,11 +821,11 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
                             alphaStrings[syma].end(),
                             betaStrings[symb].begin(),
                             betaStrings[symb].end(),
-                            (hermitian ? parityEven : parityNone), false, true);
+                            (hermitian ? SymmetryMatrix::parityEven : SymmetryMatrix::parityNone), false, true);
         MXM(&((*result.O1(false).data())[0]),
             &d[0],
             &(bra->buffer[offset]),
-            orbitalSpace->total(0, (hermitian ? parityEven : parityNone)),
+            orbitalSpace->total(0, (hermitian ? SymmetryMatrix::parityEven : SymmetryMatrix::parityNone)),
             nsa * nsb,
             1,
             true,
@@ -833,7 +835,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
     std::vector<bool> spincases(1, true);
     if (result.m_uhf) spincases.push_back(false);
     for (auto spincase : spincases)
-      if (result.O1(spincase).parity() == parityEven) {
+      if (result.O1(spincase).parity() == SymmetryMatrix::parityEven) {
         if (result.O1(spincase).symmetry() == 0) {
 //          result.O1(spincase) *=.5;
 //          for (uint isym=0; isym<8; isym++)
@@ -849,16 +851,16 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
 
   if (rank > 1) { // two-electron contribution, alpha-alpha
 //  std::cout << "@@@ density before construct 2 elec\n"<<result.str("result before construct 2e",3)<<std::endl;
-    auto p = profiler->push("aa density");
+    auto p = gci::profiler->push("aa density");
     size_t nsbbMax = 64; // temporary static
     for (unsigned int syma = 0; syma < 8; syma++) {
-      profiler->start("StringSet aa");
+      gci::profiler->start("StringSet aa");
       StringSet aa(alphaStrings, 2, 0, syma, parallel_stringset);
-      profiler->stop("StringSet aa");
+      gci::profiler->stop("StringSet aa");
       if (aa.empty()) continue;
       for (unsigned int symb = 0; symb < 8; symb++) {
         if (!NextTask()) continue;
-        auto praa = profiler->push("aa1 loop");
+        auto praa = gci::profiler->push("aa1 loop");
         unsigned int symexc = syma ^symb ^symmetry;
         //size_t nexc = h.pairSpace.find(-1)->second[symexc];
         size_t nexc = result.O2(true, true).block_size(symexc);
@@ -869,9 +871,9 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
              aa0 = aa1) { // loop over alpha batches
           size_t nsa = aa1 - aa0;
           TransitionDensity
-              d(*this, aa0, aa1, betaStrings[symb].begin(), betaStrings[symb].end(), parityOddPacked, false, false);
+              d(*this, aa0, aa1, betaStrings[symb].begin(), betaStrings[symb].end(), SymmetryMatrix::parityOddPacked, false, false);
           TransitionDensity
-              e(*bra, aa0, aa1, betaStrings[symb].begin(), betaStrings[symb].end(), parityOddPacked, false, false);
+              e(*bra, aa0, aa1, betaStrings[symb].begin(), betaStrings[symb].end(), SymmetryMatrix::parityOddPacked, false, false);
 //                      xout <<"Daa: "<<d.str(2)<<std::endl;
 //                      xout <<"Eaa: "<<e.str(2)<<std::endl;
 //                xout << "result goes to "<<&result.O2(true,true).block(symexc)[0]<<std::endl;
@@ -893,7 +895,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
   }
 
   if (rank > 1 && result.m_uhf) { // two-electron contribution, beta-beta
-    auto p = profiler->push("bb density");
+    auto p = gci::profiler->push("bb density");
     size_t nsbbMax = 64; // temporary static
     for (unsigned int symb = 0; symb < 8; symb++) {
       StringSet bb(betaStrings, 2, 0, symb, parallel_stringset);
@@ -909,9 +911,9 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
              bb0 = bb1) { // loop over beta batches
           size_t nsb = bb1 - bb0;
           TransitionDensity
-              d(*this, alphaStrings[syma].begin(), alphaStrings[syma].end(), bb0, bb1, parityOddPacked, false, false);
+              d(*this, alphaStrings[syma].begin(), alphaStrings[syma].end(), bb0, bb1, SymmetryMatrix::parityOddPacked, false, false);
           TransitionDensity
-              e(*bra, alphaStrings[syma].begin(), alphaStrings[syma].end(), bb0, bb1, parityOddPacked, false, false);
+              e(*bra, alphaStrings[syma].begin(), alphaStrings[syma].end(), bb0, bb1, SymmetryMatrix::parityOddPacked, false, false);
           MXM(&result.O2(false, false, false).block(symexc)[0],
               &d[0],
               &e[0],
@@ -926,7 +928,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
   }
 
   if (rank > 1) { // two-electron contribution, alpha-beta
-    auto p = profiler->push("ab density");
+    auto p = gci::profiler->push("ab density");
     size_t nsaaMax = 640; // temporary static
     size_t nsbbMax = 640; // temporary static
     for (unsigned int symb = 0; symb < 8; symb++) {
@@ -938,7 +940,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
         unsigned int symexc = symb ^syma ^symmetry;
         size_t nexc = result.O2(true, false, false).block_size(symexc);
         {
-          auto pro = profiler->push("StringSet iterator loops");
+          auto pro = gci::profiler->push("StringSet iterator loops");
           for (StringSet::iterator aa1, aa0 = aa.begin();
                aa1 = aa0 + nsaaMax > aa.end() ? aa.end() : aa0 + nsaaMax, aa0 < aa.end();
                aa0 = aa1) { // loop over alpha batches
@@ -948,8 +950,8 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
                  bb0 = bb1) { // loop over beta batches
               size_t nsb = bb1 - bb0;
               if (!NextTask()) continue;
-              TransitionDensity d(*this, aa0, aa1, bb0, bb1, parityNone, false, false);
-              TransitionDensity e(*bra, aa0, aa1, bb0, bb1, parityNone, false, false);
+              TransitionDensity d(*this, aa0, aa1, bb0, bb1, SymmetryMatrix::parityNone, false, false);
+              TransitionDensity e(*bra, aa0, aa1, bb0, bb1, SymmetryMatrix::parityNone, false, false);
 //                      xout <<"D: "<<d.str(2)<<std::endl;
 //                      xout <<"E: "<<e.str(2)<<std::endl;
 //                      xout << "ab result before MXM"<<result.O2(true,false,false).str("result",2)<<std::endl;
@@ -988,7 +990,7 @@ gsum(result);
 
 Orbitals Wavefunction::naturalOrbitals() {
   Orbitals orb(*orbitalSpace);
-  SMat dens1 = density(1).O1();
+  SymmetryMatrix::SMat dens1 = density(1).O1();
   dens1.ev(orb.m_occupations, &orb.m_orbitals, nullptr, nullptr, "lapack", "descending");
   orb.m_orbitals.m_description = "Natural orbitals";
   orb.m_occupations.m_description = "Natural orbital occupation numbers";
@@ -996,7 +998,7 @@ Orbitals Wavefunction::naturalOrbitals() {
 }
 
 void Wavefunction::putw(File &f, int index) {
-  auto p = profiler->push("Wavefunction::putw");
+  auto p = gci::profiler->push("Wavefunction::putw");
   size_t chunk = (buffer.size() - 1) / parallel_size + 1;
   size_t offset = chunk * parallel_rank;
   if (chunk + offset > buffer.size()) chunk = buffer.size() - offset;
@@ -1006,7 +1008,7 @@ void Wavefunction::putw(File &f, int index) {
 }
 
 void Wavefunction::getw(File &f, int index) {
-  auto p = profiler->push("Wavefunction::getw");
+  auto p = gci::profiler->push("Wavefunction::getw");
   size_t chunk = (buffer.size() - 1) / parallel_size + 1;
   size_t offset = chunk * parallel_rank;
   if (chunk + offset > buffer.size()) chunk = buffer.size() - offset;
@@ -1016,7 +1018,7 @@ void Wavefunction::getw(File &f, int index) {
 }
 
 void Wavefunction::getAll(File &f, int index) {
-  auto p = profiler->push("Wavefunction::getAll");
+  auto p = gci::profiler->push("Wavefunction::getAll");
   getw(f, index);
   size_t chunk = (buffer.size() - 1) / parallel_size + 1;
   gather_chunks(&buffer[0], buffer.size(), chunk);
@@ -1099,8 +1101,8 @@ memory::vector<double>::const_iterator Wavefunction::cend() const {
   return buffer.cend();
 }
 
-std::vector<StringSet> Wavefunction::activeStrings(bool spinUp) const {
-  auto p = profiler->push("activeStrings");
+std::vector<gci::StringSet> Wavefunction::activeStrings(bool spinUp) const {
+  auto p = gci::profiler->push("activeStrings");
   const std::vector<StringSet> &sources = spinUp ? alphaStrings : betaStrings;
 //  return sources;
   const std::vector<StringSet> &complements = spinUp ? betaStrings : alphaStrings;

@@ -61,6 +61,4 @@ class Determinant : public State {
 };
 }
 
-using namespace gci;
-
 #endif // GCIDETERMINANT_H

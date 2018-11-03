@@ -1,5 +1,7 @@
 #include "gciOrbitalSpace.h"
 
+using OrbitalSpace = gci::OrbitalSpace;
+
 void OrbitalSpace::load(const Options &dump, int verbosity) {
   if (verbosity) xout <<"Load OrbitalSpace from Options object" <<std::endl;
   load(dump.parameter("ORBSYM",std::vector<int>{0}),
