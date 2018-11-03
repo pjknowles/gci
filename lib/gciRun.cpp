@@ -1409,7 +1409,7 @@ void Run::HamiltonianMatrixPrint(SymmetryMatrix::Operator &hamiltonian, const St
 }
 
 SymmetryMatrix::Operator* gci::projector(const SymmetryMatrix::Operator& source, const std::string special, const bool forceSpinUnrestricted) {
-  dim_t dims;
+  SymmetryMatrix::dim_t dims;
   for (auto s=0; s<8; s++)
     dims.push_back(source.dimension(s,0,0));
   auto result = new SymmetryMatrix::Operator(dims,
@@ -1709,10 +1709,10 @@ void gci::FCIDump(const SymmetryMatrix::Operator& op, const std::string filename
 }
 
 SymmetryMatrix::Operator gci::fockOperator(const SymmetryMatrix::Operator& hamiltonian, const Determinant &reference, const std::string description) {
-  dim_t dims;
+  SymmetryMatrix::dim_t dims;
   for (auto s=0; s<8; s++)
     dims.push_back(hamiltonian.dimension(s,0,0));
-  Operator f(dims,
+  SymmetryMatrix::Operator f(dims,
              1,
              hamiltonian.m_uhf,
              hamiltonian.m_symmetry,
@@ -1855,10 +1855,10 @@ SymmetryMatrix::Operator gci::fockOperator(const SymmetryMatrix::Operator& hamil
 }
 
 SymmetryMatrix::Operator gci::sameSpinOperator(const SymmetryMatrix::Operator& hamiltonian, const Determinant &reference, const std::string description) {
-  dim_t dims;
+  SymmetryMatrix::dim_t dims;
   for (auto s=0; s<8; s++)
     dims.push_back(hamiltonian.dimension(s,0,0));
-  Operator result(dims,
+  SymmetryMatrix::Operator result(dims,
                   hamiltonian.m_rank,
                   true,
                   hamiltonian.m_symmetry,
