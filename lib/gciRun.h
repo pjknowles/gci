@@ -88,7 +88,7 @@ class Run {
    * @param maxIterations The maximum number of iterations to perform
    * @return the energy of the state.
    */
-  double RHF(const Operator &hamiltonian, const State &prototype, double thresh=1.0e-4, int maxIterations=20);
+  double RHF(const SymmetryMatrix::Operator &hamiltonian, const State &prototype, double thresh=1.0e-4, int maxIterations=20);
 
   /*!
    * @brief Performs RHF calculation using the "Beyond BO" electron-vibration coupled Hamiltonian

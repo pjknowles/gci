@@ -15,17 +15,17 @@ void Run::BBO_RHF(const State &prototype) {
     OperatorBBO molHam(options); // molecular Hamiltonian
     std::vector<int> symmetries;
     for (auto s : prototype.orbitalSpace->orbital_symmetries) {symmetries.push_back(s + 1);}
-    dim_t dim;
+    SymmetryMatrix::dim_t dim;
     for (auto s: *prototype.orbitalSpace) dim.push_back(s);
-    dim_t occ(8, 0);
+    SymmetryMatrix::dim_t occ(8, 0);
     std::vector<int> occInt = options.parameter("OCC", std::vector<int>{8});
     for (int i = 0; i < 8; ++i) {occ[i] = (size_t) occInt[i];}
     nm_BBO_RHF::Density density(dim, occ, symmetries, prototype.symmetry);
-    std::vector<SMat> U; // vibrational modals
+    std::vector<SymmetryMatrix::SMat> U; // vibrational modals
     for (int iMod = 0; iMod < molHam.m_nMode; ++iMod) {
         dim.assign(8, 0);
         dim[molHam.m_symMode[iMod] - 1] = (size_t) molHam.m_nModal;
-        SMat Umat({dim, dim}, parityNone, 0, "Modals for mode " + std::to_string(iMod + 1));
+        SymmetryMatrix::SMat Umat({dim, dim}, SymmetryMatrix::parityNone, 0, "Modals for mode " + std::to_string(iMod + 1));
 //        SMat Umat({dim, dim}, parityNone, molHam.m_symMode[iMod], "Modals for mode " + std::to_string(iMod + 1));
         Umat.setIdentity();
 //        nm_BBO_RHF::rotate(Umat, 0.5);
@@ -113,13 +113,13 @@ void nm_BBO_RHF::writeIter(int iIter, std::valarray<double> &energy, std::valarr
     xout << "\n" << std::endl;
 }
 
-void nm_BBO_RHF::solveFock(OperatorBBO &molHam, Density &density, std::vector<SMat> &U) {
+void nm_BBO_RHF::solveFock(OperatorBBO &molHam, Density &density, std::vector<SymmetryMatrix::SMat> &U) {
     {
         // Electronic degrees of freedom
-        Operator F = molHam.electronicFock(density.P, U, density.Cmat);
+        auto F = molHam.electronicFock(density.P, U, density.Cmat);
 //        xout << SymmetryMatrix::transpose(density.Cmat) * F.O1(true) * density.Cmat << std::endl;
-        SMat eigVal({density.dim}, parityNone, -1, "Eigenvalues");
-        SMat cMat(density.Cmat);
+        SymmetryMatrix::SMat eigVal({density.dim}, SymmetryMatrix::parityNone, -1, "Eigenvalues");
+        SymmetryMatrix::SMat cMat(density.Cmat);
         F.O1().ev(eigVal, &cMat /*&density.Cmat*/, nullptr, nullptr, "lapack", "ascending");
         density.Cmat = cMat;
 //        xout << "Cmat " << cMat << std::endl;
@@ -129,8 +129,8 @@ void nm_BBO_RHF::solveFock(OperatorBBO &molHam, Density &density, std::vector<SM
     }
     // Vibrational degrees of freedom
     for (int iMode = 0; iMode < molHam.m_nMode; ++iMode) {
-        Operator F = molHam.vibrationalFock(density.P, U[iMode], iMode);
-        SMat eigVal({U[iMode].dimensions()[1]}, parityNone, -1, "Eigenvalues");
+        auto F = molHam.vibrationalFock(density.P, U[iMode], iMode);
+        SymmetryMatrix::SMat eigVal({U[iMode].dimensions()[1]}, SymmetryMatrix::parityNone, -1, "Eigenvalues");
         F.O1().ev(eigVal, &U[iMode]);
 //        xout << eigVal.m_description;
 //        xout << SymmetryMatrix::transpose(U[iMode]) * F.O1(true) * U[iMode] << std::endl;
@@ -140,9 +140,9 @@ void nm_BBO_RHF::solveFock(OperatorBBO &molHam, Density &density, std::vector<SM
 //    }
 }
 
-void nm_BBO_RHF::rotate(SMat &mat, double ang) {
+void nm_BBO_RHF::rotate(SymmetryMatrix::SMat &mat, double ang) {
 // For now lets do it only for the modals. The
-    SMat rot(mat);
+    SymmetryMatrix::SMat rot(mat);
     rot.setIdentity();
     int sym = rot.symmetry(), n = (int) rot.dimension(sym);
     std::vector<std::valarray<double> > vecs;

@@ -1,6 +1,8 @@
 #include "gciRun.h"
 #include "gciRHF.h"
 
+namespace gci {
+
 double Run::RHF(const SymmetryMatrix::Operator &hamiltonian, const State &prototype,
                 double thresh, int maxIterations) {
     profiler->start("RHF:preamble");
@@ -59,8 +61,11 @@ void nm_RHF::Density::update() {
     P.O1(true) = 2 * (Csplice * SymmetryMatrix::transpose(Csplice));
 }
 
-SymmetryMatrix::Operator nm_RHF::electronicEnergy(const SymmetryMatrix::Operator &P, const SymmetryMatrix::Operator &Hel, double &energy) {
+SymmetryMatrix::Operator
+nm_RHF::electronicEnergy(const SymmetryMatrix::Operator &P, const SymmetryMatrix::Operator &Hel, double &energy) {
     auto F = Hel.fock(P, true, "Fock operator");
     energy = Hel.m_O0 + 0.5 * (P.O1() & (Hel.O1() + F.O1()));
     return F;
-};
+}
+
+}

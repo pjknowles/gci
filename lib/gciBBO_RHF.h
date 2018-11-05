@@ -32,14 +32,14 @@ void writeIter(int iIter, std::valarray<double> &energy, std::valarray<double> &
  * @param density Electronic density and MO's
  * @param U Vector of Modal coefficients
  */
-void solveFock(gci::OperatorBBO &molHam, Density &density, std::vector<SMat> &U);
+void solveFock(gci::OperatorBBO &molHam, Density &density, std::vector<SymmetryMatrix::SMat> &U);
 
 /*!
  * @brief Rotates the unitary matrix, mixing the different orbitals
  * @param mat Unitary matrix
  * @param ang Rotation constan
  */
-void rotate(SMat &mat, double ang);
+void rotate(SymmetryMatrix::SMat &mat, double ang);
 
 
 } // namespace nm_BBO_RHF
