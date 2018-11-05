@@ -5,7 +5,8 @@
 namespace gci {
 
 HProductSet::HProductSet(const HProduct &bra, const VibSpace &vibSpace, const VibOp &vibOp)
-        : m_vibSpace(vibSpace), m_basis(), m_vibDim(0), m_vibExcLvlDim(), m_connectedSet(true) {
+        : m_vibSpace(vibSpace), m_basis(), m_vibDim(0), m_vibExcLvlDim(vibSpace.modeCoupling + 1, 0),
+          m_connectedSet(true) {
     switch (vibOp.type) {
         case VibOpType::HO: {
             m_basis.emplace_back(bra);
@@ -41,14 +42,15 @@ void HProductSet::generateFullSpace() {
     if (m_connectedSet) throw std::logic_error("Cannot be called for a connectedSet.");
     setVibDim();
     m_basis.reserve(m_vibDim);
-    m_basis.emplace_back(HProduct::t_Product{{{}}});
+    m_basis.emplace_back(HProduct{});
     unsigned long iWfn = 1;
-    for (int exc = 1; exc < m_vibExcLvlDim.size() - 1; ++exc) {
-        for (auto iBase = m_vibExcLvlDim[exc - 1]; iBase < m_vibExcLvlDim[exc]; ++iBase) {
+    for (int exc = 1; exc < m_vibExcLvlDim.size(); ++exc) {
+        auto iStart = exc == 1 ? 0 : m_vibExcLvlDim[exc - 2];
+        for (auto iBase = iStart; iBase < m_vibExcLvlDim[exc - 1]; ++iBase) {
 // Taking each product at previous level, apply single excitations to generate unique products (see HartreeProducts ordering)
             auto base = m_basis[iBase];
             auto excitedModes = base.excitedModes();
-            auto endMode = base.empty() ? m_vibSpace.nMode : excitedModes.front() + 1;
+            auto endMode = base.empty() ? m_vibSpace.nMode : excitedModes.front();
             for (int iMode = 0; iMode < endMode; ++iMode) {
                 auto *prevProduct = &base;
                 for (int iModal = 1; iModal < m_vibSpace.nModal; ++iModal) {

@@ -33,10 +33,27 @@ TEST(HProduct, order_and_check_via_constructor) {
 TEST_F(HProductF, empty_and_excitedModes) {
     auto emptyProduct = HProduct{{{1, 0}, {2, 0}, {3, 0}}};
     EXPECT_TRUE(emptyProduct.empty()) << "All modes in ground state";
+    //
+    // This is the correct way to construct an empty HProduct (ground state)!
+    //
+    auto emptyProduct1 = HProduct{};
+    EXPECT_TRUE(emptyProduct1.empty()) << "Default empty constructor, assumes ground state";
+    //
+    // The rest are just sanity checks, and their use is discouraged
+    //
     auto emptyProduct2 = HProduct{{}};
     EXPECT_TRUE(emptyProduct2.empty()) << "No modals specified, assumes ground state";
     auto emptyProduct3 = HProduct{{{}}};
     EXPECT_TRUE(emptyProduct3.empty()) << "Empty modal specified, assumes ground state";
+    auto emptyProduct4 = HProduct{HProduct::t_Product{{}}};
+    EXPECT_TRUE(emptyProduct4.empty()) << "Empty product specified, assumes ground state";
+// This is an infuriating bug. Erroneously adding one extra empty initialization list creates a buggy vector!
+// It's in a broken state, where p[0] is not empty and has size = 1, but end iterator is illdefined and element 0 is
+// inaccessible. That's why I introduced an empty constructor.
+    auto p = HProduct::t_Product{{{}}};
+    auto emptyProduct5 = HProduct{p};
+    EXPECT_FALSE(emptyProduct5.empty())
+                        << "This bug is the reason for using empty constructor for HProduct. If this fails than it has been fixed!";
     EXPECT_EQ((std::vector<int>{}), emptyProduct.excitedModes());
     EXPECT_EQ(product.excitedModes(), (std::vector<int>{mode1, mode2, mode3}));
 }
@@ -72,6 +89,12 @@ TEST_F(HProductF, operator_brackets) {
 }
 
 TEST_F(HProductF, raise) {
+    auto empty = HProduct{};
+    empty.raise(mode1);
+    EXPECT_EQ(empty.excLvl(mode1), 1);
+    EXPECT_EQ(empty.excLvl(), 1);
+    auto singlyExcited = HProduct{{{mode1, 1}}};
+    EXPECT_EQ(empty, singlyExcited);
     auto raisedProduct = product;
     raisedProduct.raise(mode1);
     EXPECT_EQ(raisedProduct.excLvl(mode1), modal1 + 1);
@@ -91,12 +114,13 @@ TEST_F(HProductF, changeModal) {
     raisedProduct.changeModal(mode1, diff);
     EXPECT_EQ(raisedProduct.excLvl(mode1), modal1 + diff);
     auto loweredProduct = product;
-    loweredProduct.changeModal(mode2, - diff);
+    loweredProduct.changeModal(mode2, -diff);
     EXPECT_EQ(loweredProduct.excLvl(mode2), modal2 - diff);
-    EXPECT_THROW(loweredProduct.changeModal(mode1, - diff), std::logic_error) << "Trying to lower below the ground state";
+    EXPECT_THROW(loweredProduct.changeModal(mode1, -diff), std::logic_error)
+                        << "Trying to lower below the ground state";
 }
 
-TEST_F(HProductF, withinSpace){
+TEST_F(HProductF, withinSpace) {
     EXPECT_TRUE(product.withinSpace(vibSpace)) << "Product was hardcoded to be within the vibrational space";
     product.raise(mode3);
     auto raisedMode3 = product;

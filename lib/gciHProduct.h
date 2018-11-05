@@ -20,7 +20,13 @@ class HProduct {
 public:
     using t_Modal = std::vector<int>;
     using t_Product = std::vector<t_Modal>;
-    HProduct(t_Product phi);
+    /*!
+     * @brief Constructs an empty Hartree product representing the ground state.
+     * @warning This is the correct way to construct an empty product. Using an empty initializer list can result in
+     * a bug. See unit tests for `empty()`.
+     */
+    HProduct() : m_prod(t_Product{}) { }
+    HProduct(const t_Product &phi);
 
     t_Product::const_iterator begin() const {return m_prod.cbegin();}
     t_Product::const_iterator end() const {return m_prod.cend();}

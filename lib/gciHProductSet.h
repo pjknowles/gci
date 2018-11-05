@@ -16,7 +16,8 @@ class HProductSet {
 public:
     //! Constructs the complete vibrational Fock space
     HProductSet(const VibSpace &vibSpace)
-            : m_vibSpace(vibSpace), m_basis(), m_vibDim(0), m_vibExcLvlDim(), m_connectedSet(false) {setVibDim();};
+            : m_vibSpace(vibSpace), m_basis(), m_vibDim(0), m_vibExcLvlDim(vibSpace.modeCoupling + 1, 0),
+              m_connectedSet(false) {setVibDim();};
 
     /*!
      * @brief Generates a set of products connected to the `bra` through an operator. This is a subset of the full space.
@@ -28,12 +29,6 @@ public:
 
     std::vector<HProduct>::const_iterator begin() const {return m_basis.cbegin();}
     std::vector<HProduct>::const_iterator end() const {return m_basis.cend();}
-
-    /*!
-     * @brief Sets the dimensionality of the vibrational space
-     * @warning Cannot be called `if (m_connectedSet)`
-     */
-    void setVibDim();
 
     /*!
      * @brief Generates the full vibrational basis
@@ -58,10 +53,16 @@ public:
 
     //! Total size of the vibrational space
     auto vibDim() const {return m_vibDim;}
+
     //! Total size of the vibrational space at each excitation level, starting from zero (i.e. at 2 = CI0 + CI1 + CI2)
     auto vibExcLvlDim() const {return m_vibExcLvlDim;}
+
     //! Copy of the vibrational space defining this set of products
     VibSpace vibSpace() const {return m_vibSpace;}
+
+    //! Flags if this product was generated as a connected set
+    bool connectedSet() const {return m_connectedSet;}
+
 protected:
     VibSpace m_vibSpace; //!< Definition of the *full* vibrational space of which `this` may be a subset
     std::vector<HProduct> m_basis; //!< vibrational basis as a set of Hartree products
@@ -71,6 +72,12 @@ protected:
     //! Flags `this` is as a subset of the Fock space, connected to another product through an operator.
     //! Some member functions won't work.
     bool m_connectedSet;
+
+    /*!
+     * @brief Sets the dimensionality of the vibrational space
+     * @warning Cannot be called `if (m_connectedSet)`
+     */
+    void setVibDim();
 
     /*!
      * @brief @copybrief HProductSet(const VibSpace&, const HProduct&, const &VibOp)

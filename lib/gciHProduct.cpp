@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 namespace gci {
-HProduct::HProduct(t_Product phi) : m_prod(std::move(phi)) {
+HProduct::HProduct(const t_Product &phi) : m_prod(phi) {
     if (m_prod.size() == 1 && m_prod[0].empty()) m_prod = t_Product{};
     order();
     check();
