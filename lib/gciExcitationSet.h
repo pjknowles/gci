@@ -57,7 +57,7 @@ class ExcitationSet {
      * \param parity Parity of stored excitations
      */
   ExcitationSet(const String &from, const StringSet &to, int annihilations,
-                int creations, parity_t parity = parityNone);
+                int creations, SymmetryMatrix::parity_t parity = SymmetryMatrix::parityNone);
  private:
   /*!
      * \brief The String to which this set relates

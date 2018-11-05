@@ -51,7 +51,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
   void allocate_buffer(); ///< allocate buffer to full size
   size_t size() const override { return m_sparse ? buffer_sparse.size() : dimension; } ///< the size of the space
 
-  void diagonalOperator(const Operator &op); ///< set this object to the diagonal elements of the hamiltonian
+  void diagonalOperator(const SymmetryMatrix::Operator &op); ///< set this object to the diagonal elements of the hamiltonian
 
   /*!
      * \brief find the index of the smallest component
@@ -304,6 +304,4 @@ Wavefunction operator/(const Wavefunction &w1,
 Wavefunction operator*(const Wavefunction &w1, const double &value);///< multiply by a scalar
 Wavefunction operator*(const double &value, const Wavefunction &w1);///< multiply by a scalar
 }
-using namespace gci;
-
 #endif // GCIWAVEFUNCTION_H
