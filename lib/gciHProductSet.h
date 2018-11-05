@@ -56,7 +56,11 @@ public:
      */
     size_t index(const HProduct &phi);
 
-    size_t vibDim() const {return m_vibDim;}
+    //! Total size of the vibrational space
+    auto vibDim() const {return m_vibDim;}
+    //! Total size of the vibrational space at each excitation level, starting from zero (i.e. at 2 = CI0 + CI1 + CI2)
+    auto vibExcLvlDim() const {return m_vibExcLvlDim;}
+    //! Copy of the vibrational space defining this set of products
     VibSpace vibSpace() const {return m_vibSpace;}
 protected:
     VibSpace m_vibSpace; //!< Definition of the *full* vibrational space of which `this` may be a subset
@@ -64,7 +68,7 @@ protected:
     size_t m_vibDim; //!< Dimension of the vibrational space
     //! Number of vibrational basis functions up to each excitation level, counting from 0 as the GS.
     std::vector<size_t> m_vibExcLvlDim;
-    //! This is a subset of the Fock space, connected to another product through an operator.
+    //! Flags `this` is as a subset of the Fock space, connected to another product through an operator.
     //! Some member functions won't work.
     bool m_connectedSet;
 

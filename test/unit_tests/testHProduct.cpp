@@ -23,7 +23,7 @@ public:
     HProduct product;
 };
 
-TEST(HProduct, order_and_check_through_constructor) {
+TEST(HProduct, order_and_check_via_constructor) {
     auto disorderedProduct = HProduct({{3, 1}, {2, 3}, {0, 0}});
     auto orderedProduct = HProduct({{2, 3}, {3, 1}});
     EXPECT_EQ(orderedProduct, disorderedProduct);

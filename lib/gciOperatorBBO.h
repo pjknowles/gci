@@ -27,16 +27,16 @@ public:
     std::vector<double> m_freq; //! vibrational frequencies in a.u.
     std::vector<double> m_nmDisp; //! Displacement of electronic reference point from vibrational
     std::string m_fcidump; //! Root name of the fcidump files defining this Hamiltonian
-    Operator m_Hel; //! Electronic Hamiltonian
-    std::vector<Operator> m_Hvib; //! Vibrational Hamiltonian
-    std::vector<Operator> m_HintEl; //! Electronic component of the interaction Hamiltonian
-    std::vector<Operator> m_HintVib; //! Vibrational component of the interaction Hamiltonian
+    SymmetryMatrix::Operator m_Hel; //! Electronic Hamiltonian
+    std::vector<SymmetryMatrix::Operator> m_Hvib; //! Vibrational Hamiltonian
+    std::vector<SymmetryMatrix::Operator> m_HintEl; //! Electronic component of the interaction Hamiltonian
+    std::vector<SymmetryMatrix::Operator> m_HintVib; //! Vibrational component of the interaction Hamiltonian
 
     /*!
      * @brief Initialises Hel, Hvib and Hint from fcidump files. The vibrational Hamiltonian is assumed to be harmonic.
      */
     explicit OperatorBBO(const Options &options, std::string description = "BBO Molecular Hamiltonian");
-    ~OperatorBBO()=default;
+    ~OperatorBBO() = default;
 
     /*!
      * @brief Calculates electronic, vibrational and interaction component of the total energy
@@ -45,7 +45,8 @@ public:
      * @param energies Three energetic components
      * @return Total energy (electronic + vibrational + interaction)
      */
-    void energy(const Operator &density, const std::vector<SMat> &U, std::valarray<double> &energies);
+    void energy(const SymmetryMatrix::Operator &density, const std::vector<SymmetryMatrix::SMat> &U,
+                std::valarray<double> &energies);
 
 
     /*!
@@ -56,7 +57,9 @@ public:
      * @param s Column index
      * @return matrix element = U.T[r,:] * H * U[:,s]
      */
-    double transformedVibHamElement(const Operator &hamiltonian, const SMat &U, int r, int s, int symm);
+    double
+    transformedVibHamElement(const SymmetryMatrix::Operator &hamiltonian, const SymmetryMatrix::SMat &U, int r, int s,
+                             int symm);
 
     /*!
      * @brief Similarity transformation of the vibrational Hamiltonian to a modal basis
@@ -64,7 +67,8 @@ public:
      * @param U Modal coefficients
      * @return
      */
-    Operator transformedVibHam(const Operator &hamiltonian, const SMat &U);
+    SymmetryMatrix::Operator
+    transformedVibHam(const SymmetryMatrix::Operator &hamiltonian, const SymmetryMatrix::SMat &U);
 
     /*!
      * @brief Constructs the electronic Fock operator
@@ -72,7 +76,8 @@ public:
      * @param U Modal coefficients
      * @return Fock matrix
      */
-    Operator electronicFock(const Operator &P, std::vector<SMat> &U, const SMat Cmat);
+    SymmetryMatrix::Operator electronicFock(const SymmetryMatrix::Operator &P, std::vector<SymmetryMatrix::SMat> &U,
+                                            const SymmetryMatrix::SMat Cmat);
 
     /*!
      * @brief Constructs the vibrational Fock operator
@@ -81,7 +86,8 @@ public:
      * @param iMode Correpsonding mode
      * @return Fock matrix
      */
-    Operator vibrationalFock(const Operator &P, const SMat &U, int iMode);
+    SymmetryMatrix::Operator
+    vibrationalFock(const SymmetryMatrix::Operator &P, const SymmetryMatrix::SMat &U, int iMode);
 
 };
 
