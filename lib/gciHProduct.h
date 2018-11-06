@@ -24,7 +24,7 @@ public:
     /*!
      * @brief Constructs an empty Hartree product representing the ground state.
      * @warning This is the correct way to construct an empty product. Using an empty initializer list can result in
-     * a bug. See unit tests for `empty()`.
+     * a bug. See unit tests for `empty()` and Issue #11 on bitbucket.
      */
     HProduct() : m_prod(t_Product{}) { }
     HProduct(const t_Product &phi);

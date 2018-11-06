@@ -45,13 +45,16 @@ TEST_F(HProductF, empty_and_excitedModes) {
     EXPECT_TRUE(emptyProduct3.empty()) << "Empty modal specified, assumes ground state";
     auto emptyProduct4 = HProduct{HProduct::t_Product{{}}};
     EXPECT_TRUE(emptyProduct4.empty()) << "Empty product specified, assumes ground state";
-// This is an infuriating bug. Erroneously adding one extra empty initialization list creates a buggy vector!
-// It's in a broken state, where p[0] is not empty and has size = 1, but end iterator is illdefined and element 0 is
-// inaccessible. That's why I introduced an empty constructor.
-    auto p = HProduct::t_Product{{{}}};
-    auto emptyProduct5 = HProduct{p};
-    EXPECT_FALSE(emptyProduct5.empty())
-                        << "This bug is the reason for using empty constructor for HProduct. If this fails than it has been fixed!";
+    //
+    // WARNING: Intermittent bug. Seems to be compiler dependent. Reported in Issue #11.
+    //
+    // This is an infuriating bug. Erroneously adding one extra empty initialization list creates a buggy vector!
+    // It's in a broken state, where p[0] is not empty and has size = 1, but end iterator is illdefined and element 0 is
+    // inaccessible.
+    //auto p = HProduct::t_Product{{{}}};
+    //auto emptyProduct5 = HProduct{p};
+    //EXPECT_FALSE(emptyProduct5.empty())
+    //    << "This bug is the reason for using empty constructor for HProduct. If this fails than it has been fixed!";
     EXPECT_EQ((std::vector<int>{}), emptyProduct.excitedModes());
     EXPECT_EQ(product.excitedModes(), (std::vector<int>{mode1, mode2, mode3}));
 }
