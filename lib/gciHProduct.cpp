@@ -60,4 +60,10 @@ void HProduct::changeModal(const int iMode, const int diff) {
     check();
 }
 
+std::ostream &operator<<(std::ostream &os, HProduct const &obj) {
+    os << " {";
+    for (const auto &el : obj) os << "{" << el[0] << "," << el[1] << "},";
+    os << "} ";
+}
+
 }  // namespace gci

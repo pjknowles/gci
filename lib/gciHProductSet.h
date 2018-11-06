@@ -14,21 +14,26 @@ namespace gci {
  */
 class HProductSet {
 public:
+    using const_iterator = std::vector<HProduct>::const_iterator;
+    using value_type = HProduct;
     //! Constructs the complete vibrational Fock space
     HProductSet(const VibSpace &vibSpace)
-            : m_vibSpace(vibSpace), m_basis(), m_vibDim(0), m_vibExcLvlDim(vibSpace.modeCoupling + 1, 0),
+            : m_vibSpace(vibSpace), m_basis(), m_vibDim(0), m_excLvlDim(vibSpace.excLvl + 1, 0),
               m_connectedSet(false) {setVibDim();};
 
     /*!
      * @brief Generates a set of products connected to the `bra` through an operator. This is a subset of the full space.
+     *
+     * In ascending order with respect to the excitation level and mode index.
      * @param vibSpace Definition of the full vibrational Fock space
      * @param bra Reference product
      * @param vibOp Operator connecting reference to products in this set
      */
     HProductSet(const HProduct &bra, const VibSpace &vibSpace, const VibOp &vibOp);
 
-    std::vector<HProduct>::const_iterator begin() const {return m_basis.cbegin();}
-    std::vector<HProduct>::const_iterator end() const {return m_basis.cend();}
+    const_iterator begin() const {return m_basis.cbegin();}
+    const_iterator end() const {return m_basis.cend();}
+    const auto &operator[](unsigned long i) const {return m_basis[i];}
 
     /*!
      * @brief Generates the full vibrational basis
@@ -54,8 +59,11 @@ public:
     //! Total size of the vibrational space
     auto vibDim() const {return m_vibDim;}
 
+    //! Size of the basis stored in `this`
+    auto size() const { return m_basis.size();}
+
     //! Total size of the vibrational space at each excitation level, starting from zero (i.e. at 2 = CI0 + CI1 + CI2)
-    auto vibExcLvlDim() const {return m_vibExcLvlDim;}
+    auto excLvlDim() const {return m_excLvlDim;}
 
     //! Copy of the vibrational space defining this set of products
     VibSpace vibSpace() const {return m_vibSpace;}
@@ -68,7 +76,7 @@ protected:
     std::vector<HProduct> m_basis; //!< vibrational basis as a set of Hartree products
     size_t m_vibDim; //!< Dimension of the vibrational space
     //! Number of vibrational basis functions up to each excitation level, counting from 0 as the GS.
-    std::vector<size_t> m_vibExcLvlDim;
+    std::vector<size_t> m_excLvlDim;
     //! Flags `this` is as a subset of the Fock space, connected to another product through an operator.
     //! Some member functions won't work.
     bool m_connectedSet;
@@ -93,8 +101,6 @@ protected:
      */
     void generateQsqCoupledSpace(const HProduct &bra, const VibOp &vibOp);
 };
-
-HProductSet connectedSpace(const HProduct &bra);
 
 
 } //  namespace gci

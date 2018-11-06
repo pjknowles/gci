@@ -2,6 +2,7 @@
 #define GCI_GCIHPRODUCT_H
 
 #include <vector>
+#include <ostream>
 
 #include "gciVibSpace.h"
 
@@ -82,7 +83,7 @@ protected:
     t_Product m_prod; //!< excitations representing the Hartree product
 
     /*!
-     * @brief Order's `this` Hartree product
+     * @brief Orders `this` Hartree product
      *      - only one basis per mode (no modeIndex occurs twice)
      *      - modeIndex in increasing order
      *      - modalIndex != 0, since this is the assumed value for the ground state.
@@ -97,8 +98,9 @@ protected:
     void check() const;
 
 };
-}//  namespace gci
 
-#include <vector>
+std::ostream &operator<<(std::ostream &os, HProduct const &obj);
+
+}//  namespace gci
 
 #endif //GCI_GCIHPRODUCT_H

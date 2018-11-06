@@ -8,4 +8,4 @@ foreach (fil ${TESTS})
     add_test(NAME ${nam} COMMAND ${MPIEXEC} ${MPIOPTIONS} ${MPIEXEC_NUMPROC_FLAG} ${NPROC} ${PROJECT_BINARY_DIR}/gci.exe ${fil})
 endforeach ()
 
-add_subdirectory(unit_tests)
+add_subdirectory(unit_test)

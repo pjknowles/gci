@@ -20,25 +20,28 @@ enum class VibOpType {
 };
 
 /*!
- * @brief Specifies one of ther hardcoded vibrational operators
+ * @brief Specifies one of the hardcoded vibrational operators
  */
 class VibOp {
 public:
-//    VibOp(const VibOp &other) : type(other.type), mode(other.mode) {
-    VibOp(const VibOpType &type, const std::vector<int> &mode) : type(type), mode(mode) {
-        bool pass = false;
+    VibOp(const VibOpType &type, const std::vector<int> &mode = {}) : type(type), mode(mode) {
         switch (type) {
-            case VibOpType::HO: if (mode.empty()) pass = true;
-            case VibOpType::Q: if (mode.size() == 1) pass = true;
-            case VibOpType::dQ: if (mode.size() == 1) pass = true;
-            case VibOpType::Qsq: if (mode.size() == 2) pass = true;
-//            default: throw std::logic_error("Operator not implemented");
+            case VibOpType::HO:
+                if (!mode.empty())
+                    throw std::logic_error("HO is a full operator, no modes need to be specified");
+                break;
+            case VibOpType::Q: if (mode.size() != 1) throw std::logic_error("Q operator is one-dimensional");
+                break;
+            case VibOpType::dQ: if (mode.size() != 1) throw std::logic_error("dQ operator is one-dimensional");
+                break;
+            case VibOpType::Qsq: if (mode.size() != 2) throw std::logic_error("Qsq operator is two-dimensional");
+                break;
+            default: throw std::logic_error("Operator not implemented");
         }
-        if (!pass) throw std::logic_error("Inconsistent dimensionality of the operator");
     }
 
-    const VibOpType type; //!< Operator type
-    const std::vector<int> mode; //!< indices of the operator (i.e for Q_A, mode = A)
+    VibOpType type; //!< Operator type
+    std::vector<int> mode; //!< indices of the operator (i.e for Q_A, mode = A)
 };
 
 /*!

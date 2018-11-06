@@ -9,21 +9,19 @@ using namespace gci;
 class HProductF : public ::testing::Test {
 public:
     HProductF() :
-            nMode(4), nModal(5), modeCouling(3),
-            excLvl(3),
+            nMode(4), nModal(5), excLvl(3),
             mode1(0), mode2(2), mode3(3),
             modal1(1), modal2(3), modal3(4),
-            vibSpace(nMode, nModal, modeCouling),
+            vibSpace(nMode, nModal, excLvl),
             product({{mode1, modal1}, {mode2, modal2}, {mode3, modal3}}) { };
-    int nMode, nModal, modeCouling;
-    int excLvl;
+    int nMode, nModal, excLvl;
     int mode1, mode2, mode3;
     int modal1, modal2, modal3;
     VibSpace vibSpace;
     HProduct product;
 };
 
-TEST(HProduct, order_and_check_via_constructor) {
+TEST(HProductT, order_and_check_via_constructor) {
     auto disorderedProduct = HProduct({{3, 1}, {2, 3}, {0, 0}});
     auto orderedProduct = HProduct({{2, 3}, {3, 1}});
     EXPECT_EQ(orderedProduct, disorderedProduct);
@@ -89,15 +87,16 @@ TEST_F(HProductF, operator_brackets) {
 }
 
 TEST_F(HProductF, raise) {
-    auto empty = HProduct{};
-    empty.raise(mode1);
-    EXPECT_EQ(empty.excLvl(mode1), 1);
-    EXPECT_EQ(empty.excLvl(), 1);
-    auto singlyExcited = HProduct{{{mode1, 1}}};
-    EXPECT_EQ(empty, singlyExcited);
     auto raisedProduct = product;
     raisedProduct.raise(mode1);
     EXPECT_EQ(raisedProduct.excLvl(mode1), modal1 + 1);
+    // Check working with the ground state
+    auto empty = HProduct{};
+    empty.raise(mode1);
+    EXPECT_EQ(empty.excLvl(mode1), 1)<< "Raising from the ground state";
+    EXPECT_EQ(empty.excLvl(), 1);
+    auto singlyExcited = HProduct{{{mode1, 1}}};
+    EXPECT_EQ(empty, singlyExcited) << "Ensure raised ground state is the same as constructed singly excited product";
 }
 
 TEST_F(HProductF, lower) {
@@ -106,6 +105,9 @@ TEST_F(HProductF, lower) {
     EXPECT_EQ(loweredProduct.excLvl(mode1), modal1 - 1);
     EXPECT_EQ(loweredProduct.excLvl(), excLvl - 1) << "Lowered down to ground state";
     EXPECT_THROW(loweredProduct.lower(mode1), std::logic_error) << "Trying to lower below the ground state";
+    // Check working with the ground state
+    auto empty = HProduct{};
+    EXPECT_THROW(empty.lower(mode1), std::logic_error) << "Trying to lower below the ground state";
 }
 
 TEST_F(HProductF, changeModal) {
