@@ -9,15 +9,14 @@ pipelines:
   default:
     - step:
         caches:
-#          - cmake
+          - cmake
 #          - dependencies
         script: # Modify the commands below to build your repository.
           - # zypper -n install eigen3-devel cmake gcc-fortran gcc-c++ openmpi-devel openmpi-libs blas-devel libblas3 git doxygen texlive-epstopdf ghostscript lapack
           - ln -s /usr /usr/usr
-          - mkdir -p build && cd build
+          - BUILD = build/$(git branch)
+          - mkdir -p $(BUILD) && cd $(BUILD)
           - cmake ..
-#          - cmake --build . --target IterativeSolver -- -j 16
-#          - cmake --build . --target symmetry_matrix -- -j 2 # all because this one is memory-hungry
           - cmake --build . -- -j 16
           - cd test && ctest -V
 definitions:
