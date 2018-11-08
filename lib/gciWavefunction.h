@@ -151,7 +151,7 @@ class Wavefunction : public State {
   }
   void axpy(double a, const std::map<size_t, double> &x) ;
 
-  std::tuple<std::vector<size_t>, std::vector<double> > select(const vector<double> &measure,
+  std::tuple<std::vector<size_t>, std::vector<double> > select(const Wavefunction& measure,
                                                                const size_t maximumNumber = 1000,
                                                                const double threshold = 0) const ;
 

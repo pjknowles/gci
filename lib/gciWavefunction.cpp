@@ -155,15 +155,14 @@ void Wavefunction::axpy(double a, const std::map<size_t, double> &x) {
     buffer[xx.first] += xx.second * a;
 }
 
-std::tuple<std::vector<size_t>, std::vector<double> > Wavefunction::select(const vector<double> &measure,
+std::tuple<std::vector<size_t>, std::vector<double> > Wavefunction::select(const Wavefunction& measure,
                                                                            const size_t maximumNumber,
                                                                            const double threshold) const {
   std::multimap<double, size_t, std::greater<double> > sortlist;
-  const Wavefunction &measur = dynamic_cast <const Wavefunction &> (measure);
-  assert(buffer.size() == measur.size());
+  assert(buffer.size() == measure.size());
   for (size_t i = 0; i < buffer.size(); i++) {
-    auto test = buffer[i] * measur.buffer[i];
-//    xout << "select "<<buffer[i]<<" "<<measur.buffer[i]<<std::endl;
+    auto test = buffer[i] * measure.buffer[i];
+//    xout << "select "<<buffer[i]<<" "<<measure.buffer[i]<<std::endl;
     if (test > threshold) {
       sortlist.insert(std::make_pair(test, i));
       if (sortlist.size() > maximumNumber)
