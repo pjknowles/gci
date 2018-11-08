@@ -693,7 +693,7 @@ CITE_BIB_FILES         =
 # messages are off.
 # The default value is: NO.
 
-QUIET                  = NO
+QUIET                  = YES
 
 # The WARNINGS tag can be used to turn on/off the warning messages that are
 # generated to standard error ( stderr) by doxygen. If WARNINGS is set to YES
@@ -753,7 +753,7 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = "@CMAKE_CURRENT_SOURCE_DIR@/src" "@CMAKE_CURRENT_SOURCE_DIR@/submodules/FCIdump" "@CMAKE_CURRENT_SOURCE_DIR@/submodules/IterativeSolver" "@CMAKE_CURRENT_SOURCE_DIR@/submodules/IterativeSolver/IterativeSolver" "@CMAKE_CURRENT_SOURCE_DIR@/submodules/symmetry_matrix" "@CMAKE_CURRENT_SOURCE_DIR@/submodules/memory"
+INPUT                  = "@CMAKE_CURRENT_SOURCE_DIR@/lib" "@CMAKE_CURRENT_SOURCE_DIR@/dependencies/FCIdump" "@CMAKE_CURRENT_SOURCE_DIR@/dependencies/IterativeSolver" "@CMAKE_CURRENT_SOURCE_DIR@/dependencies/IterativeSolver/IterativeSolver" "@CMAKE_CURRENT_SOURCE_DIR@/dependencies/symmetry_matrix" "@CMAKE_CURRENT_SOURCE_DIR@/dependencies/memory"
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
