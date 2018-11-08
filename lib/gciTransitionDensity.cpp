@@ -519,8 +519,12 @@ void TransitionDensity::action(Wavefunction &w) const {
 #include "gciMolpro.h"
 
 SymmetryMatrix::Operator TransitionDensity::density(const Wavefunction &w) const {
-  SymmetryMatrix::dim_t dimension;
-  for (auto i = 0; i < 8; i++) dimension[i] = w[i];
+  SymmetryMatrix::dim_t dimension(8);
+  for (auto i = 0; i < 8; i++) {
+    dimension[i]=0;
+    for (const auto& s : w.orbitalSpace->orbital_symmetries)
+      if (s == i ) ++dimension[i];
+  }
   SymmetryMatrix::Operator result(dimension, 1, !(m_hasAlpha && m_hasBeta), m_symexc);
 
   unsigned int syma = m_alphaStringsBegin->computed_symmetry();
