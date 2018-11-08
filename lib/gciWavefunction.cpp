@@ -140,8 +140,7 @@ void Wavefunction::diagonalOperator(const SymmetryMatrix::Operator &op) {
 //  xout << "diagonal elements"<<std::endl; for (size_t i=0; i < buffer.size(); i++) xout <<" "<<buffer[i]; xout <<std::endl;
 }
 
-void Wavefunction::axpy(double a, const LinearAlgebra::vector<double> &x) {
-  const auto &xx = dynamic_cast <const Wavefunction &> (x);
+void Wavefunction::axpy(double a, const Wavefunction &xx) {
 //  xout << "Wavefunction::axpy initial=";
 //  for (size_t i=0; i<buffer.size(); i++) xout<<" "<<buffer[i]; xout << std::endl;
 //  xout << "Wavefunction::axpy x=";
@@ -272,19 +271,19 @@ Wavefunction operator*(const double &value, const Wavefunction &w1) {
   return result *= value;
 }
 
-double Wavefunction::dot(const LinearAlgebra::vector<double> &other) const {
+double Wavefunction::dot(const Wavefunction &other) const {
   return (*this) * ((dynamic_cast<const Wavefunction &>(other)));
 }
 
-void Wavefunction::times(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b) {
+void Wavefunction::times(const Wavefunction *a, const Wavefunction *b) {
   const auto wa = dynamic_cast<const Wavefunction *>(a);
   const auto wb = dynamic_cast<const Wavefunction *>(b);
   for (size_t i = 0; i < buffer.size(); i++)
     buffer[i] = wa->buffer[i] * wb->buffer[i];
 }
 
-void Wavefunction::divide(const LinearAlgebra::vector<double> *a,
-                          const LinearAlgebra::vector<double> *b,
+void Wavefunction::divide(const Wavefunction *a,
+                          const Wavefunction *b,
                           double shift,
                           bool append,
                           bool negative) {
@@ -775,7 +774,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
                                     bool hermitian,
                                     const Wavefunction *bra,
                                     std::string description,
-                                    bool parallel_stringset) {
+                                    bool parallel_stringset) const {
   if (bra == nullptr) bra = this;
   auto prof = gci::profiler->push("density");
 

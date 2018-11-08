@@ -12,15 +12,15 @@
 #include "gciDeterminant.h"
 #include "memory.h"
 #include <SMat.h>
-#include <LinearAlgebra.h>
 #include "gciOrbitals.h"
 
 namespace gci {
 /*!
  * \brief The Wavefunction class, which holds a configuration expansion in the tensor space defined by a hamiltonian
  */
-class Wavefunction : public State, public LinearAlgebra::vector<double> {
+class Wavefunction : public State {
  public:
+  using value_type = double;
 
   /*!
      * \brief Construct a Wavefunction object linked to an OrbitalSpace
@@ -49,7 +49,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
   std::vector<StringSet> betaStrings; ///< The beta-spin strings defining the CI basis
 
   void allocate_buffer(); ///< allocate buffer to full size
-  size_t size() const override { return m_sparse ? buffer_sparse.size() : dimension; } ///< the size of the space
+  size_t size() const { return m_sparse ? buffer_sparse.size() : dimension; } ///< the size of the space
 
   void diagonalOperator(const SymmetryMatrix::Operator &op); ///< set this object to the diagonal elements of the hamiltonian
 
@@ -117,7 +117,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
                         bool hermitian = true,
                         const Wavefunction *bra = nullptr,
                         std::string description = "",
-                        bool parallel_stringset = false);
+                        bool parallel_stringset = false) const;
 
   /*!
    * \brief Calculate natural orbitals
@@ -136,7 +136,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
 
   size_t blockOffset(unsigned int syma) const;
 
-  std::string str(int verbosity = 0, unsigned int columns = UINT_MAX) const override;
+  std::string str(int verbosity = 0, unsigned int columns = UINT_MAX) const ;
 
   std::string values() const;
 
@@ -145,19 +145,17 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
    * \param a the factor defining the multiple
    * \param x the other wavefunction
    */
-  void axpy(double a, const LinearAlgebra::vector<double> &x) override;
-  void axpy(double a, const std::shared_ptr<LinearAlgebra::vector<double> > &x) {
+  void axpy(double a, const Wavefunction &x) ;
+  void axpy(double a, const std::shared_ptr<Wavefunction> &x) {
     axpy(a, *x);
   }
-  void axpy(double a, const std::map<size_t, double> &x) override ;
+  void axpy(double a, const std::map<size_t, double> &x) ;
 
   std::tuple<std::vector<size_t>, std::vector<double> > select(const vector<double> &measure,
                                                                const size_t maximumNumber = 1000,
-                                                               const double threshold = 0) const override ;
+                                                               const double threshold = 0) const ;
 
-  void scal(double a) override;
-  // Every child of ParameterVector needs exactly this
-  Wavefunction *clone(int option = 0) const override { return new Wavefunction(*this, option); }
+  void scal(double a) ;
 
   /*!
    * \brief push the object's buffer to a file
@@ -228,14 +226,14 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
 
   friend class TransitionDensity;
   friend double operator*(const Wavefunction &w1, const Wavefunction &w2);///< inner product of two wavefunctions
-  double dot(const LinearAlgebra::vector<double> &other) const override;
-  double dot(const std::shared_ptr<LinearAlgebra::vector<double> > other) const {
+  double dot(const Wavefunction &other) const ;
+  double dot(const std::shared_ptr<Wavefunction> other) const {
     return dot(*other);
   }
-  double dot(const std::unique_ptr<LinearAlgebra::vector<double> > other) const {
+  double dot(const std::unique_ptr<Wavefunction> other) const {
     return dot(*other);
   }
-  double dot(const std::map<size_t, double> &other) const override {
+  double dot(const std::map<size_t, double> &other) const {
     double result = 0;
     if (m_sparse)
       for (const auto &o : other) {
@@ -253,7 +251,7 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
    * \param a
    * \param b
    */
-  void times(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b);
+  void times(const Wavefunction *a, const Wavefunction *b);
   /*!
    * \brief this[i] = a[i]/(b[i]+shift)
    * \param a
@@ -262,12 +260,12 @@ class Wavefunction : public State, public LinearAlgebra::vector<double> {
    * \param append whether to do += or =
    * \param negative whether =- or =+
    */
-  void divide(const LinearAlgebra::vector<double> *a,
-              const LinearAlgebra::vector<double> *b,
+  void divide(const Wavefunction *a,
+              const Wavefunction *b,
               double shift = 0,
               bool append = false,
               bool negative = false);
-  void zero() override;
+  void zero() ;
   std::map<std::string, double> m_properties;
   void settilesize(int t = -1, int a = -1, int b = -1) {
 //    std::cout << "settilesize "<<t<<","<<a<<","<<b<<std::endl;
