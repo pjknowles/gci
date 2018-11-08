@@ -16,8 +16,8 @@ pipelines:
           - ln -s /usr /usr/usr
           - mkdir -p build && cd build
           - cmake ..
-          - cmake --build . --target IterativeSolver -- -j 16
-          - cmake --build . --target symmetry_matrix -- -j 2 # all because this one is memory-hungry
+#          - cmake --build . --target IterativeSolver -- -j 16
+#          - cmake --build . --target symmetry_matrix -- -j 2 # all because this one is memory-hungry
           - cmake --build . -- -j 16
           - cd test
           - ctest -V
