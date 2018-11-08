@@ -143,7 +143,7 @@ struct meanfield_residual : residual {
                                 _IPT_c[0],
                                 parallel_stringset);
       g.operatorOnWavefunction(m_hamiltonian.fock(
-          _IPT_c[0].density(1, false, true, &_IPT_c[0]) * (2 * (-(x) * _IPT_c[0])),
+          _IPT_c[0].density(1, false, true, &_IPT_c[0]) * (2 * (-(x * _IPT_c[0]))),
           false),
                                 _IPT_c[0],
                                 parallel_stringset);
@@ -510,6 +510,7 @@ std::vector<double> Run::DIIS(const SymmetryMatrix::Operator &ham, const State &
   ww.emplace_back(prototype);
   (ww.back()).set((double) 0);
   (ww.back()).set(reference, (double) 1);
+  std::vector<bool> active(1,true);
 //  double e0=d.at(reference);
   //  g -= (e0-(double)1e-10);
 //      xout << "Diagonal H: " << d.str(2) << std::endl;
@@ -520,12 +521,12 @@ std::vector<double> Run::DIIS(const SymmetryMatrix::Operator &ham, const State &
   solver.m_thresh = energyThreshold;
   solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
   for (size_t iteration = 0; iteration < static_cast<size_t>(maxIterations); iteration++) {
-    resid(ww, gg);
-    solver.addVector(ww, gg);
+    resid(ww, gg, active);
+    solver.addVector(ww, gg, active);
     std::vector<double> shift;
     shift.push_back(0);
     precon(ww, gg, shift);
-    if (solver.endIteration(ww, gg)) break;
+    if (solver.endIteration(ww, gg, active)) break;
   }
   //      xout << "Final w: "<<w.str(2)<<std::endl;
   //      xout << "Final g: "<<g.str(2)<<std::endl;
@@ -560,7 +561,9 @@ std::vector<double> Run::Davidson(
   solver.m_thresh = energyThreshold;
   ParameterVectorSet gg;
   ParameterVectorSet ww;
+  std::vector<bool> active;
   for (int root = 0; root < nState; root++) {
+    active.push_back(true);
     ww.emplace_back(prototype);
     ww.back().allocate_buffer();
     gg.emplace_back(prototype);
@@ -599,7 +602,7 @@ std::vector<double> Run::Davidson(
         }
       } else { // subsequent
         Presid(Pcoeff, gg); // augment residual with contributions from P space
-        auto newP = solver.suggestP(ww, gg, (maxNP - NP));
+        auto newP = solver.suggestP(ww, gg, active, (maxNP - NP));
         for (const auto &pp : P)
           newP.erase(std::remove(newP.begin(), newP.end(), pp.begin()->first),
                      newP.end()); // remove anything already in P
@@ -631,14 +634,14 @@ std::vector<double> Run::Davidson(
     for (auto root = 0; root < nState; root++)
       shift.push_back(-solver.eigenvalues()[root] + 1e-10);
     update(ww, gg, shift, true);
-    if (solver.endIteration(ww, gg)) break;
-    resid(ww, gg);
-    solver.addVector(ww, gg, Pcoeff);
+    if (solver.endIteration(ww, gg, active)) break;
+    resid(ww, gg, active);
+    solver.addVector(ww, gg, active, Pcoeff);
   }
   if (solver.m_verbosity > 0)
     xout << "Number of actions of matrix on vector = " << solver.m_actions << std::endl;
   for (auto root = 0; root < nState; root++) {
-    m_wavefunctions.push_back(std::static_pointer_cast<Wavefunction>(ww[root]));
+    m_wavefunctions.push_back(std::make_shared<Wavefunction>(ww[root]));
     m_wavefunctions.back()->m_properties["ENERGY"] = solver.eigenvalues()[root];
 //      if (options.parameter("DENSITY",0)>0)
 //        m_wavefunctions.back()->density = m_wavefunctions.back()->density(options.parameter("DENSITY",0));
@@ -1111,20 +1114,19 @@ void Run::IPT(const SymmetryMatrix::Operator &ham, const State &prototype, const
     xout << "solve for c0" + std::to_string(m) << std::endl;
     // solve for c0m
     ParameterVectorSet gg;
-    gg.emplace_back(prototype));
+    gg.emplace_back(prototype);
     ParameterVectorSet ww;
-    ww.emplace_back(prototype));
+    ww.emplace_back(prototype);
+    std::vector<bool> active(1,true);
     updater update(d, false);
     meanfield_residual resid(ham, false);
-    if (false) { // print A
+    if (false) { // print A not sure what this is all about!
       _IPT_b0m->set(0);
-      for (size_t i = 0; i < ww.back()->size(); i++) {
+      for (size_t i = 0; i < ww.back().size(); i++) {
         ww.back().set((double) 0);
         ww.back().set(i, (double) 1);
         gg.back().set((double) 0);
-        gg.back().operatorOnWavefunction(_IPT_Fock[0],
-                                                                                  *std::static_pointer_cast<Wavefunction>(
-                                                                                      ww.back()));
+        gg.back().operatorOnWavefunction(_IPT_Fock[0], ww.back());
         xout << "F0[" << i << ":] = " <<
              gg[0].values() << std::endl;
         resid(ww, gg);
@@ -1143,11 +1145,11 @@ void Run::IPT(const SymmetryMatrix::Operator &ham, const State &prototype, const
 //      solver.solve(gg,ww);
     for (size_t iteration = 0; iteration < solver.m_maxIterations; iteration++) {
       resid(ww, gg);
-      solver.addVector(ww, gg);
+      solver.addVector(ww, gg, active);
       std::vector<double> shift;
       shift.push_back(0);
       update(ww, gg, shift);
-      if (solver.endIteration(ww, gg)) break;
+      if (solver.endIteration(ww, gg, active)) break;
     }
     xout << "Final g: " << gg[0].values() << std::endl;
 //      xout << "Final w: "<<ww[0]->str(2)<<std::endl;
@@ -1363,11 +1365,12 @@ std::vector<double> Run::ISRSPT(
   d.diagonalOperator(ham0);
   size_t reference = d.minloc();
   ParameterVectorSet gg;
-  gg.push_back(std::make_shared<Wavefunction>(prototype));
+  gg.emplace_back(prototype);
   ParameterVectorSet ww;
-  ww.push_back(std::make_shared<Wavefunction>(prototype));
-  std::static_pointer_cast<Wavefunction>(ww.back())->set((double) 0);
-  std::static_pointer_cast<Wavefunction>(ww.back())->set(reference, (double) 1);
+  ww.emplace_back(prototype);
+  std::vector<bool> active(1,true);
+  ww.back().set((double) 0);
+  ww.back().set(reference, (double) 1);
   updater update(d, false);
   residual resid(ham, false);
   LinearAlgebra::LinearEigensystem<Wavefunction> solver; // TODO
@@ -1376,12 +1379,12 @@ std::vector<double> Run::ISRSPT(
   solver.m_maxIterations = maxIterations;
 //  solver.solve(gg,ww);
   for (int iteration = 0; iteration < maxIterations; iteration++) {
-    resid(ww, gg);
-    solver.addVector(ww, gg);
+    resid(ww, gg, active);
+    solver.addVector(ww, gg, active);
     std::vector<double> shift;
     shift.push_back(0);
     update(ww, gg, shift);
-    if (solver.endIteration(ww, gg)) break;
+    if (solver.endIteration(ww, gg, active)) break;
   }
   //      xout << "Final w: "<<w.str(2)<<std::endl;
   //      xout << "Final g: "<<g.str(2)<<std::endl;
