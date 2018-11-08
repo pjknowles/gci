@@ -14,7 +14,7 @@ pipelines:
         script: # Modify the commands below to build your repository.
           - # zypper -n install eigen3-devel cmake gcc-fortran gcc-c++ openmpi-devel openmpi-libs blas-devel libblas3 git doxygen texlive-epstopdf ghostscript lapack
           - ln -s /usr /usr/usr
-          - BUILD = build/$(git branch)
+          - BUILD=build/$(git branch)
           - mkdir -p $(BUILD) && cd $(BUILD)
           - cmake ..
           - cmake --build . -- -j 16
