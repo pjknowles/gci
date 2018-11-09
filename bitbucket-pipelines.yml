@@ -12,10 +12,9 @@ pipelines:
           - cmake
 #          - dependencies
         script: # Modify the commands below to build your repository.
-          - # zypper -n install eigen3-devel cmake gcc-fortran gcc-c++ openmpi-devel openmpi-libs blas-devel libblas3 git doxygen texlive-epstopdf ghostscript lapack
-          - ln -s /usr /usr/usr
-          - TOP=$PWD; BUILD=build/$(git branch) ; mkdir -p $BUILD && cd $BUILD
-          - cmake $TOP
+#          -  zypper -n install eigen3-devel cmake gcc-fortran gcc-c++ openmpi-devel openmpi-libs blas-devel libblas3 git doxygen texlive-epstopdf ghostscript lapack
+#          - ln -s /usr /usr/usr
+          - TOP=$PWD; BUILD=build/$(git branch) ; mkdir -p $BUILD && cd $BUILD && cmake $TOP
           - cmake --build . -- -j 16
           - cd test && ctest -V
 definitions:
