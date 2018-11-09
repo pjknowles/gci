@@ -16,13 +16,15 @@ set(FETCHCONTENT_QUIET OFF)
 
 
 ########## Global Compiler Flags ##########
-
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-O3 -march=native" _native)
-if (_native)
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native")
-#    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native")
+if (NOT DEFINED ${CMAKE_BUILD_TYPE} OR ${CMAKE_BUILD_TYPE} STREQUAL "RELEASE")
+    include(CheckCXXCompilerFlag)
+    CHECK_CXX_COMPILER_FLAG("-O3 -march=native" _native)
+    if (_native)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native")
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native")
+    endif ()
 endif ()
+
 include(ProcessorCount)
 ProcessorCount(NPROC)
 if (NPROC EQUAL 0)
@@ -77,8 +79,8 @@ endif (MKL_FOUND)
 ########## Targets ##########
 
 add_subdirectory(lib)
-add_subdirectory(test)
 add_subdirectory(src)
+add_subdirectory(test)
 
 
 ########## Documentation ##########

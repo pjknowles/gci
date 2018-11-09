@@ -2,6 +2,9 @@
 #include <gtest/gtest.h>
 #include <stdexcept>
 #include <algorithm>
+#include <typeinfo>
+#include <typeindex>
+#include <unordered_map>
 
 #include <gciHProductSet.h>
 #include <numeric>
@@ -112,7 +115,11 @@ TEST_P(HProductSetPF, connectedSet_Q_and_dQ_operators) {
     ASSERT_THAT(connectedSet, ::testing::Pointwise(::testing::Eq(), referenceSet));
 }
 
+//std::unordered_map<std::type_index, std::string> typeNames(
+//        {{typeid(VibOpType::Q), "Q"}, {typeid(VibOpType::dQ), "dQ"}});
+
 INSTANTIATE_TEST_CASE_P(HProductSetF, HProductSetPF, ::testing::Values(VibOpType::Q, VibOpType::dQ),
+//                        [typeNames](const auto &op) {return typeNames[typeid(op.param)];});
                         [](const auto &op) {
                             switch (op.param) {
                                 case VibOpType::Q: return "Q";
@@ -125,19 +132,19 @@ TEST_F(HProductSetF, connectedSet_Qsq_operator) {
     prodSet.generateFullSpace();
     // Qsq = Q_A * Q_B
     int mode1 = 0, mode2 = 1;
-    auto refProd = HProduct({{mode1, 2},{mode2, 2}});
+    auto refProd = HProduct({{mode1, 2}, {mode2, 2}});
     auto referenceSet = std::vector<HProduct>(4);
-    referenceSet[0] = HProduct({{mode1, 1},{mode2, 1}});
-    referenceSet[1] = HProduct({{mode1, 1},{mode2, 3}});
-    referenceSet[2] = HProduct({{mode1, 3},{mode2, 1}});
-    referenceSet[3] = HProduct({{mode1, 3},{mode2, 3}});
+    referenceSet[0] = HProduct({{mode1, 1}, {mode2, 1}});
+    referenceSet[1] = HProduct({{mode1, 1}, {mode2, 3}});
+    referenceSet[2] = HProduct({{mode1, 3}, {mode2, 1}});
+    referenceSet[3] = HProduct({{mode1, 3}, {mode2, 3}});
     auto connectedSet = HProductSet(refProd, vibSpace, VibOp(VibOpType::Qsq, {mode1, mode2}));
     ASSERT_THAT(connectedSet, ::testing::Pointwise(::testing::Eq(), referenceSet)) << "Qsq = Q_A * Q_B";
     // Qsq = Q_A * Q_A
     referenceSet.resize(3);
-    referenceSet[0] = HProduct({{mode1, 0},{mode2, 2}});
-    referenceSet[1] = HProduct({{mode1, 2},{mode2, 2}});
-    referenceSet[2] = HProduct({{mode1, 4},{mode2, 2}});
+    referenceSet[0] = HProduct({{mode1, 0}, {mode2, 2}});
+    referenceSet[1] = HProduct({{mode1, 2}, {mode2, 2}});
+    referenceSet[2] = HProduct({{mode1, 4}, {mode2, 2}});
     connectedSet = HProductSet(refProd, vibSpace, VibOp(VibOpType::Qsq, {mode1, mode1}));
     ASSERT_THAT(connectedSet, ::testing::Pointwise(::testing::Eq(), referenceSet)) << "Qsq = Q_A * Q_A";
 }
