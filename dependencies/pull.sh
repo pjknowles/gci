@@ -4,7 +4,7 @@
 #
 ###################
 
-
+cd $(dirname $0) || exit 1
 for fname in *_SHA1
 do
     rep_name="${fname%%_SHA1}"
