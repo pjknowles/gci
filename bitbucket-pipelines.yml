@@ -3,7 +3,7 @@
 # Only use spaces to indent your .yml configuration.
 # -----
 # You can specify a custom docker image from Docker Hub as your build environment.
-image: pjknowles/opensuse:2018-10-24
+image: pjknowles/opensuse:2018-11-06
 
 pipelines:
   default:
@@ -12,16 +12,11 @@ pipelines:
           - cmake
 #          - dependencies
         script: # Modify the commands below to build your repository.
-          - # zypper -n install eigen3-devel cmake gcc-fortran gcc-c++ openmpi-devel openmpi-libs blas-devel libblas3 git doxygen texlive-epstopdf ghostscript
-          - ln -s /usr /usr/usr
-          - mkdir -p build && cd build
-          - cmake ..
-          - cmake --build . --target IterativeSolver -- -j 16
-          - cmake --build . --target symmetry_matrix -- -j 2 # all because this one is memory-hungry
+#          -  zypper -n install eigen3-devel cmake gcc-fortran gcc-c++ openmpi-devel openmpi-libs blas-devel libblas3 git doxygen texlive-epstopdf ghostscript lapack
+#          - ln -s /usr /usr/usr
+          - TOP=$PWD; BUILD=build/$(git rev-parse --abbrev-ref HEAD) ; mkdir -p $BUILD && cd $BUILD && pwd && cmake $TOP
           - cmake --build . -- -j 16
-          - cd test
-          - ctest -V
-          - cat /proc/cpuinfo
+          - cd test && ctest -V
 definitions:
   caches:
     cmake: build

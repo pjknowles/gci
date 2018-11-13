@@ -140,8 +140,7 @@ void Wavefunction::diagonalOperator(const SymmetryMatrix::Operator &op) {
 //  xout << "diagonal elements"<<std::endl; for (size_t i=0; i < buffer.size(); i++) xout <<" "<<buffer[i]; xout <<std::endl;
 }
 
-void Wavefunction::axpy(double a, const LinearAlgebra::vector<double> &x) {
-  const auto &xx = dynamic_cast <const Wavefunction &> (x);
+void Wavefunction::axpy(double a, const Wavefunction &xx) {
 //  xout << "Wavefunction::axpy initial=";
 //  for (size_t i=0; i<buffer.size(); i++) xout<<" "<<buffer[i]; xout << std::endl;
 //  xout << "Wavefunction::axpy x=";
@@ -156,15 +155,14 @@ void Wavefunction::axpy(double a, const std::map<size_t, double> &x) {
     buffer[xx.first] += xx.second * a;
 }
 
-std::tuple<std::vector<size_t>, std::vector<double> > Wavefunction::select(const vector<double> &measure,
+std::tuple<std::vector<size_t>, std::vector<double> > Wavefunction::select(const Wavefunction& measure,
                                                                            const size_t maximumNumber,
                                                                            const double threshold) const {
   std::multimap<double, size_t, std::greater<double> > sortlist;
-  const Wavefunction &measur = dynamic_cast <const Wavefunction &> (measure);
-  assert(buffer.size() == measur.size());
+  assert(buffer.size() == measure.size());
   for (size_t i = 0; i < buffer.size(); i++) {
-    auto test = buffer[i] * measur.buffer[i];
-//    xout << "select "<<buffer[i]<<" "<<measur.buffer[i]<<std::endl;
+    auto test = buffer[i] * measure.buffer[i];
+//    xout << "select "<<buffer[i]<<" "<<measure.buffer[i]<<std::endl;
     if (test > threshold) {
       sortlist.insert(std::make_pair(test, i));
       if (sortlist.size() > maximumNumber)
@@ -277,19 +275,19 @@ Wavefunction operator*(const double &value, const Wavefunction &w1) {
   return result *= value;
 }
 
-double Wavefunction::dot(const LinearAlgebra::vector<double> &other) const {
+double Wavefunction::dot(const Wavefunction &other) const {
   return (*this) * ((dynamic_cast<const Wavefunction &>(other)));
 }
 
-void Wavefunction::times(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b) {
+void Wavefunction::times(const Wavefunction *a, const Wavefunction *b) {
   const auto wa = dynamic_cast<const Wavefunction *>(a);
   const auto wb = dynamic_cast<const Wavefunction *>(b);
   for (size_t i = 0; i < buffer.size(); i++)
     buffer[i] = wa->buffer[i] * wb->buffer[i];
 }
 
-void Wavefunction::divide(const LinearAlgebra::vector<double> *a,
-                          const LinearAlgebra::vector<double> *b,
+void Wavefunction::divide(const Wavefunction *a,
+                          const Wavefunction *b,
                           double shift,
                           bool append,
                           bool negative) {
@@ -780,7 +778,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
                                     bool hermitian,
                                     const Wavefunction *bra,
                                     std::string description,
-                                    bool parallel_stringset) {
+                                    bool parallel_stringset) const {
   if (bra == nullptr) bra = this;
   auto prof = gci::profiler->push("density");
 
