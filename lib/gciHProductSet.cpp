@@ -43,7 +43,8 @@ void HProductSet::generateFullSpace() {
         auto iStart = std::accumulate(m_excLvlDim.begin(), m_excLvlDim.begin() + exc - 1, 0ul);
         auto iEnd = std::accumulate(m_excLvlDim.begin(), m_excLvlDim.begin() + exc, 0ul);
         for (auto iBase = iStart; iBase < iEnd; ++iBase) {
-// Taking each product at previous level, apply single excitations to generate unique products (see HartreeProducts ordering)
+            // Taking each product at previous level, apply single excitations to generate
+            // all unique products (see HartreeProduct's ordering)
             auto base = m_basis[iBase];
             auto excitedModes = base.excitedModes();
             auto endMode = base.empty() ? m_vibSpace.nMode : excitedModes.front();

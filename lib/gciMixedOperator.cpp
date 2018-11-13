@@ -3,15 +3,60 @@
 
 #include <stdexcept>
 #include <valarray>
+#include <fstream>
 
 namespace gci {
 
-MixedOperator::MixedOperator(const FCIdump &fcidump) : Hel(constructOperator(fcidump)){
-
+MixedOperator::MixedOperator
+        (const FCIdump &fcidump) : nMode(fcidump.parameter("NMODE", std::vector<int>{0})[0]), zpe(0.0),
+                                   freq(fcidump.parameter("FREQ", std::vector<double>(nMode, 0))),
+                                   Hel(constructOperator(fcidump)),
+                                   inc_d1((bool) fcidump.parameter("INC_D1_HEL", std::vector<int>{0})[0]),
+                                   inc_d2((bool) fcidump.parameter("INC_D2_HEL", std::vector<int>{0})[0]),
+                                   inc_T1((bool) fcidump.parameter("INC_T1", std::vector<int>{0})[0]),
+                                   inc_T2((bool) fcidump.parameter("INC_T1", std::vector<int>{0})[0]) {
+    auto file_exists = [](const std::string &fname) {
+        if (std::ifstream{fname}.fail()) {
+            std::cout << "Warning (MixedOperator): fcidump not found --" << fname << std::endl;
+            return false;
+        }
+        return true;
+    };
+    auto store_fcidump = [&](const std::string &fname, const VibOp &vibOp) {
+        if (file_exists(fname)) Hmix[vibOp.type].emplace_back(vibOp, FCIdump(fname));
+    };
+    if (inc_d1) {
+        for (int iMode = 0; iMode < nMode; ++iMode) {
+            std::string f = fcidump.fileName() + "_d1_" + std::to_string(iMode);
+            store_fcidump(f, VibOp{VibOpType::Q, {iMode}});
+        }
+    } else if (inc_d2) {
+        for (int iMode = 0; iMode < nMode; ++iMode) {
+            for (int jMode = 0; jMode <= iMode; ++jMode) {
+                std::string f = fcidump.fileName() + "_d2_" + std::to_string(iMode) + "_" + std::to_string(jMode);
+                store_fcidump(f, VibOp{VibOpType::Qsq, {iMode, jMode}});
+            }
+        }
+    } else if (inc_T1) {
+        for (int iMode = 0; iMode < nMode; ++iMode) {
+            std::string f = fcidump.fileName() + "_t1_" + std::to_string(iMode);
+            store_fcidump(f, VibOp{VibOpType::dQ, {iMode}});
+        }
+    } else if (inc_T2) {
+        for (int iMode = 0; iMode < nMode; ++iMode) {
+            std::string f = fcidump.fileName() + "_t2_" + std::to_string(iMode);
+            if (file_exists(f)) {
+                auto H_t2 = constructOperator(FCIdump(f));
+                Hel += H_t2;
+            }
+        }
+    }
 }
 
 double MixedOperator::O_Hvib(const HProduct &bra, const HProduct &ket) const {
-    if (bra != ket) throw std::logic_error("HO operator is diagonal. Always 0.");
+//    Suppress error when operator is exactly zero
+//    if (bra != ket) throw std::logic_error("HO operator is diagonal. Always 0.");
+    if (bra != ket) return 0.0;
     double O_Hvib = 0.0;
     for (const auto &el : bra) {
         auto iMode = el[0];
@@ -59,31 +104,38 @@ double MixedOperator::O_Qsq(const HProduct &bra, const HProduct &ket, const VibO
     if (vibOp.mode[0] != vibOp.mode[1]) {
         eQsq = 1.0;
         for (auto mode : vibOp.mode) {
-            if (exc[mode] != 1) throw std::logic_error("Always 0.");
+//    Suppress error when operator is exactly zero
+//            if (exc[mode] != 1) throw std::logic_error("Always 0.");
             auto n = bra[mode][1] > ket[mode][1] ? bra[mode][1] : ket[mode][1];
             eQsq *= std::sqrt(n / (2.0 * freq[mode]));
         }
     } else {
         auto mode = vibOp.mode[0];
         // Q_A * Q_A
-        if (diff == 0){
+        if (diff == 0) {
             eQsq = -1.0 / freq[mode] * (bra[mode][1] + 0.5);
-        } else if (diff == 2){
+        } else if (diff == 2) {
             auto n = bra[mode][1] > ket[mode][1] ? bra[mode][1] : ket[mode][1];
             eQsq = 1.0 / (2 * freq[mode]) * std::sqrt(n * (n - 1));
-        } else throw std::logic_error("Always 0.");
+        }
+//    Suppress error when operator is exactly zero
+//        else throw std::logic_error("Always 0.");
+        else eQsq = 0.0;
     }
     return eQsq;
 }
 
 double MixedOperator::QtypeOperator(const HProduct &bra, const HProduct &ket,
-                                    const std::function<double(double, int, int)> &func, const int targetMode) const {
+                                    const std::function<double(double, int, int)> &func,
+                                    const int targetMode) const {
     std::valarray<int> braOcc{0, nMode};
     std::valarray<int> ketOcc{0, nMode};
     for (const auto &modal : bra) braOcc[modal[0]] = modal[1];
     for (const auto &modal : ket) ketOcc[modal[0]] = modal[1];
     int diff = std::abs(braOcc - ketOcc).sum();
-    if (diff != 1) throw std::logic_error("Bra and ket are separated by more than 1 excitation. Always 0.");
+//    Suppress error when operator is exactly zero
+//    if (diff != 1) throw std::logic_error("Bra and ket are separated by more than 1 excitation. Always 0.");
+    if (diff != 1) return 0.0;
     diff = braOcc[targetMode] - ketOcc[targetMode];
     int n = diff > 0 ? braOcc[targetMode] : ketOcc[targetMode];
     return func(targetMode, n, diff);

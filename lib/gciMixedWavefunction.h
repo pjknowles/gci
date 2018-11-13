@@ -5,7 +5,7 @@
 
 #include <LinearAlgebra.h>
 #include "gciWavefunction.h"
-#include "gciMixedOperator.h"
+//#include "gciMixedOperator.h"
 #include "gciHProductSet.h"
 
 namespace gci {
@@ -15,6 +15,17 @@ namespace gci {
  * @brief Mixed bosonic and fermionic wavefunction represented as configuration expansion in the direct product
  * space of Slater Determenants and Hartree Product of modals. It implements storage of the wavefunction
  * coefficients and application of the Hamiltonitan ( r = H c).
+ *
+ * FCIdump parameters:
+ *      NMODE
+ *          -- number of vibrational modes
+ *          default = 0
+ *      NMODAL
+ *          -- number of modal basis functions per mode (for ground state NMODAL=1)
+ *          default = 1
+ *      VIB_EXC_LVL
+ *          -- maximum number of modes simultaneously excited in the wavefunction
+ *          default = 1
  *
  * Vibrational basis is specified by mode coupling level, CIS, CISD etc, and maximum excitation level.
  *
@@ -60,14 +71,13 @@ class MixedWavefunction : public LinearAlgebra::vector<double> {
 public:
     /*!
      * @brief Constructs the mixed wavefunction.
-     * @param state Electronic state
-     * @param vibSate Vibrational state
      */
-    MixedWavefunction(const State &state, const VibSpace &vibSpace);
-//    MixedWavefunction(const MixedWavefunction &other, int option) {*this = other;}
+    MixedWavefunction(const Options &options);
     ~MixedWavefunction() override = default;
 
-    size_t size() const {return m_dimension;}
+    size_t size() const override {return m_dimension;} //!< Number of basis functions
+    //! Flags if wavefunction buffer has been allocated. Does not guarantee that each element is non-empty as well.
+    bool empty() const;
     void allocate_buffer(); //!< allocate buffer to full size
 
     /*!
@@ -79,21 +89,21 @@ public:
 
     /*!
        * \brief Get a component of the wavefunction
-       * \param offset which component to get
-       * \return  the value of the component
+       * \param offset Which component to get
+       * \return  The value of the component
        */
     double at(size_t offset) const;
 
     /*!
        * \brief Add to this object the action of an operator on another wavefunction
-       * \param ham Hamiltonian operator
-       * \param w Wavefunction
+       * \param ham Mixed Hamiltonian operator
+       * \param w Other mixed Wavefunction
        * \param parallel_stringset whether to use parallel algorithm in StringSet construction
        */
     void operatorOnWavefunction(const MixedOperator &ham, const MixedWavefunction &w, bool parallel_stringset = false);
 
     /*!
-     * @brief set this object to the diagonal elements of the hamiltonian
+     * @brief Set this object to the diagonal elements of the hamiltonian
      * @param ham
      */
     void diagonalOperator(const MixedOperator &ham, bool parallel_stringset = false);
@@ -113,6 +123,11 @@ protected:
      * mode A.
      */
     std::vector<Wavefunction> m_wfn;
+
+    auto begin() {return m_wfn.begin();} ///< beginning of this processor's data
+    auto end() {return m_wfn.end();} ///< end of this processor's data
+    auto cbegin() const {return m_wfn.cbegin();} ///< beginning of this processor's data
+    auto cend() const {return m_wfn.cend();} ///< end of this processor's data
 
 public:
     /*!
@@ -137,6 +152,7 @@ public:
 
     /*!
      * @copydoc LinearAlgebra::vector::select
+     * @todo Implement
      */
     std::tuple<std::vector<size_t>, std::vector<double>>
     select(const vector<double> &measure, const size_t maximumNumber = 1000,
@@ -180,6 +196,7 @@ public:
 
     /*!
      * @copydoc LinearAlgebra::vector::zero
+     * @todo change to managed pointer
      */
     MixedWavefunction *clone(int option = 0) const override {return new MixedWavefunction(*this);}
 
@@ -190,8 +207,7 @@ public:
     MixedWavefunction &operator+=(double); //!< add a scalar to every element
     MixedWavefunction &operator-=(double); //!< subtract a scalar from every element
     MixedWavefunction &operator-(); //!< unary minus
-    MixedWavefunction &
-    operator/=(const MixedWavefunction &other); //!< element-by-element division by another wavefunction
+    MixedWavefunction &operator/=(const MixedWavefunction &other); //!< element-by-element division
 
     /*!
      * @brief form a perturbation-theory update, and return the predicted energy change.
@@ -212,8 +228,9 @@ public:
      * \return a pointer to this
      */
     MixedWavefunction &addAbsPower(const MixedWavefunction &c, double k = 0, double factor = 1);
-    friend double
-    operator*(const MixedWavefunction &w1, const MixedWavefunction &w2);///< inner product of two wavefunctions
+
+    //! inner product of two wavefunctions
+    friend double operator*(const MixedWavefunction &w1, const MixedWavefunction &w2);
 
     /*!
      * \brief this[i] = a[i]*b[i]
@@ -226,8 +243,8 @@ public:
      * \param a
      * \param b
      * \param shift
-     * \param append whether to do += or =
-     * \param negative whether =- or =+
+     * \param append Whether to do += or =
+     * \param negative Whether - or +
      */
     void divide(const LinearAlgebra::vector<double> *a,
                 const LinearAlgebra::vector<double> *b,
@@ -237,14 +254,14 @@ public:
 
     std::map<std::string, double> m_properties;
 
+    //! @todo Implement
     void settilesize(int t = -1, int a = -1, int b = -1) { };
 };  // class MixedWavefunction
 
 double operator*(const MixedWavefunction &w1, const MixedWavefunction &w2);///< inner product of two wavefunctions
 MixedWavefunction operator+(const MixedWavefunction &w1, const MixedWavefunction &w2); ///< add two wavefunctions
 MixedWavefunction operator-(const MixedWavefunction &w1, const MixedWavefunction &w2); ///< subtract two wavefunctions
-MixedWavefunction operator/(const MixedWavefunction &w1,
-                            const MixedWavefunction &w2); ///< element-by-element division of two wavefunctions
+MixedWavefunction operator/(const MixedWavefunction &w1, const MixedWavefunction &w2); ///< element-by-element division
 MixedWavefunction operator*(const MixedWavefunction &w1, const double &value);///< multiply by a scalar
 MixedWavefunction operator*(const double &value, const MixedWavefunction &w1);///< multiply by a scalar
 

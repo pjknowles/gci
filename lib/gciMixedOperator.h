@@ -6,11 +6,12 @@
 #include <FCIdump.h>
 
 #include "gciHProduct.h"
+#include "gciRun.h"
 
 namespace gci {
 
 /*!
- * @brief enumerators for vibrational operators
+ * @brief Enumerators for vibrational operators
  *
  * HO -- Harmonic oscillator operator
  * The rest are self-explanatory
@@ -41,16 +42,25 @@ public:
     }
 
     VibOpType type; //!< Operator type
-    std::vector<int> mode; //!< indices of the operator (i.e for Q_A, mode = A)
+    std::vector<int> mode; //!< Indices of the operator (e.g. for Q_A, mode = {A})
+};
+
+/*!
+ * @brief One term in the mixed operator
+ */
+struct MixedOpTerm {
+    MixedOpTerm(VibOp vibOp, const FCIdump &fcidump) : vibOp(std::move(vibOp)), Hel(constructOperator(fcidump)) { };
+    VibOp vibOp;
+    SymmetryMatrix::Operator Hel;
 };
 
 /*!
  * @brief Mixed fermionic-bosonic Hamiltonian operator. Specialised to second-order expansion of the molecular
  * Hamiltonian in the BBO project.
  *
- * H = H'el + Hvib + Hel(A) Q_A + Hs(A) dQ_A
+ * H = H'el + Hvib + Hel(A) Q_A + Ht(A) dQ_A
  *
- * H`el = Hel + Hs(A,A)
+ * H`el = Hel + Ht(A,A)
  *  -- first term is the electronic Hamiltonian at expansion point
  *  -- second term is the diagonal born oppenheimer correction <dQ_A Ph_I| dQ_A Ph_J>
  *
@@ -63,7 +73,34 @@ public:
  */
 class MixedOperator {
 public:
-    MixedOperator(const FCIdump &fcidump);
+    /*!
+     * @brief Constructs the full Hamiltonian from FCIdump files.
+     *
+     * In the following:
+     *      - "fcidump" is the name of fcidump file passed to gci
+     *      - modes are counted from 0, i.e. "{fcidump_t_0, fcidump_t_1, ...}"
+     *
+     * Naming converntion:
+     *     "fcidump" -- Pure Electronic (Hel) and Vibrational (Hvib) Hamiltonian
+     *     "fcidump"_d1_`A` -- first derivative of Hel wrt mode `A`
+     *     "fcidump"_d2_`A`_`B` -- second derivative of Hel wrt modes `A` and `B`
+     *                          -- @warning A >= B
+     *     "fcidump"_t1_`A` -- first order kinetic energy coupling term with mode `A`
+     *     "fcidump"_t2_`A` -- second order kinetic energy coupling term with mode `A`
+     *
+     * FCIdump parameters:
+     *      int NMODE -- number of vibrational modes
+     *      int INC_D1 -- include first derivative of Hel term, will search for "fcidump"_d1_`A` files
+     *      int INC_D2 -- include second derivative of Hel term, will search for "fcidump"_d1_`AA` files
+     *      int INC_T1 -- include first order kinetic energy coupling term, will search for "fcidump"_t1_`A` files
+     *      int INC_T2 -- include second order kinetic energy coupling term, will search for "fcidump"_t2_`A` files
+     *      (INC* statements are bool, 0 = false, 1 = true)
+     * @warning If INC_* statement is found, but any of the fcidump files do not exist, than the corresponding
+     *          term is assumed to be zero (fcidump's that ARE found are still included).
+     *
+     * @param fcidump Name of FCIdump file passed to gci
+     */
+    explicit MixedOperator(const FCIdump &fcidump);
     ~MixedOperator() = default;
 
     /*!
@@ -72,16 +109,21 @@ public:
      */
     double expectVal(const HProduct &bra, const HProduct &ket, const VibOp &vibOp) const;
 
+    auto begin() const {return Hmix.begin();}
+    auto end() const {return Hmix.end();}
+
 
     int nMode; //!< Number of vibrational modes
     std::vector<double> freq; //!< Harmonic frequencies
     double zpe; //!< Vibrational zero point energy at HO level
     SymmetryMatrix::Operator Hel; //!< Electronic Hamiltonian
-    std::vector<SymmetryMatrix::Operator> Hel_A; //!< First order expansion of electronic Hamiltonian
-    std::vector<SymmetryMatrix::Operator> Hel_AB; //!< First order expansion of electronic Hamiltonian
-    std::vector<SymmetryMatrix::Operator> Hs_A; //!< First order kinetic energy coupling term
-    std::vector<SymmetryMatrix::Operator> Hs_AA; //!< Second order kinetic energy coupling term
+    std::map<VibOpType, std::vector<MixedOpTerm>> Hmix; //!< All mixed vibrational-electronic terms, mapped by VibOpType
 protected:
+    bool inc_d1;
+    bool inc_d2;
+    bool inc_T1;
+    bool inc_T2;
+
     /*!
      * @brief Expectation value of vibrational Hamiltonian <HO| Hvib | HO>
      */

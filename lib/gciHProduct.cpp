@@ -6,9 +6,9 @@
 namespace gci {
 HProduct::HProduct(const t_Product &phi) : m_prod(phi) {
     // Catch empty initialization with HProduct({ {} }) or HProduct({ })
-    if (m_prod.size() == 1) if(m_prod[0].empty()) m_prod = t_Product{};
+    if (m_prod.size() == 1) if (m_prod[0].empty()) m_prod = t_Product{};
     // Catch erroneous empty initialization with HProduct({ { {} } }). The extra {} initializes int to 0.
-    if (m_prod.size() == 1) if(m_prod[0].size() == 1 && m_prod[0][0] == 0) m_prod = t_Product{};
+    if (m_prod.size() == 1) if (m_prod[0].size() == 1 && m_prod[0][0] == 0) m_prod = t_Product{};
     order();
     check();
 }
@@ -67,6 +67,7 @@ std::ostream &operator<<(std::ostream &os, HProduct const &obj) {
     os << " {";
     for (const auto &el : obj) os << "{" << el[0] << "," << el[1] << "},";
     os << "} ";
+    return os;
 }
 
 }  // namespace gci
