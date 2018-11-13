@@ -19,4 +19,14 @@ TEST(VibOp, constructor) {
     EXPECT_EQ(vibOp.mode.size(), 2);
 }
 
-// The rest of the tests require an example Hamiltonian
+TEST(MixedOperator, fcidump_constructor){
+//    read Hamiltonian from fcidump files
+}
+
+TEST(MixedOperator, expectVal){
+//    read Hamiltonian from fcidump files
+}
+
+TEST(MixedOperator, iterators){
+//    read Hamiltonian from fcidump files
+}

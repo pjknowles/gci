@@ -111,6 +111,8 @@ public:
 
     auto begin() const {return Hmix.begin();}
     auto end() const {return Hmix.end();}
+    auto cbegin() const {return Hmix.cbegin();}
+    auto cend() const {return Hmix.cend();}
 
 
     int nMode; //!< Number of vibrational modes
