@@ -3,9 +3,7 @@
 
 #include <vector>
 
-#include <LinearAlgebra.h>
 #include "gciWavefunction.h"
-//#include "gciMixedOperator.h"
 #include "gciHProductSet.h"
 
 namespace gci {
@@ -66,16 +64,17 @@ namespace gci {
  * This class is in fact mostly a wrapper of gci::Wavefunction with a few hardcoded expressions for the vibrational
  * parts of the Hamiltonian.
  */
-class MixedWavefunction : public LinearAlgebra::vector<double> {
+class MixedWavefunction {
     // Inhereting the vector class brings the functions that need to be implemented for linera algebra solver to work.
 public:
+    using value_type = double;
     /*!
      * @brief Constructs the mixed wavefunction.
      */
     MixedWavefunction(const Options &options);
-    ~MixedWavefunction() override = default;
+    ~MixedWavefunction() = default;
 
-    size_t size() const override {return m_dimension;} //!< Number of basis functions
+    size_t size() const {return m_dimension;} //!< Number of basis functions
     //! Flags if wavefunction buffer has been allocated. Does not guarantee that each element is non-empty as well.
     bool empty() const;
     void allocate_buffer(); //!< allocate buffer to full size
@@ -136,17 +135,17 @@ public:
     bool compatible(const MixedWavefunction &other) const;
     /*! @copydoc LinearAlgebra::vector::axpy
      */
-    void axpy(double a, const LinearAlgebra::vector<double> &other) override;
+    void axpy(double a, const MixedWavefunction &other);
     /*!
      * @copydoc LinearAlgebra::vector::axpy(scalar,const vector<scalar>&)
      */
-    void axpy(double a, const std::shared_ptr<LinearAlgebra::vector<double> > &other) {
+    void axpy(double a, const std::shared_ptr<MixedWavefunction> other) {
         axpy(a, *other);
     }
     /*!
      * @copydoc LinearAlgebra::vector::axpy(scalar,const std::map<size_t,scalar>& )
      */
-    void axpy(double a, const std::map<size_t, double> &other) override {
+    void axpy(double a, const std::map<size_t, double> &x) {
         throw std::logic_error("Cannot assume sparse vector is a map");
     }
 
@@ -156,49 +155,49 @@ public:
      */
     std::tuple<std::vector<size_t>, std::vector<double>>
     select(const vector<double> &measure, const size_t maximumNumber = 1000,
-           const double threshold = 0) const override {return {{0}, {0}};};
+           const double threshold = 0) const {return {{0}, {0}};};
 
     /*!
      * @copydoc LinearAlgebra::vector::scal
      */
-    void scal(double a) override;
+    void scal(double a);
 
     /*!
      * @copydoc LinearAlgebra::vector::dot
      */
-    double dot(const LinearAlgebra::vector<double> &other) const override;
+    double dot(const MixedWavefunction &other) const;
 
     /*!
      * @overload
      */
-    double dot(const std::shared_ptr<LinearAlgebra::vector<double> > &other) const {
+    double dot(const std::shared_ptr<MixedWavefunction> &other) const {
         return dot(*other);
     }
 
     /*!
      * @overload
      */
-    double dot(const std::unique_ptr<LinearAlgebra::vector<double> > &other) const {
+    double dot(const std::unique_ptr<MixedWavefunction> &other) const {
         return dot(*other);
     }
 
     /*!
      * @overload
      */
-    double dot(const std::map<size_t, double> &other) const override {
+    double dot(const std::map<size_t, double> &other) const {
         throw std::logic_error("Cannot assume sparse vector is a map");
     }
 
     /*!
      * @copydoc LinearAlgebra::vector::zero
      */
-    void zero() override;
+    void zero();
 
     /*!
      * @copydoc LinearAlgebra::vector::zero
      * @todo change to managed pointer
      */
-    MixedWavefunction *clone(int option = 0) const override {return new MixedWavefunction(*this);}
+    MixedWavefunction *clone(int option = 0) const {return new MixedWavefunction(*this);}
 
     void set(double val);///< set all elements to a scalar
     MixedWavefunction &operator*=(const double &value); //!< multiply by a scalar
@@ -237,7 +236,7 @@ public:
      * \param a
      * \param b
      */
-    void times(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b);
+    void times(const MixedWavefunction *a, const MixedWavefunction *b);
     /*!
      * \brief this[i] = a[i]/(b[i]+shift)
      * \param a
@@ -246,8 +245,8 @@ public:
      * \param append Whether to do += or =
      * \param negative Whether - or +
      */
-    void divide(const LinearAlgebra::vector<double> *a,
-                const LinearAlgebra::vector<double> *b,
+    void divide(const MixedWavefunction *a,
+                const MixedWavefunction *b,
                 double shift = 0,
                 bool append = false,
                 bool negative = false);

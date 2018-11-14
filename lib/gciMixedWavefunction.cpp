@@ -97,10 +97,9 @@ bool MixedWavefunction::compatible(const MixedWavefunction &w2) const {
     return sameSize && sameElectronicWfn && sameVibBasis;
 }
 
-void MixedWavefunction::axpy(double a, const LinearAlgebra::vector<double> &other) {
-    const auto &x = dynamic_cast <const MixedWavefunction &> (other);
+void MixedWavefunction::axpy(double a, const MixedWavefunction &other) {
     for (int i = 0; i < m_wfn.size(); ++i) {
-        m_wfn[i].axpy(a, x.m_wfn[i]);
+        m_wfn[i].axpy(a, other.m_wfn[i]);
     }
 }
 
@@ -108,7 +107,7 @@ void MixedWavefunction::scal(double a) {
     for (auto &el: m_wfn) el.scal(a);
 }
 
-double MixedWavefunction::dot(const LinearAlgebra::vector<double> &other) const {
+double MixedWavefunction::dot(const MixedWavefunction &other) const {
     return (*this) * ((dynamic_cast<const MixedWavefunction &>(other)));
 }
 
@@ -165,7 +164,7 @@ MixedWavefunction &MixedWavefunction::addAbsPower(const MixedWavefunction &c, do
     return *this;
 }
 
-void MixedWavefunction::times(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b) {
+void MixedWavefunction::times(const MixedWavefunction *a, const MixedWavefunction *b) {
     if (a == nullptr || b == nullptr) throw std::logic_error("Vectors cannot be null");
     const auto aa = dynamic_cast<const MixedWavefunction &> (*a);
     const auto bb = dynamic_cast<const MixedWavefunction &> (*b);
@@ -173,7 +172,7 @@ void MixedWavefunction::times(const LinearAlgebra::vector<double> *a, const Line
     for (int i = 0; i < m_wfn.size(); ++i) m_wfn[i].times(&aa.m_wfn[i], &bb.m_wfn[i]);
 }
 
-void MixedWavefunction::divide(const LinearAlgebra::vector<double> *a, const LinearAlgebra::vector<double> *b,
+void MixedWavefunction::divide(const MixedWavefunction *a, const MixedWavefunction *b,
                                double shift, bool append, bool negative) {
     if (a == nullptr || b == nullptr) throw std::logic_error("Vectors cannot be null");
     const auto aa = dynamic_cast<const MixedWavefunction &> (*a);
