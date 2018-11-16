@@ -28,7 +28,7 @@ if (NPROC EQUAL 0)
 endif ()
 if (NPROC EQUAL 8)
     #    hack to avoid overload on workstation / CI
-    set(NPROC 4)
+#    set(NPROC 4)
 endif ()
 message("Number of processors ${NPROC}")
 set(CTEST_BUILD_FLAGS -j${NPROC})
@@ -44,7 +44,6 @@ set(SYMMETRY_MATRIX_TEST OFF CACHE BOOL "Whether to build unit tests for symmetr
 set(SYMMETRY_MATRIX_FORTRAN OFF CACHE BOOL "Whether to build symmetry_matrix fortran binding" FORCE)
 add_subdirectory(dependencies)
 
-#find_package(Eigen3 3.3)
 if (NOT TARGET Eigen3::Eigen)
     FetchContent_GetProperties(eigen3_dep)
     if (NOT eigen3_dep_POPULATED)
@@ -57,12 +56,8 @@ if (NOT TARGET Eigen3::Eigen)
 endif ()
 
 find_package(MPI REQUIRED CXX Fortran)
-#TODO should this be added to the appropriate targets only, or is this needed by everyone?
+#TODO Consider reflecting this mandatory provision of MPI in the code, ie remove #ifdef HAVE_MPI_H
 add_definitions(-DHAVE_MPI_H)
-# OpenMPI root guard: https://github.com/open-mpi/ompi/issues/4451
-#if ("$ENV{USER}" STREQUAL "root" OR "$ENV{HOME}" STREQUAL "/root")
-#    set(MPIOPTIONS "--allow-run-as-root") # used in tests
-#endif ()
 
 ########## Targets ##########
 
