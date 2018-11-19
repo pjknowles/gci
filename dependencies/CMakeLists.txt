@@ -6,15 +6,13 @@ FetchContent_Declare(
         GIT_SHALLOW TRUE
 )
 
-if (${CMAKE_SOURCE_DIR}/dependencies STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    FetchContent_Declare(
-            googletest_dep
-            SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/googletest"
-            GIT_REPOSITORY https://github.com/google/googletest.git
-            GIT_TAG "release-1.8.1"
-            GIT_SHALLOW TRUE
-    )
-endif ()
+FetchContent_Declare(
+        googletest_dep
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/googletest"
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG "release-1.8.1"
+        GIT_SHALLOW TRUE
+)
 
 file(STRINGS "FCIdump_SHA1" FCIdump_GIT_TAG)
 FetchContent_Declare(

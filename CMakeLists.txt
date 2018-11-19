@@ -1,37 +1,12 @@
 cmake_minimum_required(VERSION 3.11)
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 project(gci)
-enable_language(CXX)
-#TODO Need to split dependency libraries into CXX and Fortran  components and only compile the one that's needed
-enable_language(Fortran)
 
 ########## Options ##########
 
 # Allow messages from scripts to be shown
 set(FETCHCONTENT_QUIET OFF)
-
-
-########## Global Compiler Flags ##########
-
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-O3 -march=native" _native)
-if (_native)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native")
-endif ()
-include(ProcessorCount)
-ProcessorCount(NPROC)
-if (NPROC EQUAL 0)
-    set(NPROC 1)
-endif ()
-if (NPROC EQUAL 8)
-    #    hack to avoid overload on workstation / CI
-#    set(NPROC 4)
-endif ()
-message("Number of processors ${NPROC}")
-set(CTEST_BUILD_FLAGS -j${NPROC})
 
 
 ########## Dependencies ##########
@@ -54,7 +29,7 @@ if (NOT TARGET Eigen3::Eigen)
     endif ()
 endif ()
 
-find_package(MPI REQUIRED CXX Fortran)
+find_package(MPI REQUIRED CXX )
 #TODO Consider reflecting this mandatory provision of MPI in the code, ie remove #ifdef HAVE_MPI_H
 add_definitions(-DHAVE_MPI_H)
 
@@ -73,7 +48,7 @@ if (DOXYGEN_FOUND)
     add_custom_target(${PROJECT_NAME}-doc ALL
             DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/html/index.xhtml
             )
-    file(GLOB headers src/*.h)
+    file(GLOB headers src/*.h lib/*.h)
     add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/html/index.xhtml
             COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
             DEPENDS ${SRC_LIST} ${headers} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
