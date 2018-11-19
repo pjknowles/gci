@@ -40,7 +40,6 @@ include(FetchContent)
 set(SYMMETRY_MATRIX_DOUBLE ON CACHE BOOL "Whether to build and test symmetry_matrix with double data type" FORCE)
 set(SYMMETRY_MATRIX_COMPLEXDOUBLE OFF CACHE BOOL "Whether to build and test symmetry_matrix with complex-double data type" FORCE)
 set(SYMMETRY_MATRIX_FLOAT OFF CACHE BOOL "Whether to build and test symmetry_matrix with float data type" FORCE)
-set(SYMMETRY_MATRIX_TEST OFF CACHE BOOL "Whether to build unit tests for symmetry_matrix" FORCE)
 set(SYMMETRY_MATRIX_FORTRAN OFF CACHE BOOL "Whether to build symmetry_matrix fortran binding" FORCE)
 add_subdirectory(dependencies)
 
