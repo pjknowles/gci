@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.11)
 set(CMAKE_CXX_STANDARD 14)
 
 project(gci)
+message("Build ${CMAKE_PROJECT_NAME} with CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+message(CMAKE_CXX_PLATFORM_ID=${CMAKE_CXX_PLATFORM_ID})
+message(CMAKE_Fortran_PLATFORM_ID=${CMAKE_Fortran_PLATFORM_ID})
 
 ########## Options ##########
 
@@ -16,6 +19,8 @@ set(SYMMETRY_MATRIX_DOUBLE ON CACHE BOOL "Whether to build and test symmetry_mat
 set(SYMMETRY_MATRIX_COMPLEXDOUBLE OFF CACHE BOOL "Whether to build and test symmetry_matrix with complex-double data type" FORCE)
 set(SYMMETRY_MATRIX_FLOAT OFF CACHE BOOL "Whether to build and test symmetry_matrix with float data type" FORCE)
 set(SYMMETRY_MATRIX_FORTRAN OFF CACHE BOOL "Whether to build symmetry_matrix fortran binding" FORCE)
+set(ITERATIVESOLVER_FORTRAN OFF CACHE BOOL "Whether to build IterativeSolver fortran binding" FORCE)
+set(MEMORY_FORTRAN OFF CACHE BOOL "Whether to build memory fortran binding" FORCE)
 add_subdirectory(dependencies)
 
 if (NOT TARGET Eigen3::Eigen)
