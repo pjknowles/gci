@@ -38,10 +38,6 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     initialize();
     for (auto iteration = 1; iteration <= (size_t) maxIterations; iteration++) {
         action();
-        std::cout << "w[0]\n" << ww[0].str() << std::endl;
-        std::cout << "w[1]\n" << ww[1].str() << std::endl;
-        std::cout << "g[0]\n" << gg[0].str() << std::endl;
-        std::cout << "g[1]\n" << gg[1].str() << std::endl;
         solver.addVector(ww, gg, active);
         update();
         if (solver.endIteration(ww, gg, active)) break;

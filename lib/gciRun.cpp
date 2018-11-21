@@ -377,7 +377,6 @@ std::vector<double> Run::run() {
     itf::SetVariables( "ENERGY_MP", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
   } else if (method == "DAVIDSON") {
-    energies = Davidson(m_hamiltonian, prototype);
     if (options.parameter("VIBRONIC", 0)) {
       auto ham = MixedOperator(FCIdump(options.parameter("FCIDUMP", "fcidump")));
       auto wfn = MixedWavefunction(options);
@@ -388,6 +387,7 @@ std::vector<double> Run::run() {
       auto wfn = Wavefunction(prototype);
       auto solver = run::Davidson<Wavefunction, SymmetryMatrix::Operator>(std::move(wfn), std::move(ham), options);
       solver.run();
+//      energies = Davidson(m_hamiltonian, prototype);
     }
   } else if (method == "CS") {
     energies = CSDavidson(m_hamiltonian, prototype);

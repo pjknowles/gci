@@ -77,9 +77,6 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperator &ham, const M
             for (const auto &op : hamTerm.second) {
                 auto connectedSet = HProductSet(bra, m_vibBasis.vibSpace(), op.vibOp);
                 for (const auto &ket : connectedSet) {
-                    if (!ket.withinSpace(m_vibSpace)) {
-                        std::cout << ket << std::endl;
-                    };
                     auto jWfn = m_vibBasis.index(ket);
                     double expVal = ham.expectVal(bra, ket, op.vibOp);
                     if (std::abs(expVal) < 1.e-12) continue;
@@ -93,8 +90,6 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperator &ham, const M
 
 void MixedWavefunction::diagonalOperator(const MixedOperator &ham, bool parallel_stringset) {
     Wavefunction wfn_scaled(m_wfn[0]);
-//    Wavefunction wfn_diagonal(m_wfn[0]);
-//    m_wfn[0].diagonalOperator(ham.Hel);
     for (const auto &bra : m_vibBasis) {
         auto iWfn = m_vibBasis.index(bra);
         // Pure vibrational and electronic operators
