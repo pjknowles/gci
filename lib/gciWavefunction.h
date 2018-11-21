@@ -61,6 +61,13 @@ class Wavefunction : public State {
   size_t minloc(size_t n = 1) const;
 
   /*!
+     * \brief find the index of n smallest components
+     * \param n number of smallest values to be found
+     * \return offsets in buffer
+     */
+  std::vector<size_t> minlocN(size_t n = 1) const;
+
+  /*!
      * \brief Get a component of the wavefunction
      * \param offset which component to get
      * \return  the value of the component
@@ -200,7 +207,6 @@ class Wavefunction : public State {
   void set(size_t offset, double val);///< set one element to a scalar
   void set(const double val);///< set all elements to a scalar
   //    Wavefunction& operator=(const Wavefunction &other); ///< copy
-//  namespace IterativeSolver {
   Wavefunction &operator*=(const double &value); ///< multiply by a scalar
   Wavefunction &operator+=(const Wavefunction &other); ///< add another wavefunction
   Wavefunction &operator-=(const Wavefunction &other); ///< subtract another wavefunction

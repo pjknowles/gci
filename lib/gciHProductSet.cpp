@@ -92,7 +92,7 @@ size_t HProductSet::index(const HProduct &phi) {
 
 void HProductSet::generateQcoupledSpace(const HProduct &bra, const VibOp &vibOp) {
     if (vibOp.type != VibOpType::Q && vibOp.type != VibOpType::dQ) throw std::logic_error("Mismatch of operator type");
-    // Rase and lower by one
+    // Raise and lower by one
     auto excLvl = bra.excLvl(vibOp.mode[0]);
     if (excLvl >= 1) {
         auto newProd = bra;

@@ -120,11 +120,15 @@ public:
     double zpe; //!< Vibrational zero point energy at HO level
     SymmetryMatrix::Operator Hel; //!< Electronic Hamiltonian
     std::map<VibOpType, std::vector<MixedOpTerm>> Hmix; //!< All mixed vibrational-electronic terms, mapped by VibOpType
+    bool inc_d1(){return m_inc_d1;}
+    bool inc_d2(){return m_inc_d2;}
+    bool inc_T1(){return m_inc_T1;}
+    bool inc_T2(){return m_inc_T2;}
 protected:
-    bool inc_d1;
-    bool inc_d2;
-    bool inc_T1;
-    bool inc_T2;
+    bool m_inc_d1;
+    bool m_inc_d2;
+    bool m_inc_T1;
+    bool m_inc_T2;
 
     /*!
      * @brief Expectation value of vibrational Hamiltonian <HO| Hvib | HO>

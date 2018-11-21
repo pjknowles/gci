@@ -4,7 +4,12 @@ if (NOT googletest_dep_POPULATED)
     add_subdirectory(${googletest_dep_SOURCE_DIR} ${googletest_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif ()
 
-add_executable(test-gci testVibSpace.cpp testHProduct.cpp testMixedOperator.cpp testHProductSet.cpp)
+set(config_files "fcidump_holstein_2site" "fcidump_holstein_2site_d1_0" "fcidump_holstein_2site_d1_1")
+foreach (fil ${config_files})
+    configure_file(${fil} ${CMAKE_CURRENT_BINARY_DIR}/${fil} COPYONLY)
+endforeach ()
+
+add_executable(test-gci main.cpp testVibSpace.cpp testHProduct.cpp testMixedOperator.cpp testHProductSet.cpp testMixedWavefunction.cpp)
 target_link_libraries(test-gci PUBLIC gci gmock_main)
 
 include(GoogleTest)

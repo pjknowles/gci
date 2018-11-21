@@ -2,6 +2,7 @@
 #include "gciHProductSet.h"
 
 #include <limits>
+#include <utility>
 
 namespace gci {
 
@@ -25,17 +26,41 @@ void MixedWavefunction::allocate_buffer() {
     for (auto &el: m_wfn) el.allocate_buffer();
 }
 
-//TODO Implement this
-size_t MixedWavefunction::minloc(size_t n) const {
-    if (empty()) return 0;
-    return 0;
+std::vector<size_t> MixedWavefunction::minlocN(size_t n) const {
+    if (empty()) return {};
+    // Find lowest n elements per vibrational basis. Store the absolute index and value
+    std::vector<size_t> result;
+    std::vector<std::pair<size_t, value_type>> minVals;
+    for (int iVib = 0, offset = 0; iVib < m_vibBasis.vibDim(); ++iVib, offset += m_elDim) {
+        result = m_wfn[iVib].minlocN(n);
+        for (const auto &ind : result) {
+            minVals.emplace_back(offset + ind, m_wfn[iVib].at(ind));
+        }
+    }
+    // Search for the lowest n among all
+    std::sort(minVals.begin(), minVals.end(), [](const auto &el1, const auto &el2) {return el1.second < el2.second;});
+    std::transform(minVals.begin(), std::next(minVals.begin(), n), result.begin(),
+                   [](const auto &el) {return el.first;});
+    return result;
 }
 
-double MixedWavefunction::at(size_t offset) const {
-    if (offset >= m_dimension) throw std::logic_error("Out of bounds");
-    auto n = m_vibBasis.vibDim() / offset;
-    auto r = offset - m_vibBasis.vibDim();
-    return m_wfn[n].at(r);
+size_t MixedWavefunction::minloc(size_t n) const {
+    return minlocN(n).back();
+}
+
+double MixedWavefunction::at(size_t ind) const {
+    if (ind >= m_dimension) throw std::logic_error("Out of bounds");
+    size_t vibInd = ind / m_elDim;
+    size_t elInd = ind - vibInd * m_elDim;
+    return m_wfn[vibInd].at(elInd);
+}
+
+std::string MixedWavefunction::str() const{
+    std::string out = "MixedWavefunction elements: ";
+    for (size_t i = 0; i < m_dimension; ++i) {
+        out += std::to_string(at(i)) + ", ";
+    }
+    return out;
 }
 
 void MixedWavefunction::operatorOnWavefunction(const MixedOperator &ham, const MixedWavefunction &w,
@@ -45,16 +70,20 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperator &ham, const M
         auto iWfn = m_vibBasis.index(bra);
         auto expVal = ham.expectVal(bra, bra, {VibOpType::HO, {}});
         // Pure vibrational and electronic operators
-        m_wfn[iWfn].axpy(expVal, m_wfn[iWfn]);
+        m_wfn[iWfn].axpy(expVal, w.m_wfn[iWfn]);
         m_wfn[iWfn].operatorOnWavefunction(ham.Hel, w.m_wfn[iWfn], parallel_stringset);
         // all mixed vibrational - electronic operators
         for (const auto &hamTerm : ham) {
             for (const auto &op : hamTerm.second) {
-                for (const auto &ket : HProductSet(bra, m_vibBasis.vibSpace(), op.vibOp)) {
+                auto connectedSet = HProductSet(bra, m_vibBasis.vibSpace(), op.vibOp);
+                for (const auto &ket : connectedSet) {
+                    if (!ket.withinSpace(m_vibSpace)) {
+                        std::cout << ket << std::endl;
+                    };
                     auto jWfn = m_vibBasis.index(ket);
-                    auto expVal = ham.expectVal(bra, ket, op.vibOp);
+                    double expVal = ham.expectVal(bra, ket, op.vibOp);
                     if (std::abs(expVal) < 1.e-12) continue;
-                    wfn_scaled = expVal * m_wfn[jWfn];
+                    wfn_scaled = expVal * w.m_wfn[jWfn];
                     m_wfn[iWfn].operatorOnWavefunction(op.Hel, wfn_scaled, parallel_stringset);
                 }
             }
@@ -64,14 +93,15 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperator &ham, const M
 
 void MixedWavefunction::diagonalOperator(const MixedOperator &ham, bool parallel_stringset) {
     Wavefunction wfn_scaled(m_wfn[0]);
-    Wavefunction wfn_diagonal(m_wfn[0]);
-    m_wfn[0].diagonalOperator(ham.Hel);
+//    Wavefunction wfn_diagonal(m_wfn[0]);
+//    m_wfn[0].diagonalOperator(ham.Hel);
     for (const auto &bra : m_vibBasis) {
         auto iWfn = m_vibBasis.index(bra);
         // Pure vibrational and electronic operators
-        wfn_diagonal = m_wfn[iWfn];
+        Wavefunction &wfn_diagonal = m_wfn[iWfn];
         wfn_diagonal.diagonalOperator(ham.Hel);
-        wfn_diagonal += ham.expectVal(bra, bra, {VibOpType::HO, {}});
+        auto w = ham.expectVal(bra, bra, {VibOpType::HO, {}});
+        wfn_diagonal += w;
         // all mixed vibrational - electronic operators
         for (const auto &hamTerm : ham) {
             for (const auto &op : hamTerm.second) {
@@ -117,6 +147,13 @@ void MixedWavefunction::zero() {
 
 void MixedWavefunction::set(const double val) {
     for (auto &el:m_wfn) el.set(val);
+}
+
+void MixedWavefunction::set(const size_t ind, const double val) {
+    if (ind >= m_dimension) throw std::logic_error("Out of bounds");
+    size_t vibInd = ind / m_elDim;
+    size_t elInd = ind - vibInd * m_elDim;
+    m_wfn[vibInd].set(elInd, val);
 }
 
 MixedWavefunction &MixedWavefunction::operator*=(const double &value) {

@@ -74,7 +74,7 @@ public:
      * @param vibSpace Vibrational Fock space
      * @return true if it is, false if it's not
      */
-    bool withinSpace(const VibSpace &vibSpace);
+    bool withinSpace(const VibSpace &vibSpace) const;
 
     //! @brief List of excited modes in `this` product
     std::vector<int> excitedModes() const;

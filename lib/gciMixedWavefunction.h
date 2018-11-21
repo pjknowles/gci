@@ -72,9 +72,11 @@ public:
      * @brief Constructs the mixed wavefunction.
      */
     MixedWavefunction(const Options &options);
+    MixedWavefunction(const MixedWavefunction &source, int option)
+            : m_vibBasis(source.m_vibBasis), m_vibSpace(source.m_vibSpace), m_elDim(source.m_elDim),
+              m_dimension(source.m_dimension) {*this = source;}
     ~MixedWavefunction() = default;
 
-    size_t size() const {return m_dimension;} //!< Number of basis functions
     //! Flags if wavefunction buffer has been allocated. Does not guarantee that each element is non-empty as well.
     bool empty() const;
     void allocate_buffer(); //!< allocate buffer to full size
@@ -87,11 +89,21 @@ public:
     size_t minloc(size_t n = 1) const;
 
     /*!
+       * \brief find the index of n smallest components
+       * \param n number of smallest values to be found
+       * \return offsets in buffer
+       */
+    std::vector<size_t> minlocN(size_t n = 1) const;
+
+    /*!
        * \brief Get a component of the wavefunction
        * \param offset Which component to get
        * \return  The value of the component
        */
     double at(size_t offset) const;
+
+    //! @brief Writes elements of wavefunction vector into a string
+    std::string str()const;
 
     /*!
        * \brief Add to this object the action of an operator on another wavefunction
@@ -106,6 +118,12 @@ public:
      * @param ham
      */
     void diagonalOperator(const MixedOperator &ham, bool parallel_stringset = false);
+
+    //! A copy of the vibrational space
+    VibSpace vibSpace(){return m_vibSpace;}
+    size_t dimension(){return m_dimension;}
+    size_t elDim(){return m_elDim;}
+    size_t vibDim(){return m_vibBasis.vibDim();}
 
 protected:
 
@@ -123,6 +141,7 @@ protected:
      */
     std::vector<Wavefunction> m_wfn;
 
+    size_t size() const {return m_wfn.size();} //!< Size of the wavefunction buffer
     auto begin() {return m_wfn.begin();} ///< beginning of this processor's data
     auto end() {return m_wfn.end();} ///< end of this processor's data
     auto cbegin() const {return m_wfn.cbegin();} ///< beginning of this processor's data
@@ -200,6 +219,7 @@ public:
     MixedWavefunction *clone(int option = 0) const {return new MixedWavefunction(*this);}
 
     void set(double val);///< set all elements to a scalar
+    void set(size_t ind, double val);///< set one element to a scalar
     MixedWavefunction &operator*=(const double &value); //!< multiply by a scalar
     MixedWavefunction &operator+=(const MixedWavefunction &other); //!< add another wavefunction
     MixedWavefunction &operator-=(const MixedWavefunction &other); //!< subtract another wavefunction

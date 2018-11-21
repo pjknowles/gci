@@ -24,6 +24,8 @@ if (NOT DEFINED ${CMAKE_BUILD_TYPE} OR ${CMAKE_BUILD_TYPE} STREQUAL "RELEASE")
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native")
     endif ()
 endif ()
+#message("CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS} ")
+set(CMAKE_CXX_FLAGS "-g ")
 
 include(ProcessorCount)
 ProcessorCount(NPROC)

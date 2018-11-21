@@ -4,8 +4,11 @@
 //#endif
 #include <iomanip>
 #include <algorithm>
-#include "IterativeSolver.h"
-#include "Operator.h"
+#include <IterativeSolver.h>
+#include <Operator.h>
+#include "gciMixedOperator.h"
+#include "gciMixedWavefunction.h"
+#include "gciDavidson.h"
 
 using namespace gci;
 
@@ -375,6 +378,17 @@ std::vector<double> Run::run() {
 #endif
   } else if (method == "DAVIDSON") {
     energies = Davidson(m_hamiltonian, prototype);
+    if (options.parameter("VIBRONIC", 0)) {
+      auto ham = MixedOperator(FCIdump(options.parameter("FCIDUMP", "fcidump")));
+      auto wfn = MixedWavefunction(options);
+      run::Davidson<MixedWavefunction, MixedOperator> solver(std::move(wfn), std::move(ham), options);
+      solver.run();
+    } else {
+      auto ham = m_hamiltonian;
+      auto wfn = Wavefunction(prototype);
+      auto solver = run::Davidson<Wavefunction, SymmetryMatrix::Operator>(std::move(wfn), std::move(ham), options);
+      solver.run();
+    }
   } else if (method == "CS") {
     energies = CSDavidson(m_hamiltonian, prototype);
 #ifdef MOLPRO

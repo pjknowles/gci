@@ -20,7 +20,11 @@ TEST(VibOp, constructor) {
 }
 
 TEST(MixedOperator, fcidump_constructor){
-//    read Hamiltonian from fcidump files
+    std::string fcidump = "fcidump_holstein_2site";
+    FCIdump dump{fcidump};
+    SymmetryMatrix::Operator Hel = constructOperator(dump);
+    MixedOperator ham{FCIdump(fcidump)};
+    EXPECT_EQ(ham.nMode, 2);
 }
 
 TEST(MixedOperator, expectVal){
@@ -28,5 +32,4 @@ TEST(MixedOperator, expectVal){
 }
 
 TEST(MixedOperator, iterators){
-//    read Hamiltonian from fcidump files
 }

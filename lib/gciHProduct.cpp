@@ -44,7 +44,8 @@ std::vector<int> HProduct::excitedModes() const {
     return modes;
 }
 
-bool HProduct::withinSpace(const VibSpace &vibSpace) {
+bool HProduct::withinSpace(const VibSpace &vibSpace) const {
+    if (excLvl() > vibSpace.excLvl) return false;
     return !std::any_of(m_prod.cbegin(), m_prod.cend(),
                         [&vibSpace](const t_Modal &modal) {
                             return modal[0] >= vibSpace.nMode || modal[1] >= vibSpace.nModal;
