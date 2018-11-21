@@ -3,8 +3,6 @@ set(CMAKE_CXX_STANDARD 14)
 
 project(gci)
 message("Build ${CMAKE_PROJECT_NAME} with CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
-message(CMAKE_CXX_PLATFORM_ID=${CMAKE_CXX_PLATFORM_ID})
-message(CMAKE_Fortran_PLATFORM_ID=${CMAKE_Fortran_PLATFORM_ID})
 
 ########## Options ##########
 
