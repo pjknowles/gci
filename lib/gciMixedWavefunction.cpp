@@ -32,13 +32,15 @@ std::vector<size_t> MixedWavefunction::minlocN(size_t n) const {
     std::vector<size_t> result;
     std::vector<std::pair<size_t, value_type>> minVals;
     for (int iVib = 0, offset = 0; iVib < m_vibBasis.vibDim(); ++iVib, offset += m_elDim) {
-        result = m_wfn[iVib].minlocN(n);
+        int n_el = n > m_elDim ? m_elDim : n;
+        result = m_wfn[iVib].minlocN(n_el);
         for (const auto &ind : result) {
             minVals.emplace_back(offset + ind, m_wfn[iVib].at(ind));
         }
     }
     // Search for the lowest n among all
-    std::sort(minVals.begin(), minVals.end(), [](const auto &el1, const auto &el2) {return el1.second < el2.second;});
+    std::stable_sort(minVals.begin(), minVals.end(), [](const auto &el1, const auto &el2) {return el1.second < el2.second;});
+    result.resize(n);
     std::transform(minVals.begin(), std::next(minVals.begin(), n), result.begin(),
                    [](const auto &el) {return el.first;});
     return result;

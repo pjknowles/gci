@@ -65,16 +65,16 @@ namespace gci {
  * parts of the Hamiltonian.
  */
 class MixedWavefunction {
-    // Inhereting the vector class brings the functions that need to be implemented for linera algebra solver to work.
+    // Inheriting the vector class brings the functions that need to be implemented for linera algebra solver to work.
 public:
     using value_type = double;
     /*!
      * @brief Constructs the mixed wavefunction.
      */
     MixedWavefunction(const Options &options);
-    MixedWavefunction(const MixedWavefunction &source, int option)
+    MixedWavefunction(const MixedWavefunction &source, int option = 0)
             : m_vibBasis(source.m_vibBasis), m_vibSpace(source.m_vibSpace), m_elDim(source.m_elDim),
-              m_dimension(source.m_dimension) {*this = source;}
+              m_dimension(source.m_dimension), m_wfn(source.m_wfn), m_properties(source.m_properties) { }
     ~MixedWavefunction() = default;
 
     //! Flags if wavefunction buffer has been allocated. Does not guarantee that each element is non-empty as well.
@@ -103,7 +103,7 @@ public:
     double at(size_t offset) const;
 
     //! @brief Writes elements of wavefunction vector into a string
-    std::string str()const;
+    std::string str() const;
 
     /*!
        * \brief Add to this object the action of an operator on another wavefunction
@@ -120,10 +120,10 @@ public:
     void diagonalOperator(const MixedOperator &ham, bool parallel_stringset = false);
 
     //! A copy of the vibrational space
-    VibSpace vibSpace(){return m_vibSpace;}
-    size_t dimension(){return m_dimension;}
-    size_t elDim(){return m_elDim;}
-    size_t vibDim(){return m_vibBasis.vibDim();}
+    VibSpace vibSpace() const {return m_vibSpace;}
+    size_t dimension() const {return m_dimension;}
+    size_t elDim() const {return m_elDim;}
+    size_t vibDim() const {return m_vibBasis.vibDim();}
 
 protected:
 

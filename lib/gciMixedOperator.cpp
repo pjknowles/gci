@@ -99,7 +99,7 @@ double MixedOperator::O_Qsq(const HProduct &bra, const HProduct &ket, const VibO
     std::valarray<int> ketOcc(0, nMode);
     for (const auto &modal : bra) braOcc[modal[0]] = modal[1];
     for (const auto &modal : ket) ketOcc[modal[0]] = modal[1];
-    auto exc = std::abs(braOcc - ketOcc);
+    std::valarray<int> exc = std::abs(braOcc - ketOcc);
     int diff = exc.sum();
     double eQsq = 0.0;
     // Q_A * Q_B
@@ -134,7 +134,7 @@ double MixedOperator::QtypeOperator(const HProduct &bra, const HProduct &ket,
     std::valarray<int> ketOcc(0, nMode);
     for (const auto &modal : bra) braOcc[modal[0]] = modal[1];
     for (const auto &modal : ket) ketOcc[modal[0]] = modal[1];
-    auto exc = std::abs(braOcc - ketOcc);
+    std::valarray<int> exc = std::abs(braOcc - ketOcc);
     int diff = exc.sum();
 //    Suppress error when operator is exactly zero
 //    if (diff != 1) throw std::logic_error("Bra and ket are separated by more than 1 excitation. Always 0.");

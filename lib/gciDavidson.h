@@ -77,6 +77,7 @@ public:
     std::vector<value_type> eigVal; //!< Solution eigenvalues
     std::vector<t_Wavefunction> eigVec; //!< Solution eigenvectors
 protected:
+    void printMatrix();
     void message();
     //!@brief Initializes containers necessary for running the calculation
     void initialize();

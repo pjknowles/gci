@@ -10,15 +10,45 @@
 using namespace gci;
 
 TEST(MixedWavefunction, constructor) {
-    std::string fcidump_name = "fcidump_holstein_2site";
+    std::string fcidump_name = "data/fcidump_holstein_2site";
     FCIdump fcidump{fcidump_name};
     Options opt{fcidump.data()};
     opt.addParameter("FCIDUMP", fcidump_name);
     MixedWavefunction wfn{opt};
 }
 
+class MixedWavefunction_Holstein_2site : public ::testing::Test {
+public:
+    MixedWavefunction_Holstein_2site() : fcidump_name("data/fcidump_holstein_2site_nmodal3"), fcidump(fcidump_name),
+                                         opt(fcidump.data()), wfn(opt), ham(fcidump) { }
+    std::string fcidump_name;
+    FCIdump fcidump;
+    Options opt;
+    MixedWavefunction wfn;
+    MixedOperator ham;
+};
+
+TEST_F(MixedWavefunction_Holstein_2site, minlocN) {
+    wfn.allocate_buffer();
+    wfn.diagonalOperator(ham);
+    std::vector<std::pair<int, double>> minVals;
+    for (size_t i = 0; i < wfn.dimension(); ++i) {
+        minVals.emplace_back(i, wfn.at(i));
+    }
+    std::stable_sort(minVals.begin(), minVals.end(),
+                     [](const auto &el1, const auto &el2) {return el1.second < el2.second;});
+    std::vector<int> lowest_ref;
+    for (size_t n = 1; n < wfn.dimension(); ++n) {
+        lowest_ref.resize(n);
+        lowest_ref[n-1] = minVals[n-1].first;
+        auto lowest = wfn.minlocN(n);
+        ASSERT_THAT(lowest, ::testing::Pointwise(::testing::DoubleEq(), lowest_ref));
+    }
+
+}
+
 TEST(MixedWavefunction_and_MixedOperator, holstein_2site_hamiltonian_matrix_elements) {
-    std::string fcidump_name = "fcidump_holstein_2site";
+    std::string fcidump_name = "data/fcidump_holstein_2site";
     FCIdump fcidump{fcidump_name};
     Options opt{fcidump.data()};
     opt.addParameter("FCIDUMP", fcidump_name);
