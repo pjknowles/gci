@@ -10,6 +10,7 @@ rm -f $1/src/global/{SMat,SMatMat,Operator,SMatfunction}.cpp
 rm -f $1/src/gci/gciOperator.*
 rsync src/gci.cpp $1/src/gci
 rsync lib/*.{cpp,h} $1/src/gci
+rsync dependencies/memory/lib/memory.F90 $1/src/global
 rsync dependencies/memory/lib/memory.h $1/src/global
 rsync dependencies/memory/lib/bytestreamC* $1/src/global
 rsync dependencies/symmetry_matrix/lib/{SMat,Operator,SMatMat}.h dependencies/symmetry_matrix/lib/SymmetryMatrixF.F90 $1/src/global
