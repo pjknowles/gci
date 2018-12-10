@@ -10,6 +10,7 @@ enable_language(Fortran)
 ########## Options ##########
 
 add_definitions(-DNOMAIN) # Do we want it global? Thish should really be a variable passed to a specific target
+set(MEMORY_FORTRAN OFF)
 
 # Allow messages from scripts to be shown
 set(FETCHCONTENT_QUIET OFF)

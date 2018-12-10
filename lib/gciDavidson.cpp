@@ -79,7 +79,7 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     auto prof = profiler->push("Davidson");
     message();
     initialize();
-//    printMatrix();
+    printMatrix();
     for (auto iteration = 1; iteration <= (size_t) maxIterations; iteration++) {
         action();
         solver.addVector(ww, gg, active);
@@ -103,7 +103,7 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
     std::vector<int> roots(nState, 0);
     for (int root = 0; root < nState; root++) {
         active.emplace_back(true);
-        ww.emplace_back(*prototype, 0);
+        ww.push_back(t_Wavefunction(*prototype, 0));
         ww.back().allocate_buffer();
         ww.back().zero();
         auto n = diagonalH->minloc(root + 1);

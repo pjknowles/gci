@@ -74,7 +74,13 @@ public:
     MixedWavefunction(const Options &options);
     MixedWavefunction(const MixedWavefunction &source, int option = 0)
             : m_vibBasis(source.m_vibBasis), m_vibSpace(source.m_vibSpace), m_elDim(source.m_elDim),
-              m_dimension(source.m_dimension), m_wfn(source.m_wfn), m_properties(source.m_properties) { }
+              m_dimension(source.m_dimension) {
+        if (source.m_wfn.empty()) return;
+        m_wfn.emplace_back(source.m_wfn[0]);
+        m_wfn.resize(m_vibBasis.vibDim(), m_wfn[0]);
+        allocate_buffer();
+        m_wfn = source.m_wfn;
+    }
     ~MixedWavefunction() = default;
 
     //! Flags if wavefunction buffer has been allocated. Does not guarantee that each element is non-empty as well.
@@ -271,7 +277,7 @@ public:
                 bool append = false,
                 bool negative = false);
 
-    std::map<std::string, double> m_properties;
+//    std::map<std::string, double> m_properties;
 
     //! @todo Implement
     void settilesize(int t = -1, int a = -1, int b = -1) { };

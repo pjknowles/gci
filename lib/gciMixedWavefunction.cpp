@@ -39,7 +39,8 @@ std::vector<size_t> MixedWavefunction::minlocN(size_t n) const {
         }
     }
     // Search for the lowest n among all
-    std::stable_sort(minVals.begin(), minVals.end(), [](const auto &el1, const auto &el2) {return el1.second < el2.second;});
+    std::stable_sort(minVals.begin(), minVals.end(),
+                     [](const auto &el1, const auto &el2) {return el1.second < el2.second;});
     result.resize(n);
     std::transform(minVals.begin(), std::next(minVals.begin(), n), result.begin(),
                    [](const auto &el) {return el.first;});
@@ -57,7 +58,7 @@ double MixedWavefunction::at(size_t ind) const {
     return m_wfn[vibInd].at(elInd);
 }
 
-std::string MixedWavefunction::str() const{
+std::string MixedWavefunction::str() const {
     std::string out = "MixedWavefunction elements: ";
     for (size_t i = 0; i < m_dimension; ++i) {
         out += std::to_string(at(i)) + ", ";

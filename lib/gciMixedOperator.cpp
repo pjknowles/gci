@@ -1,5 +1,7 @@
 #include "gciMixedOperator.h"
 #include "gciRun.h"
+#include "gciConstants.h"
+
 
 #include <stdexcept>
 #include <valarray>
@@ -16,7 +18,9 @@ MixedOperator::MixedOperator
                                    m_inc_T1((bool) fcidump.parameter("INC_T1", std::vector<int>{0})[0]),
                                    m_inc_T2((bool) fcidump.parameter("INC_T1", std::vector<int>{0})[0]) {
     freq.resize(nMode);
+//    std::transform(freq.begin(), freq.end(), freq.begin(), [](auto el) {return el * constants::CM_TO_AU;});
     zpe = 0.5 * std::accumulate(freq.cbegin(), freq.cend(), 0.0);
+    std::cout << "MixedOperator: zpe = " << zpe << std::endl;
     auto file_exists = [](const std::string &fname) {
         if (std::ifstream{fname}.fail()) {
             std::cout << "Warning (MixedOperator): fcidump not found --" << fname << std::endl;
@@ -32,19 +36,27 @@ MixedOperator::MixedOperator
             std::string f = fcidump.fileName() + "_d1_" + std::to_string(iMode);
             store_fcidump(f, VibOp{VibOpType::Q, {iMode}});
         }
-    } else if (m_inc_d2) {
+    }
+    if (m_inc_d2) {
         for (int iMode = 0; iMode < nMode; ++iMode) {
             for (int jMode = 0; jMode <= iMode; ++jMode) {
                 std::string f = fcidump.fileName() + "_d2_" + std::to_string(iMode) + "_" + std::to_string(jMode);
                 store_fcidump(f, VibOp{VibOpType::Qsq, {iMode, jMode}});
             }
         }
-    } else if (m_inc_T1) {
+        for (auto &op : Hmix[VibOpType::Qsq]) {
+            if (op.vibOp.mode[0] != op.vibOp.mode[1]) continue;
+            auto i = op.vibOp.mode[0];
+            op.Hel.m_O0 -= freq[i];
+        }
+    }
+    if (m_inc_T1) {
         for (int iMode = 0; iMode < nMode; ++iMode) {
             std::string f = fcidump.fileName() + "_t1_" + std::to_string(iMode);
             store_fcidump(f, VibOp{VibOpType::dQ, {iMode}});
         }
-    } else if (m_inc_T2) {
+    }
+    if (m_inc_T2) {
         for (int iMode = 0; iMode < nMode; ++iMode) {
             std::string f = fcidump.fileName() + "_t2_" + std::to_string(iMode);
             if (file_exists(f)) {
@@ -108,22 +120,23 @@ double MixedOperator::O_Qsq(const HProduct &bra, const HProduct &ket, const VibO
         for (auto mode : vibOp.mode) {
 //    Suppress error when operator is exactly zero
 //            if (exc[mode] != 1) throw std::logic_error("Always 0.");
-            auto n = bra[mode][1] > ket[mode][1] ? bra[mode][1] : ket[mode][1];
+            auto n = braOcc[mode] > ketOcc[mode] ? braOcc[mode] : ketOcc[mode];
             eQsq *= std::sqrt(n / (2.0 * freq[mode]));
         }
     } else {
         auto mode = vibOp.mode[0];
         // Q_A * Q_A
         if (diff == 0) {
-            eQsq = -1.0 / freq[mode] * (bra[mode][1] + 0.5);
+            eQsq = -1.0 / freq[mode] * (braOcc[mode] + 0.5);
         } else if (diff == 2) {
-            auto n = bra[mode][1] > ket[mode][1] ? bra[mode][1] : ket[mode][1];
+            auto n = braOcc[mode] > ketOcc[mode] ? braOcc[mode] : ketOcc[mode];
             eQsq = 1.0 / (2 * freq[mode]) * std::sqrt(n * (n - 1));
         }
 //    Suppress error when operator is exactly zero
 //        else throw std::logic_error("Always 0.");
         else eQsq = 0.0;
     }
+    eQsq=1;
     return eQsq;
 }
 

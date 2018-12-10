@@ -18,7 +18,7 @@ OperatorBBO::OperatorBBO(const Options &options, std::string description) :
         m_nmDisp(options.parameter("NM_DISP", std::vector<double>(m_nMode, 0))),
         m_fcidump(options.parameter("FCIDUMP", std::vector<std::string>(1, "")).at(0)),
         m_Hel(constructOperator(FCIdump(m_fcidump))) {
-    for (auto iter = m_freq.begin(); iter < m_freq.end(); ++iter) *iter *= Constants::CM_TO_AU;
+    for (auto iter = m_freq.begin(); iter < m_freq.end(); ++iter) *iter *= constants::CM_TO_AU;
     std::cout << "FREQ = ";
     for (auto iter = m_freq.begin(); iter < m_freq.end(); ++iter) std::cout << *iter << ", ";
     std::cout << std::endl;
