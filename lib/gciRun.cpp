@@ -1542,7 +1542,8 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
       xout << "integral sizes " << integrals_aa.size() << " " << integrals_ab.size() << " " << integrals_bb.size()
            << std::endl;
     }
-    ptrdiff_t si,sj,sk,sl,oi,oj,ok,ol;
+    unsigned int si,sj,sk,sl;
+    size_t oi,oj,ok,ol;
     while ((type = dump.nextIntegral(si, oi, sj, oj, sk, ok, sl, ol, value)) != FCIdump::endOfFile) {
 //      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
