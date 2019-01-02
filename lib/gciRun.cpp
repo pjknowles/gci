@@ -1454,7 +1454,7 @@ Eigen::VectorXd gci::int1(const SymmetryMatrix::Operator& hamiltonian, int spin)
   Eigen::VectorXd result(basisSize);
   size_t off=0;
   for (auto si=0; si<8; si++)
-    for (auto oi=0; oi<hamiltonian.dimension(si); oi++)
+    for (size_t oi=0; oi<hamiltonian.dimension(si); oi++)
       result[off++] = hamiltonian.O1(spin>0).block(si)[(oi+1)*(oi+2)/2-1];
   return result;
 }
@@ -1467,10 +1467,10 @@ Eigen::MatrixXd gci::intJ(const SymmetryMatrix::Operator& hamiltonian, int spini
   Eigen::MatrixXd result(basisSize, basisSize);
   size_t i = 0;
   for (auto si = 0; si < 8; si++)
-    for (auto oi = 0; oi < hamiltonian.dimension(si, 0, spini > 0); oi++) {
+    for (size_t oi = 0; oi < hamiltonian.dimension(si, 0, spini > 0); oi++) {
       size_t j = 0;
       for (auto sj = 0; sj < 8; sj++)
-        for (auto oj = 0; oj < hamiltonian.dimension(sj, 0, spinj > 0); oj++)
+        for (size_t oj = 0; oj < hamiltonian.dimension(sj, 0, spinj > 0); oj++)
           result(j++, i) = hamiltonian.O2(spini > 0, spinj > 0).smat(0, si, oi, oi)->block(sj)[(oj + 2) * (oj + 1) / 2 - 1];
       i++;
     }
@@ -1484,10 +1484,10 @@ Eigen::MatrixXd gci::intK(const SymmetryMatrix::Operator& hamiltonian, int spin)
   Eigen::MatrixXd result(basisSize, basisSize);
   size_t i = 0;
   for (auto si = 0; si < 8; si++)
-    for (auto oi = 0; oi < hamiltonian.dimension(si, 0, spin > 0); oi++) {
+    for (size_t oi = 0; oi < hamiltonian.dimension(si, 0, spin > 0); oi++) {
       size_t j = 0;
       for (auto sj = 0; sj < 8; sj++)
-        for (auto oj = 0; oj < hamiltonian.dimension(sj, 0, spin > 0); oj++)
+        for (size_t oj = 0; oj < hamiltonian.dimension(sj, 0, spin > 0); oj++)
           result(j++, i) =
               ((si < sj) ?
                hamiltonian.O2(spin > 0, spin > 0).smat(si ^ sj, si, oi, oj)->blockMap(si)(oi, oj)
@@ -1522,7 +1522,6 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
     dump.rewind();
     double value;
     FCIdump::integralType type;
-    int i, j, k, l;
     auto &integrals_a = result.O1(true);
     integrals_a.assign(0);
     auto &integrals_b = result.O1(false);
@@ -1556,40 +1555,21 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
 
       if (type == FCIdump::I2aa) {
-        if (verbosity > 2) xout << "aa(" << i << j << "|" << k << l << ") = " << value << std::endl;
-        if (verbosity > 2) xout << "aa(" << k << l << "|" << i << j << ") = " << value << std::endl;
         (sij ? integrals_aa.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) : integrals_aa.smat(sij, si, oi, oj)->block(sk)[
             ok * (ok + 1) / 2 + ol]) = value;
         (sij ? integrals_aa.smat(sij, sk, ok, ol)->blockMap(si)(oi, oj) : integrals_aa.smat(sij, sk, ok, ol)->block(si)[
             oi * (oi + 1) / 2 + oj]) = value;
-//          if (sij)
-//           xout << "aa("<< i << j <<"|"<< k << l <<") = " << value
-//                <<" "<< integrals_aa.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol)
-//                <<" "<< &integrals_aa.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol)
-//                 -&integrals_aa.smat(0,0,0,0)->block(0)[0]
-//                <<std::endl;
       } else if (type == FCIdump::I2ab) {
-        if (verbosity > 2) xout << "ab(" << i << j << "|" << k << l << ") = " << value << std::endl;
         (sij ? integrals_ab.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) : integrals_ab.smat(sij, si, oi, oj)->block(sk)[
             ok * (ok + 1) / 2 + ol]) = value;
-//          if (sij)
-//           xout << "ab("<< i << j <<"|"<< k << l <<") = " << value
-//                <<" "<< integrals_ab.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol)
-//                <<" "<< &integrals_ab.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol)
-//                 -&integrals_ab.smat(0,0,0,0)->block(0)[0]
-//                <<std::endl;
       } else if (type == FCIdump::I2bb) {
-        if (verbosity > 2) xout << "bb(" << i << j << "|" << k << l << ") = " << value << std::endl;
-        if (verbosity > 2) xout << "bb(" << k << l << "|" << i << j << ") = " << value << std::endl;
         (sij ? integrals_bb.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) : integrals_bb.smat(sij, si, oi, oj)->block(sk)[
             ok * (ok + 1) / 2 + ol]) = value;
         (sij ? integrals_bb.smat(sij, sk, ok, ol)->blockMap(si)(oi, oj) : integrals_bb.smat(sij, sk, ok, ol)->block(si)[
             oi * (oi + 1) / 2 + oj]) = value;
       } else if (type == FCIdump::I1a) {
-        if (verbosity > 1) xout << "ha(" << i << "," << j << ") = " << value << std::endl;
         integrals_a.block(si).at(oi * (oi + 1) / 2 + oj) = value;
       } else if (type == FCIdump::I1b) {
-        if (verbosity > 1) xout << "hb(" << i << "," << j << ") = " << value << std::endl;
         integrals_b.block(si).at(oi * (oi + 1) / 2 + oj) = value;
       } else if (type == FCIdump::I0)
         result.m_O0 = value;
@@ -1619,7 +1599,7 @@ void gci::FCIDump(const SymmetryMatrix::Operator& op, const std::string filename
   int verbosity = 0;
   if (orbital_symmetries.empty())
     for (auto sym = 0; sym < 8; sym++)
-      for (auto i = 0; i < op.dimension(sym); i++)
+      for (size_t i = 0; i < op.dimension(sym); i++)
         orbital_symmetries.push_back(sym);
   size_t n = orbital_symmetries.size();
   dump.addParameter("IUHF", op.m_uhf ? 1 : 0);

@@ -520,7 +520,7 @@ void TransitionDensity::action(Wavefunction &w) const {
 
 SymmetryMatrix::Operator TransitionDensity::density(const Wavefunction &w) const {
   SymmetryMatrix::dim_t dimension(8);
-  for (auto i = 0; i < 8; i++) {
+  for (unsigned int i = 0; i < 8; i++) {
     dimension[i]=0;
     for (const auto& s : w.orbitalSpace->orbital_symmetries)
       if (s == i ) ++dimension[i];
