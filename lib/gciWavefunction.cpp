@@ -1149,5 +1149,3 @@ std::vector<gci::StringSet> Wavefunction::activeStrings(bool spinUp) const {
 //  }
   return results;
 }
-
-
