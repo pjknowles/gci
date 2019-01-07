@@ -575,7 +575,7 @@ std::vector<double> Run::Davidson(
   solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
   solver.m_roots = static_cast<size_t>(nState);
 
-  std::vector<std::vector<double> > Pcoeff;
+  std::vector<std::vector<double> > Pcoeff(nState);
   std::vector<Pvector> P;
   Presidual Presid(ham, P);
 
@@ -589,6 +589,7 @@ std::vector<double> Run::Davidson(
       solver.clearP();
       P.clear();
       Pcoeff.clear();
+      Pcoeff.resize(nState);
     }
     if (static_cast<size_t>(maxNP) > P.size()) { // find some more P space
       size_t NP = P.size();
@@ -623,7 +624,6 @@ std::vector<double> Run::Davidson(
             addHPP[p1 + (p0 - NP) * newNP] = gsparse.buffer_sparse.at(jdet1);
         }
       }
-      Pcoeff.resize(newNP);
       solver.addP(std::vector<Pvector>(P.begin() + NP, P.end()), addHPP.data(), ww, gg, Pcoeff);
     }
     Presid(Pcoeff, gg); // augment residual with contributions from P space
