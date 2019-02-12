@@ -1600,7 +1600,7 @@ void gci::FCIDump(const SymmetryMatrix::Operator& op, const std::string filename
   if (orbital_symmetries.empty())
     for (auto sym = 0; sym < 8; sym++)
       for (size_t i = 0; i < op.dimension(sym); i++)
-        orbital_symmetries.push_back(sym);
+        orbital_symmetries.push_back(sym+1);
   size_t n = orbital_symmetries.size();
   dump.addParameter("IUHF", op.m_uhf ? 1 : 0);
   dump.addParameter("ORBSYM", orbital_symmetries);
