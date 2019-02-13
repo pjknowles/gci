@@ -861,7 +861,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
         auto praa = gci::profiler->push("aa1 loop");
         unsigned int symexc = syma ^symb ^symmetry;
         //size_t nexc = h.pairSpace.find(-1)->second[symexc];
-        size_t nexc = result.O2(true, true).block_size(symexc);
+        size_t nexc = result.O2(true, true, false).block_size(symexc);
         size_t nsb = betaStrings[symb].size();
         if (nsb == 0) continue;
         for (StringSet::iterator aa1, aa0 = aa.begin();
@@ -901,7 +901,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
       for (unsigned int syma = 0; syma < 8; syma++) {
         if (!NextTask()) continue;
         unsigned int symexc = symb ^syma ^symmetry;
-        size_t nexc = result.O2(false, false).block_size(symexc);
+        size_t nexc = result.O2(false, false, false).block_size(symexc);
         size_t nsa = alphaStrings[syma].size();
         if (nsa == 0) continue;
         for (StringSet::iterator bb1, bb0 = bb.begin();
