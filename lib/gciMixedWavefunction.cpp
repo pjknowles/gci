@@ -82,7 +82,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperator &ham, const M
                 for (const auto &ket : connectedSet) {
                     auto jWfn = m_vibBasis.index(ket);
                     double expVal = ham.expectVal(bra, ket, op.vibOp);
-                    if (std::abs(expVal) < 1.e-12) continue;
+                    if (std::abs(expVal) < 1.e-14) continue;
                     wfn_scaled = expVal * w.m_wfn[jWfn];
                     m_wfn[iWfn].operatorOnWavefunction(op.Hel, wfn_scaled, parallel_stringset);
                 }
@@ -104,7 +104,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperator &ham, bool parallel
         for (const auto &hamTerm : ham) {
             for (const auto &op : hamTerm.second) {
                 auto expVal = ham.expectVal(bra, bra, op.vibOp);
-                if (std::abs(expVal) < 1.e-12) continue;
+                if (std::abs(expVal) < 1.e-14) continue;
                 wfn_scaled = m_wfn[iWfn];
                 wfn_scaled.diagonalOperator(op.Hel);
                 wfn_scaled *= expVal;
@@ -112,6 +112,28 @@ void MixedWavefunction::diagonalOperator(const MixedOperator &ham, bool parallel
             }
         }
     }
+}
+
+std::map<std::string, double> MixedWavefunction::hfMatElems(const MixedOperator &ham, const int n) const {
+    std::map<std::string, double> matEl;
+    std::map<VibOpType, const char *> rename{{VibOpType::HO, "HO"}, {VibOpType::dQ, "T1"}, {VibOpType::Q, "H1"},
+                                             {VibOpType::Qsq, "H2"}};
+    {
+        Wavefunction dummyWfn(m_wfn[0]);
+        dummyWfn.diagonalOperator(ham.Hel);
+        matEl["Hel"] = dummyWfn.at(n);
+    }
+    for (const auto &hamTerm : ham) {
+        for (const auto &op : hamTerm.second) {
+            Wavefunction dummyWfn(m_wfn[0]);
+            dummyWfn.diagonalOperator(op.Hel);
+            std::string name = rename[op.vibOp.type];
+            std::for_each(op.vibOp.mode.begin(), op.vibOp.mode.end(),
+                          [&name](const auto el) {name += "_" + std::to_string(el);});
+            matEl[name] = dummyWfn.at(n);
+        }
+    }
+    return matEl;
 }
 
 bool MixedWavefunction::compatible(const MixedWavefunction &w2) const {
@@ -220,7 +242,7 @@ double operator*(const MixedWavefunction &w1, const MixedWavefunction &w2) {
     if (!w1.compatible(w2))
         throw std::domain_error("Attempt to form scalar product between incompatible MixedWavefunction objects");
     double result = 0.0;
-    for (int i = 0; i < w1.size(); ++i) {
+    for (int i = 0; i < w1.wfn_size(); ++i) {
         result += w1.m_wfn[i] * w2.m_wfn[i];
     }
     return result;

@@ -28,7 +28,8 @@ void Davidson<t_Wavefunction, t_Operator>::message() {
     std::cout << "Davidson eigensolver, maximum iterations=" << maxIterations;
     std::cout << "; number of states=" << nState;
     std::cout << "; energy threshold=" << std::scientific << std::setprecision(1) << energyThreshold << std::endl;
-    xout << std::fixed << std::setprecision(8);
+    std::cout << "size of Fock space=" << prototype->size() << std::endl;
+    xout << std::fixed << std::setprecision(12);
 }
 
 template<class t_Wavefunction, class t_Operator>
@@ -40,7 +41,7 @@ void Davidson<MixedWavefunction, MixedOperator>::printMatrix() {
     MixedWavefunction action(gg[0]);
     w.allocate_buffer();
     action.allocate_buffer();
-    auto n = w.dimension();
+    auto n = w.size();
     std::vector<std::vector<double>> H(n, std::vector<double>(n, 0));
     std::cout << "Hamiltonian matrix (nxn):" << std::endl;
     std::cout << "n = " << n << std::endl;
@@ -66,7 +67,7 @@ void write_vec(const t_Wavefunction &wfn, const std::string &message) { }
 
 template<>
 void write_vec<MixedWavefunction>(const MixedWavefunction &w, const std::string &message) {
-    size_t n = w.dimension();
+    size_t n = w.size();
     std::cout << message << "  ";
     for (int i = 0; i < n; ++i) {
         std::cout << w.at(i) << " ";
@@ -74,12 +75,44 @@ void write_vec<MixedWavefunction>(const MixedWavefunction &w, const std::string 
     std::cout << std::endl;
 }
 
+//template<class t_Wavefunction, class t_Operator>
+//void printHFmatrixElements(const t_Wavefunction &wfn, const t_Operator &ham) { }
+
+template<class t_Wavefunction, class t_Operator>
+void printHFmatrixElements(const t_Wavefunction &wfn, const t_Operator &ham, int n) { }
+
+/*!
+ * @brief Prints expectation values of all terms in the Hamiltonian for specified HF determinant
+ * @param wfn
+ * @param ham
+ * @param n Index of electronic determinant
+ */
+template<>
+void printHFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunction &wfn, const MixedOperator &ham, int n) {
+    MixedOperator hamMod(ham);
+    for (auto &op : hamMod.Hmix[VibOpType::Qsq]) {
+        if (op.vibOp.mode[0] != op.vibOp.mode[1]) continue;
+        auto i = op.vibOp.mode[0];
+        op.Hel.m_O0 += std::pow(hamMod.freq[i], 2);
+    }
+    auto matEls = wfn.hfMatElems(hamMod, n);
+    std::cout << "Matrix elements over Determinant n = " << n << std::endl;
+    for (const auto &el : matEls) {
+        std::cout << el.first << " = " << el.second << std::endl;
+    }
+}
+
 template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::run() {
     auto prof = profiler->push("Davidson");
     message();
     initialize();
-    printMatrix();
+//    printMatrix();
+//    printHFmatrixElements(*prototype, *ham, 0);
+//    printHFmatrixElements(*prototype, *ham, 1);
+//    printHFmatrixElements(*prototype, *ham, 2);
+//    printHFmatrixElements(*prototype, *ham, 3);
+//    printHFmatrixElements(*prototype, *ham, 4);
     for (auto iteration = 1; iteration <= (size_t) maxIterations; iteration++) {
         action();
         solver.addVector(ww, gg, active);

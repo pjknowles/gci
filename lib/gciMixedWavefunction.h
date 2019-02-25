@@ -125,9 +125,17 @@ public:
      */
     void diagonalOperator(const MixedOperator &ham, bool parallel_stringset = false);
 
+    /*!
+     * @brief Evaluates electronic components of the mixed Hamiltonian for a particular HF state
+     * @param ham Mixed Hamiltonian
+     * @param n HF state
+     * @return maps operator name to its expectation value. See definition for naming converntion.
+     */
+    std::map<std::string, double> hfMatElems(const MixedOperator &ham, int n) const;
+
     //! A copy of the vibrational space
     VibSpace vibSpace() const {return m_vibSpace;}
-    size_t dimension() const {return m_dimension;}
+    size_t size() const {return m_dimension;}
     size_t elDim() const {return m_elDim;}
     size_t vibDim() const {return m_vibBasis.vibDim();}
 
@@ -147,7 +155,7 @@ protected:
      */
     std::vector<Wavefunction> m_wfn;
 
-    size_t size() const {return m_wfn.size();} //!< Size of the wavefunction buffer
+    size_t wfn_size() const {return m_wfn.size();} //!< Size of the wavefunction buffer (=size of vibrational space)
     auto begin() {return m_wfn.begin();} ///< beginning of this processor's data
     auto end() {return m_wfn.end();} ///< end of this processor's data
     auto cbegin() const {return m_wfn.cbegin();} ///< beginning of this processor's data

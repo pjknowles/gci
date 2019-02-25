@@ -47,7 +47,7 @@ MixedOperator::MixedOperator
         for (auto &op : Hmix[VibOpType::Qsq]) {
             if (op.vibOp.mode[0] != op.vibOp.mode[1]) continue;
             auto i = op.vibOp.mode[0];
-            op.Hel.m_O0 -= freq[i];
+            op.Hel.m_O0 -= std::pow(freq[i], 2);
         }
     }
     if (m_inc_T1) {
