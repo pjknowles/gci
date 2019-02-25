@@ -32,13 +32,13 @@ TEST_F(MixedWavefunction_Holstein_2site, minlocN) {
     wfn.allocate_buffer();
     wfn.diagonalOperator(ham);
     std::vector<std::pair<int, double>> minVals;
-    for (size_t i = 0; i < wfn.dimension(); ++i) {
+    for (size_t i = 0; i < wfn.size(); ++i) {
         minVals.emplace_back(i, wfn.at(i));
     }
     std::stable_sort(minVals.begin(), minVals.end(),
                      [](const auto &el1, const auto &el2) {return el1.second < el2.second;});
     std::vector<int> lowest_ref;
-    for (size_t n = 1; n < wfn.dimension(); ++n) {
+    for (size_t n = 1; n < wfn.size(); ++n) {
         lowest_ref.resize(n);
         lowest_ref[n-1] = minVals[n-1].first;
         auto lowest = wfn.minlocN(n);
@@ -67,7 +67,7 @@ TEST(MixedWavefunction_and_MixedOperator, holstein_2site_hamiltonian_matrix_elem
     ASSERT_EQ(wfn.vibSpace().excLvl, 2);
     ASSERT_EQ(wfn.elDim(), 2);
     ASSERT_EQ(wfn.vibDim(), 4);
-    ASSERT_EQ(wfn.dimension(), 8);
+    ASSERT_EQ(wfn.size(), 8);
     std::vector<std::vector<double>> H_ref{{0.5, 1., 0.5, 0., 0.5, 0., 0., 0.},
                                            {1., 0.5, 0., 0.5, 0., 0.5, 0., 0.},
                                            {0.5, 0., 1., 1., 0., 0., 0.5, 0.},
@@ -77,19 +77,19 @@ TEST(MixedWavefunction_and_MixedOperator, holstein_2site_hamiltonian_matrix_elem
                                            {0., 0., 0.5, 0., 0.5, 0., 1.5, 1.},
                                            {0., 0., 0., 0.5, 0., 0.5, 1., 1.5}};
     std::vector<std::vector<double>> H{};
-    for (int i = 0; i < wfn.dimension(); ++i) H.emplace_back(wfn.dimension(), 0);
+    for (int i = 0; i < wfn.size(); ++i) H.emplace_back(wfn.size(), 0);
     auto action = MixedWavefunction(wfn);
     action.allocate_buffer();
-    for (int i = 0; i < wfn.dimension(); ++i) {
+    for (int i = 0; i < wfn.size(); ++i) {
         wfn.zero();
         wfn.set(i, 1.0);
         action.zero();
         action.operatorOnWavefunction(ham, wfn);
-        for (int j = 0; j < wfn.dimension(); ++j) {
+        for (int j = 0; j < wfn.size(); ++j) {
             H[i][j] = action.at(j);
         }
     }
-    for (int k = 0; k < wfn.dimension(); ++k) {
+    for (int k = 0; k < wfn.size(); ++k) {
         EXPECT_THAT(H[k], ::testing::Pointwise(::testing::DoubleEq(), H_ref[k])) << "Column =" << k;
     }
 }
