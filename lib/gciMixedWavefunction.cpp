@@ -136,6 +136,38 @@ std::map<std::string, double> MixedWavefunction::hfMatElems(const MixedOperator 
     return matEl;
 }
 
+std::map<std::string, double> MixedWavefunction::ciMatElems(const MixedOperator &ham) const {
+    std::map<std::string, double> matEl;
+    std::map<VibOpType, const char *> rename{{VibOpType::HO, "HO"}, {VibOpType::dQ, "T1"}, {VibOpType::Q, "H1"},
+                                             {VibOpType::Qsq, "H2"}};
+    {
+        MixedWavefunction dummyWfn(*this);
+        dummyWfn.m_wfn[0].operatorOnWavefunction(ham.Hel, m_wfn[0], false);
+        matEl["Hel"] = dummyWfn.m_wfn[0].dot(m_wfn[0]);
+    }
+    for (const auto &hamTerm : ham) {
+        for (const auto &op : hamTerm.second) {
+            std::string name = rename[op.vibOp.type];
+            std::for_each(op.vibOp.mode.begin(), op.vibOp.mode.end(),
+                          [&name](const auto el) {name += "_" + std::to_string(el);});
+            MixedWavefunction dummyWfn(*this);
+            dummyWfn.m_wfn[0].operatorOnWavefunction(op.Hel, m_wfn[0], false);
+            matEl[name] = dummyWfn.m_wfn[0].dot(m_wfn[0]);
+        }
+    }
+    return matEl;
+}
+
+std::vector<double> MixedWavefunction::vec() const {
+    auto v = std::vector<double>(m_dimension);
+    for (int iW = 0, n = 0; iW < m_vibBasis.vibDim(); ++iW) {
+        for (size_t jEl = 0; jEl < m_wfn[iW].size(); ++jEl, ++n) {
+            v[n] = m_wfn[iW].at(jEl);
+        }
+    }
+    return std::vector<double>();
+}
+
 bool MixedWavefunction::compatible(const MixedWavefunction &w2) const {
     bool sameSize = (m_wfn.size() == w2.m_wfn.size());
     if (!sameSize) return sameSize;

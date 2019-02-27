@@ -133,6 +133,18 @@ public:
      */
     std::map<std::string, double> hfMatElems(const MixedOperator &ham, int n) const;
 
+    /*!
+     * @brief Evaluates expectation value of electronic MixedOperator terms over electronic wfn stored at vibrational GS
+     * @param ham Mixed Hamiltonian
+     * @return maps operator name to its expectation value. See definition for naming converntion.
+     */
+    std::map<std::string, double> ciMatElems(const MixedOperator &ham) const;
+
+    /*!
+     * @return Returns all coefficients in a single vector
+     */
+    std::vector<double> vec() const;
+
     //! A copy of the vibrational space
     VibSpace vibSpace() const {return m_vibSpace;}
     size_t size() const {return m_dimension;}
@@ -227,7 +239,7 @@ public:
     void zero();
 
     /*!
-     * @copydoc LinearAlgebra::vector::zero
+     * @copydoc LinearAlgebra::vector::clone
      * @todo change to managed pointer
      */
     MixedWavefunction *clone(int option = 0) const {return new MixedWavefunction(*this);}
