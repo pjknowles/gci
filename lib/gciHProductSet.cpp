@@ -64,7 +64,7 @@ void HProductSet::generateFullSpace() {
     }
 }
 
-size_t HProductSet::index(const HProduct &phi) {
+size_t HProductSet::index(const HProduct &phi) const {
     if (m_connectedSet) throw std::logic_error("Cannot be called for a connectedSet.");
     size_t index = 0;
     if (phi.empty()) index = 0;

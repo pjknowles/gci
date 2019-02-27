@@ -54,13 +54,13 @@ public:
      * @warning Cannot be called `if (connectedSet)`
      * @param phi Vibrational basis function
      */
-    size_t index(const HProduct &phi);
+    size_t index(const HProduct &phi) const;
 
     //! Total size of the vibrational space
     auto vibDim() const {return m_vibDim;}
 
     //! Size of the basis stored in `this`
-    auto size() const { return m_basis.size();}
+    auto size() const {return m_basis.size();}
 
     //! Total size of the vibrational space at each excitation level, starting from zero (i.e. at 2 = CI0 + CI1 + CI2)
     auto excLvlDim() const {return m_excLvlDim;}
