@@ -108,6 +108,15 @@ public:
        */
     double at(size_t offset) const;
 
+    /*!
+     * @brief Returns a constant reference to a wavefunction corresponding to vibrational product under offset
+     * @param offset Index to the vibrational product
+     * @return Reference to a wavefunction under offset
+     */
+    const Wavefunction & wavefunctionAt(size_t offset) const{
+        return m_wfn[offset];
+    }
+
     //! @brief Writes elements of wavefunction vector into a string
     std::string str() const;
 

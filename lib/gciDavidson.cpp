@@ -1,6 +1,7 @@
 #include "gciDavidson.h"
 
 #include <iomanip>
+#include <arpa/nameser.h>
 
 namespace gci {
 namespace run {
@@ -75,11 +76,8 @@ void write_vec<MixedWavefunction>(const MixedWavefunction &w, const std::string 
     std::cout << std::endl;
 }
 
-//template<class t_Wavefunction, class t_Operator>
-//void printHFmatrixElements(const t_Wavefunction &wfn, const t_Operator &ham) { }
-
 template<class t_Wavefunction, class t_Operator>
-void printHFmatrixElements(const t_Wavefunction &wfn, const t_Operator &ham, int n) { }
+void printDiagonalHFmatrixElements(const t_Wavefunction &wfn, const t_Operator &ham, int n) { }
 
 /*!
  * @brief Prints expectation values of all terms in the Hamiltonian for specified HF determinant
@@ -88,7 +86,9 @@ void printHFmatrixElements(const t_Wavefunction &wfn, const t_Operator &ham, int
  * @param n Index of electronic determinant
  */
 template<>
-void printHFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunction &wfn, const MixedOperator &ham, int n) {
+void
+printDiagonalHFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunction &wfn, const MixedOperator &ham,
+                                                                int n) {
     MixedOperator hamMod(ham);
     for (auto &op : hamMod.Hmix[VibOpType::Qsq]) {
         if (op.vibOp.mode[0] != op.vibOp.mode[1]) continue;
@@ -103,29 +103,165 @@ void printHFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunc
 }
 
 template<class t_Wavefunction, class t_Operator>
+void printMCSCFmatrixElements(const t_Wavefunction &wfn, const t_Operator &ham) { }
+
+/*!
+ * @brief Prints expectation values of all terms in the Hamiltonian over MCSCF
+ * @param wfn
+ * @param ham
+ */
+template<>
+void
+printMCSCFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunction &wfn, const MixedOperator &ham) {
+    MixedOperator hamMod(ham);
+    for (auto &op : hamMod.Hmix[VibOpType::Qsq]) {
+        if (op.vibOp.mode[0] != op.vibOp.mode[1]) continue;
+        auto i = op.vibOp.mode[0];
+        op.Hel.m_O0 += std::pow(hamMod.freq[i], 2);
+    }
+    // Write Determinants
+    for (size_t iD = 0; iD < wfn.elDim(); ++iD)
+        xout << wfn.wavefunctionAt(0).determinantAt(iD).str() << std::endl;
+    auto w_mcscf = std::vector<MixedWavefunction>(4, MixedWavefunction(wfn));
+    for (auto &el : w_mcscf) el.set(0.);
+    xout << "MCSCF expecation values of electronic terms " << std::endl;
+    w_mcscf[0].set(0, 0.967881967969);
+    w_mcscf[0].set(3, -0.251405043863);
+    w_mcscf[1].set(1, 0.707106781187);
+    w_mcscf[1].set(2, -0.707106781187);
+    w_mcscf[2].set(1, 0.707106781187);
+    w_mcscf[2].set(2, 0.707106781187);
+    w_mcscf[3].set(0, 0.251405043863);
+    w_mcscf[3].set(3, 0.967881967969);
+    for (int istate = 0; istate < 4; ++istate) {
+        auto matEls = w_mcscf[istate].ciMatElems(hamMod);
+        std::cout << "MCSCF state =  " << istate << std::endl;
+        for (const auto &el : matEls) {
+            std::cout << "  " << el.first << " = " << el.second << std::endl;
+        }
+    }
+    xout << "Ground state energies with vibrations " << std::endl;
+    // E = cT . H . C
+    auto blankW = MixedWavefunction(wfn);
+    for (int iState = 0; iState < 4; ++iState) {
+        blankW.set(0);
+        blankW.operatorOnWavefunction(ham, w_mcscf[iState]);
+        auto e = blankW.dot(w_mcscf[iState]);
+        xout << e << ",  ";
+    }
+    xout << std::endl;
+    return;
+    xout << "First vibrationally excited state energies" << std::endl;
+    for (auto &el : w_mcscf) el.set(0.);
+    w_mcscf[0].set(4, 0.967881967969);
+    w_mcscf[0].set(7, -0.251405043863);
+    w_mcscf[1].set(5, 0.707106781187);
+    w_mcscf[1].set(6, -0.707106781187);
+    w_mcscf[2].set(5, 0.707106781187);
+    w_mcscf[2].set(6, 0.707106781187);
+    w_mcscf[3].set(4, 0.251405043863);
+    w_mcscf[3].set(7, 0.967881967969);
+    for (int iState = 0; iState < 4; ++iState) {
+        blankW.set(0);
+        blankW.operatorOnWavefunction(ham, w_mcscf[iState]);
+        auto e = blankW.dot(w_mcscf[iState]);
+        xout << e << ",  ";
+    }
+    xout << std::endl;
+}
+
+template<class t_Wavefunction, class t_Operator>
+void printSCFmatrixElements(const t_Wavefunction &wfn, const t_Operator &ham) { }
+
+/*!
+ * @brief Prints expectation values of all terms in the Hamiltonian over Slater Determinants
+ */
+template<>
+void
+printSCFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunction &wfn, const MixedOperator &ham) {
+    MixedOperator hamMod(ham);
+    for (auto &op : hamMod.Hmix[VibOpType::Qsq]) {
+        if (op.vibOp.mode[0] != op.vibOp.mode[1]) continue;
+        auto i = op.vibOp.mode[0];
+        op.Hel.m_O0 += std::pow(hamMod.freq[i], 2);
+    }
+    std::map<VibOpType, const char *> rename{{VibOpType::HO, "HO"}, {VibOpType::dQ, "T1"}, {VibOpType::Q, "H1"},
+                                             {VibOpType::Qsq, "H2"}};
+    Wavefunction w(wfn.wavefunctionAt(0));
+    Wavefunction action(w);
+    w.allocate_buffer();
+    action.allocate_buffer();
+    auto n = w.size();
+    std::vector<std::vector<double>> H(n, std::vector<double>(n, 0));
+    std::cout << "Hamiltonian matrix (nxn):" << std::endl;
+    std::cout << "n = " << n << std::endl;
+    std::cout << "Hel\n{";
+    for (int i = 0; i < n; ++i) {
+        w.zero();
+        w.set(i, 1.0);
+        action.zero();
+        action.operatorOnWavefunction(hamMod.Hel, w);
+        std::cout << "{";
+        for (size_t j = 0; j < n; ++j) {
+            H[i][j] = action.at(j);
+            if (j == n - 1) std::cout << H[i][j] << "";
+            else std::cout << H[i][j] << ",";
+        }
+        if (i == n - 1) std::cout << "}};" << std::endl;
+        else std::cout << "}," << std::endl;
+    }
+    for (const auto &hamTerm : hamMod) {
+        for (const auto &op : hamTerm.second) {
+            std::string name = rename[op.vibOp.type];
+            std::for_each(op.vibOp.mode.begin(), op.vibOp.mode.end(),
+                          [&name](const auto el) {name += "_" + std::to_string(el);});
+            std::cout << name << "\n{";
+            for (int i = 0; i < n; ++i) {
+                w.zero();
+                w.set(i, 1.0);
+                action.zero();
+                action.operatorOnWavefunction(op.Hel, w);
+                std::cout << "{";
+                for (size_t j = 0; j < n; ++j) {
+                    H[i][j] = action.at(j);
+                    if (j == n - 1) std::cout << H[i][j] << "";
+                    else std::cout << H[i][j] << ",";
+                }
+                if (i == n - 1) std::cout << "}};" << std::endl;
+                else std::cout << "}," << std::endl;
+            }
+        }
+    }
+}
+
+template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::run() {
     auto prof = profiler->push("Davidson");
     message();
     initialize();
 //    printMatrix();
-//    printHFmatrixElements(*prototype, *ham, 0);
-//    printHFmatrixElements(*prototype, *ham, 1);
-//    printHFmatrixElements(*prototype, *ham, 2);
-//    printHFmatrixElements(*prototype, *ham, 3);
-//    printHFmatrixElements(*prototype, *ham, 4);
+    printDiagonalHFmatrixElements(*prototype, *ham, 0);
+    printDiagonalHFmatrixElements(*prototype, *ham, 1);
+    printDiagonalHFmatrixElements(*prototype, *ham, 2);
+    printDiagonalHFmatrixElements(*prototype, *ham, 3);
+    printMCSCFmatrixElements(*prototype, *ham);
+    printSCFmatrixElements(*prototype, *ham);
     for (auto iteration = 1; iteration <= (size_t) maxIterations; iteration++) {
         action();
         solver.addVector(ww, gg, active);
         update();
-        if (solver.endIteration(ww, gg, active)) break;
+        if (solver.endIteration(ww, gg, active) && iteration > 4) break;
     }
     if (solver.m_verbosity > 0)
         xout << "Number of actions of matrix on vector = " << solver.m_actions << std::endl;
-//    for (auto root = 0; root < nState; root++) {
-//        write_vec(ww[root],
-//                  "eigenvector " + std::to_string(root) + " active=" + std::to_string(active[root]) + " converged=" +
-//                  std::to_string(solver.errors()[root]) + ":");
-//    }
+    xout << "energies: ";
+    for (int i = 0; i < nState; ++i) xout << solver.eigenvalues()[i] << ", ";
+    xout << std::endl;
+    for (auto root = 0; root < nState; root++) {
+        write_vec(ww[root],
+                  "eigenvector " + std::to_string(root) + " active=" + std::to_string(active[root]) + " error=" +
+                  std::to_string(solver.errors()[root]) + ":    ");
+    }
 }
 
 template<class t_Wavefunction, class t_Operator>

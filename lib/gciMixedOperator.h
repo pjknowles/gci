@@ -50,6 +50,7 @@ public:
  */
 struct MixedOpTerm {
     MixedOpTerm(VibOp vibOp, const FCIdump &fcidump) : vibOp(std::move(vibOp)), Hel(constructOperator(fcidump)) { };
+    MixedOpTerm(VibOp vibOp, const SymmetryMatrix::Operator &op) : vibOp(std::move(vibOp)), Hel(op) { };
     VibOp vibOp;
     SymmetryMatrix::Operator Hel;
 };
@@ -101,6 +102,8 @@ public:
      * @param fcidump Name of FCIdump file passed to gci
      */
     explicit MixedOperator(const FCIdump &fcidump);
+    MixedOperator() : nMode(0), freq({}), zpe(0), Hel({0, 0}, 0, false, 0, true, "dummy"), Hmix({}), m_inc_d1(false),
+                      m_inc_d2(false), m_inc_T1(false), m_inc_T2(false) { }
     ~MixedOperator() = default;
 
     /*!
@@ -120,10 +123,10 @@ public:
     double zpe; //!< Vibrational zero point energy at HO level
     SymmetryMatrix::Operator Hel; //!< Electronic Hamiltonian
     std::map<VibOpType, std::vector<MixedOpTerm>> Hmix; //!< All mixed vibrational-electronic terms, mapped by VibOpType
-    bool inc_d1(){return m_inc_d1;}
-    bool inc_d2(){return m_inc_d2;}
-    bool inc_T1(){return m_inc_T1;}
-    bool inc_T2(){return m_inc_T2;}
+    bool inc_d1() {return m_inc_d1;}
+    bool inc_d2() {return m_inc_d2;}
+    bool inc_T1() {return m_inc_T1;}
+    bool inc_T2() {return m_inc_T2;}
 protected:
     bool m_inc_d1;
     bool m_inc_d2;

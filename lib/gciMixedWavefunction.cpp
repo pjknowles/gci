@@ -3,6 +3,7 @@
 
 #include <limits>
 #include <utility>
+#include <numeric>
 
 namespace gci {
 
@@ -151,8 +152,10 @@ std::map<std::string, double> MixedWavefunction::ciMatElems(const MixedOperator 
             std::for_each(op.vibOp.mode.begin(), op.vibOp.mode.end(),
                           [&name](const auto el) {name += "_" + std::to_string(el);});
             MixedWavefunction dummyWfn(*this);
+            dummyWfn.zero();
             dummyWfn.m_wfn[0].operatorOnWavefunction(op.Hel, m_wfn[0], false);
-            matEl[name] = dummyWfn.m_wfn[0].dot(m_wfn[0]);
+            auto norm = m_wfn[0].dot(m_wfn[0]);
+            matEl[name] = dummyWfn.m_wfn[0].dot(m_wfn[0]) / norm;
         }
     }
     return matEl;
@@ -165,7 +168,7 @@ std::vector<double> MixedWavefunction::vec() const {
             v[n] = m_wfn[iW].at(jEl);
         }
     }
-    return std::vector<double>();
+    return v;
 }
 
 bool MixedWavefunction::compatible(const MixedWavefunction &w2) const {

@@ -8,6 +8,77 @@
 #include <fstream>
 
 namespace gci {
+SymmetryMatrix::Operator constructOperatorT1(const FCIdump &dump) {
+    std::vector<char> portableByteStream;
+    int lPortableByteStream;
+    int rank = 0;
+#ifdef HAVE_MPI_H
+    MPI_Comm_rank(MPI_COMM_COMPUTE, &rank);
+#endif
+    if (rank == 0) {
+        int verbosity = 0;
+        std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
+        SymmetryMatrix::dim_t dim(8);
+        for (const auto &s : orbital_symmetries) {
+            dim.at(s - 1)++;
+        }
+        SymmetryMatrix::Operator result(SymmetryMatrix::dims_t{dim, dim, dim, dim}, 1, dump.parameter("IUHF")[0] > 0,
+                                        {-1, -1}, {-1, -1}, 0, true, "Hamiltonian T1");
+
+        dump.rewind();
+        double value;
+        FCIdump::integralType type;
+        int i, j, k, l;
+        auto &integrals_a = result.O1(true);
+        integrals_a.assign(0);
+        auto &integrals_b = result.O1(false);
+        integrals_b.assign(0);
+        if (verbosity > 0) {
+            xout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
+            xout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
+        }
+        off_t si, sj, sk, sl, oi, oj, ok, ol;
+        while ((type = dump.nextIntegral(si, oi, sj, oj, sk, ok, sl, ol, value)) != FCIdump::endOfFile) {
+//      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
+//      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
+            if (si < sj || (si == sj && oi < oj)) {
+                std::swap(oi, oj);
+                std::swap(si, sj);
+            }
+            if (sk < sl || (sk == sl && ok < ol)) {
+                std::swap(ok, ol);
+                std::swap(sk, sl);
+            }
+            unsigned int sij = si ^sj;
+//      xout << "\nvalue: "<<value<<std::endl;
+//      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
+//      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
+
+            if (type == FCIdump::I1a) {
+                if (verbosity > 1) xout << "ha(" << i << "," << j << ") = " << value << std::endl;
+                integrals_a.block(si).at(oi * (oi + 1) / 2 + oj) = value;
+            } else if (type == FCIdump::I1b) {
+                if (verbosity > 1) xout << "hb(" << i << "," << j << ") = " << value << std::endl;
+                integrals_b.block(si).at(oi * (oi + 1) / 2 + oj) = value;
+            } else if (type == FCIdump::I0)
+                result.m_O0 = value;
+        }
+        if (verbosity > 0) xout << result << std::endl;
+        portableByteStream = result.bytestream().data();
+        lPortableByteStream = portableByteStream.size();
+    }
+#ifdef HAVE_MPI_H
+    MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, MPI_COMM_COMPUTE);
+#endif
+    char *buf = (rank == 0) ? portableByteStream.data() : (char *) malloc(lPortableByteStream);
+#ifdef HAVE_MPI_H
+    MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, MPI_COMM_COMPUTE);
+#endif
+    class bytestream bs(buf);
+    auto result = SymmetryMatrix::Operator::construct(bs);
+    if (rank != 0) free(buf);
+    return result;
+}
 
 MixedOperator::MixedOperator
         (const FCIdump &fcidump) : nMode(fcidump.parameter("NMODE", std::vector<int>{0})[0]),
@@ -53,7 +124,9 @@ MixedOperator::MixedOperator
     if (m_inc_T1) {
         for (int iMode = 0; iMode < nMode; ++iMode) {
             std::string f = fcidump.fileName() + "_t1_" + std::to_string(iMode);
-            store_fcidump(f, VibOp{VibOpType::dQ, {iMode}});
+            if (file_exists(f))
+                Hmix[VibOpType::dQ].push_back(
+                        MixedOpTerm(VibOp{VibOpType::dQ, {iMode}}, constructOperatorT1(FCIdump(f))));
         }
     }
     if (m_inc_T2) {
@@ -127,16 +200,15 @@ double MixedOperator::O_Qsq(const HProduct &bra, const HProduct &ket, const VibO
         auto mode = vibOp.mode[0];
         // Q_A * Q_A
         if (diff == 0) {
-            eQsq = -1.0 / freq[mode] * (braOcc[mode] + 0.5);
+            eQsq = 0.5 * 1.0 / freq[mode] * (braOcc[mode] + 0.5);
         } else if (diff == 2) {
             auto n = braOcc[mode] > ketOcc[mode] ? braOcc[mode] : ketOcc[mode];
-            eQsq = 1.0 / (2 * freq[mode]) * std::sqrt(n * (n - 1));
+            eQsq = 0.5 * 1.0 / (2. * freq[mode]) * std::sqrt(n * (n - 1));
         }
 //    Suppress error when operator is exactly zero
 //        else throw std::logic_error("Always 0.");
         else eQsq = 0.0;
     }
-    eQsq=1;
     return eQsq;
 }
 
