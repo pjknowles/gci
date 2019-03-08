@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
   }
   if (argc > 1) strcpy(fcidumpname, argv[1]);
 
-  size_t memory = 100000;
+  size_t memory = 1000000000;
   for (int i = 2; i < argc; i++) {
     std::string s(argv[i]);
     size_t equals = s.find('=');

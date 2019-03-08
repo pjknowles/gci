@@ -37,7 +37,8 @@ SymmetryMatrix::Operator constructOperatorT1(const FCIdump &dump) {
             xout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
             xout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
         }
-        off_t si, sj, sk, sl, oi, oj, ok, ol;
+        unsigned int si,sj,sk,sl;
+        size_t oi,oj,ok,ol;
         while ((type = dump.nextIntegral(si, oi, sj, oj, sk, ok, sl, ol, value)) != FCIdump::endOfFile) {
 //      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;

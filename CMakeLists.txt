@@ -1,52 +1,23 @@
 cmake_minimum_required(VERSION 3.11)
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 project(gci)
-enable_language(CXX)
-#TODO Need to split dependency libraries into CXX and Fortran  components and only compile the one that's needed
-enable_language(Fortran)
+message("Build ${CMAKE_PROJECT_NAME} with CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
 
 ########## Options ##########
-
-add_definitions(-DNOMAIN) # Do we want it global? Thish should really be a variable passed to a specific target
-set(MEMORY_FORTRAN OFF)
 
 # Allow messages from scripts to be shown
 set(FETCHCONTENT_QUIET OFF)
 
 
-########## Global Compiler Flags ##########
-if (NOT DEFINED ${CMAKE_BUILD_TYPE} OR ${CMAKE_BUILD_TYPE} STREQUAL "RELEASE")
-    include(CheckCXXCompilerFlag)
-    CHECK_CXX_COMPILER_FLAG("-O3 -march=native" _native)
-    if (_native)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native")
-        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native")
-    endif ()
-endif ()
-#message("CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS} ")
-set(CMAKE_CXX_FLAGS "-g ")
-
-include(ProcessorCount)
-ProcessorCount(NPROC)
-if (NPROC EQUAL 0)
-    set(NPROC 1)
-endif ()
-if (NPROC EQUAL 8)
-    #    hack to avoid overload on workstation / CI
-    set(NPROC 4)
-endif ()
-message("Number of processors ${NPROC}")
-set(CTEST_BUILD_FLAGS -j${NPROC})
-
-
 ########## Dependencies ##########
 
 include(FetchContent)
+set(SYMMETRY_MATRIX_DOUBLE ON CACHE BOOL "Whether to build and test symmetry_matrix with double data type" FORCE)
+set(SYMMETRY_MATRIX_COMPLEXDOUBLE OFF CACHE BOOL "Whether to build and test symmetry_matrix with complex-double data type" FORCE)
+set(SYMMETRY_MATRIX_FLOAT OFF CACHE BOOL "Whether to build and test symmetry_matrix with float data type" FORCE)
 add_subdirectory(dependencies)
 
-find_package(Eigen3 3.3)
 if (NOT TARGET Eigen3::Eigen)
     FetchContent_GetProperties(eigen3_dep)
     if (NOT eigen3_dep_POPULATED)
@@ -58,26 +29,9 @@ if (NOT TARGET Eigen3::Eigen)
     endif ()
 endif ()
 
-find_package(MPI REQUIRED CXX Fortran)
-#TODO should this be added to the appropriate targets only, or is this needed by everyone?
+find_package(MPI REQUIRED CXX )
+#TODO Consider reflecting this mandatory provision of MPI in the code, ie remove #ifdef HAVE_MPI_H
 add_definitions(-DHAVE_MPI_H)
-# OpenMPI root guard: https://github.com/open-mpi/ompi/issues/4451
-if ("$ENV{USER}" STREQUAL "root" OR "$ENV{HOME}" STREQUAL "/root")
-    set(MPIOPTIONS "--allow-run-as-root") # used in tests
-endif ()
-
-#TODO this should only be needed by the libraries and they should define their own dependencies
-find_package(MKL)
-if (MKL_FOUND)
-    add_definitions(-DEIGEN_USE_MKL_ALL)
-    message("MKL link libraries are ${MKL_LIBRARIES}")
-else (MKL_FOUND)
-    find_package(BLAS REQUIRED)
-    if (BLAS_FOUND)
-        message("Blas link library is ${BLAS_LIBRARIES}")
-    endif (BLAS_FOUND)
-endif (MKL_FOUND)
-
 
 ########## Targets ##########
 
@@ -94,7 +48,7 @@ if (DOXYGEN_FOUND)
     add_custom_target(${PROJECT_NAME}-doc ALL
             DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/html/index.xhtml
             )
-    file(GLOB headers src/*.h)
+    file(GLOB headers src/*.h lib/*.h)
     add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/html/index.xhtml
             COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
             DEPENDS ${SRC_LIST} ${headers} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile

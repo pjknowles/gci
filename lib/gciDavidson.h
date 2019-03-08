@@ -86,7 +86,6 @@ protected:
     //! Get the new vector, $r = A u - \lambda u$
     void update();
     LinearAlgebra::LinearEigensystem<t_Wavefunction> solver; //!< Iterative solver
-    std::vector<bool> active; //!<
     ParameterVectorSet ww; //!< Set of current solutions
     ParameterVectorSet gg; //!< Set of residual vectors
 

@@ -248,9 +248,9 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     printSCFmatrixElements(*prototype, *ham);
     for (auto iteration = 1; iteration <= (size_t) maxIterations; iteration++) {
         action();
-        solver.addVector(ww, gg, active);
+        solver.addVector(ww, gg);
         update();
-        if (solver.endIteration(ww, gg, active) && iteration > 4) break;
+        if (solver.endIteration(ww, gg) && iteration > 4) break;
     }
     if (solver.m_verbosity > 0)
         xout << "Number of actions of matrix on vector = " << solver.m_actions << std::endl;
@@ -259,7 +259,7 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     xout << std::endl;
     for (auto root = 0; root < nState; root++) {
         write_vec(ww[root],
-                  "eigenvector " + std::to_string(root) + " active=" + std::to_string(active[root]) + " error=" +
+                  "eigenvector " + std::to_string(root) + " active=" + std::to_string(solver.active(root)) + " error=" +
                   std::to_string(solver.errors()[root]) + ":    ");
     }
 }
@@ -271,7 +271,6 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
     diagonalH->diagonalOperator(*ham);
     std::vector<int> roots(nState, 0);
     for (int root = 0; root < nState; root++) {
-        active.emplace_back(true);
         ww.push_back(t_Wavefunction(*prototype, 0));
         ww.back().allocate_buffer();
         ww.back().zero();
@@ -296,7 +295,7 @@ void Davidson<t_Wavefunction, t_Operator>::action() {
 //        write_vec<t_Wavefunction>(x, "eigenvector applied on Hc " + std::to_string(k) + " before update");
         t_Wavefunction &g = gg[k];
         g.zero();
-        if (active[k]) {
+        if (solver.active().at(k)) {
             auto prof = profiler->push("Hc");
             g.operatorOnWavefunction(*ham, x, parallel_stringset);
         }

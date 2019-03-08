@@ -530,7 +530,6 @@ std::vector<double> Run::DIIS(const SymmetryMatrix::Operator &ham, const State &
   ww.emplace_back(prototype);
   (ww.back()).set((double) 0);
   (ww.back()).set(reference, (double) 1);
-  std::vector<bool> active(1,true);
 //  double e0=d.at(reference);
   //  g -= (e0-(double)1e-10);
 //      xout << "Diagonal H: " << d.str(2) << std::endl;
@@ -541,12 +540,12 @@ std::vector<double> Run::DIIS(const SymmetryMatrix::Operator &ham, const State &
   solver.m_thresh = energyThreshold;
   solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
   for (size_t iteration = 0; iteration < static_cast<size_t>(maxIterations); iteration++) {
-    resid(ww, gg, active);
-    solver.addVector(ww, gg, active);
+    resid(ww, gg, solver.active());
+    solver.addVector(ww, gg);
     std::vector<double> shift;
     shift.push_back(0);
     precon(ww, gg, shift);
-    if (solver.endIteration(ww, gg, active)) break;
+    if (solver.endIteration(ww, gg)) break;
   }
   //      xout << "Final w: "<<w.str(2)<<std::endl;
   //      xout << "Final g: "<<g.str(2)<<std::endl;
@@ -581,9 +580,7 @@ std::vector<double> Run::Davidson(
   solver.m_thresh = energyThreshold;
   ParameterVectorSet gg;
   ParameterVectorSet ww;
-  std::vector<bool> active;
   for (int root = 0; root < nState; root++) {
-    active.push_back(true);
     ww.emplace_back(prototype);
     ww.back().allocate_buffer();
     gg.emplace_back(prototype);
@@ -598,7 +595,7 @@ std::vector<double> Run::Davidson(
   solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
   solver.m_roots = static_cast<size_t>(nState);
 
-  std::vector<std::vector<double> > Pcoeff;
+  std::vector<std::vector<double> > Pcoeff(nState);
   std::vector<Pvector> P;
   Presidual Presid(ham, P);
 
@@ -612,6 +609,7 @@ std::vector<double> Run::Davidson(
       solver.clearP();
       P.clear();
       Pcoeff.clear();
+      Pcoeff.resize(nState);
     }
     if (static_cast<size_t>(maxNP) > P.size()) { // find some more P space
       size_t NP = P.size();
@@ -622,7 +620,7 @@ std::vector<double> Run::Davidson(
         }
       } else { // subsequent
         Presid(Pcoeff, gg); // augment residual with contributions from P space
-        auto newP = solver.suggestP(ww, gg, active, (maxNP - NP));
+        auto newP = solver.suggestP(ww, gg, (maxNP - NP));
         for (const auto &pp : P)
           newP.erase(std::remove(newP.begin(), newP.end(), pp.begin()->first),
                      newP.end()); // remove anything already in P
@@ -646,7 +644,6 @@ std::vector<double> Run::Davidson(
             addHPP[p1 + (p0 - NP) * newNP] = gsparse.buffer_sparse.at(jdet1);
         }
       }
-      Pcoeff.resize(newNP);
       solver.addP(std::vector<Pvector>(P.begin() + NP, P.end()), addHPP.data(), ww, gg, Pcoeff);
     }
     Presid(Pcoeff, gg); // augment residual with contributions from P space
@@ -654,9 +651,9 @@ std::vector<double> Run::Davidson(
     for (auto root = 0; root < nState; root++)
       shift.push_back(-solver.eigenvalues()[root] + 1e-10);
     update(ww, gg, shift, true);
-    if (solver.endIteration(ww, gg, active)) break;
-    resid(ww, gg, active);
-    solver.addVector(ww, gg, active, Pcoeff);
+    if (solver.endIteration(ww, gg)) break;
+    resid(ww, gg, solver.active());
+    solver.addVector(ww, gg, Pcoeff);
   }
   if (solver.m_verbosity > 0)
     xout << "Number of actions of matrix on vector = " << solver.m_actions << std::endl;
@@ -1137,7 +1134,6 @@ void Run::IPT(const SymmetryMatrix::Operator &ham, const State &prototype, const
     gg.emplace_back(prototype);
     ParameterVectorSet ww;
     ww.emplace_back(prototype);
-    std::vector<bool> active(1,true);
     updater update(d, false);
     meanfield_residual resid(ham, false);
     if (false) { // print A not sure what this is all about!
@@ -1165,11 +1161,11 @@ void Run::IPT(const SymmetryMatrix::Operator &ham, const State &prototype, const
 //      solver.solve(gg,ww);
     for (size_t iteration = 0; iteration < solver.m_maxIterations; iteration++) {
       resid(ww, gg);
-      solver.addVector(ww, gg, active);
+      solver.addVector(ww, gg);
       std::vector<double> shift;
       shift.push_back(0);
       update(ww, gg, shift);
-      if (solver.endIteration(ww, gg, active)) break;
+      if (solver.endIteration(ww, gg)) break;
     }
     xout << "Final g: " << gg[0].values() << std::endl;
 //      xout << "Final w: "<<ww[0]->str(2)<<std::endl;
@@ -1388,7 +1384,6 @@ std::vector<double> Run::ISRSPT(
   gg.emplace_back(prototype);
   ParameterVectorSet ww;
   ww.emplace_back(prototype);
-  std::vector<bool> active(1,true);
   ww.back().set((double) 0);
   ww.back().set(reference, (double) 1);
   updater update(d, false);
@@ -1399,12 +1394,12 @@ std::vector<double> Run::ISRSPT(
   solver.m_maxIterations = maxIterations;
 //  solver.solve(gg,ww);
   for (int iteration = 0; iteration < maxIterations; iteration++) {
-    resid(ww, gg, active);
-    solver.addVector(ww, gg, active);
+    resid(ww, gg, solver.active());
+    solver.addVector(ww, gg);
     std::vector<double> shift;
     shift.push_back(0);
     update(ww, gg, shift);
-    if (solver.endIteration(ww, gg, active)) break;
+    if (solver.endIteration(ww, gg)) break;
   }
   //      xout << "Final w: "<<w.str(2)<<std::endl;
   //      xout << "Final g: "<<g.str(2)<<std::endl;
@@ -1479,7 +1474,7 @@ Eigen::VectorXd gci::int1(const SymmetryMatrix::Operator& hamiltonian, int spin)
   Eigen::VectorXd result(basisSize);
   size_t off=0;
   for (auto si=0; si<8; si++)
-    for (auto oi=0; oi<hamiltonian.dimension(si); oi++)
+    for (size_t oi=0; oi<hamiltonian.dimension(si); oi++)
       result[off++] = hamiltonian.O1(spin>0).block(si)[(oi+1)*(oi+2)/2-1];
   return result;
 }
@@ -1492,10 +1487,10 @@ Eigen::MatrixXd gci::intJ(const SymmetryMatrix::Operator& hamiltonian, int spini
   Eigen::MatrixXd result(basisSize, basisSize);
   size_t i = 0;
   for (auto si = 0; si < 8; si++)
-    for (auto oi = 0; oi < hamiltonian.dimension(si, 0, spini > 0); oi++) {
+    for (size_t oi = 0; oi < hamiltonian.dimension(si, 0, spini > 0); oi++) {
       size_t j = 0;
       for (auto sj = 0; sj < 8; sj++)
-        for (auto oj = 0; oj < hamiltonian.dimension(sj, 0, spinj > 0); oj++)
+        for (size_t oj = 0; oj < hamiltonian.dimension(sj, 0, spinj > 0); oj++)
           result(j++, i) = hamiltonian.O2(spini > 0, spinj > 0).smat(0, si, oi, oi)->block(sj)[(oj + 2) * (oj + 1) / 2 - 1];
       i++;
     }
@@ -1509,10 +1504,10 @@ Eigen::MatrixXd gci::intK(const SymmetryMatrix::Operator& hamiltonian, int spin)
   Eigen::MatrixXd result(basisSize, basisSize);
   size_t i = 0;
   for (auto si = 0; si < 8; si++)
-    for (auto oi = 0; oi < hamiltonian.dimension(si, 0, spin > 0); oi++) {
+    for (size_t oi = 0; oi < hamiltonian.dimension(si, 0, spin > 0); oi++) {
       size_t j = 0;
       for (auto sj = 0; sj < 8; sj++)
-        for (auto oj = 0; oj < hamiltonian.dimension(sj, 0, spin > 0); oj++)
+        for (size_t oj = 0; oj < hamiltonian.dimension(sj, 0, spin > 0); oj++)
           result(j++, i) =
               ((si < sj) ?
                hamiltonian.O2(spin > 0, spin > 0).smat(si ^ sj, si, oi, oj)->blockMap(si)(oi, oj)
@@ -1547,7 +1542,6 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
     dump.rewind();
     double value;
     FCIdump::integralType type;
-    int i, j, k, l;
     auto &integrals_a = result.O1(true);
     integrals_a.assign(0);
     auto &integrals_b = result.O1(false);
@@ -1562,7 +1556,8 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
       xout << "integral sizes " << integrals_aa.size() << " " << integrals_ab.size() << " " << integrals_bb.size()
            << std::endl;
     }
-    off_t si,sj,sk,sl,oi,oj,ok,ol;
+    unsigned int si,sj,sk,sl;
+    size_t oi,oj,ok,ol;
     while ((type = dump.nextIntegral(si, oi, sj, oj, sk, ok, sl, ol, value)) != FCIdump::endOfFile) {
 //      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
@@ -1580,40 +1575,21 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
 
       if (type == FCIdump::I2aa) {
-        if (verbosity > 2) xout << "aa(" << i << j << "|" << k << l << ") = " << value << std::endl;
-        if (verbosity > 2) xout << "aa(" << k << l << "|" << i << j << ") = " << value << std::endl;
         (sij ? integrals_aa.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) : integrals_aa.smat(sij, si, oi, oj)->block(sk)[
             ok * (ok + 1) / 2 + ol]) = value;
         (sij ? integrals_aa.smat(sij, sk, ok, ol)->blockMap(si)(oi, oj) : integrals_aa.smat(sij, sk, ok, ol)->block(si)[
             oi * (oi + 1) / 2 + oj]) = value;
-//          if (sij)
-//           xout << "aa("<< i << j <<"|"<< k << l <<") = " << value
-//                <<" "<< integrals_aa.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol)
-//                <<" "<< &integrals_aa.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol)
-//                 -&integrals_aa.smat(0,0,0,0)->block(0)[0]
-//                <<std::endl;
       } else if (type == FCIdump::I2ab) {
-        if (verbosity > 2) xout << "ab(" << i << j << "|" << k << l << ") = " << value << std::endl;
         (sij ? integrals_ab.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) : integrals_ab.smat(sij, si, oi, oj)->block(sk)[
             ok * (ok + 1) / 2 + ol]) = value;
-//          if (sij)
-//           xout << "ab("<< i << j <<"|"<< k << l <<") = " << value
-//                <<" "<< integrals_ab.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol)
-//                <<" "<< &integrals_ab.smat(sij,si,oi,oj)->blockMap(sk)(ok,ol)
-//                 -&integrals_ab.smat(0,0,0,0)->block(0)[0]
-//                <<std::endl;
       } else if (type == FCIdump::I2bb) {
-        if (verbosity > 2) xout << "bb(" << i << j << "|" << k << l << ") = " << value << std::endl;
-        if (verbosity > 2) xout << "bb(" << k << l << "|" << i << j << ") = " << value << std::endl;
         (sij ? integrals_bb.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) : integrals_bb.smat(sij, si, oi, oj)->block(sk)[
             ok * (ok + 1) / 2 + ol]) = value;
         (sij ? integrals_bb.smat(sij, sk, ok, ol)->blockMap(si)(oi, oj) : integrals_bb.smat(sij, sk, ok, ol)->block(si)[
             oi * (oi + 1) / 2 + oj]) = value;
       } else if (type == FCIdump::I1a) {
-        if (verbosity > 1) xout << "ha(" << i << "," << j << ") = " << value << std::endl;
         integrals_a.block(si).at(oi * (oi + 1) / 2 + oj) = value;
       } else if (type == FCIdump::I1b) {
-        if (verbosity > 1) xout << "hb(" << i << "," << j << ") = " << value << std::endl;
         integrals_b.block(si).at(oi * (oi + 1) / 2 + oj) = value;
       } else if (type == FCIdump::I0)
         result.m_O0 = value;
@@ -1643,8 +1619,8 @@ void gci::FCIDump(const SymmetryMatrix::Operator& op, const std::string filename
   int verbosity = 0;
   if (orbital_symmetries.empty())
     for (auto sym = 0; sym < 8; sym++)
-      for (auto i = 0; i < op.dimension(sym); i++)
-        orbital_symmetries.push_back(sym);
+      for (size_t i = 0; i < op.dimension(sym); i++)
+        orbital_symmetries.push_back(sym+1);
   size_t n = orbital_symmetries.size();
   dump.addParameter("IUHF", op.m_uhf ? 1 : 0);
   dump.addParameter("ORBSYM", orbital_symmetries);

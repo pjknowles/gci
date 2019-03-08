@@ -922,7 +922,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
       for (unsigned int syma = 0; syma < 8; syma++) {
         if (!NextTask()) continue;
         unsigned int symexc = symb ^syma ^symmetry;
-        size_t nexc = result.O2(false, false).block_size(symexc);
+        size_t nexc = result.O2(false, false, false).block_size(symexc);
         size_t nsa = alphaStrings[syma].size();
         if (nsa == 0) continue;
         for (StringSet::iterator bb1, bb0 = bb.begin();
