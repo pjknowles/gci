@@ -87,14 +87,14 @@ MixedOperator::MixedOperator
                                    m_inc_d1((bool) fcidump.parameter("INC_D1", std::vector<int>{0})[0]),
                                    m_inc_d2((bool) fcidump.parameter("INC_D2", std::vector<int>{0})[0]),
                                    m_inc_T1((bool) fcidump.parameter("INC_T1", std::vector<int>{0})[0]),
-                                   m_inc_T2((bool) fcidump.parameter("INC_T1", std::vector<int>{0})[0]) {
+                                   m_inc_T2((bool) fcidump.parameter("INC_T2", std::vector<int>{0})[0]) {
     freq.resize(nMode);
 //    std::transform(freq.begin(), freq.end(), freq.begin(), [](auto el) {return el * constants::CM_TO_AU;});
     zpe = 0.5 * std::accumulate(freq.cbegin(), freq.cend(), 0.0);
     std::cout << "MixedOperator: zpe = " << zpe << std::endl;
     auto file_exists = [](const std::string &fname) {
         if (std::ifstream{fname}.fail()) {
-            std::cout << "Warning (MixedOperator): fcidump not found --" << fname << std::endl;
+            std::cout << "Warning (MixedOperator): fcidump not found   " << fname << std::endl;
             return false;
         }
         return true;
