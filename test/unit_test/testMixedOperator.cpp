@@ -29,7 +29,7 @@ TEST(VibOp, constructor) {
 }
 
 TEST(MixedOperator, fcidump_constructor) {
-    std::string fcidump = "fcidump_holstein_2site";
+    std::string fcidump = "data/fcidump_holstein_2site";
     FCIdump dump{fcidump};
     SymmetryMatrix::Operator Hel = constructOperator(dump);
     MixedOperator ham{FCIdump(fcidump)};

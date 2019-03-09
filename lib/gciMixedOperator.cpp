@@ -201,10 +201,10 @@ double MixedOperator::O_Qsq(const HProduct &bra, const HProduct &ket, const VibO
         auto mode = vibOp.mode[0];
         // Q_A * Q_A
         if (diff == 0) {
-            eQsq = 0.5 * 1.0 / freq[mode] * (braOcc[mode] + 0.5);
+            eQsq = 1.0 / freq[mode] * (braOcc[mode] + 0.5);
         } else if (diff == 2) {
             auto n = braOcc[mode] > ketOcc[mode] ? braOcc[mode] : ketOcc[mode];
-            eQsq = 0.5 * 1.0 / (2. * freq[mode]) * std::sqrt(n * (n - 1));
+            eQsq = 1.0 / (2. * freq[mode]) * std::sqrt(n * (n - 1));
         }
 //    Suppress error when operator is exactly zero
 //        else throw std::logic_error("Always 0.");
