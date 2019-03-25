@@ -122,7 +122,7 @@ void HProductSet::generateQsqCoupledSpace(const HProduct &bra, const VibOp &vibO
             newProd.changeModal(vibOp.mode[0], +2);
             m_basis.emplace_back(newProd);
         }
-    } else {
+    } else if (m_vibSpace.excLvl >= 2) {
         // Q_A * Q_B
         auto excLvlA = bra.excLvl(vibOp.mode[0]);
         auto excLvlB = bra.excLvl(vibOp.mode[1]);
