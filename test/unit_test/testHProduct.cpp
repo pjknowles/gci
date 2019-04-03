@@ -47,7 +47,7 @@ TEST_F(HProductF, empty_and_excitedModes) {
     EXPECT_TRUE(emptyProduct4.empty()) << "Empty product specified, assumes ground state";
     auto p = HProduct::t_Product{{{}}};
     auto emptyProduct5 = HProduct{p};
-    EXPECT_TRUE(emptyProduct5.empty())<< "Empty product specified with an erroneous extra {} i.e. t_Product{{{}}}";
+    EXPECT_TRUE(emptyProduct5.empty()) << "Empty product specified with an erroneous extra {} i.e. t_Product{{{}}}";
     EXPECT_EQ((std::vector<int>{}), emptyProduct.excitedModes());
     EXPECT_EQ(product.excitedModes(), (std::vector<int>{mode1, mode2, mode3}));
 }
@@ -89,7 +89,7 @@ TEST_F(HProductF, raise) {
     // Check working with the ground state
     auto empty = HProduct{};
     empty.raise(mode1);
-    EXPECT_EQ(empty.excLvl(mode1), 1)<< "Raising from the ground state";
+    EXPECT_EQ(empty.excLvl(mode1), 1) << "Raising from the ground state";
     EXPECT_EQ(empty.excLvl(), 1);
     auto singlyExcited = HProduct{{{mode1, 1}}};
     EXPECT_EQ(empty, singlyExcited) << "Ensure raised ground state is the same as constructed singly excited product";
@@ -100,10 +100,12 @@ TEST_F(HProductF, lower) {
     loweredProduct.lower(mode1);
     EXPECT_EQ(loweredProduct.excLvl(mode1), modal1 - 1);
     EXPECT_EQ(loweredProduct.excLvl(), excLvl - 1) << "Lowered down to ground state";
-    EXPECT_THROW(loweredProduct.lower(mode1), std::logic_error) << "Trying to lower below the ground state";
+    loweredProduct.lower(mode1);
+    EXPECT_FALSE(loweredProduct.withinSpace(vibSpace)) << "Lowered below the ground state";
     // Check working with the ground state
     auto empty = HProduct{};
-    EXPECT_THROW(empty.lower(mode1), std::logic_error) << "Trying to lower below the ground state";
+    empty.lower(mode1);
+    EXPECT_FALSE(loweredProduct.withinSpace(vibSpace)) << "Lowered below the ground state";
 }
 
 TEST_F(HProductF, changeModal) {
@@ -114,8 +116,8 @@ TEST_F(HProductF, changeModal) {
     auto loweredProduct = product;
     loweredProduct.changeModal(mode2, -diff);
     EXPECT_EQ(loweredProduct.excLvl(mode2), modal2 - diff);
-    EXPECT_THROW(loweredProduct.changeModal(mode1, -diff), std::logic_error)
-                        << "Trying to lower below the ground state";
+    loweredProduct.changeModal(mode1, -diff);
+    EXPECT_FALSE(loweredProduct.withinSpace(vibSpace)) << "Trying to lower below the ground state";
 }
 
 TEST_F(HProductF, withinSpace) {
