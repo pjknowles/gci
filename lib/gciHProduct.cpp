@@ -61,7 +61,7 @@ void HProduct::changeModal(const int iMode, const int diff) {
         (*modal)[1] += diff;
     }
     order();
-    check();
+//    check();
 }
 
 std::ostream &operator<<(std::ostream &os, HProduct const &obj) {

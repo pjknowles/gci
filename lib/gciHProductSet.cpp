@@ -90,19 +90,26 @@ size_t HProductSet::index(const HProduct &phi) const {
     return index;
 }
 
+namespace {
+void check_and_emplace(std::vector<HProduct> &basis, HProduct &bra, const VibSpace &vibSpace) {
+    if (bra.withinSpace(vibSpace)) {
+        basis.emplace_back(bra);
+    }
+}
+}
+
 void HProductSet::generateQcoupledSpace(const HProduct &bra, const VibOp &vibOp) {
     if (vibOp.type != VibOpType::Q && vibOp.type != VibOpType::dQ) throw std::logic_error("Mismatch of operator type");
     // Raise and lower by one
-    auto excLvl = bra.excLvl(vibOp.mode[0]);
-    if (excLvl >= 1) {
+    {
         auto newProd = bra;
         newProd.lower(vibOp.mode[0]);
-        m_basis.emplace_back(newProd);
+        check_and_emplace(m_basis, newProd, m_vibSpace);
     }
-    if (excLvl < m_vibSpace.nModal - 1) {
+    {
         auto newProd = bra;
         newProd.raise(vibOp.mode[0]);
-        m_basis.emplace_back(newProd);
+        check_and_emplace(m_basis, newProd, m_vibSpace);
     }
 }
 
@@ -114,45 +121,43 @@ void HProductSet::generateQsqCoupledSpace(const HProduct &bra, const VibOp &vibO
         if (excLvl >= 2) {
             auto newProd = bra;
             newProd.changeModal(vibOp.mode[0], -2);
-            m_basis.emplace_back(newProd);
+            check_and_emplace(m_basis, newProd, m_vibSpace);
         }
         m_basis.push_back(bra);
         if (excLvl < m_vibSpace.nModal - 2) {
             auto newProd = bra;
             newProd.changeModal(vibOp.mode[0], +2);
-            m_basis.emplace_back(newProd);
+            check_and_emplace(m_basis, newProd, m_vibSpace);
         }
     } else if (m_vibSpace.excLvl >= 2) {
         // Q_A * Q_B
-        auto excLvlA = bra.excLvl(vibOp.mode[0]);
-        auto excLvlB = bra.excLvl(vibOp.mode[1]);
         // lower, lower
-        if (excLvlA >= 1 && excLvlB >= 1) {
+        {
             auto newProd = bra;
             newProd.lower(vibOp.mode[0]);
             newProd.lower(vibOp.mode[1]);
-            m_basis.emplace_back(newProd);
+            check_and_emplace(m_basis, newProd, m_vibSpace);
         }
         // lower, raise
-        if (excLvlA >= 1 && excLvlB < m_vibSpace.nModal - 1) {
+        {
             auto newProd = bra;
             newProd.lower(vibOp.mode[0]);
             newProd.raise(vibOp.mode[1]);
-            m_basis.emplace_back(newProd);
+            check_and_emplace(m_basis, newProd, m_vibSpace);
         }
         // raise, lower
-        if (excLvlA < m_vibSpace.nModal - 1 && excLvlB >= 1) {
+        {
             auto newProd = bra;
             newProd.raise(vibOp.mode[0]);
             newProd.lower(vibOp.mode[1]);
-            m_basis.emplace_back(newProd);
+            check_and_emplace(m_basis, newProd, m_vibSpace);
         }
         // raise, raise
-        if (excLvlA < m_vibSpace.nModal - 1 && excLvlB < m_vibSpace.nModal - 1) {
+        {
             auto newProd = bra;
             newProd.raise(vibOp.mode[0]);
             newProd.raise(vibOp.mode[1]);
-            m_basis.emplace_back(newProd);
+            check_and_emplace(m_basis, newProd, m_vibSpace);
         }
     }
 }

@@ -63,6 +63,8 @@ public:
 
     /*!
      * @brief Changes occupied modal by `diff` excitations.
+     * @note No check is made over legitemacy of the resulted Product. An explicit check whether result is withinSpace
+     * has to be made.
      * @param iMode Mode to be changed
      * @param diff Relative number of excitations(de-excitations positive/negative values
      * @return Excited Hartree product
