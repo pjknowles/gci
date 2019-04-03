@@ -97,6 +97,7 @@ printDiagonalHFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavef
     }
     auto matEls = wfn.hfMatElems(hamMod, n);
     std::cout << "Matrix elements over Determinant n = " << n << std::endl;
+    xout << wfn.wavefunctionAt(0).determinantAt(n).str() << std::endl;
     for (const auto &el : matEls) {
         std::cout << el.first << " = " << el.second << std::endl;
     }
@@ -244,8 +245,9 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     printDiagonalHFmatrixElements(*prototype, *ham, 1);
     printDiagonalHFmatrixElements(*prototype, *ham, 2);
     printDiagonalHFmatrixElements(*prototype, *ham, 3);
-    printMCSCFmatrixElements(*prototype, *ham);
-    printSCFmatrixElements(*prototype, *ham);
+    printDiagonalHFmatrixElements(*prototype, *ham, 4);
+//    printMCSCFmatrixElements(*prototype, *ham);
+//    printSCFmatrixElements(*prototype, *ham);
     for (auto iteration = 1; iteration <= (size_t) maxIterations; iteration++) {
         action();
         solver.addVector(ww, gg);
