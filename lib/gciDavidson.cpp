@@ -64,16 +64,13 @@ void Davidson<MixedWavefunction, MixedOperator>::printMatrix() {
 }
 
 template<class t_Wavefunction>
-void write_vec(const t_Wavefunction &wfn, const std::string &message) { }
-
-template<>
-void write_vec<MixedWavefunction>(const MixedWavefunction &w, const std::string &message) {
+void write_vec(const t_Wavefunction &w, const std::string &message) {
     size_t n = w.size();
-    std::cout << message << "  ";
+    std::cout << message << "  {";
     for (int i = 0; i < n; ++i) {
-        std::cout << w.at(i) << " ";
+        std::cout << w.at(i) << ", ";
     }
-    std::cout << std::endl;
+    std::cout << "}" << std::endl;
 }
 
 template<class t_Wavefunction, class t_Operator>
@@ -236,16 +233,51 @@ printSCFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunction
 }
 
 template<class t_Wavefunction, class t_Operator>
+void printCImatrixElements(const t_Wavefunction &wfn, const t_Operator &ham) {
+    t_Wavefunction dummyWfn(wfn);
+    dummyWfn.operatorOnWavefunction(ham, wfn, false);
+    auto e = dummyWfn.dot(wfn);
+    xout << "CI expecation values of electronic terms " << std::endl;
+    xout << "Energy = " << e << std::endl;
+}
+
+/*!
+ * @brief Prints expectation values of all terms in the Hamiltonian over MCSCF
+ * @param wfn
+ * @param ham
+ */
+template<>
+void
+printCImatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunction &wfn, const MixedOperator &ham) {
+    MixedWavefunction dummyWfn(wfn);
+    dummyWfn.zero();
+    dummyWfn.operatorOnWavefunction(ham, wfn, false);
+    auto e = dummyWfn.dot(wfn);
+    MixedOperator hamMod(ham);
+    for (auto &op : hamMod.Hmix[VibOpType::Qsq]) {
+        if (op.vibOp.mode[0] != op.vibOp.mode[1]) continue;
+        auto i = op.vibOp.mode[0];
+        op.Hel.m_O0 += std::pow(hamMod.freq[i], 2);
+    }
+    xout << "CI expecation values of electronic terms " << std::endl;
+    xout << "Energy = " << e << std::endl;
+    auto matEls = wfn.ciMatElems(hamMod);
+    for (const auto &el : matEls) {
+        std::cout << "  " << el.first << " = " << el.second << std::endl;
+    }
+}
+
+template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::run() {
     auto prof = profiler->push("Davidson");
     message();
     initialize();
 //    printMatrix();
-    printDiagonalHFmatrixElements(*prototype, *ham, 0);
-    printDiagonalHFmatrixElements(*prototype, *ham, 1);
-    printDiagonalHFmatrixElements(*prototype, *ham, 2);
-    printDiagonalHFmatrixElements(*prototype, *ham, 3);
-    printDiagonalHFmatrixElements(*prototype, *ham, 4);
+//    printDiagonalHFmatrixElements(*prototype, *ham, 0);
+//    printDiagonalHFmatrixElements(*prototype, *ham, 1);
+//    printDiagonalHFmatrixElements(*prototype, *ham, 2);
+//    printDiagonalHFmatrixElements(*prototype, *ham, 3);
+//    printDiagonalHFmatrixElements(*prototype, *ham, 4);
 //    printMCSCFmatrixElements(*prototype, *ham);
 //    printSCFmatrixElements(*prototype, *ham);
     for (auto iteration = 1; iteration <= (size_t) maxIterations; iteration++) {
@@ -263,6 +295,7 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
         write_vec(ww[root],
                   "eigenvector " + std::to_string(root) + " active=" + std::to_string(solver.active(root)) + " error=" +
                   std::to_string(solver.errors()[root]) + ":    ");
+        printCImatrixElements(ww[root], *ham);
     }
 }
 
