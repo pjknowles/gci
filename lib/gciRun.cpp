@@ -378,16 +378,20 @@ std::vector<double> Run::run() {
 #endif
   } else if (method == "DAVIDSON") {
     if (options.parameter("VIBRONIC", 0)) {
-      auto ham = MixedOperator(FCIdump(options.parameter("FCIDUMP", "fcidump")));
-      auto wfn = MixedWavefunction(options);
-      run::Davidson<MixedWavefunction, MixedOperator> solver(std::move(wfn), std::move(ham), options);
-      solver.run();
+        auto ham = MixedOperator(FCIdump(options.parameter("FCIDUMP", "fcidump")));
+        auto wfn = MixedWavefunction(options);
+        run::Davidson<MixedWavefunction, MixedOperator> solver(std::move(wfn), std::move(ham), options);
+        solver.run();
+//        auto ham2 = m_hamiltonian;
+//        auto wfn2 = Wavefunction(prototype);
+//        auto solver2 = run::Davidson<Wavefunction, SymmetryMatrix::Operator>(std::move(wfn2), std::move(ham2), options);
+//        solver2.run();
     } else {
-      auto ham = m_hamiltonian;
-      auto wfn = Wavefunction(prototype);
-      auto solver = run::Davidson<Wavefunction, SymmetryMatrix::Operator>(std::move(wfn), std::move(ham), options);
-      solver.run();
-//      energies = Davidson(m_hamiltonian, prototype);
+        auto ham = m_hamiltonian;
+        auto wfn = Wavefunction(prototype);
+        auto solver = run::Davidson<Wavefunction, SymmetryMatrix::Operator>(std::move(wfn), std::move(ham), options);
+        solver.run();
+//        energies = Davidson(m_hamiltonian, prototype);
     }
   } else if (method == "CS") {
     energies = CSDavidson(m_hamiltonian, prototype);
