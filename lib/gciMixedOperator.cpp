@@ -116,10 +116,12 @@ MixedOperator::MixedOperator
                 store_fcidump(f, VibOp{VibOpType::Qsq, {iMode, jMode}});
             }
         }
+        // Scale by the prefactor and subtract out the external potential
         for (auto &op : Hmix[VibOpType::Qsq]) {
             if (op.vibOp.mode[0] != op.vibOp.mode[1]) continue;
             auto i = op.vibOp.mode[0];
-            op.Hel.m_O0 -= std::pow(freq[i], 2);
+            op.Hel *= 0.5;
+            op.Hel.m_O0 -= 0.5 * std::pow(freq[i], 2);
         }
     }
     if (m_inc_T1) {
@@ -204,7 +206,7 @@ double MixedOperator::O_Qsq(const HProduct &bra, const HProduct &ket, const VibO
             eQsq = 1.0 / freq[mode] * (braOcc[mode] + 0.5);
         } else if (diff == 2) {
             auto n = braOcc[mode] > ketOcc[mode] ? braOcc[mode] : ketOcc[mode];
-            eQsq = 1.0 / (2. * freq[mode]) * std::sqrt(n * (n - 1));
+            eQsq = 0.5 / freq[mode] * std::sqrt(n * (n - 1));
         }
 //    Suppress error when operator is exactly zero
 //        else throw std::logic_error("Always 0.");

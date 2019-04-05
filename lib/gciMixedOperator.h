@@ -99,6 +99,9 @@ public:
      * @warning If INC_* statement is found, but any of the fcidump files do not exist, than the corresponding
      *          term is assumed to be zero (fcidump's that ARE found are still included).
      *
+     * @note Some of the vibrational operators have prefactors. Scaling of integrals by these prefactors is done on
+     * construction. The dump files should not be pre-scaled!
+     *
      * @param fcidump Name of FCIdump file passed to gci
      */
     explicit MixedOperator(const FCIdump &fcidump);
