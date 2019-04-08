@@ -155,6 +155,8 @@ std::map<std::string, double> MixedWavefunction::ciMatElems(const MixedOperator 
             dummyWfn.zero();
             dummyWfn.m_wfn[0].operatorOnWavefunction(op.Hel, m_wfn[0], false);
             auto norm = m_wfn[0].dot(m_wfn[0]);
+//            auto expVal = ham.expectVal(m_vibBasis[0], m_vibBasis[0], op.vibOp);
+//            matEl[name] = expVal * dummyWfn.m_wfn[0].dot(m_wfn[0]) / norm;
             matEl[name] = dummyWfn.m_wfn[0].dot(m_wfn[0]) / norm;
         }
     }

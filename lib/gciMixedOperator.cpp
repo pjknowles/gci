@@ -120,8 +120,7 @@ MixedOperator::MixedOperator
         for (auto &op : Hmix[VibOpType::Qsq]) {
             if (op.vibOp.mode[0] != op.vibOp.mode[1]) continue;
             auto i = op.vibOp.mode[0];
-            op.Hel *= 0.5;
-            op.Hel.m_O0 -= 0.5 * std::pow(freq[i], 2);
+            op.Hel.m_O0 -= std::pow(freq[i], 2);
         }
     }
     if (m_inc_T1) {
@@ -203,10 +202,10 @@ double MixedOperator::O_Qsq(const HProduct &bra, const HProduct &ket, const VibO
         auto mode = vibOp.mode[0];
         // Q_A * Q_A
         if (diff == 0) {
-            eQsq = 1.0 / freq[mode] * (braOcc[mode] + 0.5);
+            eQsq = 0.5 / freq[mode] * (braOcc[mode] + 0.5);
         } else if (diff == 2) {
             auto n = braOcc[mode] > ketOcc[mode] ? braOcc[mode] : ketOcc[mode];
-            eQsq = 0.5 / freq[mode] * std::sqrt(n * (n - 1));
+            eQsq = 0.25 / freq[mode] * std::sqrt(n * (n - 1));
         }
 //    Suppress error when operator is exactly zero
 //        else throw std::logic_error("Always 0.");
