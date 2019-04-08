@@ -268,10 +268,30 @@ printCImatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunction 
 }
 
 template<class t_Wavefunction, class t_Operator>
+void Davidson<t_Wavefunction, t_Operator>::prepareGuess() { }
+
+template<>
+void Davidson<MixedWavefunction, MixedOperator>::prepareGuess() {
+    // Currently assumes only 1 mode
+    auto nS = nState;
+    auto nMode = options.parameter("NMODE", int(0));
+    if (nMode != 1) return;
+    auto nM = options.parameter("NMODAL", int(0));
+    auto n = nS / nM;
+    Wavefunction w = prototype->wavefunctionAt(0);
+    // Modify options to choose the correct number of electronic states
+    Davidson<Wavefunction, SymmetryMatrix::Operator> elecSolver(std::move(w), SymmetryMatrix::Operator(ham->Hel),
+                                                                options);
+    elecSolver.run();
+    // Loop over electronic states, loop over modals, set each element of the electronic wavefunction
+}
+
+template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::run() {
     auto prof = profiler->push("Davidson");
     message();
     initialize();
+    prepareGuess();
 //    printMatrix();
 //    printDiagonalHFmatrixElements(*prototype, *ham, 0);
 //    printDiagonalHFmatrixElements(*prototype, *ham, 1);
@@ -292,9 +312,11 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     for (int i = 0; i < nState; ++i) xout << solver.eigenvalues()[i] << ", ";
     xout << std::endl;
     for (auto root = 0; root < nState; root++) {
-        write_vec(ww[root],
-                  "eigenvector " + std::to_string(root) + " active=" + std::to_string(solver.active(root)) + " error=" +
-                  std::to_string(solver.errors()[root]) + ":    ");
+//        write_vec(ww[root],
+//                  "eigenvector " + std::to_string(root) + " active=" + std::to_string(solver.active(root)) + " error=" +
+//                  std::to_string(solver.errors()[root]) + ":    ");
+        xout << "eigenvector " + std::to_string(root) + " active=" + std::to_string(solver.active(root)) + " error=" +
+                std::to_string(solver.errors()[root]) << std::endl;
         printCImatrixElements(ww[root], *ham);
     }
 }

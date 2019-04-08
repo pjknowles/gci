@@ -81,6 +81,8 @@ protected:
     void message();
     //!@brief Initializes containers necessary for running the calculation
     void initialize();
+    //! @brief Prepares an initial guess. For Mixed wavefunction it entails solving the electronic CI problem
+    void prepareGuess();
     //! Apply the Hamiltonian on the current solution
     void action();
     //! Get the new vector, $r = A u - \lambda u$
