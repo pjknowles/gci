@@ -11,7 +11,6 @@ using namespace gci;
 
 
 
-using namespace LinearAlgebra;
 using ParameterVectorSet = std::vector<Wavefunction>;
 using scalar = double;
 
@@ -515,7 +514,7 @@ std::vector<double> Run::DIIS(const SymmetryMatrix::Operator &ham, const State &
 //      xout << "Diagonal H: " << d.str(2) << std::endl;
   updater precon(d, true);
   residual resid(ham, true, residual_Q.get());
-  LinearAlgebra::DIIS<Wavefunction> solver;
+  IterativeSolver::DIIS<Wavefunction> solver;
   solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", 1);
   solver.m_thresh = energyThreshold;
   solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
@@ -556,7 +555,7 @@ std::vector<double> Run::Davidson(
   d.diagonalOperator(ham);
   updater update(d, false);
   residual resid(ham, false);
-  LinearAlgebra::LinearEigensystem<Wavefunction> solver;
+  IterativeSolver::LinearEigensystem<Wavefunction> solver;
   solver.m_thresh = energyThreshold;
   ParameterVectorSet gg;
   ParameterVectorSet ww;
@@ -1133,7 +1132,7 @@ void Run::IPT(const SymmetryMatrix::Operator &ham, const State &prototype, const
     }
     ww.back().set((double) 0);
     ww.back().set(referenceLocation + m % 2, (double) 1);
-    LinearAlgebra::DIIS<Wavefunction> solver;
+    IterativeSolver::DIIS<Wavefunction> solver;
     solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
     solver.m_thresh = options.parameter("TOL", std::vector<double>(1, (double) 1e-8)).at(0);
     solver.m_maxIterations = options.parameter("MAXIT", std::vector<int>(1, 1000)).at(0);
@@ -1368,7 +1367,7 @@ std::vector<double> Run::ISRSPT(
   ww.back().set(reference, (double) 1);
   updater update(d, false);
   residual resid(ham, false);
-  LinearAlgebra::LinearEigensystem<Wavefunction> solver; // TODO
+  IterativeSolver::LinearEigensystem<Wavefunction> solver; // TODO
   solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
   solver.m_thresh = energyThreshold;
   solver.m_maxIterations = maxIterations;
