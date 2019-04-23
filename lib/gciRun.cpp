@@ -635,7 +635,7 @@ std::vector<double> Run::Davidson(
     solver.addVector(ww, gg, Pcoeff);
   }
   if (solver.m_verbosity > 0)
-    xout << "Number of actions of matrix on vector = " << solver.m_actions << std::endl;
+    xout << "Number of actions of matrix on vector = " << solver.actions() << std::endl;
   for (auto root = 0; root < nState; root++) {
     m_wavefunctions.push_back(std::make_shared<Wavefunction>(ww[root]));
     m_wavefunctions.back()->m_properties["ENERGY"] = solver.eigenvalues()[root];
