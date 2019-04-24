@@ -748,7 +748,9 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
               size_t nsb = bb1 - bb0;
               if (!NextTask()) continue;
               TransitionDensity d(w, aa0, aa1, bb0, bb1, SymmetryMatrix::parityNone, false, false);
+              gci::profiler->start("TransitionDensity copy");
               TransitionDensity e(d);
+              gci::profiler->stop("TransitionDensity copy");
               MXM(&e[0], &d[0], &h.O2(true, false, false).block(symexc)[0], nsa * nsb, nexc, nexc, false);
               e.action(*this);
             }
