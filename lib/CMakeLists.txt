@@ -55,7 +55,14 @@ add_library(gci
         )
 target_include_directories(gci INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(gci PUBLIC Eigen3::Eigen Profiler FCIdump IterativeSolver symmetry_matrix memory molpro_plugin)
+find_package(BLAS)
+STRING(FIND "${BLAS_LIBRARIES}" "mkl" POS)
+if (POS GREATER -1)
+    message("Found MKL")
+    target_compile_definitions(gci PUBLIC -DEIGEN_USE_MKL_ALL)
+endif ()
+
+target_link_libraries(gci PUBLIC Eigen3::Eigen Profiler FCIdump IterativeSolver symmetry_matrix memory molpro_plugin ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
 
 target_include_directories(gci PUBLIC ${MPI_CXX_INCLUDE_PATH})
 target_link_libraries(gci PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
