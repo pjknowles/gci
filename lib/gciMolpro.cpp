@@ -13,6 +13,7 @@ static bool eigen = true;
 using namespace Eigen;
 
 void MxmDrvNN(double *Out, const double *A, const double *B, uint nRows, uint nLink, uint nCols, bool AddToDest) {
+#ifdef EIGEN_USE_MKL_ALL
   if (blas) {
     cblas_dgemm(CblasColMajor,
                 CblasNoTrans,
@@ -28,7 +29,9 @@ void MxmDrvNN(double *Out, const double *A, const double *B, uint nRows, uint nL
                 AddToDest ? 1 : 0,
                 Out,
                 nRows);
-  } else if (eigen) {
+  } else
+#endif
+  if (eigen) {
     Map<MatrixXd, Unaligned, Stride<Dynamic, Dynamic> >
         Am(const_cast<double *>(A), nRows, nLink, Stride<Dynamic, Dynamic>(nRows, 1));
     Map<MatrixXd, Unaligned, Stride<Dynamic, Dynamic> >
@@ -60,6 +63,7 @@ void MxmDrvTN(double *Out,
               uint nStrideLink,
               uint nCols,
               bool AddToDest) {
+#ifdef EIGEN_USE_MKL_ALL
   if (blas) {
     cblas_dgemm(CblasColMajor,
                 CblasTrans,
@@ -75,7 +79,9 @@ void MxmDrvTN(double *Out,
                 AddToDest ? 1 : 0,
                 Out,
                 nRows);
-  } else if (eigen) {
+  } else
+#endif
+  if (eigen) {
 //      std::cout << "nStrideLink="<<nStrideLink<<std::endl;
 //      std::cout << "nLink="<<nLink<<std::endl;
 //      std::cout << "nCols="<<nCols<<std::endl;
