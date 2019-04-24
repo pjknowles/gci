@@ -56,6 +56,10 @@ add_library(gci
 target_include_directories(gci INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(BLAS)
+if (BLAS_FOUND)
+    message("Found BLAS")
+    target_compile_definitions(gci PUBLIC -DBLAS)
+endif ()
 STRING(FIND "${BLAS_LIBRARIES}" "mkl" POS)
 if (POS GREATER -1)
     message("Found MKL")
