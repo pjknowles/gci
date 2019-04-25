@@ -5,6 +5,25 @@
 
 using TransitionDensity = gci::TransitionDensity;
 
+TransitionDensity::TransitionDensity(const TransitionDensity& source, bool copy, bool initialize)
+    :
+      m_alphaStringsBegin(source.m_alphaStringsBegin),
+      m_alphaStringsEnd(source.m_alphaStringsEnd),
+      m_betaStringsBegin(source.m_betaStringsBegin),
+      m_betaStringsEnd(source.m_betaStringsEnd),
+      m_parity(source.m_parity),
+      m_nsa(source.m_nsa),
+      m_nsb((source.m_nsb)),
+      m_syma(source.m_syma),
+      m_symb(source.m_symb),
+      m_symexc(source.m_symexc),
+      m_deltaAlpha(source.m_deltaAlpha),
+      m_deltaBeta(source.m_deltaBeta),
+      m_excitations(source.m_excitations) {
+  if (initialize) resize(m_nsa * m_nsb * m_excitations);
+  if (copy)
+    std::copy(source.begin(), source.end(), begin());
+}
 TransitionDensity::TransitionDensity(const Wavefunction &w,
                                      const StringSet::const_iterator &alphaStringsBegin,
                                      const StringSet::const_iterator &alphaStringsEnd,

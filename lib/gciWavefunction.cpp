@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <assert.h>
 #include "gciOrbitals.h"
+#include <chrono>
 
 using Wavefunction = gci::Wavefunction;
 
@@ -456,7 +457,7 @@ void MXM(double *Out,
          int nStrideLink = -1) {
   const bool debug = false;
   auto prof = gci::profiler->push("MXM");
-  prof += 2 * nLink * nCols * nRows;
+  prof += 2 * nLink * size_t(nCols) * nRows;
   if (nStrideLink < 0) {
     if (debug && AddToDest)
       xout << "MXM initial Out\n" << Eigen::Map<Eigen::MatrixXd>(Out, nRows, nCols) << std::endl;
@@ -542,7 +543,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                                 SymmetryMatrix::parityEven, true, false);
 //            xout << "alpha transition density" << d << "\n" << w.betaStrings[symb].size() << aa1 - aa0 << " "
 //                 << d.size() << std::endl;
-            TransitionDensity e(d);
+            TransitionDensity e(d, false);
 //            xout << "hamiltonian block\n" << ham << std::endl;
 //                        xout << "ham dimensions "<<ham.rows()<<" "<<ham.cols()<<std::endl;
             MXM(&e[0],
@@ -571,7 +572,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                                 bb0, bb1,
                                 SymmetryMatrix::parityEven, false, true);
             //            xout << "beta transition density"<<d<<std::endl;
-            TransitionDensity e(d);
+            TransitionDensity e(d, false);
             MXM(&e[0],
                 &d[0],
                 &ham(0, 0),
@@ -679,7 +680,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
           size_t nsa = aa1 - aa0;
           TransitionDensity
               d(w, aa0, aa1, w.betaStrings[symb].begin(), w.betaStrings[symb].end(), SymmetryMatrix::parityOddPacked, false, false);
-          TransitionDensity e(d);
+          TransitionDensity e(d, false);
           MXM(&e[0], &d[0], &h.O2(true, true, false).block(symexc)[0], nsa * nsb, nexc, nexc, false);
           e.action(*this);
         }
@@ -714,7 +715,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                   SymmetryMatrix::parityOddPacked,
                   false,
                   false);
-            TransitionDensity e(d);
+            TransitionDensity e(d, false);
             MXM(&e[0], &d[0], &h.O2(false, false, false).block(symexc)[0], nsa * nsb, nexc, nexc, false);
             e.action(*this);
           }
@@ -748,9 +749,26 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
               size_t nsb = bb1 - bb0;
               if (!NextTask()) continue;
               TransitionDensity d(w, aa0, aa1, bb0, bb1, SymmetryMatrix::parityNone, false, false);
-              gci::profiler->start("TransitionDensity copy");
-              TransitionDensity e(d);
-              gci::profiler->stop("TransitionDensity copy");
+              gci::profiler->start("TransitionDensity construct");
+              TransitionDensity e(d, false);
+              gci::profiler->stop("TransitionDensity construct");
+              if (false){
+                auto pro = gci::profiler->push("TransitionDensity dummy construct");
+                pro += d.size();
+                auto start = std::chrono::steady_clock::now();
+                TransitionDensity e(d, false, false);
+                e.reserve(d.size());
+                e.resize(d.size());
+                auto end = std::chrono::steady_clock::now();
+//                xout << "address of TransitionDensity after construction " << e.data() << std::endl;
+                std::cout << " TransitionDensity copy constructor length=" << d.size() << ", option " << (false)
+                          << ", seconds="
+                          << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() * 1e-9
+                          << ", bandwidth="
+                          << 1e3 * d.size() / std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count()
+                          << "Mop/s"
+                          << std::endl;
+              }
               MXM(&e[0], &d[0], &h.O2(true, false, false).block(symexc)[0], nsa * nsb, nexc, nexc, false);
               e.action(*this);
             }

@@ -15,7 +15,36 @@ namespace gci {
  * \brief Class to hold transition density matrix,
  * defined by an array of ExcitationSet objects
  */
-class TransitionDensity : public memory::vector<double>, public Printable {
+template <typename T, typename A = std::allocator<T>>
+class ctor_allocator : public A
+{
+  using a_t = std::allocator_traits<A>;
+ public:
+  using A::A; // Inherit constructors from A
+
+  template <typename U> struct rebind
+  {
+    using other =
+    ctor_allocator
+        <  U, typename a_t::template rebind_alloc<U>  >;
+  };
+
+  template <typename U>
+  void construct(U* ptr)
+  noexcept(std::is_nothrow_default_constructible<U>::value)
+  {
+    ::new(static_cast<void*>(ptr)) U;
+  }
+
+  template <typename U, typename...Args>
+  void construct(U* ptr, Args&&... args)
+  {
+    a_t::construct(static_cast<A&>(*this),
+                   ptr, std::forward<Args>(args)...);
+  }
+};
+//class TransitionDensity : public memory::vector<double, memory::allocator<double> >, public Printable {
+ class TransitionDensity : public memory::vector<double>, public Printable {
  public:
   /*!
    * \brief Construct a TransitionDensity from a wavefunction to a subset of space defined by sets of alpha and beta String objects
@@ -34,6 +63,14 @@ class TransitionDensity : public memory::vector<double>, public Printable {
                     const StringSet::const_iterator &betaStringsBegin,
                     const StringSet::const_iterator &betaStringsEnd,
                     SymmetryMatrix::parity_t parity, bool doAlpha = true, bool doBeta = true);
+
+  /*!
+   * @brief Copy constructor, with the option not to copy data
+   * @param source
+   * @param copy If false, do not contents of source
+   */
+  TransitionDensity(const TransitionDensity& source, bool copy=true, bool initialize=true);
+
   /*!
    * \brief Collapse onto a configuration-space residual
    * w(I) += E(K,exc) <I|exc|K>

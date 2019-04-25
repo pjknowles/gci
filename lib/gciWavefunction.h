@@ -29,7 +29,7 @@ class Wavefunction : public State {
      * \param symmetry Spatial symmetry
      * \param ms2 Sz quantum number times 2
      */
-  Wavefunction(OrbitalSpace h, int n, int s, int m2) : State(h, n, s, m2), m_sparse(false) {
+  Wavefunction(OrbitalSpace h, int nelec, int symmetry, int ms2) : State(h, nelec, symmetry, ms2), m_sparse(false) {
     buildStrings();
   }
   Wavefunction(OrbitalSpace *h, int nelec, int symmetry, int ms2);
