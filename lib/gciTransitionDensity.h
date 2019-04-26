@@ -44,7 +44,7 @@ class ctor_allocator : public A
   }
 };
 //class TransitionDensity : public memory::vector<double, memory::allocator<double> >, public Printable {
- class TransitionDensity : public memory::vector<double>, public Printable {
+ class TransitionDensity : public memory::array<double>, public Printable {
  public:
   /*!
    * \brief Construct a TransitionDensity from a wavefunction to a subset of space defined by sets of alpha and beta String objects
@@ -69,7 +69,7 @@ class ctor_allocator : public A
    * @param source
    * @param copy If false, do not contents of source
    */
-  TransitionDensity(const TransitionDensity& source, bool copy=true, bool initialize=true);
+  TransitionDensity(const TransitionDensity& source, bool copy=true);
 
   /*!
    * \brief Collapse onto a configuration-space residual

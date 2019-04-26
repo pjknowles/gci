@@ -756,9 +756,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                 auto pro = gci::profiler->push("TransitionDensity dummy construct");
                 pro += d.size();
                 auto start = std::chrono::steady_clock::now();
-                TransitionDensity e(d, false, false);
-                e.reserve(d.size());
-                e.resize(d.size());
+                TransitionDensity e(d, false);
                 auto end = std::chrono::steady_clock::now();
 //                xout << "address of TransitionDensity after construction " << e.data() << std::endl;
                 std::cout << " TransitionDensity copy constructor length=" << d.size() << ", option " << (false)
