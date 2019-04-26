@@ -171,6 +171,7 @@ void inline gsum(std::map<size_t, double>& buffer) {
 #endif
 }
 
+void inline gsum(memory::array<double> v) { gsum(&v[0], v.size()); }
 void inline gsum(memory::vector<double> v) { gsum(&v[0], v.size()); }
 void inline gsum(std::vector<double> v) { gsum(&v[0], v.size()); }
 
