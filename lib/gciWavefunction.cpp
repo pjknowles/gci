@@ -11,6 +11,8 @@
 #include <assert.h>
 #include "gciOrbitals.h"
 #include <chrono>
+#include <ctime>
+#include <iomanip>
 
 using Wavefunction = gci::Wavefunction;
 
@@ -748,10 +750,12 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                  bb0 = bb1) { // loop over beta batches
               size_t nsb = bb1 - bb0;
               if (!NextTask()) continue;
+              gci::profiler->start("test");
+                xout << "time before entering TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() << std::endl;
               TransitionDensity d(w, aa0, aa1, bb0, bb1, SymmetryMatrix::parityNone, false, false);
-              gci::profiler->start("TransitionDensity construct");
+              xout << "time after leaving TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() << std::endl;
+              gci::profiler->stop("test");
               TransitionDensity e(d, false);
-              gci::profiler->stop("TransitionDensity construct");
               if (false){
                 auto pro = gci::profiler->push("TransitionDensity dummy construct");
                 pro += d.size();

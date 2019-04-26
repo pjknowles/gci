@@ -52,16 +52,18 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       m_excitations((m_deltaAlpha + m_deltaBeta) % 2 ? w.orbitalSpace->operator[](m_symexc) : w.orbitalSpace->total(
           m_symexc,
           m_parity)) {
+  xout << "time on entering TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() << std::endl;
   assign(0); //TODO needed?
+  auto prof1 = profiler->push("TransitionDensity1");
 //  xout << "size(): " << memory::array<double>::size() << std::endl;
-//  xout << (std::distance(alphaStringsBegin, alphaStringsEnd) * std::distance(betaStringsBegin, betaStringsEnd)
-//      * ((w.alphaStrings[0].proto.nelec - alphaStringsBegin->nelec + w.betaStrings[0].proto.nelec
-//              - (betaStringsBegin->nelec) % 2 ? w.orbitalSpace->operator[](
-//          w.symmetry ^ alphaStringsBegin->computed_symmetry() ^ betaStringsBegin->computed_symmetry())
-//                                              : w.orbitalSpace->total(
-//              w.symmetry ^ alphaStringsBegin->computed_symmetry() ^ betaStringsBegin->computed_symmetry(),
-//              parity)))) << std::endl;
-//  xout << m_nsa << " " << m_nsb << " " << m_excitations << " " << m_nsa * m_nsb * m_excitations << std::endl;
+  xout << (std::distance(alphaStringsBegin, alphaStringsEnd) * std::distance(betaStringsBegin, betaStringsEnd)
+      * ((w.alphaStrings[0].proto.nelec - alphaStringsBegin->nelec + w.betaStrings[0].proto.nelec
+              - (betaStringsBegin->nelec) % 2 ? w.orbitalSpace->operator[](
+          w.symmetry ^ alphaStringsBegin->computed_symmetry() ^ betaStringsBegin->computed_symmetry())
+                                              : w.orbitalSpace->total(
+              w.symmetry ^ alphaStringsBegin->computed_symmetry() ^ betaStringsBegin->computed_symmetry(),
+              parity)))) << std::endl;
+  xout << m_nsa << " " << m_nsb << " " << m_excitations << " " << m_nsa * m_nsb * m_excitations << std::endl;
   assert(memory::array<double>::size() == m_nsa * m_nsb * m_excitations);
   if (empty()) return;
   auto prof = profiler->push("TransitionDensity");
@@ -311,6 +313,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
     throw std::logic_error("unimplemented case");
   }
   //  size_t populated=0; for (const_iterator x=begin(); x!=end(); x++) if (*x !=(double)0) ++populated; xout <<"TransitionDensity population="<<((double)populated)/((double)size()+1)<<std::endl;
+  xout << "time on leaving TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() << std::endl;
 
 }
 
