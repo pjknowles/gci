@@ -18,7 +18,7 @@
 {class=INPUT,type=i,name='PARALLEL_STRINGSET',default_value=0,set='GCI',short_description='Whether to distribute the generation of StringSets'}
 {class=INPUT,type=i,name='DENSITY',default_value=0,set='GCI', short_description='whether to calculate 1-density (1 or 2), 2-density (2)'}
 {class=INPUT,type=i,name='SOLVER_VERBOSITY',default_value=1,set='GCI', short_description='How verbose in equation solving'}
-{class=INPUT,type=i,name='TILESIZE',default_value=-1,set='GCI', short_description='Tile size in FCI'}
+{class=INPUT,type=i,name='TILESIZE',default_value=128,set='GCI', short_description='Tile size in FCI'}
 {class=INPUT,type=i,name='ALPHATILESIZE',default_value=-1,set='GCI', short_description='Tile size in FCI'}
 {class=INPUT,type=i,name='BETATILESIZE',default_value=-1,set='GCI', short_description='Tile size in FCI'}
 {class=INPUT,type=i,name='EXCITATIONLEVEL',default_value=-1,set='GCI', short_description='Excitation level analysis'}
