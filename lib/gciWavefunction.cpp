@@ -728,8 +728,8 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
 
   if (h.m_rank > 1) { // two-electron contribution, alpha-beta
     auto p = gci::profiler->push("ab integrals");
-    size_t nsaaMax = 640; // temporary static
-    size_t nsbbMax = 640; // temporary static
+    size_t nsaaMax = 128; // temporary static
+    size_t nsbbMax = 128; // temporary static
     for (unsigned int symb = 0; symb < 8; symb++) {
       StringSet bb(betaActiveStrings, 1, 0, symb, parallel_stringset);
       if (bb.empty()) continue;
@@ -739,7 +739,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
         unsigned int symexc = symb ^syma ^w.symmetry;
         size_t nexc = h.O2(true, false, false).block_size(symexc);
         {
-          //              xout << "syma="<<syma<<", symb="<<symb<<", symexc="<<symexc<<std::endl;
+//                        xout << "syma="<<syma<<", symb="<<symb<<", symexc="<<symexc<<std::endl;
           auto pro = gci::profiler->push("StringSet iterator loops");
           for (StringSet::iterator aa1, aa0 = aa.begin();
                aa1 = aa0 + nsaaMax > aa.end() ? aa.end() : aa0 + nsaaMax, aa0 < aa.end();
@@ -750,11 +750,11 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                  bb0 = bb1) { // loop over beta batches
               size_t nsb = bb1 - bb0;
               if (!NextTask()) continue;
-              gci::profiler->start("test");
-                xout << "time before entering TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() << std::endl;
+//              gci::profiler->start("test");
+//                xout << "time before entering TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() <<" "<< gci::profiler->getResources().wall << std::endl;
               TransitionDensity d(w, aa0, aa1, bb0, bb1, SymmetryMatrix::parityNone, false, false);
-              xout << "time after leaving TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() << std::endl;
-              gci::profiler->stop("test");
+//              xout << "time after leaving TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() <<" "<< gci::profiler->getResources().wall << std::endl;
+//              gci::profiler->stop("test");
               TransitionDensity e(d, false);
               if (false){
                 auto pro = gci::profiler->push("TransitionDensity dummy construct");
@@ -949,8 +949,8 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
 
   if (rank > 1) { // two-electron contribution, alpha-beta
     auto p = gci::profiler->push("ab density");
-    size_t nsaaMax = 640; // temporary static
-    size_t nsbbMax = 640; // temporary static
+    size_t nsaaMax = 128; // temporary static
+    size_t nsbbMax = 128; // temporary static
     for (unsigned int symb = 0; symb < 8; symb++) {
       StringSet bb(betaStrings, 1, 0, symb, parallel_stringset);
       if (bb.empty()) continue;

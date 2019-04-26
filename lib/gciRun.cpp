@@ -565,7 +565,7 @@ std::vector<double> Run::Davidson(
     gg.emplace_back(prototype);
     gg.back().allocate_buffer();
     gg.back().settilesize(
-        options.parameter("TILESIZE", std::vector<int>(1, -1)).at(0),
+        options.parameter("TILESIZE", std::vector<int>(1, 128)).at(0),
         options.parameter("ALPHATILESIZE", std::vector<int>(1, -1)).at(0),
         options.parameter("BETATILESIZE", std::vector<int>(1, -1)).at(0));
   }
