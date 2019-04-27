@@ -1587,7 +1587,7 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
 #ifdef HAVE_MPI_H
   MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, MPI_COMM_COMPUTE);
 #endif
-  class bytestream bs(buf);
+  class memory::bytestream bs(buf);
   auto result = SymmetryMatrix::Operator::construct(bs);
   if (rank != 0) free(buf);
   return result;
