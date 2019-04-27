@@ -92,6 +92,31 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperator &ham, const M
     }
 }
 
+void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &ham, const MixedWavefunction &w,
+                                               bool parallel_stringset) {
+    Wavefunction wfn_scaled(m_wfn[0]);
+    for (const auto &bra : m_vibBasis) {
+        auto iWfn = m_vibBasis.index(bra);
+        auto expVal = ham.expectVal(bra, bra, {VibOpType::HO, {}});
+        // Pure vibrational and electronic operators
+        m_wfn[iWfn].axpy(expVal, w.m_wfn[iWfn]);
+        m_wfn[iWfn].operatorOnWavefunction(ham.Hel, w.m_wfn[iWfn], parallel_stringset);
+        // all mixed vibrational - electronic operators
+        for (const auto &hamTerm : ham) {
+            for (const auto &op : hamTerm.second) {
+                auto connectedSet = HProductSet(bra, m_vibBasis.vibSpace(), op.vibOp);
+                for (const auto &ket : connectedSet) {
+                    auto jWfn = m_vibBasis.index(ket);
+                    double expVal = ham.expectVal(bra, ket, op.vibOp);
+                    if (std::abs(expVal) < 1.e-14) continue;
+                    wfn_scaled = expVal * w.m_wfn[jWfn];
+                    m_wfn[iWfn].operatorOnWavefunction(op.Hel, wfn_scaled, parallel_stringset);
+                }
+            }
+        }
+    }
+}
+
 void MixedWavefunction::diagonalOperator(const MixedOperator &ham, bool parallel_stringset) {
     Wavefunction wfn_scaled(m_wfn[0]);
     for (const auto &bra : m_vibBasis) {

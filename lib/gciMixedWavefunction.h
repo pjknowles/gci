@@ -5,6 +5,8 @@
 
 #include "gciWavefunction.h"
 #include "gciHProductSet.h"
+#include "gciMixedOperator.h"
+#include "gciMixedOperatorSecondQuant.h"
 
 namespace gci {
 
@@ -113,7 +115,7 @@ public:
      * @param offset Index to the vibrational product
      * @return Reference to a wavefunction under offset
      */
-    const Wavefunction & wavefunctionAt(size_t offset) const{
+    const Wavefunction &wavefunctionAt(size_t offset) const {
         return m_wfn[offset];
     }
 
@@ -121,18 +123,33 @@ public:
     std::string str() const;
 
     /*!
-       * \brief Add to this object the action of an operator on another wavefunction
-       * \param ham Mixed Hamiltonian operator
-       * \param w Other mixed Wavefunction
-       * \param parallel_stringset whether to use parallel algorithm in StringSet construction
-       */
+     * \brief Add to this object the action of an operator on another wavefunction
+     * \param ham Mixed Hamiltonian operator
+     * \param w Other mixed Wavefunction
+     * \param parallel_stringset whether to use parallel algorithm in StringSet construction
+     */
     void operatorOnWavefunction(const MixedOperator &ham, const MixedWavefunction &w, bool parallel_stringset = false);
+
+    /*!
+     * \brief Add to this object the action of an operator on another wavefunction
+     * \param ham Fully second quantized mixed Hamiltonian operator
+     * \param w Other mixed Wavefunction
+     * \param parallel_stringset whether to use parallel algorithm in StringSet construction
+     */
+    void operatorOnWavefunction(const MixedOperatorSecondQuant &ham, const MixedWavefunction &w,
+                                bool parallel_stringset = false);
 
     /*!
      * @brief Set this object to the diagonal elements of the hamiltonian
      * @param ham
      */
     void diagonalOperator(const MixedOperator &ham, bool parallel_stringset = false);
+
+    /*!
+     * @brief Set this object to the diagonal elements of the hamiltonian
+     * \param ham Fully second quantized mixed Hamiltonian operator
+     */
+    void diagonalOperator(const MixedOperatorSecondQuant &ham, bool parallel_stringset = false);
 
     /*!
      * @brief Evaluates electronic components of the mixed Hamiltonian for a particular HF state
