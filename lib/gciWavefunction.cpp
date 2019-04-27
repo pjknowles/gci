@@ -750,27 +750,8 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                  bb0 = bb1) { // loop over beta batches
               size_t nsb = bb1 - bb0;
               if (!NextTask()) continue;
-//              gci::profiler->start("test");
-//                xout << "time before entering TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() <<" "<< gci::profiler->getResources().wall << std::endl;
               TransitionDensity d(w, aa0, aa1, bb0, bb1, SymmetryMatrix::parityNone, false, false);
-//              xout << "time after leaving TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() <<" "<< gci::profiler->getResources().wall << std::endl;
-//              gci::profiler->stop("test");
               TransitionDensity e(d, false);
-              if (false){
-                auto pro = gci::profiler->push("TransitionDensity dummy construct");
-                pro += d.size();
-                auto start = std::chrono::steady_clock::now();
-                TransitionDensity e(d, false);
-                auto end = std::chrono::steady_clock::now();
-//                xout << "address of TransitionDensity after construction " << e.data() << std::endl;
-                std::cout << " TransitionDensity copy constructor length=" << d.size() << ", option " << (false)
-                          << ", seconds="
-                          << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() * 1e-9
-                          << ", bandwidth="
-                          << 1e3 * d.size() / std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count()
-                          << "Mop/s"
-                          << std::endl;
-              }
               MXM(&e[0], &d[0], &h.O2(true, false, false).block(symexc)[0], nsa * nsb, nexc, nexc, false);
               e.action(*this);
             }
