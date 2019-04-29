@@ -1,8 +1,6 @@
 #ifndef GCI_GCIVIBSPACE_H
 #define GCI_GCIVIBSPACE_H
 
-#include <FCIdump.h>
-
 namespace gci {
 /*!
  * @brief Parameters defining the vibrational space

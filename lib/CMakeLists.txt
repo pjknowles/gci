@@ -60,7 +60,7 @@ add_library(gci
         gciMixedWavefunction.cpp gciMixedWavefunction.h
         gciOperatorBBO.cpp gciOperatorBBO.h
         gciVibSpace.cpp gciVibSpace.h
-        gciDavidson.h gciDavidson.cpp gciMixedOperatorSecondQuant.h gciMixedOperatorSecondQuant.cpp gciMixedTensor.cpp gciMixedTensor.h)
+        gciDavidson.h gciDavidson.cpp gciMixedOperatorSecondQuant.h gciMixedOperatorSecondQuant.cpp gciVibOperator.cpp gciVibOperator.h gciVibExcitation.cpp gciVibExcitation.h)
 target_include_directories(gci INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(gci PUBLIC Eigen3::Eigen Profiler FCIdump IterativeSolver symmetry_matrix memory molpro_plugin)

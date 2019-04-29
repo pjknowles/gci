@@ -43,11 +43,11 @@ TEST_F(HProductF, empty_and_excitedModes) {
     EXPECT_TRUE(emptyProduct2.empty()) << "No modals specified, assumes ground state";
     auto emptyProduct3 = HProduct{{{}}};
     EXPECT_TRUE(emptyProduct3.empty()) << "Empty modal specified, assumes ground state";
-    auto emptyProduct4 = HProduct{HProduct::t_Product{{}}};
+    auto emptyProduct4 = HProduct{HProduct::product_t{{}}};
     EXPECT_TRUE(emptyProduct4.empty()) << "Empty product specified, assumes ground state";
-    auto p = HProduct::t_Product{{{}}};
+    auto p = HProduct::product_t{{{}}};
     auto emptyProduct5 = HProduct{p};
-    EXPECT_TRUE(emptyProduct5.empty()) << "Empty product specified with an erroneous extra {} i.e. t_Product{{{}}}";
+    EXPECT_TRUE(emptyProduct5.empty()) << "Empty product specified with an erroneous extra {} i.e. product_t{{{}}}";
     EXPECT_EQ((std::vector<int>{}), emptyProduct.excitedModes());
     EXPECT_EQ(product.excitedModes(), (std::vector<int>{mode1, mode2, mode3}));
 }
@@ -63,10 +63,10 @@ TEST_F(HProductF, excLvl) {
 }
 
 TEST_F(HProductF, operators_equality_begin_end) {
-    auto firstModal = HProduct::t_Modal{mode1, modal1};
+    auto firstModal = HProduct::modal_t{mode1, modal1};
     ASSERT_EQ(product.begin()[0], firstModal);
-    HProduct::t_Product copyByIterators;
-    ASSERT_NO_THROW((copyByIterators = HProduct::t_Product(product.begin(), product.end())));
+    HProduct::product_t copyByIterators;
+    ASSERT_NO_THROW((copyByIterators = HProduct::product_t(product.begin(), product.end())));
     auto copyProduct = HProduct(copyByIterators);
     EXPECT_TRUE(copyProduct == product);
     HProduct differentProduct{{{1, 1}, {2, 2}}};

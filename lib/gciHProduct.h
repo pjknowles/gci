@@ -1,10 +1,10 @@
 #ifndef GCI_GCIHPRODUCT_H
 #define GCI_GCIHPRODUCT_H
 
-#include <vector>
 #include <ostream>
 
 #include "gciVibSpace.h"
+#include "gciVibExcitation.h"
 
 namespace gci {
 
@@ -19,17 +19,21 @@ namespace gci {
  */
 class HProduct {
 public:
-    using t_Modal = std::vector<int>;
-    using t_Product = std::vector<t_Modal>;
+    using modal_t = std::array<int, 2>;
+    using product_t = std::vector<modal_t>;
     /*!
      * @brief Constructs an empty Hartree product representing the ground state.
      * @warning This is the preferred way to construct an empty product.
      */
-    HProduct() : m_prod(t_Product{}) { }
-    HProduct(const t_Product &phi);
+    HProduct() : m_prod(product_t{}) { }
+    HProduct(product_t phi);
 
-    t_Product::const_iterator begin() const {return m_prod.cbegin();}
-    t_Product::const_iterator end() const {return m_prod.cend();}
+    product_t::iterator begin() {return m_prod.begin();}
+    product_t::iterator end() {return m_prod.end();}
+    product_t::const_iterator begin() const {return m_prod.begin();}
+    product_t::const_iterator end() const {return m_prod.end();}
+    product_t::const_iterator cbegin() const {return m_prod.cbegin();}
+    product_t::const_iterator cend() const {return m_prod.cend();}
 
     bool operator==(const HProduct &other) const {return m_prod == other.m_prod;}
     bool operator!=(const HProduct &other) const {return !(*this == other);}
@@ -44,6 +48,13 @@ public:
     int excLvl(int iMode) const;
 
     const auto &operator[](unsigned long i) const {return m_prod[i];}
+
+    /*!
+     * @brief Applies the vibrational excitation operator
+     * @note If annihilation operator does not match the occupied modal, that modal is set to -1 and will be declared
+     * outside of vibrational space when checked.
+     */
+    HProduct excite(const VibExcitation &exc);
 
     /*!
      * @brief Excites a mode by one level.
@@ -81,7 +92,7 @@ public:
     //! @brief List of excited modes in `this` product
     std::vector<int> excitedModes() const;
 protected:
-    t_Product m_prod; //!< excitations representing the Hartree product
+    product_t m_prod; //!< excitations representing the Hartree product
 
     /*!
      * @brief Orders `this` Hartree product
