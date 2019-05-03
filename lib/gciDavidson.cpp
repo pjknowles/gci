@@ -149,23 +149,6 @@ printMCSCFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefuncti
     }
     xout << std::endl;
     return;
-    xout << "First vibrationally excited state energies" << std::endl;
-    for (auto &el : w_mcscf) el.set(0.);
-    w_mcscf[0].set(4, 0.967881967969);
-    w_mcscf[0].set(7, -0.251405043863);
-    w_mcscf[1].set(5, 0.707106781187);
-    w_mcscf[1].set(6, -0.707106781187);
-    w_mcscf[2].set(5, 0.707106781187);
-    w_mcscf[2].set(6, 0.707106781187);
-    w_mcscf[3].set(4, 0.251405043863);
-    w_mcscf[3].set(7, 0.967881967969);
-    for (int iState = 0; iState < 4; ++iState) {
-        blankW.set(0);
-        blankW.operatorOnWavefunction(ham, w_mcscf[iState]);
-        auto e = blankW.dot(w_mcscf[iState]);
-        xout << e << ",  ";
-    }
-    xout << std::endl;
 }
 
 template<class t_Wavefunction, class t_Operator>

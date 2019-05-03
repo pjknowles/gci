@@ -9,7 +9,6 @@
 #include "gciOptions.h"
 #include "gciWavefunction.h"
 #include "gciMixedWavefunction.h"
-#include "gciMixedOperator.h"
 
 /*
  * Now that there are two wavefunction objects and two operators (pure electronic and mixed). There is no
@@ -100,6 +99,8 @@ protected:
 
 template
 class Davidson<MixedWavefunction, MixedOperator>;
+template
+class Davidson<MixedWavefunction, MixedOperatorSecondQuant>;
 template
 class Davidson<Wavefunction, SymmetryMatrix::Operator>;
 
