@@ -7,6 +7,7 @@
 
 namespace gci {
 
+
 /*!
  * @brief Mixed electron-vibration operator in a fully second quantized form.
  *
@@ -18,14 +19,31 @@ namespace gci {
  */
 class MixedOperatorSecondQuant {
 public:
-    SymmetryMatrix::Operator Hel; //!< Purely electronic term
-    std::shared_ptr<VibOperator<double>> Hvib;//!< Purely vibrational term
-    std::vector<VibOperator<SymmetryMatrix::Operator >> mixedHam;//!< Mixed electronic-vibrational terms
+    using mixed_op_el_t = SymmetryMatrix::Operator;
     int nMode; //!< Number of vibrational modes
     int nModal; //!< Number of modals per mode (for now assumed the same for each mode)
+    SymmetryMatrix::Operator Hel; //!< Purely electronic term
+    VibOperator<double> Hvib;//!< Purely vibrational term
+    std::map<std::string, VibOperator<mixed_op_el_t >> mixedHam;//!< Mixed electronic-vibrational terms
 
     explicit MixedOperatorSecondQuant(const FCIdump &fcidump);
-    MixedOperatorSecondQuant() : Hel({0, 0}, 0, false, 0, true, "dummy"), mixedHam({}), nMode(0), nModal(0) { }
+protected:
+    bool includeO;
+    bool includeK;
+
+    /*!
+     * @brief Constructs purely vibrational operator
+     * @note I'm assuming it's 1MC only
+     * @param fcidump_name Name of the main fcidump file
+     * @param nmode number of modes
+     * @param nmodal  number of modals
+     */
+    static VibOperator<double> constructHvib(const std::string &fcidump_name, int nmode, int nmodal);
+
+    /*!
+     * @brief From FCIdump file generates antisymmetric electronic operator
+     */
+    SymmetryMatrix::Operator constructOperatorAntisymm1el(const FCIdump &dump);
 };
 } // namespace gci
 
