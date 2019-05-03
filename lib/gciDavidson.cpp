@@ -218,6 +218,7 @@ printSCFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunction
 template<class t_Wavefunction, class t_Operator>
 void printCImatrixElements(const t_Wavefunction &wfn, const t_Operator &ham) {
     t_Wavefunction dummyWfn(wfn);
+    dummyWfn.zero();
     dummyWfn.operatorOnWavefunction(ham, wfn, false);
     auto e = dummyWfn.dot(wfn);
     xout << "CI expecation values of electronic terms " << std::endl;
