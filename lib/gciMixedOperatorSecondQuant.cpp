@@ -16,26 +16,30 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
         nModal(fcidump.parameter("NMODAL", std::vector<int>{0})[0]),
         Hel(constructOperator(fcidump)),
         Hvib(constructHvib(fcidump.fileName(), nMode, nModal)),
+        includeHel(fcidump.parameter("INCLUDE_HEL", std::vector<int>{0})[0]),
         includeO(fcidump.parameter("INCLUDE_O", std::vector<int>{0})[0]),
         includeK(fcidump.parameter("INCLUDE_K", std::vector<int>{0})[0]) {
     std::string f;
-    std::string name = "Hel[1]";
+    std::string name;
     auto vibOp = VibOperator<mixed_op_el_t>(nMode, nModal, ns_VibOperator::parity_t::even,
                                             ns_VibOperator::parity_t::even, name);
-    for (int iMode = 0; iMode < nMode; ++iMode) {
-        for (int iModal = 0; iModal < nModal; ++iModal) {
-            for (int jModal = 0; jModal <= iModal; ++jModal) {
-                f = fcidump.fileName() + "_Hel_" + std::to_string(iMode + 1) + "_" + std::to_string(iModal + 1) +
-                    "_" + std::to_string(jModal + 1);
-                if (file_exists(f)) {
-                    VibExcitation vibExc({{iMode, iModal, jModal}});
-                    auto &&op = constructOperator(FCIdump(f));
-                    vibOp.append(op, vibExc);
+    if (includeHel) {
+        name = "Hel[1]";
+        for (int iMode = 0; iMode < nMode; ++iMode) {
+            for (int iModal = 0; iModal < nModal; ++iModal) {
+                for (int jModal = 0; jModal <= iModal; ++jModal) {
+                    f = fcidump.fileName() + "_Hel_" + std::to_string(iMode + 1) + "_" + std::to_string(iModal + 1) +
+                        "_" + std::to_string(jModal + 1);
+                    if (file_exists(f)) {
+                        VibExcitation vibExc({{iMode, iModal, jModal}});
+                        auto &&op = constructOperator(FCIdump(f));
+                        vibOp.append(op, vibExc);
+                    }
                 }
             }
         }
+        mixedHam.insert({name, vibOp});
     }
-    mixedHam.insert({name, vibOp});
     if (includeO) {
         name = "O[1]";
         vibOp = VibOperator<mixed_op_el_t>(nMode, nModal, ns_VibOperator::parity_t::odd,
@@ -76,7 +80,8 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
                 }
             }
         }
-        mixedHam.at("Hel[1]") += vibOp;
+        if (mixedHam.find("Hel[1]") != mixedHam.end()) mixedHam.at("Hel[1]") += vibOp;
+        else mixedHam.insert({"Hel[1]", vibOp});
     }
 }
 

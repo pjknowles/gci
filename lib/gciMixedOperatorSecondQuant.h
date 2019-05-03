@@ -28,6 +28,7 @@ public:
 
     explicit MixedOperatorSecondQuant(const FCIdump &fcidump);
 protected:
+    bool includeHel;
     bool includeO;
     bool includeK;
 
