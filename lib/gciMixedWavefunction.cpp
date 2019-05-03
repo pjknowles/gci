@@ -82,10 +82,47 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperator &ham, const M
                 auto connectedSet = HProductSet(bra, m_vibBasis.vibSpace(), op.vibOp);
                 for (const auto &ket : connectedSet) {
                     auto jWfn = m_vibBasis.index(ket);
-                    double expVal = ham.expectVal(bra, ket, op.vibOp);
+                    expVal = ham.expectVal(bra, ket, op.vibOp);
                     if (std::abs(expVal) < 1.e-14) continue;
                     wfn_scaled = expVal * w.m_wfn[jWfn];
                     m_wfn[iWfn].operatorOnWavefunction(op.Hel, wfn_scaled, parallel_stringset);
+                }
+            }
+        }
+    }
+}
+
+void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &ham, const MixedWavefunction &w,
+                                               bool parallel_stringset) {
+    Wavefunction wfn_scaled(m_wfn[0]);
+    for (const auto &bra : m_vibBasis) {
+        auto iBra = m_vibBasis.index(bra);
+        // Pure electronic operators
+        m_wfn[iBra].operatorOnWavefunction(ham.Hel, w.m_wfn[iBra], parallel_stringset);
+        // Pure vibrational operator
+        for (const auto &vibEl : ham.Hvib.tensor) {
+            auto val = vibEl.second.oper;
+            auto &vibExc = vibEl.second.exc;
+            auto ket = bra.excite(vibExc);
+            if (!ket.withinSpace(m_vibSpace)) continue;
+            auto iKet = m_vibBasis.index(ket);
+            m_wfn[iBra].axpy(val, w.m_wfn[iKet]);
+        }
+        // all mixed vibrational - electronic operators
+        // Need to take into account the symmetry of each term
+        for (const auto &mixedTerm : ham.mixedHam) {
+            const auto &vibTensor = mixedTerm.second;
+            for (const auto &vibEl : vibTensor.tensor) {
+                auto &op = vibEl.second.oper;
+                auto &vibExc = vibEl.second.exc;
+                auto ket = bra.excite(vibExc);
+                if (!ket.withinSpace(m_vibSpace)) continue;
+                auto iKet = m_vibBasis.index(ket);
+                m_wfn[iBra].operatorOnWavefunction(op, w.m_wfn[iKet], parallel_stringset);
+                if (vibTensor.hermiticity() != ns_VibOperator::parity_t::none) {
+                    auto conjElem = vibEl.second.conjugate();
+                    auto &conjOp = conjElem.oper;
+                    m_wfn[iKet].operatorOnWavefunction(conjOp, w.m_wfn[iBra], parallel_stringset);
                 }
             }
         }
@@ -110,6 +147,36 @@ void MixedWavefunction::diagonalOperator(const MixedOperator &ham, bool parallel
                 wfn_scaled.diagonalOperator(op.Hel);
                 wfn_scaled *= expVal;
                 wfn_diagonal += wfn_scaled;
+            }
+        }
+    }
+}
+
+void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bool parallel_stringset) {
+    Wavefunction vibElDiag(m_wfn[0]);
+    for (const auto &bra : m_vibBasis) {
+        auto iBra = m_vibBasis.index(bra);
+        // Pure electronic operators
+        m_wfn[iBra].diagonalOperator(ham.Hel);
+        // Pure vibrational operator
+        auto diagonalWfn = Wavefunction(m_wfn[0]);
+        for (const auto &vibEl : ham.Hvib.tensor) {
+            auto val = vibEl.second.oper;
+            auto &vibExc = vibEl.second.exc;
+            auto ket = bra.excite(vibExc);
+            if (ket != bra) continue;
+            m_wfn[iBra] += val;
+        }
+        // all mixed vibrational - electronic operators
+        for (const auto &mixedTerm : ham.mixedHam) {
+            for (const auto &vibEl : mixedTerm.second.tensor) {
+                auto op = vibEl.second.oper;
+                auto &vibExc = vibEl.second.exc;
+                auto ket = bra.excite(vibExc);
+                if (ket != bra) continue;
+                vibElDiag = m_wfn[iBra];
+                vibElDiag.diagonalOperator(op);
+                m_wfn[iBra] += vibElDiag;
             }
         }
     }
