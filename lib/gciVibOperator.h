@@ -56,6 +56,39 @@ size_t hash_mc1_nosym(const VibExcitation &exc, int nModal);
 size_t hash_mc1_nosym_old(const VibExcitation &exc, int nModal);
 }  //  namespace ns_VibOperator
 
+/*!
+ * @brief An element of the tensor corresponding to a particular vibrational excitation string
+ * @note Assumes 1MC
+ * @tparam Container
+ */
+template<class Container>
+class VibTensEl {
+public:
+    using parity_t = ns_VibOperator::parity_t;
+    Container oper; //!< tensor element operator
+    VibExcitation exc; //!< excitation
+
+    VibTensEl(const Container &op, VibExcitation vibExc, parity_t hermiticity, parity_t exchange) :
+            oper(op), exc(std::move(vibExc)), m_hermiticity(hermiticity), m_exchange(exchange) { }
+
+    auto hermiticity() const {return m_hermiticity;}
+
+    /*!
+     * @brief Returns the conjugate transpose of this element including change in phase
+     * @todo treat cases with no symmetry
+     */
+    VibTensEl conjugate() const {
+        auto conjOp = Container(oper);
+        if (m_hermiticity == parity_t::odd) conjOp *= -1;
+        auto conjExc = VibExcitation(exc);
+        conjExc.conjugate();
+        return {conjOp, conjExc, m_hermiticity, m_exchange};
+    }
+protected:
+    parity_t m_hermiticity; //!< conjugation symmetry E_{ij} -> E_{ji}
+    parity_t m_exchange;//!< symmetry under echange of mode indices E_{ij}^A E_{kl}^B -> E_{kl}^B E_{ij}^A
+
+};
 
 /*!
  * @brief Integrals over electronic and vibrational basis, stored with corresponding vibrational excitation operators.
@@ -63,16 +96,20 @@ size_t hash_mc1_nosym_old(const VibExcitation &exc, int nModal);
 template<class Container>
 class VibOperator {
 public:
-    using tensor_el_t = std::pair<Container, VibExcitation>;
+//    using tensor_el_t = std::pair<Container, VibExcitation>;
+    using tensor_el_t = VibTensEl<Container>;
     using tensor_t = std::map<size_t, tensor_el_t>;
-    typedef ns_VibOperator::parity_t parity_t;
+    using parity_t = ns_VibOperator::parity_t;
 
     tensor_t tensor; //!< Mixed tensor
     std::string name; //!< Name of the tensor
 
-    explicit VibOperator(int nMode, int nModal, parity_t herm = parity_t::even,
-                         parity_t exch = parity_t::even, std::string name_ = "") :
-            m_nMode(nMode), m_nModal(nModal), m_hermiticity(herm), m_exchange(exch), name(std::move(name_)) { }
+    explicit VibOperator(int nMode, int nModal, parity_t hermiticity = parity_t::even,
+                         parity_t exchange = parity_t::even, std::string name_ = "") :
+            m_nMode(nMode), m_nModal(nModal), m_hermiticity(hermiticity), m_exchange(exchange),
+            name(std::move(name_)) { }
+
+    auto hermiticity() const {return m_hermiticity;}
 
     /*!
      * @brief Appends a new term to the tensor.
@@ -80,9 +117,10 @@ public:
      * @param op Electronic operator
      * @param vibExc Vibrational excitation string
      */
-    void append(Container &&op, const VibExcitation &vibExc) {
+    void append(const Container &op, const VibExcitation &vibExc) {
         auto h = hash(vibExc);
-        auto &&el = tensor_el_t({op, vibExc});
+        auto &&el = tensor_el_t(op, vibExc, m_hermiticity, m_exchange);
+//        auto &&el = VibTensEl<Container>(op, vibExc, m_hermiticity, m_exchange);
         tensor.insert({h, el});
     }
 
@@ -94,7 +132,26 @@ public:
      */
     Container &at(const VibExcitation &exc) {
         auto h = hash(exc);
-        return tensor.at(h).first;
+        return tensor.at(h).oper;
+    }
+
+    class VibOperator &operator+=(const VibOperator<Container> &other) {
+        for (const auto &otherEl : other.tensor) {
+            bool found = false;
+            for (auto &thisEl : tensor) {
+                if (thisEl.first != otherEl.first) continue;
+                found = true;
+                thisEl.second.oper += otherEl.second.oper;
+            }
+            if (!found) append(otherEl.second.oper, otherEl.second.exc);
+        }
+        return *this;
+    }
+
+    class VibOperator operator+(const VibOperator<Container> &other) const {
+        auto newOp = *this;
+        newOp += other;
+        return newOp;
     }
 protected:
     parity_t m_hermiticity; //!< conjugation symmetry E_{ij} -> E_{ji}
@@ -102,7 +159,9 @@ protected:
     int m_nMode; //!< number of modes
     int m_nModal; //!< number of modals per mode (assumed to be the same for each mode)
 
-    size_t hash(const VibExcitation &exc) {return hash(exc, m_nMode, m_nModal, m_hermiticity, m_exchange);}
+    size_t hash(const VibExcitation &exc) {
+        return ns_VibOperator::hash(exc, m_nMode, m_nModal, m_hermiticity, m_exchange);
+    }
 };
 
 } // namespace gci

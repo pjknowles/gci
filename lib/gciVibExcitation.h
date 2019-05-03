@@ -17,6 +17,15 @@ public:
     int mc_lvl; //!< number of modes involved in the excitation
 
     explicit VibExcitation(std::vector<exc_t> excs) : excitations(std::move(excs)), mc_lvl(excitations.size()) { }
+
+    /*!
+     * @brief Applies complex conjugation to the excitation operator.
+     * Swaps modal labels.
+     */
+    void conjugate() {
+        for (auto &exc : excitations) std::swap(exc[1], exc[2]);
+    }
+
 };
 
 } //  namespace gci
