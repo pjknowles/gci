@@ -119,7 +119,7 @@ public:
      */
     void append(const Container &op, const VibExcitation &vibExc) {
         auto h = hash(vibExc);
-        auto &&el = tensor_el_t(op, vibExc, m_hermiticity, m_exchange);
+        auto el = tensor_el_t(op, vibExc, m_hermiticity, m_exchange);
 //        auto &&el = VibTensEl<Container>(op, vibExc, m_hermiticity, m_exchange);
         tensor.insert({h, el});
     }

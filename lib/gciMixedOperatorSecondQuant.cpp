@@ -35,7 +35,7 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
             }
         }
     }
-    mixedHam.insert({name, std::move(vibOp)});
+    mixedHam.insert({name, vibOp});
     if (includeO) {
         name = "O[1]";
         vibOp = VibOperator<mixed_op_el_t>(nMode, nModal, ns_VibOperator::parity_t::odd,
@@ -53,7 +53,7 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
                 }
             }
         }
-        mixedHam.insert({name, std::move(vibOp)});
+        mixedHam.insert({name, vibOp});
     }
     if (includeK) {
         f = fcidump.fileName() + "_K";
