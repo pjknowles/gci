@@ -40,8 +40,12 @@ HProduct HProduct::excite(const VibExcitation &exc) const {
             }
         }
         if (!found) {
-            newProduct.m_prod.emplace_back(modal_t({-1, -1}));
-            break;
+            if (exc_i[2] == 0)
+                newProduct.m_prod.emplace_back(modal_t({exc_i[0], exc_i[1]}));
+            else {
+                newProduct.m_prod.emplace_back(modal_t({-1, -1}));
+                break;
+            }
         }
     }
     return newProduct;
