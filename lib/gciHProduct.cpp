@@ -48,6 +48,7 @@ HProduct HProduct::excite(const VibExcitation &exc) const {
             }
         }
     }
+    newProduct.order();
     return newProduct;
 }
 
