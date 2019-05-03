@@ -19,7 +19,8 @@ int HProduct::excLvl(int iMode) const {
     else return (*index)[1];
 }
 
-HProduct HProduct::excite(const VibExcitation &exc) {
+//TODO Testing!
+HProduct HProduct::excite(const VibExcitation &exc) const {
     auto newProduct = HProduct(*this);
     // if any of the modes are different, excitation is void
     // for each mode, if annihilation operator does not match the modal,

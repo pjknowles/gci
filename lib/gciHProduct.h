@@ -54,7 +54,7 @@ public:
      * @note If annihilation operator does not match the occupied modal, that modal is set to -1 and will be declared
      * outside of vibrational space when checked.
      */
-    HProduct excite(const VibExcitation &exc);
+    HProduct excite(const VibExcitation &exc) const;
 
     /*!
      * @brief Excites a mode by one level.
