@@ -34,12 +34,9 @@ void Davidson<t_Wavefunction, t_Operator>::message() {
 }
 
 template<class t_Wavefunction, class t_Operator>
-void Davidson<t_Wavefunction, t_Operator>::printMatrix() { }
-
-template<>
-void Davidson<MixedWavefunction, MixedOperator>::printMatrix() {
-    MixedWavefunction w(ww[0]);
-    MixedWavefunction action(gg[0]);
+void Davidson<t_Wavefunction, t_Operator>::printMatrix() {
+    t_Wavefunction w(ww[0]);
+    t_Wavefunction action(gg[0]);
     w.allocate_buffer();
     action.allocate_buffer();
     auto n = w.size();
@@ -276,7 +273,7 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     message();
     initialize();
     prepareGuess();
-//    printMatrix();
+    printMatrix();
 //    printDiagonalHFmatrixElements(*prototype, *ham, 0);
 //    printDiagonalHFmatrixElements(*prototype, *ham, 1);
 //    printDiagonalHFmatrixElements(*prototype, *ham, 2);

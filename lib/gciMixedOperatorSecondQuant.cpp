@@ -25,6 +25,7 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
                                             ns_VibOperator::parity_t::even, name);
     if (includeHel) {
         name = "Hel[1]";
+        vibOp.name = name;
         for (int iMode = 0; iMode < nMode; ++iMode) {
             for (int iModal = 0; iModal < nModal; ++iModal) {
                 for (int jModal = 0; jModal <= iModal; ++jModal) {
