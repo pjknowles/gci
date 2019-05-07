@@ -107,6 +107,11 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             if (!ket.withinSpace(m_vibSpace)) continue;
             auto iKet = m_vibBasis.index(ket);
             m_wfn[iBra].axpy(val, w.m_wfn[iKet]);
+            if (iBra != iKet) {
+                auto conjElem = vibEl.second.conjugate();
+                val = conjElem.oper;
+                m_wfn[iKet].axpy(val, w.m_wfn[iBra]);
+            }
         }
         // all mixed vibrational - electronic operators
         // Need to take into account the symmetry of each term
