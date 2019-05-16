@@ -273,7 +273,7 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     message();
     initialize();
     prepareGuess();
-    printMatrix();
+//    printMatrix();
 //    printDiagonalHFmatrixElements(*prototype, *ham, 0);
 //    printDiagonalHFmatrixElements(*prototype, *ham, 1);
 //    printDiagonalHFmatrixElements(*prototype, *ham, 2);
@@ -285,7 +285,8 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
         action();
         solver.addVector(ww, gg);
         update();
-        if (solver.endIteration(ww, gg) && iteration > 4) break;
+//        if (solver.endIteration(ww, gg) && iteration > 4) break;
+        if (solver.endIteration(ww, gg)) break;
     }
     if (solver.m_verbosity > 0)
         xout << "Number of actions of matrix on vector = " << solver.m_actions << std::endl;
