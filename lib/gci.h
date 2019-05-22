@@ -11,7 +11,7 @@
 #ifndef MOLPRO
 #define xout std::cout
 #else
-#include "common/molpro_config.h"
+#include "molpro_config.h"
 #include "gciMolpro.h"
 #include "ppidd.h"
 #ifdef HAVE_MPI_H
