@@ -17,9 +17,5 @@ rsync dependencies/symmetry_matrix/lib/{SMat,Operator,SMatMat}.h dependencies/sy
 rsync dependencies/symmetry_matrix/lib/{SMat,Operator,SMatMat}-{double.cpp,implementation.h} $1/src/blas
 rsync dependencies/Profiler/lib/Profiler* $1/src/global
 rsync dependencies/FCIdump/lib/FCIdump* $1/src/global
-rsync dependencies/IterativeSolver/lib/PagedVector.h $1/src/global
-rsync dependencies/IterativeSolver/lib/IterativeSolver.h $1/src/global
-rsync dependencies/IterativeSolver/lib/IterativeSolver.cpp $1/src/util
-rsync dependencies/IterativeSolver/lib/IterativeSolverF.F90 $1/src/global
-rsync dependencies/IterativeSolver/example/*.{F90,cpp} $1/develop/examples
+rsync -av dependencies/IterativeSolver/{lib,example,CMakeLists.txt,Doxyfile.in,test} $1/src/IterativeSolver
 rsync gci.registry $1/lib
