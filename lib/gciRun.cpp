@@ -923,7 +923,7 @@ std::vector<double> Run::RSPT(const std::vector<SymmetryMatrix::Operator *> &ham
   e[0] = g.at(reference);
   g -= e[0];
   g.set(reference, (double) 1);
-//  xout << "Møller-Plesset denominators: " << g.str(2) << std::endl;
+//  xout << "Moeller-Plesset denominators: " << g.str(2) << std::endl;
   gci::File h0file;
   h0file.name = "H0";
   g.putw(h0file);
