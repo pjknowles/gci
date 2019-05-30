@@ -17,7 +17,7 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
         Hel(constructOperator(fcidump)),
         Hvib(constructHvib(fcidump.fileName(), nMode, nModal)),
         includeHel(fcidump.parameter("INCLUDE_HEL", std::vector<int>{0})[0]),
-        includeO(fcidump.parameter("INCLUDE_O", std::vector<int>{0})[0]),
+        includeLambda(fcidump.parameter("INCLUDE_LAMBDA", std::vector<int>{0})[0]),
         includeK(fcidump.parameter("INCLUDE_K", std::vector<int>{0})[0]) {
     std::string f;
     std::string name;
@@ -41,18 +41,18 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
         }
         mixedHam.insert({name, vibOp});
     }
-    if (includeO) {
-        name = "O[1]";
+    if (includeLambda) {
+        name = "Lambda[1]";
         vibOp = VibOperator<mixed_op_el_t>(nMode, nModal, ns_VibOperator::parity_t::odd,
                                            ns_VibOperator::parity_t::even, name);
         for (int iMode = 0; iMode < nMode; ++iMode) {
             for (int iModal = 0; iModal < nModal; ++iModal) {
-                for (int jModal = 0; jModal <= iModal; ++jModal) {
-                    f = fcidump.fileName() + "_O_" + std::to_string(iMode + 1) + "_" + std::to_string(iModal + 1) +
+                for (int jModal = 0; jModal < iModal; ++jModal) {
+                    f = fcidump.fileName() + "_Lambda_" + std::to_string(iMode + 1) + "_" + std::to_string(iModal + 1) +
                         "_" + std::to_string(jModal + 1);
                     if (file_exists(f)) {
                         VibExcitation vibExc({{iMode, iModal, jModal}});
-                        auto &&op = constructOperator(FCIdump(f));
+                        auto &&op = constructOperatorAntisymm1el(FCIdump(f));
                         vibOp.append(op, vibExc);
                     }
                 }
@@ -117,7 +117,7 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(
             dim.at(s - 1)++;
         }
         SymmetryMatrix::Operator result(SymmetryMatrix::dims_t{dim, dim, dim, dim}, 1, dump.parameter("IUHF")[0] > 0,
-                                        {-1, -1}, {-1, -1}, 0, true, "Hamiltonian T1");
+                                        {-1, -1}, {-1, -1}, 0, true, "Hamiltonian Lambda[1]");
 
         dump.rewind();
         double value;
@@ -134,8 +134,6 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(
         unsigned int si, sj, sk, sl;
         size_t oi, oj, ok, ol;
         while ((type = dump.nextIntegral(si, oi, sj, oj, sk, ok, sl, ol, value)) != FCIdump::endOfFile) {
-//      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
-//      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
             if (si < sj || (si == sj && oi < oj)) {
                 std::swap(oi, oj);
                 std::swap(si, sj);
@@ -145,9 +143,6 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(
                 std::swap(sk, sl);
             }
             unsigned int sij = si ^sj;
-//      xout << "\nvalue: "<<value<<std::endl;
-//      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
-//      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
 
             if (type == FCIdump::I1a) {
                 if (verbosity > 1) xout << "ha(" << i << "," << j << ") = " << value << std::endl;

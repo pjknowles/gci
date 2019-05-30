@@ -29,7 +29,7 @@ public:
     explicit MixedOperatorSecondQuant(const FCIdump &fcidump);
 protected:
     bool includeHel;
-    bool includeO;
+    bool includeLambda;
     bool includeK;
 
     /*!
@@ -44,7 +44,7 @@ protected:
     /*!
      * @brief From FCIdump file generates antisymmetric electronic operator
      */
-    SymmetryMatrix::Operator constructOperatorAntisymm1el(const FCIdump &dump);
+    static SymmetryMatrix::Operator constructOperatorAntisymm1el(const FCIdump &dump);
 };
 } // namespace gci
 
