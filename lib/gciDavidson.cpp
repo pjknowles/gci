@@ -252,19 +252,32 @@ template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::prepareGuess() { }
 
 template<>
-void Davidson<MixedWavefunction, MixedOperator>::prepareGuess() {
+void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
     // Currently assumes only 1 mode
     auto nS = nState;
     auto nMode = options.parameter("NMODE", int(0));
     if (nMode != 1) return;
     auto nM = options.parameter("NMODAL", int(0));
     auto n = nS / nM;
+    n += (n * nM == nS) ? 0 : 1;
+    n +=(n == 1 && nS > 3) ? 2 : 0;
+    auto modOptions = Options(options);
+    modOptions.addParameter("NSTATE", (int) n);
     Wavefunction w = prototype->wavefunctionAt(0);
     // Modify options to choose the correct number of electronic states
     Davidson<Wavefunction, SymmetryMatrix::Operator> elecSolver(std::move(w), SymmetryMatrix::Operator(ham->Hel),
-                                                                options);
+                                                                modOptions);
     elecSolver.run();
     // Loop over electronic states, loop over modals, set each element of the electronic wavefunction
+    for (int root = 0; root < nState; root++) {
+        auto ind_elec_state = root / nM;
+        auto ind_modal = root - ind_elec_state * nM;
+        auto elDim = ww[0].elDim();
+        ww[root].set(0.0);
+        for (int j = 0; j < elDim; ++j) {
+            ww[root].set(ind_modal * elDim + j, elecSolver.ww[ind_elec_state].at(j));
+        }
+    }
 }
 
 template<class t_Wavefunction, class t_Operator>

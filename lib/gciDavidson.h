@@ -73,8 +73,10 @@ public:
     std::shared_ptr<t_Wavefunction> prototype; //!< Prototype wavefunction
     std::shared_ptr<t_Operator> ham; //!< Hamiltonian operator that is being diagonalized
     std::shared_ptr<t_Wavefunction> diagonalH; //!< Stored diagonal values of the hamiltonian operator
-    std::vector<value_type> eigVal; //!< Solution eigenvalues
-    std::vector<t_Wavefunction> eigVec; //!< Solution eigenvectors
+//    std::vector<value_type> eigVal; //!< Solution eigenvalues
+//    std::vector<t_Wavefunction> eigVec; //!< Solution eigenvectors
+    ParameterVectorSet ww; //!< Set of current solutions
+    ParameterVectorSet gg; //!< Set of residual vectors
 protected:
     void printMatrix();
     void message();
@@ -87,8 +89,6 @@ protected:
     //! Get the new vector, $r = A u - \lambda u$
     void update();
     LinearAlgebra::LinearEigensystem<t_Wavefunction> solver; //!< Iterative solver
-    ParameterVectorSet ww; //!< Set of current solutions
-    ParameterVectorSet gg; //!< Set of residual vectors
 
     double energyThreshold;
     int nState;
