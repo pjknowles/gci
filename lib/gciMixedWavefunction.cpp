@@ -124,11 +124,11 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
                 if (!ket.withinSpace(m_vibSpace)) continue;
                 auto iKet = m_vibBasis.index(ket);
                 m_wfn[iBra].operatorOnWavefunction(op, w.m_wfn[iKet], parallel_stringset);
-                if (vibTensor.hermiticity() != ns_VibOperator::parity_t::none && iBra != iKet) {
-                    auto conjElem = vibEl.second.conjugate();
-                    auto &conjOp = conjElem.oper;
-                    m_wfn[iKet].operatorOnWavefunction(conjOp, w.m_wfn[iBra], parallel_stringset);
-                }
+//                if (vibTensor.hermiticity() != ns_VibOperator::parity_t::none && iBra != iKet) {
+//                    auto conjElem = vibEl.second.conjugate();
+//                    auto &conjOp = conjElem.oper;
+//                    m_wfn[iKet].operatorOnWavefunction(conjOp, w.m_wfn[iBra], parallel_stringset);
+//                }
             }
         }
     }

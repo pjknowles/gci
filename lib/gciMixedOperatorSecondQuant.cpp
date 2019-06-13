@@ -21,7 +21,7 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
         includeK(fcidump.parameter("INCLUDE_K", std::vector<int>{0})[0]) {
     std::string f;
     std::string name;
-    auto vibOp = VibOperator<mixed_op_el_t>(nMode, nModal, ns_VibOperator::parity_t::even,
+    auto vibOp = VibOperator<mixed_op_el_t>(nMode, nModal, ns_VibOperator::parity_t::none,
                                             ns_VibOperator::parity_t::even, name);
     if (includeHel) {
         name = "Hel[1]";
@@ -35,6 +35,9 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
                         VibExcitation vibExc({{iMode, iModal, jModal}});
                         auto &&op = constructOperator(FCIdump(f));
                         vibOp.append(op, vibExc);
+                        if (iModal != jModal) {
+                            vibOp.append(constructOperator(FCIdump(f)), VibExcitation({{iMode, jModal, iModal}}));
+                        }
                     }
                 }
             }
@@ -43,7 +46,7 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
     }
     if (includeLambda) {
         name = "Lambda[1]";
-        vibOp = VibOperator<mixed_op_el_t>(nMode, nModal, ns_VibOperator::parity_t::odd,
+        vibOp = VibOperator<mixed_op_el_t>(nMode, nModal, ns_VibOperator::parity_t::none,
                                            ns_VibOperator::parity_t::even, name);
         for (int iMode = 0; iMode < nMode; ++iMode) {
             for (int iModal = 0; iModal < nModal; ++iModal) {
@@ -54,6 +57,10 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
                         VibExcitation vibExc({{iMode, iModal, jModal}});
                         auto &&op = constructOperatorAntisymm1el(FCIdump(f));
                         vibOp.append(op, vibExc);
+                        if (iModal != jModal) {
+                            op = constructOperatorAntisymm1el(FCIdump(f)) * (-1.);
+                            vibOp.append(op, VibExcitation({{iMode, jModal, iModal}}));
+                        }
                     }
                 }
             }
