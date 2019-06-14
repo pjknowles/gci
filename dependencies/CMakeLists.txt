@@ -19,7 +19,7 @@ FetchContent_Declare(
         fcidump_dep
         SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/FCIdump"
 #        GIT_REPOSITORY git@gitlab.com:molpro/fcidump.git
-        GIT_REPOSITORY https://git@gitlab.com/molpro/fcidump.git
+        GIT_REPOSITORY https://gitlab.com/molpro/fcidump.git
         GIT_TAG ${FCIdump_GIT_TAG}
         UPDATE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/checkout.sh FCIdump ${CMAKE_BUILD_TYPE}
 )
