@@ -28,7 +28,8 @@ file(STRINGS "IterativeSolver_SHA1" IterativeSolver_GIT_TAG)
 FetchContent_Declare(
         iterativesolver_dep
         SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/IterativeSolver"
-        GIT_REPOSITORY https://gitlab.com/molpro/iterativesolver.git
+#        GIT_REPOSITORY https://gitlab+deploy-token-74714:VcwszaF11Jm3UJCadMFVVcwszaF11Jm3UJCadMFV@gitlab.com/molpro/iterativesolver.git
+        GIT_REPOSITORY git@gitlab.com:molpro/iterativesolver.git
         GIT_TAG ${IterativeSolver_GIT_TAG}
         UPDATE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/checkout.sh IterativeSolver ${CMAKE_BUILD_TYPE}
 )
