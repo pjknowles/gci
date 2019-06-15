@@ -13,5 +13,5 @@ job:
     - echo -e "machine gitlab.com\nlogin gitlab-ci-token\npassword ${CI_JOB_TOKEN}" > ~/.netrc
     - TOP=$PWD
     - git checkout $CI_COMMIT_SHA # because of cache
-    - cd $TOP; BUILD=build/$(git rev-parse --abbrev-ref HEAD); mkdir -p $BUILD && cd $BUILD && pwd && cmake -DMPIOPTIONS="--allow-run-as-root" $TOP ; cmake --build . -- -j ${procs} ;  ctest -V -j ${procs}
+    - cd $TOP; BUILD=build/$(git rev-parse --abbrev-ref HEAD); mkdir -p $BUILD && cd $BUILD && pwd && cmake -DMPIOPTIONS="--allow-run-as-root" $TOP ; cmake --build . -- -j ${procs} ; cd test;  ctest -V -j ${procs}
 
