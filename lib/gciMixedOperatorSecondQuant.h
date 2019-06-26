@@ -23,6 +23,7 @@ public:
     int nMode; //!< Number of vibrational modes
     int nModal; //!< Number of modals per mode (for now assumed the same for each mode)
     SymmetryMatrix::Operator Hel; //!< Purely electronic term
+    std::shared_ptr<SymmetryMatrix::Operator> K0; //!< Non-adiabatic scalar coupling term at reference
     VibOperator<double> Hvib;//!< Purely vibrational term
     std::map<std::string, VibOperator<mixed_op_el_t >> mixedHam;//!< Mixed electronic-vibrational terms
 
@@ -45,6 +46,8 @@ protected:
      * @brief From FCIdump file generates antisymmetric electronic operator
      */
     static SymmetryMatrix::Operator constructOperatorAntisymm1el(const FCIdump &dump);
+
+    static SymmetryMatrix::Operator constructK(const FCIdump &dump);
 };
 } // namespace gci
 

@@ -99,6 +99,10 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
         auto iBra = m_vibBasis.index(bra);
         // Pure electronic operators
         m_wfn[iBra].operatorOnWavefunction(ham.Hel, w.m_wfn[iBra], parallel_stringset);
+        // Scalar non-adiabatic coupling term
+        if (ham.K0){
+            m_wfn[iBra].operatorOnWavefunction(*ham.K0.get(), w.m_wfn[iBra], parallel_stringset);
+        }
         // Pure vibrational operator
         for (const auto &vibEl : ham.Hvib.tensor) {
             auto val = vibEl.second.oper;
