@@ -234,17 +234,17 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructK(const FCIdump &dum
 //      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
 
-            if (type == FCIdump::I2aa) {
+            if (type == FCIdump::I2aa && false) {
 //                (sij ? integrals_aa.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) :
 //                 integrals_aa.smat(sij, si, oi, oj)->block(sk)[ok * (ok + 1) / 2 + ol]) = value;
 //                (sij ? integrals_aa.smat(sij, sk, ok, ol)->blockMap(si)(oi, oj) :
 //                 integrals_aa.smat(sij, sk, ok, ol)->block(si)[oi * (oi + 1) / 2 + oj]) = value;
                 integrals_aa.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) = value;
-            } else if (type == FCIdump::I2ab) {
+            } else if (type == FCIdump::I2ab && false) {
 //                (sij ? integrals_ab.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) :
 //                 integrals_ab.smat(sij, si, oi, oj)->block(sk)[ok * (ok + 1) / 2 + ol]) = value;
                 integrals_ab.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) = value;
-            } else if (type == FCIdump::I2bb) {
+            } else if (type == FCIdump::I2bb && false) {
 //                (sij ? integrals_bb.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) :
 //                 integrals_bb.smat(sij, si, oi, oj)->block(sk)[ok * (ok + 1) / 2 + ol]) = value;
 //                (sij ? integrals_bb.smat(sij, sk, ok, ol)->blockMap(si)(oi, oj) :
