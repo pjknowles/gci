@@ -1,0 +1,8 @@
+#ifndef GCI_CONFIG_H
+#define GCI_CONFIG_H
+#cmakedefine GCI_FORTRAN
+#cmakedefine GCI_I8
+#ifndef MOLPRO
+#cmakedefine MOLPRO
+#endif
+#endif

@@ -49,28 +49,27 @@ add_library(gci
         gciWavefunction.cpp gciWavefunction.h
         sharedCounter.cpp sharedCounter.h
         )
-target_include_directories(gci INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(BLAS)
 if (BLAS_FOUND)
     message("Found BLAS")
-    target_compile_definitions(gci PUBLIC -DBLAS)
+    target_compile_definitions(gci PRIVATE -DBLAS)
 endif ()
 STRING(FIND "${BLAS_LIBRARIES}" "mkl" POS)
 if (POS GREATER -1)
     message("Found MKL")
-    target_compile_definitions(gci PUBLIC -DEIGEN_USE_MKL_ALL)
+    target_compile_definitions(gci PRIVATE -DEIGEN_USE_MKL_ALL)
 endif ()
 
 target_link_libraries(gci PUBLIC Eigen3::Eigen Profiler FCIdump IterativeSolver symmetry_matrix memory molpro_plugin ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
 
-target_include_directories(gci PUBLIC ${MPI_CXX_INCLUDE_PATH})
+target_include_directories(gci PRIVATE ${MPI_CXX_INCLUDE_PATH})
 target_link_libraries(gci PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
-target_compile_options(gci PUBLIC ${MPI_CXX_COMPILE_FLAGS})
+target_compile_options(gci PRIVATE ${MPI_CXX_COMPILE_FLAGS})
 
 if (MPI_CXX_FOUND)
     target_link_libraries(gci PUBLIC MPI::MPI_CXX)
 endif ()
 
-
+include(libconfig.cmake)
 
