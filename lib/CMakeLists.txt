@@ -1,35 +1,52 @@
 ########## Dependencies ##########
 
+file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/fcidump_lockfile GUARD FILE TIMEOUT 1000)
 FetchContent_GetProperties(fcidump_dep)
 if (NOT fcidump_dep_POPULATED)
     FetchContent_Populate(fcidump_dep)
     add_subdirectory(${fcidump_dep_SOURCE_DIR} ${fcidump_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif ()
+file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/fcidump_lockfile RELEASE)
+
+file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/iterativesolver_lockfile GUARD FILE TIMEOUT 1000)
 FetchContent_GetProperties(iterativesolver_dep)
 if (NOT iterativesolver_dep_POPULATED)
     FetchContent_Populate(iterativesolver_dep)
     add_subdirectory(${iterativesolver_dep_SOURCE_DIR} ${iterativesolver_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif ()
+file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/iterativesolver_lockfile RELEASE)
+
+file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/memory_lockfile GUARD FILE TIMEOUT 1000)
 FetchContent_GetProperties(memory_dep)
 if (NOT memory_dep_POPULATED)
     FetchContent_Populate(memory_dep)
     add_subdirectory(${memory_dep_SOURCE_DIR} ${memory_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif ()
+file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/memory_lockfile RELEASE)
+
+file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/molpro_plugin_lockfile GUARD FILE TIMEOUT 1000)
 FetchContent_GetProperties(molpro_plugin_dep)
 if (NOT molpro_plugin_dep_POPULATED)
     FetchContent_Populate(molpro_plugin_dep)
     add_subdirectory(${molpro_plugin_dep_SOURCE_DIR} ${molpro_plugin_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif ()
+file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/molpro_plugin_lockfile RELEASE)
+
+file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/profiler_lockfile GUARD FILE TIMEOUT 1000)
 FetchContent_GetProperties(profiler_dep)
 if (NOT profiler_dep_POPULATED)
     FetchContent_Populate(profiler_dep)
     add_subdirectory(${profiler_dep_SOURCE_DIR} ${profiler_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif ()
+file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/profiler_lockfile RELEASE)
+
+file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/symmetry_matrix_lockfile GUARD FILE TIMEOUT 1000)
 FetchContent_GetProperties(symmetry_matrix_dep)
 if (NOT symmetry_matrix_dep_POPULATED)
     FetchContent_Populate(symmetry_matrix_dep)
     add_subdirectory(${symmetry_matrix_dep_SOURCE_DIR} ${symmetry_matrix_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif ()
+file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/symmetry_matrix_lockfile RELEASE)
 
 
 ########## Target ##########

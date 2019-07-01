@@ -19,6 +19,7 @@ set(SYMMETRY_MATRIX_FLOAT OFF CACHE BOOL "Whether to build and test symmetry_mat
 add_subdirectory(dependencies)
 
 if (NOT TARGET Eigen3::Eigen)
+    file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/eigen3_lockfile GUARD FILE TIMEOUT 1000)
     FetchContent_GetProperties(eigen3_dep)
     if (NOT eigen3_dep_POPULATED)
         FetchContent_Populate(eigen3_dep)
@@ -27,6 +28,7 @@ if (NOT TARGET Eigen3::Eigen)
         add_library(Eigen3::Eigen ALIAS ExternalEigen3)
         message("Using external Eigen3 library")
     endif ()
+    file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/eigen3_lockfile RELEASE)
 endif ()
 
 find_package(MPI REQUIRED CXX )
