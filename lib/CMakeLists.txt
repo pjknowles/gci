@@ -1,55 +1,34 @@
-########## Dependencies ##########
+include(FetchContent)
+function(get_dependency)
+    foreach (dep IN LISTS ARGN)
+        FetchContent_GetProperties(${dep})
+        if (NOT ${dep}_POPULATED)
+            file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/${dep}_lockfile GUARD FILE TIMEOUT 1000)
+            FetchContent_Populate(${dep})
+            file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/${dep}_lockfile RELEASE)
+        endif ()
+        set(${dep}_SOURCE_DIR "${${dep}_SOURCE_DIR}" PARENT_SCOPE)
+        set(${dep}_BINARY_DIR "${${dep}_BINARY_DIR}" PARENT_SCOPE)
+    endforeach ()
+endfunction()
 
-file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/fcidump_lockfile GUARD FILE TIMEOUT 1000)
-FetchContent_GetProperties(fcidump_dep)
-if (NOT fcidump_dep_POPULATED)
-    FetchContent_Populate(fcidump_dep)
-    add_subdirectory(${fcidump_dep_SOURCE_DIR} ${fcidump_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
+
+if (NOT TARGET Eigen3::Eigen)
+    get_dependency(eigen3_dep)
+    add_library(ExternalEigen3 INTERFACE)
+    target_include_directories(ExternalEigen3 INTERFACE ${CMAKE_SOURCE_DIR}/dependencies/Eigen3)
+    add_library(Eigen3::Eigen ALIAS ExternalEigen3)
+    message("Using external Eigen3 library")
 endif ()
-file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/fcidump_lockfile RELEASE)
 
-file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/iterativesolver_lockfile GUARD FILE TIMEOUT 1000)
-FetchContent_GetProperties(iterativesolver_dep)
-if (NOT iterativesolver_dep_POPULATED)
-    FetchContent_Populate(iterativesolver_dep)
-    add_subdirectory(${iterativesolver_dep_SOURCE_DIR} ${iterativesolver_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif ()
-file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/iterativesolver_lockfile RELEASE)
+set(SYMMETRY_MATRIX_DOUBLE ON CACHE BOOL "Whether to build and test symmetry_matrix with double data type" FORCE)
+set(SYMMETRY_MATRIX_COMPLEXDOUBLE OFF CACHE BOOL "Whether to build and test symmetry_matrix with complex-double data type" FORCE)
+set(SYMMETRY_MATRIX_FLOAT OFF CACHE BOOL "Whether to build and test symmetry_matrix with float data type" FORCE)
+foreach (dep fcidump_dep;iterativesolver_dep;memory_dep;molpro_plugin_dep;profiler_dep;symmetry_matrix_dep)
+    get_dependency(${dep})
+    add_subdirectory(${${dep}_SOURCE_DIR} ${${dep}_BINARY_DIR} EXCLUDE_FROM_ALL)
+endforeach ()
 
-file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/memory_lockfile GUARD FILE TIMEOUT 1000)
-FetchContent_GetProperties(memory_dep)
-if (NOT memory_dep_POPULATED)
-    FetchContent_Populate(memory_dep)
-    add_subdirectory(${memory_dep_SOURCE_DIR} ${memory_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif ()
-file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/memory_lockfile RELEASE)
-
-file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/molpro_plugin_lockfile GUARD FILE TIMEOUT 1000)
-FetchContent_GetProperties(molpro_plugin_dep)
-if (NOT molpro_plugin_dep_POPULATED)
-    FetchContent_Populate(molpro_plugin_dep)
-    add_subdirectory(${molpro_plugin_dep_SOURCE_DIR} ${molpro_plugin_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif ()
-file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/molpro_plugin_lockfile RELEASE)
-
-file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/profiler_lockfile GUARD FILE TIMEOUT 1000)
-FetchContent_GetProperties(profiler_dep)
-if (NOT profiler_dep_POPULATED)
-    FetchContent_Populate(profiler_dep)
-    add_subdirectory(${profiler_dep_SOURCE_DIR} ${profiler_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif ()
-file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/profiler_lockfile RELEASE)
-
-file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/symmetry_matrix_lockfile GUARD FILE TIMEOUT 1000)
-FetchContent_GetProperties(symmetry_matrix_dep)
-if (NOT symmetry_matrix_dep_POPULATED)
-    FetchContent_Populate(symmetry_matrix_dep)
-    add_subdirectory(${symmetry_matrix_dep_SOURCE_DIR} ${symmetry_matrix_dep_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif ()
-file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/symmetry_matrix_lockfile RELEASE)
-
-
-########## Target ##########
 
 add_library(gci
         gci.h
@@ -92,5 +71,6 @@ target_compile_options(gci PUBLIC ${MPI_CXX_COMPILE_FLAGS})
 if (MPI_CXX_FOUND)
     target_link_libraries(gci PUBLIC MPI::MPI_CXX)
 endif ()
+
 
 

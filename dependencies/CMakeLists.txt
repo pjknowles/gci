@@ -1,3 +1,4 @@
+include(FetchContent)
 FetchContent_Declare(
         eigen3_dep
         SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/Eigen3"
