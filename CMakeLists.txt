@@ -23,6 +23,7 @@ add_definitions(-DHAVE_MPI_H)
 
 add_subdirectory(lib)
 add_subdirectory(src)
+enable_testing()
 add_subdirectory(test)
 
 
