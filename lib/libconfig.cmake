@@ -38,6 +38,15 @@ install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}Targets LIBRARY DESTINATIO
         INCLUDES DESTINATION include
         PUBLIC_HEADER DESTINATION include
         )
+message("DEPENDENCIES: ${DEPENDENCIES}")
+foreach (dep ${DEPENDENCIES})
+    install(TARGETS ${dep} EXPORT ${PROJECT_NAME}Targets LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+            RUNTIME DESTINATION bin
+            INCLUDES DESTINATION include
+            PUBLIC_HEADER DESTINATION include
+            )
+endforeach ()
 install(EXPORT ${PROJECT_NAME}Targets
         FILE ${PROJECT_NAME}Targets.cmake
         NAMESPACE ${PROJECT_NAME}::

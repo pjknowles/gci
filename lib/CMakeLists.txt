@@ -17,18 +17,33 @@ endfunction()
 if (NOT TARGET Eigen3::Eigen)
     get_dependency(eigen3_dep)
     add_library(ExternalEigen3 INTERFACE)
-    target_include_directories(ExternalEigen3 INTERFACE ${CMAKE_SOURCE_DIR}/dependencies/Eigen3)
+    target_include_directories(ExternalEigen3 INTERFACE
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/dependencies/Eigen3>
+            $<INSTALL_INTERFACE:include>
+            )
     add_library(Eigen3::Eigen ALIAS ExternalEigen3)
     message("Using external Eigen3 library")
+    list(APPEND DEPENDENCIES ExternalEigen3)
+else ()
+    list(APPEND DEPENDENCIES Eigen3::Eigen)
 endif ()
 
 set(SYMMETRY_MATRIX_DOUBLE ON CACHE BOOL "Whether to build and test symmetry_matrix with double data type" FORCE)
 set(SYMMETRY_MATRIX_COMPLEXDOUBLE OFF CACHE BOOL "Whether to build and test symmetry_matrix with complex-double data type" FORCE)
 set(SYMMETRY_MATRIX_FLOAT OFF CACHE BOOL "Whether to build and test symmetry_matrix with float data type" FORCE)
+if (NOT CMAKE_Fortran_COMPILER)
+    message("Building GCI without Fortran support")
+    set(FORTRAN OFF)
+else ()
+    message("Building GCI with Fortran support")
+    set(FORTRAN ON)
+endif ()
 foreach (dep fcidump_dep;iterativesolver_dep;memory_dep;molpro_plugin_dep;profiler_dep;symmetry_matrix_dep)
     get_dependency(${dep})
     add_subdirectory(${${dep}_SOURCE_DIR} ${${dep}_BINARY_DIR} EXCLUDE_FROM_ALL)
 endforeach ()
+list(APPEND DEPENDENCIES Profiler FCIdump molpro_plugin)
+#list(APPEND DEPENDENCIES Profiler FCIdump IterativeSolver memory molpro_plugin)
 
 
 add_library(gci
