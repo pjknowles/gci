@@ -10,6 +10,14 @@
 using namespace gci;
 
 
+int gci::parallel_size = 1;
+int gci::parallel_rank = 0;
+bool gci::molpro_plugin = false;
+MPI_Comm gci::molpro_plugin_intercomm = MPI_COMM_NULL;
+std::unique_ptr<sharedCounter> gci::_nextval_counter = nullptr;
+int64_t gci::__my_first_task = 0;
+int64_t gci::__task = 0;
+int64_t gci::__task_granularity = 1;
 
 using ParameterVectorSet = std::vector<Wavefunction>;
 using scalar = double;
@@ -1879,3 +1887,21 @@ void gci::gsum(SymmetryMatrix::Operator& op) {
     }
   }
 }
+#ifdef MOLPRO
+#ifdef __cplusplus
+extern "C" {
+#endif
+void gcirun(double* energies, int nenergies, char* fcidump) {
+  Run run(fcidump);
+  try {
+    std::vector<double>e = run.run();
+    for (int i=0; i < (nenergies > (int)e.size() ? (int)e.size() : nenergies); i++)
+      energies[i]=e[i];
+  }
+  catch(char const* c) { xout << "caught error: " <<c<<std::endl;}
+  return;
+}
+#ifdef __cplusplus
+}
+#endif
+#endif

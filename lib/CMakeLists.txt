@@ -68,6 +68,10 @@ add_library(gci
         sharedCounter.cpp sharedCounter.h
         )
 
+if (Molpro_SOURCE_DIR)
+    target_compile_definitions(gci PRIVATE MOLPRO)
+endif ()
+
 find_package(BLAS)
 if (BLAS_FOUND)
     message("Found BLAS")
