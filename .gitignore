@@ -22,3 +22,5 @@ cmake-build-debug
 cmake-build-release
 Testing
 build
+dependencies/*/
+*_lockfile

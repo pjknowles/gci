@@ -1,14 +1,7 @@
 #include "sharedCounter.h"
+//TODO a cleaner separation of library-internal headers
 #include "gci.h"
-#include "gciFile.h"
-#include "gciOperator.h"
-#include "gciDeterminant.h"
-#include "gciWavefunction.h"
-#include "gciStringSet.h"
-#include "gciExcitationSet.h"
-#include "gciOrbitalSpace.h"
 #include "gciRun.h"
-#include "FCIdump.h"
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -18,33 +11,10 @@
 #include <fcntl.h>
 using namespace gci;
 
-#ifdef MOLPRO
-#ifdef __cplusplus
-extern "C" {
-#endif
-  void gcirun(double* energies, int nenergies, char* fcidump) {
-    Run run(fcidump);
-    try {
-    std::vector<double>e = run.run();
-    for (int i=0; i < (nenergies > (int)e.size() ? (int)e.size() : nenergies); i++)
-        energies[i]=e[i];
-    }
-    catch(char const* c) { xout << "caught error: " <<c<<std::endl;}
-    return;
-}
-#ifdef __cplusplus
-}
-#endif
-#endif
 
-int gci::parallel_size = 1;
-int gci::parallel_rank = 0;
-bool gci::molpro_plugin = false;
-MPI_Comm gci::molpro_plugin_intercomm = MPI_COMM_NULL;
-std::unique_ptr<sharedCounter> gci::_nextval_counter = nullptr;
-int64_t gci::__my_first_task = 0;
-int64_t gci::__task = 0;
-int64_t gci::__task_granularity = 1;
+extern int gci::parallel_size;
+extern int gci::parallel_rank;
+extern bool gci::molpro_plugin;
 
 #ifndef MOLPRO
 #include <cerrno>
@@ -71,7 +41,7 @@ int main(int argc, char *argv[])
   }
   if (argc > 1) strcpy(fcidumpname, argv[1]);
 
-  size_t memory = 100000;
+  size_t memory = 1000000000;
   for (int i = 2; i < argc; i++) {
     std::string s(argv[i]);
     size_t equals = s.find('=');
@@ -113,7 +83,7 @@ int main(int argc, char *argv[])
       size_t pos = std::min(densityname.rfind('.'), densityname.size());
       densityname.replace(pos, densityname.size() - pos, ".density.");
       densityname += std::to_string(state + 1) + ".fcidump";
-      run.m_densityMatrices[state].FCIDump(densityname);
+      FCIDump(run.m_densityMatrices[state],densityname);
       if (plugin.active()) { // send the density back
         if (plugin.send("TAKE DENSITY FCIDUMP"))
           plugin.send(densityname);
