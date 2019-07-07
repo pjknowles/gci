@@ -1,21 +1,4 @@
-include(FetchContent)
-function(get_dependency MAKESUBDIR)
-    foreach (dep IN LISTS ARGN)
-        FetchContent_GetProperties(${dep})
-        if (NOT ${dep}_POPULATED)
-            file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/${dep}_lockfile GUARD FILE TIMEOUT 1000)
-            FetchContent_Populate(${dep})
-            if (MAKESUBDIR)
-                add_subdirectory(${${dep}_SOURCE_DIR} ${${dep}_BINARY_DIR} EXCLUDE_FROM_ALL)
-            endif ()
-            file(LOCK ${CMAKE_SOURCE_DIR}/dependencies/${dep}_lockfile RELEASE)
-        endif ()
-        foreach (s SOURCE_DIR BINARY_DIR POPULATED)
-            set(${dep}_${s} "${${dep}_${s}}" PARENT_SCOPE)
-        endforeach ()
-    endforeach ()
-endfunction()
-
+include(libconfig.cmake)
 
 if (NOT TARGET Eigen3::Eigen)
     get_dependency(OFF eigen3_dep)
@@ -43,9 +26,9 @@ else ()
 endif ()
 foreach (dep fcidump_dep;iterativesolver_dep;memory_dep;molpro_plugin_dep;profiler_dep;symmetry_matrix_dep)
     get_dependency(ON ${dep})
+    message("dependency ${dep} source ${${dep}_SOURCE_DIR}")
 endforeach ()
-list(APPEND DEPENDENCIES Profiler FCIdump molpro_plugin)
-#list(APPEND DEPENDENCIES Profiler FCIdump IterativeSolver memory molpro_plugin)
+list(APPEND DEPENDENCIES FCIdump IterativeSolver memory molpro_plugin Profiler symmetry_matrix)
 
 
 add_library(gci
@@ -93,5 +76,5 @@ if (MPI_CXX_FOUND)
     target_link_libraries(gci PUBLIC MPI::MPI_CXX)
 endif ()
 
-include(libconfig.cmake)
 
+configure_library(${PROJECT_NAME} "${DEPENDENCIES}")
