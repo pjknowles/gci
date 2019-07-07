@@ -1,34 +1,17 @@
-# This file is a template, and might need editing before it works on your project.
-# use the official gcc image, based on debian
-# can use verions as well, like gcc:5.2
-# see https://hub.docker.com/_/gcc/
-image: pjknowles/opensuse:tumbleweed
-
-build:
-  stage: build
-  # instead of calling g++ directly you can also use some build toolkit like make
-  # install the necessary build tools when needed
-  # before_script: 
-  #   - apt update && apt -y install make autoconf 
-script: # Modify the commands below to build your repository.
-          - # zypper -n install eigen3-devel cmake gcc-fortran gcc-c++ openmpi-devel openmpi-libs blas-devel libblas3 git doxygen texlive-epstopdf ghostscript
-          - # ln -s /usr /usr/usr
-          - git submodule update --init --recursive
-          - mkdir -p build && cd build
-          - cmake ..
-          - make -f CMakeFiles/gci.exe.dir/build.make -j1 CMakeFiles/gci.exe.dir/submodules/symmetry_matrix/SMat.cpp.o CMakeFiles/gci.exe.dir/submodules/symmetry_matrix/SMatfunction.cpp.o
-          - make -j
-          - ctest -V
-  artifacts:
-    paths:
-      - mybinary
-  # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
-  # cache:
-  #   paths:
-  #     - "*.o"
-
-# run tests using the binary built before
-test:
-  stage: test
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths: # cache everything so that unnecessary recompilation is avoided
+    - lib
+    - src
+    - test
+    - CMakeLists.txt
+    - Doxyfile.in
+job:
+  image: pjknowles/opensuse
   script:
-    - ./runmytests.sh
+    - procs=$(lscpu -p | egrep -v '^#' | wc -l); echo $procs processors available
+    - echo -e "machine gitlab.com\nlogin gitlab-ci-token\npassword ${CI_JOB_TOKEN}" > ~/.netrc
+    - TOP=$PWD
+    - git checkout $CI_COMMIT_SHA # because of cache
+    - cd $TOP; BUILD=build/$(git rev-parse --abbrev-ref HEAD); mkdir -p $BUILD && cd $BUILD && pwd && cmake -DMPIOPTIONS="--allow-run-as-root" $TOP ; cmake --build . -- -j ${procs} ; cd test;  ctest -V -j ${procs}
+
