@@ -1,18 +1,18 @@
 include(libconfig.cmake)
 
-if (NOT TARGET Eigen3::Eigen)
-    get_dependency(OFF eigen3_dep)
-    add_library(ExternalEigen3 INTERFACE)
-    target_include_directories(ExternalEigen3 INTERFACE
-            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/dependencies/Eigen3>
-            $<INSTALL_INTERFACE:include>
-            )
-    add_library(Eigen3::Eigen ALIAS ExternalEigen3)
-    message("Using external Eigen3 library")
-    list(APPEND DEPENDENCIES ExternalEigen3)
-else ()
-    list(APPEND DEPENDENCIES Eigen3::Eigen)
-endif ()
+#if (NOT TARGET Eigen3::Eigen)
+#    get_dependency(OFF eigen3_dep)
+#    add_library(ExternalEigen3 INTERFACE)
+#    target_include_directories(ExternalEigen3 INTERFACE
+#            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/dependencies/Eigen3>
+#            $<INSTALL_INTERFACE:include>
+#            )
+#    add_library(Eigen3::Eigen ALIAS ExternalEigen3)
+#    message("Using external Eigen3 library")
+#    list(APPEND DEPENDENCIES ExternalEigen3)
+#else ()
+#    list(APPEND DEPENDENCIES Eigen3::Eigen)
+#endif ()
 
 set(SYMMETRY_MATRIX_DOUBLE ON CACHE BOOL "Whether to build and test symmetry_matrix with double data type" FORCE)
 set(SYMMETRY_MATRIX_COMPLEXDOUBLE OFF CACHE BOOL "Whether to build and test symmetry_matrix with complex-double data type" FORCE)
@@ -66,7 +66,9 @@ if (POS GREATER -1)
     target_compile_definitions(gci PRIVATE -DEIGEN_USE_MKL_ALL)
 endif ()
 
-target_link_libraries(gci PUBLIC Eigen3::Eigen Profiler FCIdump IterativeSolver symmetry_matrix memory molpro_plugin ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
+target_link_libraries(gci PUBLIC
+#Eigen3::Eigen
+Profiler FCIdump IterativeSolver symmetry_matrix memory molpro_plugin ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
 
 target_include_directories(gci PRIVATE ${MPI_CXX_INCLUDE_PATH})
 target_link_libraries(gci PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
