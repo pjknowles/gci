@@ -18,7 +18,7 @@ endfunction()
 
 # completion of configuration for a library, including exports.
 function(configure_library LIBRARY_NAME DEPENDENCIES)
-    message("configure_library ${LIBRARY_NAME} ${DEPENDENCIES}")
+    message("configure_library ${LIBRARY_NAME} with dependencies ${DEPENDENCIES}")
     string(TOUPPER ${LIBRARY_NAME} PROJECT_UPPER_NAME)
     add_library(${LIBRARY_NAME}::${LIBRARY_NAME} ALIAS ${LIBRARY_NAME})
     target_include_directories(${LIBRARY_NAME} PUBLIC
@@ -69,7 +69,6 @@ function(configure_library LIBRARY_NAME DEPENDENCIES)
             INCLUDES DESTINATION include
             PUBLIC_HEADER DESTINATION include
             )
-    message("DEPENDENCIES for ${LIBRARY_NAME}: ${DEPENDENCIES}")
     foreach (dep ${DEPENDENCIES})
         install(TARGETS ${dep} EXPORT ${LIBRARY_NAME}Targets LIBRARY DESTINATION lib
                 ARCHIVE DESTINATION lib

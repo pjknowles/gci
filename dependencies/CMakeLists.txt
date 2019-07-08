@@ -1,11 +1,4 @@
 include(FetchContent)
-FetchContent_Declare(
-        eigen3_dep
-        SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/Eigen3"
-        GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror.git
-        GIT_TAG "3.3.7"
-        GIT_SHALLOW TRUE
-)
 
 FetchContent_Declare(
         googletest_dep

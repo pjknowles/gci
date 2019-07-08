@@ -10,7 +10,6 @@ constexpr bool blas = true;
 constexpr bool blas = false;
 #endif
 static bool eigen = true;
-using namespace Eigen;
 
 void MxmDrvNN(double *Out, const double *A, const double *B, uint nRows, uint nLink, uint nCols, bool AddToDest) {
 #ifdef EIGEN_USE_MKL_ALL
@@ -32,11 +31,11 @@ void MxmDrvNN(double *Out, const double *A, const double *B, uint nRows, uint nL
   } else
 #endif
   if (eigen) {
-    Map<MatrixXd, Unaligned, Stride<Dynamic, Dynamic> >
-        Am(const_cast<double *>(A), nRows, nLink, Stride<Dynamic, Dynamic>(nRows, 1));
-    Map<MatrixXd, Unaligned, Stride<Dynamic, Dynamic> >
-        Bm(const_cast<double *>(B), nLink, nCols, Stride<Dynamic, Dynamic>(nCols, 1));
-    Map<MatrixXd, Unaligned, Stride<Dynamic, Dynamic> > Outm(Out, nRows, nCols, Stride<Dynamic, Dynamic>(nRows, 1));
+    Eigen::Map<Eigen::MatrixXd, Eigen::Unaligned, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic> >
+        Am(const_cast<double *>(A), nRows, nLink, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(nRows, 1));
+    Eigen::Map<Eigen::MatrixXd, Eigen::Unaligned, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic> >
+        Bm(const_cast<double *>(B), nLink, nCols, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(nCols, 1));
+    Eigen::Map<Eigen::MatrixXd, Eigen::Unaligned, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic> > Outm(Out, nRows, nCols, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(nRows, 1));
     if (AddToDest)
       Outm += Am * Bm;
     else
@@ -85,11 +84,11 @@ void MxmDrvTN(double *Out,
 //      std::cout << "nStrideLink="<<nStrideLink<<std::endl;
 //      std::cout << "nLink="<<nLink<<std::endl;
 //      std::cout << "nCols="<<nCols<<std::endl;
-    Map<MatrixXd, Unaligned, Stride<Dynamic, Dynamic> >
-        Am(const_cast<double *>(A), nRows, nLink, Stride<Dynamic, Dynamic>(1, nStrideLink));
-    Map<MatrixXd, Unaligned, Stride<Dynamic, Dynamic> >
-        Bm(const_cast<double *>(B), nLink, nCols, Stride<Dynamic, Dynamic>(1, nCols));
-    Map<MatrixXd, Unaligned, Stride<Dynamic, Dynamic> > Outm(Out, nRows, nCols, Stride<Dynamic, Dynamic>(nRows, 1));
+    Eigen::Map<Eigen::MatrixXd, Eigen::Unaligned, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic> >
+        Am(const_cast<double *>(A), nRows, nLink, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(1, nStrideLink));
+    Eigen::Map<Eigen::MatrixXd, Eigen::Unaligned, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic> >
+        Bm(const_cast<double *>(B), nLink, nCols, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(1, nCols));
+    Eigen::Map<Eigen::MatrixXd, Eigen::Unaligned, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic> > Outm(Out, nRows, nCols, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(nRows, 1));
 //      if (nCols*nLink) {
 //      std::cout << "MxmDrvTN Am:\n"<<Am<<std::endl;
 //      std::cout << "B[0] "<<B[0]<<"@"<<&B[0]<<std::endl;
