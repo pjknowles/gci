@@ -116,7 +116,9 @@ function(configure_library LIBRARY_NAME DEPENDENCIES)
             PUBLIC_HEADER DESTINATION include
             )
     foreach (dep ${DEPENDENCIES})
-        message(STATUS "install(TARGETS ${dep} EXPORT ${LIBRARY_NAME}Targets ...)")
+        if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
+            message(VERBOSE "install(TARGETS ${dep} EXPORT ${LIBRARY_NAME}Targets ...)")
+        endif ()
         install(TARGETS ${dep} EXPORT ${LIBRARY_NAME}Targets LIBRARY DESTINATION lib
                 ARCHIVE DESTINATION lib
                 RUNTIME DESTINATION bin
