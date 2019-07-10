@@ -18,8 +18,7 @@ CMakeFiles
 cmake_install.cmake
 CMakeLists.txt.user*
 .idea
-cmake-build-debug
-cmake-build-release
+cmake-build*
 Testing
 build
 dependencies/*/

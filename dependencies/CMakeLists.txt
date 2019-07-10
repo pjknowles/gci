@@ -1,64 +1,39 @@
-include(FetchContent)
 
-FetchContent_Declare(
-        googletest_dep
-        SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/googletest"
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG "release-1.8.1"
-        GIT_SHALLOW TRUE
+declare_dependency(
+        googletest
+        https://github.com/google/googletest.git
 )
 
-file(STRINGS "FCIdump_SHA1" FCIdump_GIT_TAG)
-FetchContent_Declare(
-        fcidump_dep
-        SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/FCIdump"
-        GIT_REPOSITORY https://gitlab.com/molpro/fcidump.git
-        GIT_TAG ${FCIdump_GIT_TAG}
-        UPDATE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/checkout.sh FCIdump ${CMAKE_BUILD_TYPE}
+declare_dependency(
+        fcidump
+        https://gitlab.com/molpro/fcidump.git
 )
 
-file(STRINGS "IterativeSolver_SHA1" IterativeSolver_GIT_TAG)
-FetchContent_Declare(
-        iterativesolver_dep
-        SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/IterativeSolver"
-        GIT_REPOSITORY https://gitlab+deploy-token-74790:BQ4_qi9fyN7sypf6H__m@gitlab.com/molpro/IterativeSolver
-        GIT_TAG ${IterativeSolver_GIT_TAG}
-        UPDATE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/checkout.sh IterativeSolver ${CMAKE_BUILD_TYPE}
+declare_dependency(
+        iterativesolver
+        https://gitlab+deploy-token-74790:BQ4_qi9fyN7sypf6H__m@gitlab.com/molpro/IterativeSolver
 )
 
-file(STRINGS "memory_SHA1" memory_GIT_TAG)
-FetchContent_Declare(
-        memory_dep
-        SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/memory"
-        GIT_REPOSITORY git@github.com:molpro/memory
-        GIT_TAG ${memory_GIT_TAG}
-        UPDATE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/checkout.sh memory ${CMAKE_BUILD_TYPE}
+declare_dependency(
+        memory
+        git@github.com:molpro/memory
 )
 
-file(STRINGS "molpro-plugin_SHA1" molpro_plugin_GIT_TAG)
-FetchContent_Declare(
-        molpro_plugin_dep
-        SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/molpro-plugin"
-        GIT_REPOSITORY https://gitlab.com/molpro/molpro-plugin.git
-        GIT_TAG ${molpro_plugin_GIT_TAG}
-        UPDATE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/checkout.sh molpro-plugin ${CMAKE_BUILD_TYPE}
+declare_dependency(
+        molpro_plugin
+        https://gitlab.com/molpro/molpro-plugin.git
 )
 
-file(STRINGS "Profiler_SHA1" Profiler_GIT_TAG)
-FetchContent_Declare(
-        profiler_dep
-        SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/Profiler"
-        GIT_REPOSITORY https://gitlab+deploy-token-74792:Bj6FL_cWqz_8y2PNDycx@gitlab.com/molpro/profiler.git
-        GIT_TAG ${Profiler_GIT_TAG}
-        UPDATE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/checkout.sh Profiler ${CMAKE_BUILD_TYPE}
+declare_dependency(
+        profiler
+        https://gitlab+deploy-token-74792:Bj6FL_cWqz_8y2PNDycx@gitlab.com/molpro/profiler.git
 )
 
-file(STRINGS "symmetry_matrix_SHA1" symmetry_matrix_GIT_TAG)
-FetchContent_Declare(
-        symmetry_matrix_dep
-        SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/symmetry_matrix"
-        GIT_REPOSITORY https://gitlab+deploy-token-74793:dLXMspxsDJozbVw7VBRF@gitlab.com/molpro/symmetry_matrix.git
-        GIT_TAG ${symmetry_matrix_GIT_TAG}
-        UPDATE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/checkout.sh symmetry_matrix ${CMAKE_BUILD_TYPE}
+declare_dependency(
+        symmetry_matrix
+        https://gitlab+deploy-token-74793:dLXMspxsDJozbVw7VBRF@gitlab.com/molpro/symmetry_matrix.git
 )
 
+declare_dependency(googletest
+        https://github.com/google/googletest.git
+        )

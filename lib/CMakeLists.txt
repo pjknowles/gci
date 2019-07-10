@@ -1,4 +1,3 @@
-include(libconfig.cmake)
 
 set(SYMMETRY_MATRIX_DOUBLE ON CACHE BOOL "Whether to build and test symmetry_matrix with double data type" FORCE)
 set(SYMMETRY_MATRIX_COMPLEXDOUBLE OFF CACHE BOOL "Whether to build and test symmetry_matrix with complex-double data type" FORCE)
@@ -10,10 +9,11 @@ else ()
     message("Building GCI with Fortran support")
     set(FORTRAN ON)
 endif ()
-foreach (dep fcidump_dep;iterativesolver_dep;memory_dep;molpro_plugin_dep;profiler_dep;symmetry_matrix_dep)
-    get_dependency(ON ${dep})
+foreach (dep FCIdump IterativeSolver memory molpro_plugin Profiler symmetry_matrix)
+    string(TOLOWER ${dep} depl)
+    get_dependency(${depl})
+    list(APPEND DEPENDENCIES ${dep})
 endforeach ()
-list(APPEND DEPENDENCIES FCIdump IterativeSolver memory molpro_plugin Profiler symmetry_matrix)
 
 
 add_library(gci
@@ -52,7 +52,7 @@ if (POS GREATER -1)
 endif ()
 
 target_link_libraries(gci PUBLIC
-Profiler FCIdump IterativeSolver symmetry_matrix memory molpro_plugin ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
+        Profiler FCIdump IterativeSolver symmetry_matrix memory molpro_plugin ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
 
 target_include_directories(gci PRIVATE ${MPI_CXX_INCLUDE_PATH})
 target_link_libraries(gci PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
