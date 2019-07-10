@@ -38,6 +38,7 @@ add_library(gci
 
 if (Molpro_SOURCE_DIR)
     target_compile_definitions(gci PRIVATE MOLPRO)
+    target_link_libraries(gci PRIVATE ppidd::ppidd)
 endif ()
 
 find_package(BLAS)
