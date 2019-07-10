@@ -5,12 +5,12 @@ declare_dependency(
 )
 
 declare_dependency(
-        fcidump
+        FCIdump
         https://gitlab.com/molpro/fcidump.git
 )
 
 declare_dependency(
-        iterativesolver
+        IterativeSolver
         https://gitlab+deploy-token-74790:BQ4_qi9fyN7sypf6H__m@gitlab.com/molpro/IterativeSolver
 )
 
@@ -25,7 +25,7 @@ declare_dependency(
 )
 
 declare_dependency(
-        profiler
+        Profiler
         https://gitlab+deploy-token-74792:Bj6FL_cWqz_8y2PNDycx@gitlab.com/molpro/profiler.git
 )
 
