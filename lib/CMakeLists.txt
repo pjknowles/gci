@@ -1,4 +1,4 @@
-
+unset(DEPENDENCIES)
 set(SYMMETRY_MATRIX_DOUBLE ON CACHE BOOL "Whether to build and test symmetry_matrix with double data type" FORCE)
 set(SYMMETRY_MATRIX_COMPLEXDOUBLE OFF CACHE BOOL "Whether to build and test symmetry_matrix with complex-double data type" FORCE)
 set(SYMMETRY_MATRIX_FLOAT OFF CACHE BOOL "Whether to build and test symmetry_matrix with float data type" FORCE)
@@ -38,7 +38,9 @@ add_library(gci
 
 if (Molpro_SOURCE_DIR)
     target_compile_definitions(gci PRIVATE MOLPRO)
-    target_link_libraries(gci PRIVATE ppidd::ppidd)
+    get_dependency(ppidd)
+    list(APPEND DEPENDENCIES ppidd)
+    target_link_libraries(gci PUBLIC ppidd::ppidd)
 endif ()
 
 find_package(BLAS)
