@@ -69,5 +69,6 @@ if (MPI_CXX_FOUND)
     target_link_libraries(gci PUBLIC MPI::MPI_CXX)
 endif ()
 
+list(APPEND DEPENDENCIES eigen)
 
 configure_library(${PROJECT_NAME} "${DEPENDENCIES}")
