@@ -14,6 +14,10 @@ foreach (dep FCIdump IterativeSolver memory molpro_plugin Profiler symmetry_matr
     get_dependency(${depl})
     list(APPEND DEPENDENCIES ${dep})
 endforeach ()
+if (Molpro_SOURCE_DIR)
+    get_dependency(ppidd)
+    list(APPEND DEPENDENCIES ppidd)
+endif ()
 
 
 add_library(gci
@@ -66,4 +70,5 @@ if (MPI_CXX_FOUND)
 endif ()
 
 
+message(STATUS "gci/lib: DEPENDENCIES=${DEPENDENCIES}")
 configure_library(${PROJECT_NAME} "${DEPENDENCIES}")
