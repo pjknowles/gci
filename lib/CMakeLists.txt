@@ -70,5 +70,4 @@ if (MPI_CXX_FOUND)
 endif ()
 
 
-message(STATUS "gci/lib: DEPENDENCIES=${DEPENDENCIES}")
 configure_library(${PROJECT_NAME} "${DEPENDENCIES}")
