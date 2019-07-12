@@ -107,7 +107,9 @@ function(configure_library LIBRARY_NAME DEPENDENCIES)
 ")
     configure_file("${CMAKE_CURRENT_BINARY_DIR}/${LIBRARY_NAME}-config.h.in" ${LIBRARY_NAME}-config.h)
 
-    install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION include)
+    if (CMAKE_Fortran_MODULE_DIRECTORY)
+        install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION include)
+    endif ()
 
     install(TARGETS ${LIBRARY_NAME} EXPORT ${LIBRARY_NAME}Targets LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib
@@ -118,13 +120,22 @@ function(configure_library LIBRARY_NAME DEPENDENCIES)
     foreach (dep ${DEPENDENCIES})
         if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
             message(VERBOSE "install(TARGETS ${dep} EXPORT ${LIBRARY_NAME}Targets ...)")
+        else ()
+            message(STATUS "install(TARGETS ${dep} EXPORT ${LIBRARY_NAME}Targets ...)")
         endif ()
-        install(TARGETS ${dep} EXPORT ${LIBRARY_NAME}Targets LIBRARY DESTINATION lib
+        install(TARGETS ${dep}
+#        EXPORT ${LIBRARY_NAME}Targets
+        LIBRARY DESTINATION lib
                 ARCHIVE DESTINATION lib
                 RUNTIME DESTINATION bin
                 INCLUDES DESTINATION include
                 PUBLIC_HEADER DESTINATION include
                 )
+#        install(EXPORT ${dep}Targets
+#                FILE ${dep}Targets.cmake
+#                NAMESPACE ${dep}::
+#                DESTINATION lib/cmake/${dep}
+#                )
     endforeach ()
     install(EXPORT ${LIBRARY_NAME}Targets
             FILE ${LIBRARY_NAME}Targets.cmake
