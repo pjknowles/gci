@@ -30,6 +30,8 @@ add_definitions(-DHAVE_MPI_H)
 ########## Targets ##########
 
 add_subdirectory(lib)
+
+if (NOT Molpro_SOURCE_DIR)
 add_subdirectory(src)
 enable_testing()
 add_subdirectory(test)
@@ -51,4 +53,5 @@ if (DOXYGEN_FOUND)
             COMMENT "Generating API documentation with Doxygen" VERBATIM
             )
 endif (DOXYGEN_FOUND)
+endif()
 
