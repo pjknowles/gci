@@ -166,11 +166,17 @@ function(configure_library LIBRARY_NAME)
                     RESULT_VARIABLE rc
                     OUTPUT_VARIABLE libs
                     )
-#                message("${path}/${dep}-config --libs returns ${rc} and ${libs}")
+            message("${path}/${dep}-config --libs returns ${rc} and ${libs}")
             if (NOT rc)
-                string(PREPEND CONFIG_LIBS "${libs} ") # this might not always work
+                foreach (l ${libs})
+                    string(REGEX REPLACE "\n" " " l "${l}")
+                    set(CONFIG_LIBS "${l} ${CONFIG_LIBS}") # this might not always work
+                endforeach ()
             endif ()
         endforeach ()
+        string(REGEX REPLACE "  *" " " CONFIG_LIBS "${CONFIG_LIBS}")
+        string(STRIP "${CONFIG_LIBS}" CONFIG_LIBS)
+        message(STATUS "CONFIG_LIBS: ${CONFIG_LIBS}")
         target_link_libraries(${LIBRARY_NAME} PUBLIC ${target})
         file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/${LIBRARY_NAME}Config.cmake"
                 "find_dependency(${dep} ${ver})
