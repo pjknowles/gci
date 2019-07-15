@@ -1,4 +1,3 @@
-unset(DEPENDENCIES)
 set(SYMMETRY_MATRIX_DOUBLE ON CACHE BOOL "Whether to build and test symmetry_matrix with double data type" FORCE)
 set(SYMMETRY_MATRIX_COMPLEXDOUBLE OFF CACHE BOOL "Whether to build and test symmetry_matrix with complex-double data type" FORCE)
 set(SYMMETRY_MATRIX_FLOAT OFF CACHE BOOL "Whether to build and test symmetry_matrix with float data type" FORCE)
@@ -59,7 +58,7 @@ if (POS GREATER -1)
 endif ()
 
 target_link_libraries(gci PUBLIC
-        Profiler FCIdump IterativeSolver symmetry_matrix memory molpro_plugin ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
+        ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
 
 target_include_directories(gci PRIVATE ${MPI_CXX_INCLUDE_PATH})
 target_link_libraries(gci PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
@@ -69,6 +68,5 @@ if (MPI_CXX_FOUND)
     target_link_libraries(gci PUBLIC MPI::MPI_CXX)
 endif ()
 
-list(APPEND DEPENDENCIES eigen)
 
-configure_library(${PROJECT_NAME} "${DEPENDENCIES}")
+configure_library(${PROJECT_NAME} ${DEPENDENCIES})
