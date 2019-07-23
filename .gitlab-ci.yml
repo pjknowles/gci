@@ -9,8 +9,8 @@ cache:
 job:
   image: pjknowles/opensuse
   script:
-    - procs=$(lscpu -p | egrep -v '^#' | wc -l); echo $procs processors available
-    - echo -e "machine gitlab.com\nlogin gitlab-ci-token\npassword ${CI_JOB_TOKEN}" > ~/.netrc
+    - procs=$(lscpu -p | egrep -v '^#' | wc -l || echo 1); echo $procs processors available
+#    - echo -e "machine gitlab.com\nlogin gitlab-ci-token\npassword ${CI_JOB_TOKEN}" > ~/.netrc
     - TOP=$PWD
     - git checkout $CI_COMMIT_SHA # because of cache
     - cd $TOP; BUILD=build/$(git rev-parse --abbrev-ref HEAD); mkdir -p $BUILD && cd $BUILD && pwd && cmake -DMPIOPTIONS="--allow-run-as-root" $TOP ; cmake --build . -- -j ${procs} ; cd test;  ctest -V -j ${procs}
