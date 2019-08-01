@@ -301,8 +301,6 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
 //        if (solver.endIteration(ww, gg) && iteration > 4) break;
         if (solver.endIteration(ww, gg)) break;
     }
-    if (solver.m_verbosity > 0)
-        xout << "Number of actions of matrix on vector = " << solver.m_actions << std::endl;
     xout << "energies: ";
     for (int i = 0; i < nState; ++i) xout << solver.eigenvalues()[i] << ", ";
     xout << std::endl;

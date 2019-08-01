@@ -1,33 +1,27 @@
 cmake_minimum_required(VERSION 3.11)
 set(CMAKE_CXX_STANDARD 14)
 
-project(gci)
+project(gci VERSION 1.0)
+option(FORTRAN "Whether to build with Fortran support" OFF)
+if (FORTRAN OR Molpro_SOURCE_DIR)
+	set(FORTRAN ON)
+	enable_language(Fortran)
+endif()
 message("Build ${CMAKE_PROJECT_NAME} with CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+include(libconfig)
 
 ########## Options ##########
 
 # Allow messages from scripts to be shown
-set(FETCHCONTENT_QUIET OFF)
+#set(FETCHCONTENT_QUIET OFF)
 
 
 ########## Dependencies ##########
 
-include(FetchContent)
-set(SYMMETRY_MATRIX_DOUBLE ON CACHE BOOL "Whether to build and test symmetry_matrix with double data type" FORCE)
-set(SYMMETRY_MATRIX_COMPLEXDOUBLE OFF CACHE BOOL "Whether to build and test symmetry_matrix with complex-double data type" FORCE)
-set(SYMMETRY_MATRIX_FLOAT OFF CACHE BOOL "Whether to build and test symmetry_matrix with float data type" FORCE)
 add_subdirectory(dependencies)
-
-if (NOT TARGET Eigen3::Eigen)
-    FetchContent_GetProperties(eigen3_dep)
-    if (NOT eigen3_dep_POPULATED)
-        FetchContent_Populate(eigen3_dep)
-        add_library(ExternalEigen3 INTERFACE)
-        target_include_directories(ExternalEigen3 INTERFACE ${CMAKE_SOURCE_DIR}/dependencies/Eigen3)
-        add_library(Eigen3::Eigen ALIAS ExternalEigen3)
-        message("Using external Eigen3 library")
-    endif ()
-endif ()
 
 find_package(MPI REQUIRED CXX )
 #TODO Consider reflecting this mandatory provision of MPI in the code, ie remove #ifdef HAVE_MPI_H
@@ -36,7 +30,10 @@ add_definitions(-DHAVE_MPI_H)
 ########## Targets ##########
 
 add_subdirectory(lib)
+
+if (NOT Molpro_SOURCE_DIR)
 add_subdirectory(src)
+enable_testing()
 add_subdirectory(test)
 
 
@@ -56,4 +53,5 @@ if (DOXYGEN_FOUND)
             COMMENT "Generating API documentation with Doxygen" VERBATIM
             )
 endif (DOXYGEN_FOUND)
+endif()
 

@@ -90,14 +90,6 @@ class Run {
    */
   double RHF(const SymmetryMatrix::Operator &hamiltonian, const State &prototype, double thresh=1.0e-4, int maxIterations=20);
 
-  /*!
-   * @brief Performs RHF calculation using the "Beyond BO" electron-vibration coupled Hamiltonian
-   * @param prototype A State object specifying number of electrons, symmetry, spin
-   * If it is a Wavefunction , then that will be used also for specifying the configuration space, otherwise the default FCI
-   * @param fcidump Root of the fcidump file name for electronic and interaction hamiltonians
-   */
-  void BBO_RHF(const State &prototype);
-
   SymmetryMatrix::Operator m_hamiltonian;
  public:
   std::unique_ptr<SymmetryMatrix::Operator> m_densityMatrix; // the (state-averaged) density matrix

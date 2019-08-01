@@ -88,7 +88,7 @@ protected:
     void action();
     //! Get the new vector, $r = A u - \lambda u$
     void update();
-    LinearAlgebra::LinearEigensystem<t_Wavefunction> solver; //!< Iterative solver
+    IterativeSolver::LinearEigensystem<t_Wavefunction> solver; //!< Iterative solver
 
     double energyThreshold;
     int nState;

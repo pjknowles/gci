@@ -5,13 +5,39 @@
 
 using TransitionDensity = gci::TransitionDensity;
 
+TransitionDensity::TransitionDensity(const TransitionDensity& source, bool copy)
+    : memory::array<double>(source.m_nsa * source.m_nsb * source.m_excitations),
+      m_alphaStringsBegin(source.m_alphaStringsBegin),
+      m_alphaStringsEnd(source.m_alphaStringsEnd),
+      m_betaStringsBegin(source.m_betaStringsBegin),
+      m_betaStringsEnd(source.m_betaStringsEnd),
+      m_parity(source.m_parity),
+      m_nsa(source.m_nsa),
+      m_nsb((source.m_nsb)),
+      m_syma(source.m_syma),
+      m_symb(source.m_symb),
+      m_symexc(source.m_symexc),
+      m_deltaAlpha(source.m_deltaAlpha),
+      m_deltaBeta(source.m_deltaBeta),
+      m_excitations(source.m_excitations) {
+  if (copy)
+    std::copy(source.begin(), source.end(), begin());
+}
 TransitionDensity::TransitionDensity(const Wavefunction &w,
                                      const StringSet::const_iterator &alphaStringsBegin,
                                      const StringSet::const_iterator &alphaStringsEnd,
                                      const StringSet::const_iterator &betaStringsBegin,
                                      const StringSet::const_iterator &betaStringsEnd,
                                      const SymmetryMatrix::parity_t parity, const bool doAlpha, const bool doBeta)
-    : m_alphaStringsBegin(alphaStringsBegin),
+    : memory::array<double>(
+    std::distance(alphaStringsBegin, alphaStringsEnd) * std::distance(betaStringsBegin, betaStringsEnd)
+        * ((w.alphaStrings[0].proto.nelec - alphaStringsBegin->nelec + w.betaStrings[0].proto.nelec
+            - betaStringsBegin->nelec) % 2 ? w.orbitalSpace->operator[](
+            w.symmetry ^ alphaStringsBegin->computed_symmetry() ^ betaStringsBegin->computed_symmetry())
+                                           : w.orbitalSpace->total(
+                w.symmetry ^ alphaStringsBegin->computed_symmetry() ^ betaStringsBegin->computed_symmetry(),
+                parity))),
+      m_alphaStringsBegin(alphaStringsBegin),
       m_alphaStringsEnd(alphaStringsEnd),
       m_betaStringsBegin(betaStringsBegin),
       m_betaStringsEnd(betaStringsEnd),
@@ -26,9 +52,17 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
       m_excitations((m_deltaAlpha + m_deltaBeta) % 2 ? w.orbitalSpace->operator[](m_symexc) : w.orbitalSpace->total(
           m_symexc,
           m_parity)) {
-  resize(m_nsa * m_nsb * m_excitations, (double) 0);
-  if (m_nsa * m_nsb * m_excitations == 0) return;
+//  xout << "time on entering TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() <<" "<< gci::profiler->getResources().wall << std::endl;
+//  xout << "size(): " << memory::array<double>::size() << std::endl;
+//  xout << m_nsa << " " << m_nsb << " " << m_excitations << " " << m_nsa * m_nsb * m_excitations <<" = "<<size() << std::endl;
+  assert(memory::array<double>::size() == m_nsa * m_nsb * m_excitations);
+  if (empty()) return;
   auto prof = profiler->push("TransitionDensity");
+  {
+    auto prof = profiler->push("initialise");
+    prof += size();
+    assign(0); //TODO needed?
+  }
 
   if (m_deltaAlpha == 0 && m_deltaBeta == 0) { // number of electrons preserved, so one-electron excitation
     m_hasAlpha = doAlpha;
@@ -275,6 +309,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w,
     throw std::logic_error("unimplemented case");
   }
   //  size_t populated=0; for (const_iterator x=begin(); x!=end(); x++) if (*x !=(double)0) ++populated; xout <<"TransitionDensity population="<<((double)populated)/((double)size()+1)<<std::endl;
+//  xout << "time on leaving TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() <<" "<< gci::profiler->getResources().wall << std::endl;
 
 }
 

@@ -204,37 +204,37 @@ public:
      * @brief Checks that the two wavefunctions are of the same electronic State and of the same dimension.
      */
     bool compatible(const MixedWavefunction &other) const;
-    /*! @copydoc LinearAlgebra::vector::axpy
+    /*! @copydoc IterativeSolver::vector::axpy
      */
     void axpy(double a, const MixedWavefunction &other);
     /*!
-     * @copydoc LinearAlgebra::vector::axpy(scalar,const vector<scalar>&)
+     * @copydoc IterativeSolver::vector::axpy(scalar,const vector<scalar>&)
      */
     void axpy(double a, const std::shared_ptr<MixedWavefunction> other) {
         axpy(a, *other);
     }
     /*!
-     * @copydoc LinearAlgebra::vector::axpy(scalar,const std::map<size_t,scalar>& )
+     * @copydoc IterativeSolver::vector::axpy(scalar,const std::map<size_t,scalar>& )
      */
     void axpy(double a, const std::map<size_t, double> &x) {
         throw std::logic_error("Cannot assume sparse vector is a map");
     }
 
     /*!
-     * @copydoc LinearAlgebra::vector::select
+     * @copydoc IterativeSolver::vector::select
      * @todo Implement
      */
     std::tuple<std::vector<size_t>, std::vector<double>>
-    select(const vector<double> &measure, const size_t maximumNumber = 1000,
+    select(const std::vector<double> &measure, const size_t maximumNumber = 1000,
            const double threshold = 0) const {return {{0}, {0}};};
 
     /*!
-     * @copydoc LinearAlgebra::vector::scal
+     * @copydoc IterativeSolver::vector::scal
      */
     void scal(double a);
 
     /*!
-     * @copydoc LinearAlgebra::vector::dot
+     * @copydoc IterativeSolver::vector::dot
      */
     double dot(const MixedWavefunction &other) const;
 
@@ -260,12 +260,12 @@ public:
     }
 
     /*!
-     * @copydoc LinearAlgebra::vector::zero
+     * @copydoc IterativeSolver::vector::zero
      */
     void zero();
 
     /*!
-     * @copydoc LinearAlgebra::vector::clone
+     * @copydoc IterativeSolver::vector::clone
      * @todo change to managed pointer
      */
     MixedWavefunction *clone(int option = 0) const {return new MixedWavefunction(*this);}

@@ -7,14 +7,14 @@
 using namespace gci;
 
 
-int gci::parallel_size = 1;
-int gci::parallel_rank = 0;
-bool gci::molpro_plugin = false;
-MPI_Comm gci::molpro_plugin_intercomm = MPI_COMM_NULL;
-std::unique_ptr<sharedCounter> gci::_nextval_counter = nullptr;
-int64_t gci::__my_first_task = 0;
-int64_t gci::__task = 0;
-int64_t gci::__task_granularity = 1;
+//int gci::parallel_size = 1;
+//int gci::parallel_rank = 0;
+//bool gci::molpro_plugin = false;
+//MPI_Comm gci::molpro_plugin_intercomm = MPI_COMM_NULL;
+//std::unique_ptr<sharedCounter> gci::_nextval_counter = nullptr;
+//int64_t gci::__my_first_task = 0;
+//int64_t gci::__task = 0;
+//int64_t gci::__task_granularity = 1;
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

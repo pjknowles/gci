@@ -29,7 +29,7 @@ class Wavefunction : public State {
      * \param symmetry Spatial symmetry
      * \param ms2 Sz quantum number times 2
      */
-  Wavefunction(OrbitalSpace h, int n, int s, int m2) : State(h, n, s, m2), m_sparse(false) {
+  Wavefunction(OrbitalSpace h, int nelec, int symmetry, int ms2) : State(h, nelec, symmetry, ms2), m_sparse(false) {
     buildStrings();
   }
   Wavefunction(OrbitalSpace *h, int nelec, int symmetry, int ms2);
@@ -143,7 +143,7 @@ class Wavefunction : public State {
 
   size_t blockOffset(unsigned int syma) const;
 
-  std::string str(int verbosity = 0, unsigned int columns = UINT_MAX) const ;
+  std::string str(int verbosity = 0, unsigned int columns = UINT_MAX) const override ;
 
   std::string values() const;
 

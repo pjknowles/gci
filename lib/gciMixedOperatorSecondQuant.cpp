@@ -1,6 +1,8 @@
 #include "gciMixedOperatorSecondQuant.h"
 #include "gciRun.h"
 
+#include <utility>
+
 namespace gci {
 
 auto file_exists(const std::string &fname) {
@@ -173,7 +175,7 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(
 #ifdef HAVE_MPI_H
     MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, MPI_COMM_COMPUTE);
 #endif
-    class bytestream bs(buf);
+    class memory::bytestream bs(buf);
     auto result = SymmetryMatrix::Operator::construct(bs);
     if (rank != 0) free(buf);
     return result;
@@ -273,7 +275,7 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructK(const FCIdump &dum
 #ifdef HAVE_MPI_H
     MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, MPI_COMM_COMPUTE);
 #endif
-    class bytestream bs(buf);
+    class memory::bytestream bs(buf);
     auto result = SymmetryMatrix::Operator::construct(bs);
     if (rank != 0) free(buf);
     return result;

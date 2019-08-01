@@ -1,5 +1,5 @@
 #ifdef MOLPRO
-#include "common/molpro_config.h"
+#include "molpro_config.h"
 #include "gciMolpro.h"
 #else
 #ifndef _GNU_SOURCE
