@@ -1,5 +1,5 @@
 cache:
-  key: ${CI_COMMIT_REF_SLUG}
+  key: ${CI_PROJECT_NAME}
   paths: # cache everything so that unnecessary recompilation is avoided
     - lib
     - src
@@ -10,8 +10,9 @@ job:
   image: pjknowles/opensuse
   script:
     - procs=$(lscpu -p | egrep -v '^#' | wc -l || echo 1); echo $procs processors available
-#    - echo -e "machine gitlab.com\nlogin gitlab-ci-token\npassword ${CI_JOB_TOKEN}" > ~/.netrc
     - TOP=$PWD
     - git checkout $CI_COMMIT_SHA # because of cache
-    - cd $TOP; BUILD=build/$(git rev-parse --abbrev-ref HEAD); mkdir -p $BUILD && cd $BUILD && pwd && cmake -DMPIOPTIONS="--allow-run-as-root" $TOP ; cmake --build . -- -j ${procs} ; cd test;  ctest -V -j ${procs}
+    - git reset --hard
+    - git clean -f src lib test
+    - cd $TOP; BUILD=build; mkdir -p $BUILD && cd $BUILD && pwd && cmake -DMPIOPTIONS="--allow-run-as-root" $TOP ; cmake --build . -- -j ${procs} ; cd test;  ctest -V -j ${procs}
 
