@@ -1496,49 +1496,82 @@ Eigen::VectorXd gci::int1(const SymmetryMatrix::Operator& hamiltonian, int spin)
   return result;
 }
 
-Eigen::MatrixXd gci::intJ(const SymmetryMatrix::Operator& hamiltonian, int spini, int spinj) {
-  if (spinj > spini) return intJ(hamiltonian,spinj, spini).transpose();
-  size_t basisSize = 0;
-  for (auto si=0; si<8; si++)
-    basisSize += hamiltonian.O1().dimension(si);
-  Eigen::MatrixXd result(basisSize, basisSize);
-  size_t i = 0;
-  for (auto si = 0; si < 8; si++)
-    for (size_t oi = 0; oi < hamiltonian.dimension(si, 0, spini > 0); oi++) {
-      size_t j = 0;
-      for (auto sj = 0; sj < 8; sj++)
-        for (size_t oj = 0; oj < hamiltonian.dimension(sj, 0, spinj > 0); oj++)
-          result(j++, i) = hamiltonian.O2(spini > 0, spinj > 0).smat(0, si, oi, oi)->block(sj)[(oj + 2) * (oj + 1) / 2 - 1];
-      i++;
+Eigen::MatrixXd gci::intJ(const SymmetryMatrix::Operator &hamiltonian, int spini, int spinj) {
+    if (spinj > spini) return intJ(hamiltonian, spinj, spini).transpose();
+    size_t basisSize = 0;
+    for (auto si = 0; si < 8; si++) {
+        basisSize += hamiltonian.O1().dimension(si);
     }
-  return result;
+    auto oddPacked = hamiltonian.m_hermiticity[0] == -1 && hamiltonian.m_hermiticity[1] == -1;
+    if (oddPacked) return Eigen::MatrixXd::Zero(basisSize, basisSize);
+    Eigen::MatrixXd result(basisSize, basisSize);
+    auto hamO2 = hamiltonian.O2(spini > 0, spinj > 0);
+    size_t i = 0;
+    for (uint si = 0; si < 8; si++) {
+        for (size_t oi = 0; oi < hamiltonian.dimension(si, 0, spini > 0); oi++, i++) {
+            size_t j = 0;
+            for (uint sj = 0; sj < 8; sj++) {
+                for (size_t oj = 0; oj < hamiltonian.dimension(sj, 0, spinj > 0); oj++, j++) {
+                    result(j, i) = hamO2.smat(0, si, oi, oi)->block(sj)[(oj + 2) * (oj + 1) / 2 - 1];
+                }
+            }
+        }
+    }
+    return result;
 }
 
-Eigen::MatrixXd gci::intK(const SymmetryMatrix::Operator& hamiltonian, int spin) {
-  size_t basisSize = 0;
-  for (auto si=0; si<8; si++)
-    basisSize += hamiltonian.O1().dimension(si);
-  Eigen::MatrixXd result(basisSize, basisSize);
-  size_t i = 0;
-  for (auto si = 0; si < 8; si++)
-    for (size_t oi = 0; oi < hamiltonian.dimension(si, 0, spin > 0); oi++) {
-      size_t j = 0;
-      for (auto sj = 0; sj < 8; sj++)
-        for (size_t oj = 0; oj < hamiltonian.dimension(sj, 0, spin > 0); oj++)
-          result(j++, i) =
-              ((si < sj) ?
-               hamiltonian.O2(spin > 0, spin > 0).smat(si ^ sj, si, oi, oj)->blockMap(si)(oi, oj)
-                         :
-               ((si > sj) ?
-                hamiltonian.O2(spin > 0, spin > 0).smat(si ^ sj, sj, oj, oi)->blockMap(sj)(oj, oi)
-                          : ((i > j) ?
-                             hamiltonian.O2(spin > 0, spin > 0).smat(0, si, oi, oj)->block(si)[(oi * (oi + 1)) / 2 + oj]
-                                     :
-                             hamiltonian.O2(spin > 0, spin > 0).smat(0, sj, oj, oi)->block(sj)[(oj * (oj + 1)) / 2 + oi]
-                )));
-      i++;
+Eigen::MatrixXd gci::intK(const SymmetryMatrix::Operator &hamiltonian, int spin) {
+    size_t basisSize = 0;
+    for (auto si = 0; si < 8; si++) {
+        basisSize += hamiltonian.O1().dimension(si);
     }
-  return result;
+    auto oddPacked = hamiltonian.m_hermiticity[0] == -1 && hamiltonian.m_hermiticity[1] == -1;
+    Eigen::MatrixXd result(basisSize, basisSize);
+    auto hamO2 = hamiltonian.O2(spin > 0, spin > 0);
+    size_t i = 0;
+    for (uint si = 0; si < 8; si++) {
+        for (size_t oi = 0; oi < hamiltonian.dimension(si, 0, spin > 0); oi++, i++) {
+            size_t j = 0;
+            for (uint sj = 0; sj < 8; sj++) {
+                for (size_t oj = 0; oj < hamiltonian.dimension(sj, 0, spin > 0); oj++, j++) {
+                    if (si < sj) {
+                        result(j, i) = hamO2.smat(si ^ sj, si, oi, oj)->blockMap(si)(oi, oj);
+                    } else {
+                        if (si > sj) {
+                            result(j, i) = hamO2.smat(si ^ sj, sj, oj, oi)->blockMap(sj)(oj, oi);
+                        } else {
+                            if (i > j) {
+                                if (oddPacked) {
+                                    if (oi == oj) {
+                                        result(j, i) = 0;
+                                    } else {
+                                        result(j, i) = hamO2.smat(0, si, oi, oj)->block(si)[(oi * (oi - 1)) / 2 + oj];
+                                    }
+                                } else {
+                                    result(j, i) = hamO2.smat(0, si, oi, oj)->block(si)[(oi * (oi + 1)) / 2 + oj];
+                                }
+
+                            } else {
+                                if (oddPacked) {
+                                    if (oi == oj) {
+                                        result(j, i) = 0;
+                                    } else {
+                                        result(j, i) =
+                                                hamO2.smat(0, sj, oj, oi)->block(sj)[(oj * (oj - 1)) / 2 + oi];
+                                    }
+                                } else {
+
+                                    result(j, i) =
+                                            hamO2.smat(0, sj, oj, oi)->block(sj)[(oj * (oj + 1)) / 2 + oi];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return result;
 }
 
 SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
