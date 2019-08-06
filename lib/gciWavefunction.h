@@ -61,6 +61,13 @@ class Wavefunction : public State {
   size_t minloc(size_t n = 1) const;
 
   /*!
+     * \brief find the index of n smallest components
+     * \param n number of smallest values to be found
+     * \return offsets in buffer
+     */
+  std::vector<size_t> minlocN(size_t n = 1) const;
+
+  /*!
      * \brief Get a component of the wavefunction
      * \param offset which component to get
      * \return  the value of the component
@@ -136,7 +143,7 @@ class Wavefunction : public State {
 
   size_t blockOffset(unsigned int syma) const;
 
-  std::string str(int verbosity = 0, unsigned int columns = UINT_MAX) const ;
+  std::string str(int verbosity = 0, unsigned int columns = UINT_MAX) const override ;
 
   std::string values() const;
 
@@ -200,10 +207,10 @@ class Wavefunction : public State {
   void set(size_t offset, double val);///< set one element to a scalar
   void set(const double val);///< set all elements to a scalar
   //    Wavefunction& operator=(const Wavefunction &other); ///< copy
-//  namespace IterativeSolver {
   Wavefunction &operator*=(const double &value); ///< multiply by a scalar
   Wavefunction &operator+=(const Wavefunction &other); ///< add another wavefunction
   Wavefunction &operator-=(const Wavefunction &other); ///< subtract another wavefunction
+  Wavefunction &operator+=(double); ///< add a scalar to every element
   Wavefunction &operator-=(double); ///< subtract a scalar from every element
   Wavefunction &operator-(); ///< unary minus
   Wavefunction &operator/=(const Wavefunction &other); ///< element-by-element division by another wavefunction
@@ -284,11 +291,11 @@ class Wavefunction : public State {
   memory::vector<double>::iterator end(); ///< end of this processor's data
   memory::vector<double>::const_iterator cbegin() const; ///< beginning of this processor's data
   memory::vector<double>::const_iterator cend() const; ///< end of this processor's data
-  bool compatible(const Wavefunction &other) const; ///< whether this wavefunction is on the same space as another
   std::vector<size_t> _blockOffset;
   int m_tilesize = -1, m_alphatilesize = -1, m_betatilesize = -1;
   static constexpr double m_activeStringTolerance = 1e-15;
  public:
+  bool compatible(const Wavefunction &other) const; ///< whether this wavefunction is on the same space as another
   std::map<size_t, double> buffer_sparse; ///< alternative storage to buffer, useful when very sparse
   bool m_sparse; ///< whether the coefficients are stored in buffer_sparse instead of buffer
 

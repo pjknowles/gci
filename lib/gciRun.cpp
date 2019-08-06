@@ -4,8 +4,11 @@
 //#endif
 #include <iomanip>
 #include <algorithm>
-#include "IterativeSolver.h"
-#include "Operator.h"
+#include <IterativeSolver.h>
+#include <Operator.h>
+#include "gciMixedOperator.h"
+#include "gciMixedWavefunction.h"
+#include "gciDavidson.h"
 
 using namespace gci;
 
@@ -250,21 +253,22 @@ struct updater {
 Run::Run(std::string fcidump)
     : m_hamiltonian(constructOperator(FCIdump(fcidump))) {
 #ifdef HAVE_MPI_H
-  MPI_Comm_rank(MPI_COMM_COMPUTE, &parallel_rank);
-  MPI_Comm_size(MPI_COMM_COMPUTE, &parallel_size);
-  xout << "Parallel run of " << parallel_size << " processes" << std::endl;
-  int lendata = 0;
-  if (parallel_rank == 0) {
-    options = Options(FCIdump(fcidump).data());
-    lendata = (int) options.data().size();
-  }
-  MPI_Bcast(&lendata, (int) 1, MPI_INT, 0, MPI_COMM_COMPUTE);
-  auto *buf = (char *) malloc(static_cast<size_t>(lendata + 1));
-  if (parallel_rank == 0) for (auto i = 0; i < lendata; i++) buf[i] = options.data()[i];
-  MPI_Bcast(&buf[0], lendata, MPI_CHAR, 0, MPI_COMM_COMPUTE);
-  buf[lendata] = (char) 0;
-  options = Options(buf);
-  free(buf);
+    MPI_Comm_rank(MPI_COMM_COMPUTE, &parallel_rank);
+    MPI_Comm_size(MPI_COMM_COMPUTE, &parallel_size);
+    xout << "Parallel run of " << parallel_size << " processes" << std::endl;
+    int lendata = 0;
+    if (parallel_rank == 0) {
+        options = Options(FCIdump(fcidump).data());
+        options.addParameter("FCIDUMP", fcidump);
+        lendata = (int) options.data().size();
+    }
+    MPI_Bcast(&lendata, (int) 1, MPI_INT, 0, MPI_COMM_COMPUTE);
+    auto *buf = (char *) malloc(static_cast<size_t>(lendata + 1));
+    if (parallel_rank == 0) for (auto i = 0; i < lendata; i++) buf[i] = options.data()[i];
+    MPI_Bcast(&buf[0], lendata, MPI_CHAR, 0, MPI_COMM_COMPUTE);
+    buf[lendata] = (char) 0;
+    options = Options(buf);
+    free(buf);
 #else
   parallel_rank=0; parallel_size=1;
   options = Options(FCIdump(fcidump).data());
@@ -379,25 +383,51 @@ std::vector<double> Run::run() {
 #ifdef MOLPRO
     itf::SetVariables( "ENERGY_MP", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
-  } else if (method == "DAVIDSON") {
-    energies = Davidson(m_hamiltonian, prototype);
-  } else if (method == "CS") {
-    energies = CSDavidson(m_hamiltonian, prototype);
+    } else if (method == "DAVIDSON") {
+        if (options.parameter("VIBRONIC", 0)) {
+            if (options.parameter("SECOND_QUANT", 0)) {
+                auto ham = MixedOperatorSecondQuant(FCIdump(options.parameter("FCIDUMP", "fcidump")));
+                auto wfn = MixedWavefunction(options);
+                run::Davidson<MixedWavefunction, MixedOperatorSecondQuant> solver(std::move(wfn), std::move(ham),
+                                                                                  options);
+                solver.run();
+            } else {
+                auto ham = MixedOperator(FCIdump(options.parameter("FCIDUMP", "fcidump")));
+                auto wfn = MixedWavefunction(options);
+                run::Davidson<MixedWavefunction, MixedOperator> solver(std::move(wfn), std::move(ham), options);
+                solver.run();
+//        auto ham2 = m_hamiltonian;
+//        auto wfn2 = Wavefunction(prototype);
+//        auto solver2 = run::Davidson<Wavefunction, SymmetryMatrix::Operator>(std::move(wfn2), std::move(ham2), options);
+//        solver2.run();
+            }
+        } else {
+            auto ham = m_hamiltonian;
+            auto wfn = Wavefunction(prototype);
+            auto solver = run::Davidson<Wavefunction, SymmetryMatrix::Operator>(std::move(wfn), std::move(ham),
+                                                                                options);
+            solver.run();
+//        energies = Davidson(m_hamiltonian, prototype);
+        }
+    } else if (method == "CS") {
+        energies = CSDavidson(m_hamiltonian, prototype);
 #ifdef MOLPRO
     //    itf::SetVariables( "ENERGY_METHOD", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
 #endif
-  } else if (method == "DIIS") {
-    energies = DIIS(m_hamiltonian, prototype);
-  } else if (method == "HAMILTONIAN")
-    HamiltonianMatrixPrint(m_hamiltonian, prototype);
-  else if (method == "PROFILETEST") {
-    double a = 1.234;
-    for (int i = 0; i < 100000000; i++) a = (a + 1 / std::sqrt(a));
-    energies.resize(1);
-    energies[0] = a;
-  } else {
-    xout << "Unknown method in GCI, " << method << std::endl;
-  }
+    } else if (method == "DIIS") {
+        energies = DIIS(m_hamiltonian, prototype);
+    } else if (method == "RHF") {
+        RHF(m_hamiltonian, prototype);
+    } else if (method == "HAMILTONIAN")
+        HamiltonianMatrixPrint(m_hamiltonian, prototype);
+    else if (method == "PROFILETEST") {
+        double a = 1.234;
+        for (int i = 0; i < 100000000; i++) a = (a + 1 / std::sqrt(a));
+        energies.resize(1);
+        energies[0] = a;
+    } else {
+        xout << "Unknown method in GCI, " << method << std::endl;
+    }
 
   {
     auto profile = options.parameter("PROFILER", std::vector<int>(1, -1)).at(0);
@@ -923,27 +953,27 @@ std::vector<double> Run::RSPT(const std::vector<SymmetryMatrix::Operator *> &ham
 //  return e;
   if (hams.empty()) throw std::logic_error("not enough hamiltonians");
 //  for (int k=0; k<(int)hamiltonians.size(); k++) xout << "H("<<k<<"): " << *hamiltonians[k] << std::endl;
-  Wavefunction w(prototype);
-  xout << "RSPT wavefunction size=" << w.size() << std::endl;
-  Wavefunction g(w);
-  g.diagonalOperator(*hams[0]);
-  size_t reference = g.minloc();
-  e[0] = g.at(reference);
-  g -= e[0];
-  g.set(reference, (double) 1);
-//  xout << "Moeller-Plesset denominators: " << g.str(2) << std::endl;
-  gci::File h0file;
-  h0file.name = "H0";
-  g.putw(h0file);
-  w.set((double) 0);
-  w.set(reference, (double) 1);
-  gci::File wfile;
-  wfile.name = "Wavefunction vectors";
-  w.putw(wfile, 0);
-  gci::File gfile;
-  gfile.name = "Action vectors";
-  for (int k = 0; k < (int) hams.size(); k++) {
-    g.set((double) 0);
+    Wavefunction w(prototype);
+    xout << "RSPT wavefunction size=" << w.size() << std::endl;
+    Wavefunction g(w);
+    g.diagonalOperator(*hams[0]);
+    size_t reference = g.minloc();
+    e[0] = g.at(reference);
+    g -= e[0];
+    g.set(reference, (double) 1);
+//  xout << "Møller-Plesset denominators: " << g.str(2) << std::endl;
+    gci::File h0file;
+    h0file.name = "H0";
+    g.putw(h0file);
+    w.set((double) 0);
+    w.set(reference, (double) 1);
+    gci::File wfile;
+    wfile.name = "Wavefunction vectors";
+    w.putw(wfile, 0);
+    gci::File gfile;
+    gfile.name = "Action vectors";
+    for (int k = 0; k < (int) hams.size(); k++) {
+        g.set((double) 0);
 //    xout << "hamiltonian about to be applied to reference: "<< *hams[k] <<std::endl;
     g.operatorOnWavefunction(*hams[k], w);
 //    xout << "hamiltonian on reference: " << g.str(2) << std::endl;
@@ -1467,49 +1497,82 @@ Eigen::VectorXd gci::int1(const SymmetryMatrix::Operator& hamiltonian, int spin)
   return result;
 }
 
-Eigen::MatrixXd gci::intJ(const SymmetryMatrix::Operator& hamiltonian, int spini, int spinj) {
-  if (spinj > spini) return intJ(hamiltonian,spinj, spini).transpose();
-  size_t basisSize = 0;
-  for (auto si=0; si<8; si++)
-    basisSize += hamiltonian.O1().dimension(si);
-  Eigen::MatrixXd result(basisSize, basisSize);
-  size_t i = 0;
-  for (auto si = 0; si < 8; si++)
-    for (size_t oi = 0; oi < hamiltonian.dimension(si, 0, spini > 0); oi++) {
-      size_t j = 0;
-      for (auto sj = 0; sj < 8; sj++)
-        for (size_t oj = 0; oj < hamiltonian.dimension(sj, 0, spinj > 0); oj++)
-          result(j++, i) = hamiltonian.O2(spini > 0, spinj > 0).smat(0, si, oi, oi)->block(sj)[(oj + 2) * (oj + 1) / 2 - 1];
-      i++;
+Eigen::MatrixXd gci::intJ(const SymmetryMatrix::Operator &hamiltonian, int spini, int spinj) {
+    if (spinj > spini) return intJ(hamiltonian, spinj, spini).transpose();
+    size_t basisSize = 0;
+    for (auto si = 0; si < 8; si++) {
+        basisSize += hamiltonian.O1().dimension(si);
     }
-  return result;
+    auto oddPacked = hamiltonian.m_hermiticity[0] == -1 && hamiltonian.m_hermiticity[1] == -1;
+    if (oddPacked) return Eigen::MatrixXd::Zero(basisSize, basisSize);
+    Eigen::MatrixXd result(basisSize, basisSize);
+    auto hamO2 = hamiltonian.O2(spini > 0, spinj > 0);
+    size_t i = 0;
+    for (uint si = 0; si < 8; si++) {
+        for (size_t oi = 0; oi < hamiltonian.dimension(si, 0, spini > 0); oi++, i++) {
+            size_t j = 0;
+            for (uint sj = 0; sj < 8; sj++) {
+                for (size_t oj = 0; oj < hamiltonian.dimension(sj, 0, spinj > 0); oj++, j++) {
+                    result(j, i) = hamO2.smat(0, si, oi, oi)->block(sj)[(oj + 2) * (oj + 1) / 2 - 1];
+                }
+            }
+        }
+    }
+    return result;
 }
 
-Eigen::MatrixXd gci::intK(const SymmetryMatrix::Operator& hamiltonian, int spin) {
-  size_t basisSize = 0;
-  for (auto si=0; si<8; si++)
-    basisSize += hamiltonian.O1().dimension(si);
-  Eigen::MatrixXd result(basisSize, basisSize);
-  size_t i = 0;
-  for (auto si = 0; si < 8; si++)
-    for (size_t oi = 0; oi < hamiltonian.dimension(si, 0, spin > 0); oi++) {
-      size_t j = 0;
-      for (auto sj = 0; sj < 8; sj++)
-        for (size_t oj = 0; oj < hamiltonian.dimension(sj, 0, spin > 0); oj++)
-          result(j++, i) =
-              ((si < sj) ?
-               hamiltonian.O2(spin > 0, spin > 0).smat(si ^ sj, si, oi, oj)->blockMap(si)(oi, oj)
-                         :
-               ((si > sj) ?
-                hamiltonian.O2(spin > 0, spin > 0).smat(si ^ sj, sj, oj, oi)->blockMap(sj)(oj, oi)
-                          : ((i > j) ?
-                             hamiltonian.O2(spin > 0, spin > 0).smat(0, si, oi, oj)->block(si)[(oi * (oi + 1)) / 2 + oj]
-                                     :
-                             hamiltonian.O2(spin > 0, spin > 0).smat(0, sj, oj, oi)->block(sj)[(oj * (oj + 1)) / 2 + oi]
-                )));
-      i++;
+Eigen::MatrixXd gci::intK(const SymmetryMatrix::Operator &hamiltonian, int spin) {
+    size_t basisSize = 0;
+    for (auto si = 0; si < 8; si++) {
+        basisSize += hamiltonian.O1().dimension(si);
     }
-  return result;
+    auto oddPacked = hamiltonian.m_hermiticity[0] == -1 && hamiltonian.m_hermiticity[1] == -1;
+    Eigen::MatrixXd result(basisSize, basisSize);
+    auto hamO2 = hamiltonian.O2(spin > 0, spin > 0);
+    size_t i = 0;
+    for (uint si = 0; si < 8; si++) {
+        for (size_t oi = 0; oi < hamiltonian.dimension(si, 0, spin > 0); oi++, i++) {
+            size_t j = 0;
+            for (uint sj = 0; sj < 8; sj++) {
+                for (size_t oj = 0; oj < hamiltonian.dimension(sj, 0, spin > 0); oj++, j++) {
+                    if (si < sj) {
+                        result(j, i) = hamO2.smat(si ^ sj, si, oi, oj)->blockMap(si)(oi, oj);
+                    } else {
+                        if (si > sj) {
+                            result(j, i) = hamO2.smat(si ^ sj, sj, oj, oi)->blockMap(sj)(oj, oi);
+                        } else {
+                            if (i > j) {
+                                if (oddPacked) {
+                                    if (oi == oj) {
+                                        result(j, i) = 0;
+                                    } else {
+                                        result(j, i) = hamO2.smat(0, si, oi, oj)->block(si)[(oi * (oi - 1)) / 2 + oj];
+                                    }
+                                } else {
+                                    result(j, i) = hamO2.smat(0, si, oi, oj)->block(si)[(oi * (oi + 1)) / 2 + oj];
+                                }
+
+                            } else {
+                                if (oddPacked) {
+                                    if (oi == oj) {
+                                        result(j, i) = 0;
+                                    } else {
+                                        result(j, i) =
+                                                hamO2.smat(0, sj, oj, oi)->block(sj)[(oj * (oj - 1)) / 2 + oi];
+                                    }
+                                } else {
+
+                                    result(j, i) =
+                                            hamO2.smat(0, sj, oj, oi)->block(sj)[(oj * (oj + 1)) / 2 + oi];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return result;
 }
 
 SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {

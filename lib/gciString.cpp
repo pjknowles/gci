@@ -5,36 +5,37 @@
 #include <sstream>
 #include <string.h>
 
-using String = gci::String;
+// using String = gci::String;
+namespace gci {
 
-size_t gci::String::StringNotFound = (size_t) -1; ///< conventional null value for index
-size_t gci::String::keyUnassigned = (size_t) -1; ///< conventional null value for key
+size_t String::StringNotFound = (size_t) -1; ///< conventional null value for index
+size_t String::keyUnassigned = (size_t) -1; ///< conventional null value for key
 
 String::String(const State *State, const int Spin)
-    : m_spin(Spin) {
-  if (State != nullptr) {
-    orbitalSpace.reset(new OrbitalSpace(*State->orbitalSpace));
-  }
-  nullify();
+        : m_spin(Spin) {
+    if (State != nullptr) {
+        orbitalSpace.reset(new OrbitalSpace(*State->orbitalSpace));
+    }
+    nullify();
 }
 
 String::String(const std::vector<char> bytestream, const State *State) {
-  if (State == nullptr) {
-    orbitalSpace = nullptr;
-  } else {
-    orbitalSpace.reset(new OrbitalSpace(*State->orbitalSpace));
+    if (State == nullptr) {
+        orbitalSpace = nullptr;
+    } else {
+        orbitalSpace.reset(new OrbitalSpace(*State->orbitalSpace));
 //    xout << "assigned orbitalSpace="<<orbitalSpace<<std::endl;
 //    xout <<orbitalSpace->str()<<std::endl;
-  }
-  nullify();
-  size_t offset = 0;
-  memcpy(&nelec, &bytestream[offset], sizeof(nelec));
-  offset += sizeof(nelec);
-  memcpy(&m_spin, &bytestream[offset], sizeof(m_spin));
-  offset += sizeof(m_spin);
-  m_orbitals.resize((size_t) nelec);
-  memcpy(&m_orbitals[0], &bytestream[offset], sizeof(orbital_type) * m_orbitals.size());
-  offset += sizeof(orbital_type) * m_orbitals.size();
+    }
+    nullify();
+    size_t offset = 0;
+    memcpy(&nelec, &bytestream[offset], sizeof(nelec));
+    offset += sizeof(nelec);
+    memcpy(&m_spin, &bytestream[offset], sizeof(m_spin));
+    offset += sizeof(m_spin);
+    m_orbitals.resize((size_t) nelec);
+    memcpy(&m_orbitals[0], &bytestream[offset], sizeof(orbital_type) * m_orbitals.size());
+    offset += sizeof(orbital_type) * m_orbitals.size();
 //  xout <<"constructed String from bytestream nelec="<<nelec<<", spin="<<spin<<", orbitals=";
 //  for (size_t i=0; i<nelec; i++) xout <<orbitals()[i]<<","; xout <<std::endl;
 //  xout <<str(1)<<std::endl;
@@ -43,18 +44,18 @@ String::String(const std::vector<char> bytestream, const State *State) {
 }
 
 std::vector<char> String::serialise() const {
-  std::vector<char> bytestream(sizeof(nelec) + sizeof(m_spin) + nelec * sizeof(orbital_type));
-  size_t offset = 0;
-  memcpy(&bytestream[offset], &nelec, sizeof(nelec));
-  offset += sizeof(nelec);
-  memcpy(&bytestream[offset], &m_spin, sizeof(m_spin));
-  offset += sizeof(m_spin);
-  memcpy(&bytestream[offset], &m_orbitals[0], sizeof(orbital_type) * m_orbitals.size());
-  offset += sizeof(orbital_type) * m_orbitals.size();
+    std::vector<char> bytestream(sizeof(nelec) + sizeof(m_spin) + nelec * sizeof(orbital_type));
+    size_t offset = 0;
+    memcpy(&bytestream[offset], &nelec, sizeof(nelec));
+    offset += sizeof(nelec);
+    memcpy(&bytestream[offset], &m_spin, sizeof(m_spin));
+    offset += sizeof(m_spin);
+    memcpy(&bytestream[offset], &m_orbitals[0], sizeof(orbital_type) * m_orbitals.size());
+    offset += sizeof(orbital_type) * m_orbitals.size();
 //  xout <<"serialised String to bytestream nelec="<<nelec<<", spin="<<spin<<", orbitals=";
 //  for (size_t i=0; i<nelec; i++) xout <<orbitals()[i]<<","; xout <<std::endl;
 //  xout <<str()<<std::endl;
-  return bytestream;
+    return bytestream;
 }
 
 //int String::create(unsigned int orbital) {
@@ -115,104 +116,106 @@ std::vector<char> String::serialise() const {
 //}
 
 void String::nullify() {
-  m_orbitals.clear();
-  ms2 = 0;
-  nelec = 0;
-  symmetry = 0;
-  m_key = keyUnassigned;
+    m_orbitals.clear();
+    ms2 = 0;
+    nelec = 0;
+    symmetry = 0;
+    m_key = keyUnassigned;
 }
 
 const std::vector<String::orbital_type> &String::orbitals() const {
-  return m_orbitals;
+    return m_orbitals;
 }
 
 std::string String::str(int verbosity, unsigned int columns) const {
-  std::string result;
+    std::string result;
 //      xout <<"String::str orbitals_[0]" <<orbitals_[0]<<std::endl;
 //  xout << "String::str length of orbitals_="<<orbitals_.size()<<std::endl;
-  if (verbosity >= 0) {
-    for (std::vector<orbital_type>::const_iterator i = m_orbitals.begin(); i != m_orbitals.end(); ++i) {
-      if (i != m_orbitals.begin()) result.append(",");
-      std::stringstream ss;
-      int ispin = (int) (*i) * (int) m_spin;
-      ss << ispin;
-      std::string rr;
-      ss >> rr;
-      result.append(rr);
-    }
+    if (verbosity >= 0) {
+        for (std::vector<orbital_type>::const_iterator i = m_orbitals.begin(); i != m_orbitals.end(); ++i) {
+            if (i != m_orbitals.begin()) result.append(",");
+            std::stringstream ss;
+            int ispin = (int) (*i) * (int) m_spin;
+            ss << ispin;
+            std::string rr;
+            ss >> rr;
+            result.append(rr);
+        }
 //      xout << "end of loop occ orbital"<<std::endl;
-    std::stringstream ss;
-    ss << " [";
-    if (m_key != keyUnassigned) ss << m_key << ".";
-    ss << computed_symmetry() + 1 << "]"; // internally symmetries are implemented 0-7, but externally as 1-8
-    std::string rr;
-    ss >> rr;
-    result.append(rr);
-  }
-  return result;
+        std::stringstream ss;
+        ss << " [";
+        if (m_key != keyUnassigned) ss << m_key << ".";
+        ss << computed_symmetry() + 1 << "]"; // internally symmetries are implemented 0-7, but externally as 1-8
+        std::string rr;
+        ss >> rr;
+        result.append(rr);
+    }
+    return result;
 }
 
 unsigned int String::computed_symmetry(bool nocheck) const {
-  unsigned int s = 0;
+    unsigned int s = 0;
 //  xout << "in computed_symmetry"<<std::endl;
 //  xout <<orbitalSpace->str()<<std::endl;
-  for (int i = 0; i < (int) m_orbitals.size(); i++) {
-    s ^= orbitalSpace->orbital_symmetries[m_orbitals[i] - 1];
-    //        xout <<"orbital "<<orbitals_[i]<<",  symmetry="<<hamiltonian->orbital_symmetries[orbitals_[i]-1]<<" total symmetry now "<<s<<std::endl;
-  }
-  if (s != symmetry && !nocheck) {
-    xout << "s=" << s << ", symmetry=" << symmetry << std::endl;
-    throw std::runtime_error("String symmetry messed up");
-  }
+    for (int i = 0; i < (int) m_orbitals.size(); i++) {
+        s ^= orbitalSpace->orbital_symmetries[m_orbitals[i] - 1];
+        //        xout <<"orbital "<<orbitals_[i]<<",  symmetry="<<hamiltonian->orbital_symmetries[orbitals_[i]-1]<<" total symmetry now "<<s<<std::endl;
+    }
+    if (s != symmetry && !nocheck) {
+        xout << "s=" << s << ", symmetry=" << symmetry << std::endl;
+        throw std::runtime_error("String symmetry messed up");
+    }
 //  xout << "computed_symmetry"<<s<<std::endl;
-  return s;
+    return s;
 }
 
 bool String::next(int sym) {
-  if (sym < 0) { // generate the next string of any symmetry
-    orbital_type limit = orbitalSpace->total();
-    std::vector<orbital_type>::iterator k;
-    orbital_type floor = 0;
-    for (std::vector<orbital_type>::reverse_iterator i = m_orbitals.rbegin(); i != m_orbitals.rend(); ++i) {
-      floor = ++(*i);
-      k = i.base();
-      if (*i <= limit) break;
-      limit--;
+    if (sym < 0) { // generate the next string of any symmetry
+        orbital_type limit = orbitalSpace->total();
+        std::vector<orbital_type>::iterator k;
+        orbital_type floor = 0;
+        for (std::vector<orbital_type>::reverse_iterator i = m_orbitals.rbegin(); i != m_orbitals.rend(); ++i) {
+            floor = ++(*i);
+            k = i.base();
+            if (*i <= limit) break;
+            limit--;
+        }
+        if (limit <= orbitalSpace->total() - m_orbitals.size())
+            return false; // we ran out of boxes to put the objects into
+        while (k != m_orbitals.rbegin().base())
+            *(k++) = ++floor;
+        symmetry = computed_symmetry(true);
+        //    xout << "String::next returns with symmetry="<<symmetry<<std::endl;
+        return true;
+    } else { // call myself until we get the symmetry required
+        bool notexhausted;
+        while ((notexhausted = next()) && (symmetry = computed_symmetry()) != (unsigned int) sym);
+        return notexhausted;
     }
-    if (limit <= orbitalSpace->total() - m_orbitals.size()) return false; // we ran out of boxes to put the objects into
-    while (k != m_orbitals.rbegin().base())
-      *(k++) = ++floor;
-    symmetry = computed_symmetry(true);
-    //    xout << "String::next returns with symmetry="<<symmetry<<std::endl;
-    return true;
-  } else { // call myself until we get the symmetry required
-    bool notexhausted;
-    while ((notexhausted = next()) && (symmetry = computed_symmetry()) != (unsigned int) sym);
-    return notexhausted;
-  }
 }
 
 bool String::first(int n, int sym) {
-  //    xout << "String::first " << n <<" nelec="<<nelec<< std::endl;
-  if (n <= 0) n = nelec;
-  if (n <= 0) n = m_orbitals.size();
-  nullify();
-  //    xout << n <<std::endl;
-  for (unsigned int i = 1; i <= (unsigned int) n; i++)
-    create(i);
-  nelec = n;
-  //    xout << "String::first first go, sym, symmetry "<<sym<<symmetry<<std::endl;
-  if (sym < 0 || computed_symmetry() == (unsigned int) sym) return true;
-  return next(sym);
+    //    xout << "String::first " << n <<" nelec="<<nelec<< std::endl;
+    if (n <= 0) n = nelec;
+    if (n <= 0) n = m_orbitals.size();
+    nullify();
+    //    xout << n <<std::endl;
+    for (unsigned int i = 1; i <= (unsigned int) n; i++)
+        create(i);
+    nelec = n;
+    //    xout << "String::first first go, sym, symmetry "<<sym<<symmetry<<std::endl;
+    if (sym < 0 || computed_symmetry() == (unsigned int) sym) return true;
+    return next(sym);
 }
 
 String String::exhausted;
 
 size_t String::index(const StringSet &set) const {
-  const auto i = set.addressMap.find(m_key);
-  return (i == set.addressMap.end()) ? StringNotFound : i->second;
+    const auto i = set.addressMap.find(m_key);
+    return (i == set.addressMap.end()) ? StringNotFound : i->second;
 }
 
 bool String::operator==(const String &other) const {
-  return m_key == other.m_key;
+    return m_key == other.m_key;
 }
+} // namespace gci

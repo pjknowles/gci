@@ -5,7 +5,8 @@
 #include "gciState.h"
 #include "gciWavefunction.h"
 #include "gciOptions.h"
-#include "FCIdump.h"
+#include <FCIdump.h>
+#include <SMat.h>
 #include <cstdint>
 
 namespace gci {
@@ -78,6 +79,16 @@ class Run {
                            double energyThreshold = (double) -1, int maxIterations = -1);
 
   void HamiltonianMatrixPrint(SymmetryMatrix::Operator &hamiltonian, const State &prototype, int verbosity = 0);
+  /*!
+   * @brief Performs RHF calculation within the space of supplied MOs
+   * @param hamiltonian The hamiltonian
+   * @param prototype A State object specifying number of electrons, symmetry, spin
+   * If it is a Wavefunction , then that will be used also for specifying the configuration space, otherwise the default FCI
+   * @param threshold Convergence threshold
+   * @param maxIterations The maximum number of iterations to perform
+   * @return the energy of the state.
+   */
+  double RHF(const SymmetryMatrix::Operator &hamiltonian, const State &prototype, double thresh=1.0e-4, int maxIterations=20);
 
   SymmetryMatrix::Operator m_hamiltonian;
  public:
@@ -86,6 +97,7 @@ class Run {
 
   std::vector<std::shared_ptr<Wavefunction> > m_wavefunctions;
   gci::Options options;
+
 };
 
 /*!

@@ -6,4 +6,4 @@ foreach (fil ${TESTS})
     add_test(NAME ${nam} COMMAND ${MPIEXEC} ${MPIOPTIONS} ${PROJECT_BINARY_DIR}/gci.exe ${fil})
 endforeach ()
 
-add_subdirectory(unit_tests)
+add_subdirectory(unit_test)
