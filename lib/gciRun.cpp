@@ -1420,6 +1420,7 @@ SymmetryMatrix::Operator* gci::projector(const SymmetryMatrix::Operator& source,
                                              source.m_uhf > 0 || forceSpinUnrestricted,
                                              0,
                                              true,
+                                             false,
                                              special + " projector");
   result->m_O0 = 0;
 
@@ -1524,7 +1525,7 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
     SymmetryMatrix::dim_t dim(8);
     for (const auto &s : orbital_symmetries)
       dim.at(s - 1)++;
-    SymmetryMatrix::Operator result(dim, 2, dump.parameter("IUHF")[0] > 0, 0, true, "Hamiltonian");
+    SymmetryMatrix::Operator result(dim, 2, dump.parameter("IUHF")[0] > 0, 0, true, false, "Hamiltonian");
 
     dump.rewind();
     double value;
@@ -1701,6 +1702,7 @@ SymmetryMatrix::Operator gci::fockOperator(const SymmetryMatrix::Operator& hamil
              hamiltonian.m_uhf,
              hamiltonian.m_symmetry,
              true,
+             false,
              description);
   // xout << "gci::Operator::fockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
   // xout << "gci::Operator::fockOperator Reference beta: "<<reference.stringBeta<<std::endl;
@@ -1847,6 +1849,7 @@ SymmetryMatrix::Operator gci::sameSpinOperator(const SymmetryMatrix::Operator& h
                   true,
                   hamiltonian.m_symmetry,
                   true,
+                  false,
                   description);
   {
     Determinant ra = reference;
