@@ -97,11 +97,10 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
     Wavefunction wfn_scaled(m_wfn[0]);
     for (const auto &bra : m_vibBasis) {
         auto iBra = m_vibBasis.index(bra);
-        // Pure electronic operators
+        // Purely electronic operators
         m_wfn[iBra].operatorOnWavefunction(ham.Hel, w.m_wfn[iBra], parallel_stringset);
-        // Scalar non-adiabatic coupling term
-        if (ham.K0){
-            m_wfn[iBra].operatorOnWavefunction(*ham.K0.get(), w.m_wfn[iBra], parallel_stringset);
+        for (const auto &hel : ham.nacHel) {
+            m_wfn[iBra].operatorOnWavefunction(hel.second, w.m_wfn[iBra], parallel_stringset);
         }
         // Pure vibrational operator
         for (const auto &vibEl : ham.Hvib.tensor) {
@@ -118,7 +117,6 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             }
         }
         // all mixed vibrational - electronic operators
-        // Need to take into account the symmetry of each term
         for (const auto &mixedTerm : ham.mixedHam) {
             const auto &vibTensor = mixedTerm.second;
             for (const auto &vibEl : vibTensor.tensor) {
@@ -128,11 +126,6 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
                 if (!ket.withinSpace(m_vibSpace)) continue;
                 auto iKet = m_vibBasis.index(ket);
                 m_wfn[iBra].operatorOnWavefunction(op, w.m_wfn[iKet], parallel_stringset);
-//                if (vibTensor.hermiticity() != ns_VibOperator::parity_t::none && iBra != iKet) {
-//                    auto conjElem = vibEl.second.conjugate();
-//                    auto &conjOp = conjElem.oper;
-//                    m_wfn[iKet].operatorOnWavefunction(conjOp, w.m_wfn[iBra], parallel_stringset);
-//                }
             }
         }
     }
@@ -165,8 +158,11 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
     Wavefunction vibElDiag(m_wfn[0]);
     for (const auto &bra : m_vibBasis) {
         auto iBra = m_vibBasis.index(bra);
-        // Pure electronic operators
+        // Purely electronic operators
         m_wfn[iBra].diagonalOperator(ham.Hel);
+        for (const auto &hel : ham.nacHel) {
+            m_wfn[iBra].diagonalOperator(hel.second);
+        }
         // Pure vibrational operator
         auto diagonalWfn = Wavefunction(m_wfn[0]);
         for (const auto &vibEl : ham.Hvib.tensor) {
