@@ -2,8 +2,9 @@
 #include <iostream>
 #include <sstream>
 #include <iterator>
+#include "gciMolpro.h"
 
-using TransitionDensity = gci::TransitionDensity;
+//using TransitionDensity = gci::TransitionDensity;
 namespace gci {
 
 TransitionDensity::TransitionDensity(const TransitionDensity &source, bool copy)
@@ -562,7 +563,6 @@ void TransitionDensity::action(Wavefunction &w) const {
     }
 }
 
-#include "gciMolpro.h"
 
 SymmetryMatrix::Operator TransitionDensity::density(const Wavefunction &w) const {
     SymmetryMatrix::dim_t dimension(8);
