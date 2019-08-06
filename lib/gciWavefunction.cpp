@@ -801,7 +801,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
     for (const auto s: *orbitalSpace) dim.push_back(s);
     SymmetryMatrix::Operator result(SymmetryMatrix::dims_t{dim, dim, dim, dim}, rank, uhf,
                                     (hermitian ? std::vector<int>{1, 1} : std::vector<int>{0, 0}), {-1, -1},
-                                    symmetry ^ bra->symmetry, false, description);
+                                    symmetry ^ bra->symmetry, false, false, description);
 //  std::cout << "result\n"<<result.str("result",3)<<std::endl;
     result.zero();
     result.m_O0 = (*this) * (*bra);

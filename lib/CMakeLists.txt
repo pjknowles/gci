@@ -43,7 +43,6 @@ add_library(gci
         gciHProductSet.cpp gciHProductSet.h
         gciMixedOperator.cpp gciMixedOperator.h
         gciMixedWavefunction.cpp gciMixedWavefunction.h
-        gciOperatorBBO.cpp gciOperatorBBO.h
         gciVibSpace.cpp gciVibSpace.h
         gciDavidson.h gciDavidson.cpp
         gciMixedOperatorSecondQuant.h gciMixedOperatorSecondQuant.cpp
