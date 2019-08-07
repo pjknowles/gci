@@ -416,8 +416,6 @@ std::vector<double> Run::run() {
 #endif
     } else if (method == "DIIS") {
         energies = DIIS(m_hamiltonian, prototype);
-    } else if (method == "RHF") {
-        RHF(m_hamiltonian, prototype);
     } else if (method == "HAMILTONIAN")
         HamiltonianMatrixPrint(m_hamiltonian, prototype);
     else if (method == "PROFILETEST") {
