@@ -70,12 +70,14 @@ class MixedWavefunction {
     // Inheriting the vector class brings the functions that need to be implemented for linera algebra solver to work.
 public:
     using value_type = double;
+
     /*!
      * @brief Constructs the mixed wavefunction.
      */
-    MixedWavefunction(const Options &options);
+    explicit MixedWavefunction(const Options &options);
+
     MixedWavefunction(const MixedWavefunction &source, int option = 0)
-            : m_vibBasis(source.m_vibBasis), m_vibSpace(source.m_vibSpace), m_elDim(source.m_elDim),
+            : m_vibSpace(source.m_vibSpace),m_vibBasis(source.m_vibBasis), m_elDim(source.m_elDim),
               m_dimension(source.m_dimension) {
         if (source.m_wfn.empty()) return;
         m_wfn.emplace_back(source.m_wfn[0]);
@@ -83,10 +85,12 @@ public:
         allocate_buffer();
         m_wfn = source.m_wfn;
     }
+
     ~MixedWavefunction() = default;
 
     //! Flags if wavefunction buffer has been allocated. Does not guarantee that each element is non-empty as well.
     bool empty() const;
+
     void allocate_buffer(); //!< allocate buffer to full size
 
     /*!
@@ -128,7 +132,8 @@ public:
      * \param w Other mixed Wavefunction
      * \param parallel_stringset whether to use parallel algorithm in StringSet construction
      */
-    void operatorOnWavefunction(const MixedOperator &ham, const MixedWavefunction &w, bool parallel_stringset = false);
+    void
+    operatorOnWavefunction(const MixedOperator &ham, const MixedWavefunction &w, bool parallel_stringset = false);
 
     /*!
      * \brief Add to this object the action of an operator on another wavefunction
@@ -157,7 +162,7 @@ public:
      * @param n HF state
      * @return maps operator name to its expectation value. See definition for naming converntion.
      */
-    std::map<std::string, double> hfMatElems(const MixedOperator &ham, int n) const;
+    std::map<std::string, double> hfMatElems(const MixedOperator &ham, unsigned int n) const;
 
     /*!
      * @brief Evaluates expectation value of electronic MixedOperator terms over electronic wfn stored at vibrational GS
@@ -172,10 +177,13 @@ public:
     std::vector<double> vec() const;
 
     //! A copy of the vibrational space
-    VibSpace vibSpace() const {return m_vibSpace;}
-    size_t size() const {return m_dimension;}
-    size_t elDim() const {return m_elDim;}
-    size_t vibDim() const {return m_vibBasis.vibDim();}
+    VibSpace vibSpace() const { return m_vibSpace; }
+
+    size_t size() const { return m_dimension; }
+
+    size_t elDim() const { return m_elDim; }
+
+    size_t vibDim() const { return m_vibBasis.vibDim(); }
 
 protected:
 
@@ -193,26 +201,30 @@ protected:
      */
     std::vector<Wavefunction> m_wfn;
 
-    size_t wfn_size() const {return m_wfn.size();} //!< Size of the wavefunction buffer (=size of vibrational space)
-    auto begin() {return m_wfn.begin();} ///< beginning of this processor's data
-    auto end() {return m_wfn.end();} ///< end of this processor's data
-    auto cbegin() const {return m_wfn.cbegin();} ///< beginning of this processor's data
-    auto cend() const {return m_wfn.cend();} ///< end of this processor's data
+    size_t
+    wfn_size() const { return m_wfn.size(); } //!< Size of the wavefunction buffer (=size of vibrational space)
+    auto begin() { return m_wfn.begin(); } ///< beginning of this processor's data
+    auto end() { return m_wfn.end(); } ///< end of this processor's data
+    auto cbegin() const { return m_wfn.cbegin(); } ///< beginning of this processor's data
+    auto cend() const { return m_wfn.cend(); } ///< end of this processor's data
 
 public:
     /*!
      * @brief Checks that the two wavefunctions are of the same electronic State and of the same dimension.
      */
     bool compatible(const MixedWavefunction &other) const;
+
     /*! @copydoc IterativeSolver::vector::axpy
      */
     void axpy(double a, const MixedWavefunction &other);
+
     /*!
      * @copydoc IterativeSolver::vector::axpy(scalar,const vector<scalar>&)
      */
-    void axpy(double a, const std::shared_ptr<MixedWavefunction> other) {
+    void axpy(double a, const std::shared_ptr<MixedWavefunction> &other) {
         axpy(a, *other);
     }
+
     /*!
      * @copydoc IterativeSolver::vector::axpy(scalar,const std::map<size_t,scalar>& )
      */
@@ -226,7 +238,10 @@ public:
      */
     std::tuple<std::vector<size_t>, std::vector<double>>
     select(const std::vector<double> &measure, const size_t maximumNumber = 1000,
-           const double threshold = 0) const {return {{0}, {0}};};
+           const double threshold = 0) const {
+        return {{0},
+                {0}};
+    };
 
     /*!
      * @copydoc IterativeSolver::vector::scal
@@ -268,7 +283,7 @@ public:
      * @copydoc IterativeSolver::vector::clone
      * @todo change to managed pointer
      */
-    MixedWavefunction *clone(int option = 0) const {return new MixedWavefunction(*this);}
+    MixedWavefunction *clone(int option = 0) const { return new MixedWavefunction(*this); }
 
     void set(double val);///< set all elements to a scalar
     void set(size_t ind, double val);///< set one element to a scalar
@@ -289,7 +304,7 @@ public:
      */
     double update(const Wavefunction &diagonalH,
                   double &eTruncated,
-                  const double dEmax = 0.0) { };
+                  const double dEmax = 0.0) = delete;
 
     /*!
      * \brief addAbsPower Evaluate this[i] += factor * abs(c[I])^k * c[I]
@@ -309,6 +324,7 @@ public:
      * \param b
      */
     void times(const MixedWavefunction *a, const MixedWavefunction *b);
+
     /*!
      * \brief this[i] = a[i]/(b[i]+shift)
      * \param a
@@ -326,13 +342,15 @@ public:
 //    std::map<std::string, double> m_properties;
 
     //! @todo Implement
-    void settilesize(int t = -1, int a = -1, int b = -1) { };
+    void settilesize(int t = -1, int a = -1, int b = -1) {};
 };  // class MixedWavefunction
 
 double operator*(const MixedWavefunction &w1, const MixedWavefunction &w2);///< inner product of two wavefunctions
 MixedWavefunction operator+(const MixedWavefunction &w1, const MixedWavefunction &w2); ///< add two wavefunctions
-MixedWavefunction operator-(const MixedWavefunction &w1, const MixedWavefunction &w2); ///< subtract two wavefunctions
-MixedWavefunction operator/(const MixedWavefunction &w1, const MixedWavefunction &w2); ///< element-by-element division
+MixedWavefunction
+operator-(const MixedWavefunction &w1, const MixedWavefunction &w2); ///< subtract two wavefunctions
+MixedWavefunction
+operator/(const MixedWavefunction &w1, const MixedWavefunction &w2); ///< element-by-element division
 MixedWavefunction operator*(const MixedWavefunction &w1, const double &value);///< multiply by a scalar
 MixedWavefunction operator*(const double &value, const MixedWavefunction &w1);///< multiply by a scalar
 

@@ -1,6 +1,5 @@
 #include "gciMixedOperator.h"
 #include "gciRun.h"
-#include "gciConstants.h"
 
 
 #include <stdexcept>
@@ -20,29 +19,28 @@ SymmetryMatrix::Operator constructOperatorT1(const FCIdump &dump) {
         int verbosity = 0;
         std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
         SymmetryMatrix::dim_t dim(8);
-        for (const auto &s : orbital_symmetries) {
+        for (unsigned int s : orbital_symmetries) {
             dim.at(s - 1)++;
         }
-        SymmetryMatrix::Operator result(SymmetryMatrix::dims_t{dim, dim, dim, dim}, 1, dump.parameter("IUHF")[0] > 0,
-                                        {-1, -1}, {-1, -1}, 0, true, "Hamiltonian T1");
+        SymmetryMatrix::Operator result(SymmetryMatrix::dims_t{dim, dim, dim, dim}, 1,
+                                        dump.parameter("IUHF")[0] > 0,
+                                        {-1, -1}, {-1, -1}, 0, true, false, "Hamiltonian T1");
 
         dump.rewind();
         double value;
         FCIdump::integralType type;
-        int i, j, k, l;
         auto &integrals_a = result.O1(true);
         integrals_a.assign(0);
         auto &integrals_b = result.O1(false);
         integrals_b.assign(0);
         if (verbosity > 0) {
             xout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
-            xout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
+            xout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0]
+                 << std::endl;
         }
-        unsigned int si,sj,sk,sl;
-        size_t oi,oj,ok,ol;
+        unsigned int si, sj, sk, sl;
+        size_t oi, oj, ok, ol;
         while ((type = dump.nextIntegral(si, oi, sj, oj, sk, ok, sl, ol, value)) != FCIdump::endOfFile) {
-//      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
-//      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
             if (si < sj || (si == sj && oi < oj)) {
                 std::swap(oi, oj);
                 std::swap(si, sj);
@@ -51,16 +49,10 @@ SymmetryMatrix::Operator constructOperatorT1(const FCIdump &dump) {
                 std::swap(ok, ol);
                 std::swap(sk, sl);
             }
-            unsigned int sij = si ^sj;
-//      xout << "\nvalue: "<<value<<std::endl;
-//      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
-//      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
 
             if (type == FCIdump::I1a) {
-                if (verbosity > 1) xout << "ha(" << i << "," << j << ") = " << value << std::endl;
                 integrals_a.block(si).at(oi * (oi + 1) / 2 + oj) = value;
             } else if (type == FCIdump::I1b) {
-                if (verbosity > 1) xout << "hb(" << i << "," << j << ") = " << value << std::endl;
                 integrals_b.block(si).at(oi * (oi + 1) / 2 + oj) = value;
             } else if (type == FCIdump::I0)
                 result.m_O0 = value;
@@ -105,14 +97,14 @@ MixedOperator::MixedOperator
         if (file_exists(fname)) Hmix[vibOp.type].push_back(MixedOpTerm(vibOp, FCIdump(fname)));
     };
     if (m_inc_d1) {
-        for (int iMode = 0; iMode < nMode; ++iMode) {
+        for (unsigned int iMode = 0; iMode < nMode; ++iMode) {
             std::string f = fcidump.fileName() + "_d1_" + std::to_string(iMode);
             store_fcidump(f, VibOp{VibOpType::Q, {iMode}});
         }
     }
     if (m_inc_d2) {
-        for (int iMode = 0; iMode < nMode; ++iMode) {
-            for (int jMode = 0; jMode <= iMode; ++jMode) {
+        for (unsigned int iMode = 0; iMode < nMode; ++iMode) {
+            for (unsigned int jMode = 0; jMode <= iMode; ++jMode) {
                 std::string f = fcidump.fileName() + "_d2_" + std::to_string(iMode) + "_" + std::to_string(jMode);
                 store_fcidump(f, VibOp{VibOpType::Qsq, {iMode, jMode}});
             }
@@ -125,7 +117,7 @@ MixedOperator::MixedOperator
         }
     }
     if (m_inc_T1) {
-        for (int iMode = 0; iMode < nMode; ++iMode) {
+        for (unsigned int iMode = 0; iMode < nMode; ++iMode) {
             std::string f = fcidump.fileName() + "_t1_" + std::to_string(iMode);
             if (file_exists(f))
                 Hmix[VibOpType::dQ].push_back(
@@ -133,7 +125,7 @@ MixedOperator::MixedOperator
         }
     }
     if (m_inc_T2) {
-        for (int iMode = 0; iMode < nMode; ++iMode) {
+        for (unsigned int iMode = 0; iMode < nMode; ++iMode) {
             std::string f = fcidump.fileName() + "_t2_" + std::to_string(iMode);
             if (file_exists(f)) {
                 auto H_t2 = constructOperator(FCIdump(f));
@@ -158,17 +150,23 @@ double MixedOperator::O_Hvib(const HProduct &bra, const HProduct &ket) const {
 
 double MixedOperator::expectVal(const HProduct &bra, const HProduct &ket, const VibOp &vibOp) const {
     switch (vibOp.type) {
-        case VibOpType::HO: return O_Hvib(bra, ket);
-        case VibOpType::Q: return O_Q(bra, ket, vibOp);
-        case VibOpType::dQ: return O_dQ(bra, ket, vibOp);
-        case VibOpType::Qsq: return O_Qsq(bra, ket, vibOp);
+        case VibOpType::HO:
+            return O_Hvib(bra, ket);
+        case VibOpType::Q:
+            return O_Q(bra, ket, vibOp);
+        case VibOpType::dQ:
+            return O_dQ(bra, ket, vibOp);
+        case VibOpType::Qsq:
+            return O_Qsq(bra, ket, vibOp);
+        default:
+            throw std::logic_error("Operator not implemented");
     }
 }
 
 double MixedOperator::O_Q(const HProduct &bra, const HProduct &ket, const VibOp &vibOp) const {
     if (vibOp.type != VibOpType::Q) throw std::logic_error("Wrong operator type");
     auto func = [](double w, const int n, const int diff) {
-        return std::sqrt(n / (2.0 * w));
+        return std::sqrt((double) n / (2.0 * w));
     };
     return QtypeOperator(bra, ket, func, vibOp.mode[0]);
 }
@@ -217,7 +215,7 @@ double MixedOperator::O_Qsq(const HProduct &bra, const HProduct &ket, const VibO
 
 double MixedOperator::QtypeOperator(const HProduct &bra, const HProduct &ket,
                                     const std::function<double(double, int, int)> &func,
-                                    const int targetMode) const {
+                                    unsigned int targetMode) const {
     std::valarray<int> braOcc(0, nMode);
     std::valarray<int> ketOcc(0, nMode);
     for (const auto &modal : bra) braOcc[modal[0]] = modal[1];

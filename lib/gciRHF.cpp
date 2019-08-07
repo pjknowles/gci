@@ -44,6 +44,7 @@ double Run::RHF(const SymmetryMatrix::Operator &hamiltonian, const State &protot
         F.O1().ev(eigVal, &density.Cmat);
     }
     profiler->stop("RHF:algorithm");
+    return energy;
 }
 
 nm_RHF::Density::Density(SymmetryMatrix::dim_t &dim, SymmetryMatrix::dim_t &occ, std::vector<int> &symmetries,

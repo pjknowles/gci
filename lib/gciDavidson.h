@@ -69,9 +69,9 @@ public:
      */
     void run();
 
-    Options &options;//!< Options governing the type of calculation
     std::shared_ptr<t_Wavefunction> prototype; //!< Prototype wavefunction
     std::shared_ptr<t_Operator> ham; //!< Hamiltonian operator that is being diagonalized
+    Options &options;//!< Options governing the type of calculation
     std::shared_ptr<t_Wavefunction> diagonalH; //!< Stored diagonal values of the hamiltonian operator
 //    std::vector<value_type> eigVal; //!< Solution eigenvalues
 //    std::vector<t_Wavefunction> eigVec; //!< Solution eigenvectors
@@ -91,8 +91,8 @@ protected:
     IterativeSolver::LinearEigensystem<t_Wavefunction> solver; //!< Iterative solver
 
     double energyThreshold;
-    int nState;
-    int maxIterations;
+    unsigned int nState;
+    unsigned int maxIterations;
     int solverVerbosity;
     int parallel_stringset;
 };

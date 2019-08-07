@@ -6,9 +6,9 @@
 namespace gci {
 HProduct::HProduct(product_t phi) : m_prod(std::move(phi)) {
     // Catch empty initialization with HProduct({ {} }) or HProduct({ })
-    if (m_prod.size() == 1) if (m_prod[0].empty()) m_prod = product_t{};
+//    if (m_prod.size() == 1) if (m_prod[0].empty()) m_prod = product_t{};
     // Catch erroneous empty initialization with HProduct({ { {} } }). The extra {} initializes int to 0.
-    if (m_prod.size() == 1) if (m_prod[0].size() == 1 && m_prod[0][0] == 0) m_prod = product_t{};
+//    if (m_prod.size() == 1) if (m_prod[0].size() == 1 && m_prod[0][0] == 0) m_prod = product_t{};
     order();
     check();
 }

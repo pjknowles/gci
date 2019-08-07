@@ -20,8 +20,8 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
         Hvib(constructHvib(fcidump.fileName(), nMode, nModal)),
         includeHel(fcidump.parameter("INCLUDE_HEL", std::vector<int>{0})[0]),
         includeLambda(fcidump.parameter("INCLUDE_LAMBDA", std::vector<int>{0})[0]),
-        includeD(fcidump.parameter("INCLUDE_D", std::vector<int>{0})[0]),
-        includeK(fcidump.parameter("INCLUDE_K", std::vector<int>{0})[0]) {
+        includeK(fcidump.parameter("INCLUDE_K", std::vector<int>{0})[0]),
+        includeD(fcidump.parameter("INCLUDE_D", std::vector<int>{0})[0]){
     if (includeHel) initializeHel(fcidump);
     if (includeLambda) initializeLambda(fcidump);
     if (includeK) initializeK(fcidump);
@@ -158,7 +158,7 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(
         int verbosity = 0;
         std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
         SymmetryMatrix::dim_t dim(8);
-        for (const auto &s : orbital_symmetries) {
+        for (unsigned int s : orbital_symmetries) {
             dim.at(s - 1)++;
         }
         SymmetryMatrix::Operator result(SymmetryMatrix::dims_t{dim, dim, dim, dim}, 1, dump.parameter("IUHF")[0] > 0,
@@ -191,7 +191,6 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(
                 phase *= -1;
             }
             value *= phase;
-            unsigned int sij = si ^sj;
 
             if (type == FCIdump::I1a) {
                 if (verbosity > 1) xout << "ha(" << oi << "," << oj << ") = " << value << std::endl;
@@ -230,7 +229,7 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructK(const FCIdump &dum
         int verbosity = 0;
         std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
         SymmetryMatrix::dim_t dim(8);
-        for (const auto &s : orbital_symmetries) {
+        for (unsigned int s : orbital_symmetries) {
             dim.at(s - 1)++;
         }
 //        SymmetryMatrix::Operator result(dim, 2, dump.parameter("IUHF")[0] > 0, 0, true, "Hamiltonian");
@@ -266,7 +265,6 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructK(const FCIdump &dum
                 std::swap(ok, ol);
                 std::swap(sk, sl);
             }
-            unsigned int sij = si ^sj;
             if (type == FCIdump::I1a) {
                 integrals_a.block(si).at(oi * (oi + 1) / 2 + oj) = value;
             } else if (type == FCIdump::I1b) {
@@ -305,7 +303,7 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructD(const FCIdump &dum
         int verbosity = 0;
         std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
         SymmetryMatrix::dim_t dim(8);
-        for (const auto &s : orbital_symmetries) {
+        for (unsigned int s : orbital_symmetries) {
             dim.at(s - 1)++;
         }
 //        SymmetryMatrix::Operator result(dim, 2, dump.parameter("IUHF")[0] > 0, 0, true, "Hamiltonian");

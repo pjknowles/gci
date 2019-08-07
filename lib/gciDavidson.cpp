@@ -44,13 +44,13 @@ void Davidson<t_Wavefunction, t_Operator>::printMatrix() {
     std::cout << "Hamiltonian matrix (nxn):" << std::endl;
     std::cout << "n = " << n << std::endl;
     std::cout << " H = {";
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         w.zero();
         w.set(i, 1.0);
         action.zero();
         action.operatorOnWavefunction(*ham, w);
         std::cout << "{";
-        for (int j = 0; j < n; ++j) {
+        for (size_t j = 0; j < n; ++j) {
             H[i][j] = action.at(j);
             if (j == n - 1) std::cout << H[i][j] << "";
             else std::cout << H[i][j] << ",";
@@ -64,7 +64,7 @@ template<class t_Wavefunction>
 void write_vec(const t_Wavefunction &w, const std::string &message) {
     size_t n = w.size();
     std::cout << message << "  {";
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         std::cout << w.at(i) << ", ";
     }
     std::cout << "}" << std::endl;
@@ -145,7 +145,6 @@ printMCSCFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefuncti
         xout << e << ",  ";
     }
     xout << std::endl;
-    return;
 }
 
 template<class t_Wavefunction, class t_Operator>
@@ -174,7 +173,7 @@ printSCFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunction
     std::cout << "Hamiltonian matrix (nxn):" << std::endl;
     std::cout << "n = " << n << std::endl;
     std::cout << "Hel\n{";
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         w.zero();
         w.set(i, 1.0);
         action.zero();
@@ -194,7 +193,7 @@ printSCFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunction
             std::for_each(op.vibOp.mode.begin(), op.vibOp.mode.end(),
                           [&name](const auto el) {name += "_" + std::to_string(el);});
             std::cout << name << "\n{";
-            for (int i = 0; i < n; ++i) {
+            for (size_t i = 0; i < n; ++i) {
                 w.zero();
                 w.set(i, 1.0);
                 action.zero();
@@ -269,12 +268,12 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
                                                                 modOptions);
     elecSolver.run();
     // Loop over electronic states, loop over modals, set each element of the electronic wavefunction
-    for (int root = 0; root < nState; root++) {
+    for (unsigned int root = 0; root < nState; root++) {
         auto ind_elec_state = root / nM;
         auto ind_modal = root - ind_elec_state * nM;
         auto elDim = ww[0].elDim();
         ww[root].set(0.0);
-        for (int j = 0; j < elDim; ++j) {
+        for (size_t j = 0; j < elDim; ++j) {
             ww[root].set(ind_modal * elDim + j, elecSolver.ww[ind_elec_state].at(j));
         }
     }
@@ -294,7 +293,7 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
 //    printDiagonalHFmatrixElements(*prototype, *ham, 4);
 //    printMCSCFmatrixElements(*prototype, *ham);
 //    printSCFmatrixElements(*prototype, *ham);
-    for (auto iteration = 1; iteration <= (size_t) maxIterations; iteration++) {
+    for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
         action();
         solver.addVector(ww, gg);
         update();
@@ -302,7 +301,7 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
         if (solver.endIteration(ww, gg)) break;
     }
     xout << "energies: ";
-    for (int i = 0; i < nState; ++i) xout << solver.eigenvalues()[i] << ", ";
+    for (unsigned int i = 0; i < nState; ++i) xout << solver.eigenvalues()[i] << ", ";
     xout << std::endl;
 //    for (auto root = 0; root < nState; root++) {
 //        write_vec(ww[root],
@@ -320,7 +319,7 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
     diagonalH->allocate_buffer();
     diagonalH->diagonalOperator(*ham);
     std::vector<int> roots(nState, 0);
-    for (int root = 0; root < nState; root++) {
+    for (unsigned int root = 0; root < nState; root++) {
         ww.push_back(t_Wavefunction(*prototype, 0));
         ww.back().allocate_buffer();
         ww.back().zero();

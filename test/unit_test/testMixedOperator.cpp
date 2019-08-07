@@ -6,7 +6,7 @@
 #include <gciMixedOperator.h>
 #include <numeric>
 
-using namespace gci;
+namespace gci {
 
 //
 class TestMixedOperator : public ::testing::Test, public MixedOperator {
@@ -48,15 +48,15 @@ TEST_F(TestMixedOperator, O_Qsq) {
     auto op = VibOp(VibOpType::Qsq, {0, 0});
     for (int n = 0; n < maxM; ++n) {
         double ref = 0.5 / freq[0] * (n + 0.5);
-        auto bra = HProduct::product_t({{0, n}});
+        auto bra = HProduct(HProduct::product_t{{0, n}});
         auto el = O_Qsq(bra, bra, op);
         ASSERT_DOUBLE_EQ(el, ref) << "< n | Qsq | n > == 1 / w * (n + 0.5)";
     }
     for (int n = 2; n < maxM; ++n) {
         int m = n - 2;
         double ref = 0.25 / freq[0] * std::sqrt(n * (n - 1));
-        auto bra = HProduct::product_t({{0, n}});
-        auto ket = HProduct::product_t({{0, m}});
+        auto bra = HProduct(HProduct::product_t{{0, n}});
+        auto ket = HProduct(HProduct::product_t{{0, m}});
         auto el = O_Qsq(bra, ket, op);
         ASSERT_DOUBLE_EQ(el, ref) << "< n | Qsq | m > == 1 / 2 / w * sqrt(n * (n - 1))";
     }
@@ -64,9 +64,10 @@ TEST_F(TestMixedOperator, O_Qsq) {
         int m = n + 2;
         if ((n - m) % 2 != 0) continue;
         double ref = 0.25 / freq[0] * std::sqrt(m * (m - 1));
-        auto bra = HProduct::product_t({{0, n}});
-        auto ket = HProduct::product_t({{0, m}});
+        auto bra = HProduct(HProduct::product_t{{0, n}});
+        auto ket = HProduct(HProduct::product_t{{0, m}});
         auto el = O_Qsq(bra, ket, op);
         ASSERT_DOUBLE_EQ(el, ref) << "< n | Qsq | m > == 1 / 2 / w * sqrt(m * (m - 1))";
     }
 }
+} // namespace gci

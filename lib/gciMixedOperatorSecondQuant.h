@@ -23,11 +23,12 @@ public:
     int nMode; //!< Number of vibrational modes
     int nModal; //!< Number of modals per mode (for now assumed the same for each mode)
     hel_t Hel; //!< Purely electronic terms
-    std::map<std::string, hel_t> nacHel; //!< Purely electronic terms from kinetic energy coupling
     VibOperator<double> Hvib;//!< Purely vibrational term
+    std::map<std::string, hel_t> nacHel; //!< Purely electronic terms from kinetic energy coupling
     std::map<std::string, VibOperator<hel_t >> mixedHam;//!< Mixed electronic-vibrational terms
 
     explicit MixedOperatorSecondQuant(const FCIdump &fcidump);
+
 protected:
     bool includeHel;
     bool includeLambda;
@@ -49,10 +50,15 @@ protected:
     static SymmetryMatrix::Operator constructOperatorAntisymm1el(const FCIdump &dump);
 
     static SymmetryMatrix::Operator constructK(const FCIdump &dump);
+
     static SymmetryMatrix::Operator constructD(const FCIdump &dump);
+
     void initializeHel(const FCIdump &fcidump);
+
     void initializeLambda(const FCIdump &fcidump);
+
     void initializeK(const FCIdump &fcidump);
+
     void initializeD(const FCIdump &fcidump);
 };
 } // namespace gci
