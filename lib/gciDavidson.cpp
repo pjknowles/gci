@@ -376,5 +376,8 @@ template
 class gci::run::Davidson<gci::MixedWavefunction, gci::MixedOperator>;
 
 template
-    class gci::run::Davidson<gci::MixedWavefunction, gci::MixedOperatorSecondQuant>;
+class gci::run::Davidson<gci::MixedWavefunction, gci::MixedOperatorSecondQuant>;
+
+template
+    class gci::run::Davidson<gci::Wavefunction, SymmetryMatrix::Operator>;
 
