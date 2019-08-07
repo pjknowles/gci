@@ -97,13 +97,6 @@ protected:
     int parallel_stringset;
 };
 
-template
-class Davidson<MixedWavefunction, MixedOperator>;
-template
-class Davidson<MixedWavefunction, MixedOperatorSecondQuant>;
-template
-class Davidson<Wavefunction, SymmetryMatrix::Operator>;
-
 }  // namespace run
 }  // namespace gci
 
