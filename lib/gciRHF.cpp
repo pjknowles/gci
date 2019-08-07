@@ -49,8 +49,8 @@ double Run::RHF(const SymmetryMatrix::Operator &hamiltonian, const State &protot
 nm_RHF::Density::Density(SymmetryMatrix::dim_t &dim, SymmetryMatrix::dim_t &occ, std::vector<int> &symmetries,
                          int symmetry) :
         dim(dim), occ(occ), symmetries(symmetries), symmetry(symmetry),
-        Cmat(SymmetryMatrix::SMat({dim, dim}, SymmetryMatrix::parityNone)),
-        Csplice(SymmetryMatrix::SMat({dim, occ}, SymmetryMatrix::parityNone)),
+        Cmat(SymmetryMatrix::SMat(SymmetryMatrix::dims_t{dim, dim}, SymmetryMatrix::parityNone)),
+        Csplice(SymmetryMatrix::SMat(SymmetryMatrix::dims_t{dim, occ}, SymmetryMatrix::parityNone)),
         P(SymmetryMatrix::Operator(dim, 1, false, (unsigned) symmetry, true, "density")) {
     Cmat.setIdentity();
     update();
