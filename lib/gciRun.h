@@ -82,7 +82,6 @@ class Run {
 
   SymmetryMatrix::Operator m_hamiltonian;
  public:
-  std::unique_ptr<SymmetryMatrix::Operator> m_densityMatrix; // the (state-averaged) density matrix
   std::vector<SymmetryMatrix::Operator> m_densityMatrices; // the individual state density matrices
 
   std::vector<std::shared_ptr<Wavefunction> > m_wavefunctions;
