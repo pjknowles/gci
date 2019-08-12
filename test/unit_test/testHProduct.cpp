@@ -91,7 +91,7 @@ TEST_F(HProductF, raise) {
     empty.raise(mode1);
     EXPECT_EQ(empty.excLvl(mode1), 1) << "Raising from the ground state";
     EXPECT_EQ(empty.excLvl(), 1);
-    auto singlyExcited = HProduct{{{mode1, 1}}};
+    auto singlyExcited = HProduct{HProduct::product_t{{mode1, 1}}};
     EXPECT_EQ(empty, singlyExcited) << "Ensure raised ground state is the same as constructed singly excited product";
 }
 

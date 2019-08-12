@@ -284,6 +284,8 @@ std::vector<double> Run::run() {
   if (profiler == nullptr) profiler.reset(new Profiler("GCI"));
   _nextval_counter.reset(new sharedCounter());
   profiler->reset("GCI");
+  int activeLvl = options.parameter("PROFACTIVE",-1);
+  if (activeLvl >= 0)  profiler->active(activeLvl);
   xout << "PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
   std::vector<double> energies;
   std::string method = options.parameter("METHOD", std::vector<std::string>(1, "DAVIDSON")).at(0);
@@ -416,8 +418,6 @@ std::vector<double> Run::run() {
 #endif
     } else if (method == "DIIS") {
         energies = DIIS(m_hamiltonian, prototype);
-    } else if (method == "RHF") {
-        RHF(m_hamiltonian, prototype);
     } else if (method == "HAMILTONIAN")
         HamiltonianMatrixPrint(m_hamiltonian, prototype);
     else if (method == "PROFILETEST") {
@@ -495,6 +495,7 @@ std::vector<double> Run::run() {
 }
 
 Run::~Run() {
+  std::cout << *profiler.get() << std::endl;
   profiler.release();
   _nextval_counter.release();
 }

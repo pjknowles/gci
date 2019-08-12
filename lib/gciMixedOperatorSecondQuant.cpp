@@ -20,8 +20,8 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
         Hvib(constructHvib(fcidump.fileName(), nMode, nModal)),
         includeHel(fcidump.parameter("INCLUDE_HEL", std::vector<int>{0})[0]),
         includeLambda(fcidump.parameter("INCLUDE_LAMBDA", std::vector<int>{0})[0]),
-        includeD(fcidump.parameter("INCLUDE_D", std::vector<int>{0})[0]),
-        includeK(fcidump.parameter("INCLUDE_K", std::vector<int>{0})[0]) {
+        includeK(fcidump.parameter("INCLUDE_K", std::vector<int>{0})[0]),
+        includeD(fcidump.parameter("INCLUDE_D", std::vector<int>{0})[0]){
     if (includeHel) initializeHel(fcidump);
     if (includeLambda) initializeLambda(fcidump);
     if (includeK) initializeK(fcidump);
@@ -109,7 +109,7 @@ void MixedOperatorSecondQuant::initializeD(const FCIdump &fcidump) {
         nacHel.insert({"D[0]", constructD(FCIdump(f))});
     }
     std::string name = "D[1]";
-    auto vibOp = VibOperator<hel_t>(nMode, nModal, ns_VibOperator::parity_t::even,
+    auto vibOp = VibOperator<hel_t>(nMode, nModal, ns_VibOperator::parity_t::none,
                                     ns_VibOperator::parity_t::even, name);
     for (int iMode = 0; iMode < nMode; ++iMode) {
         for (int iModal = 0; iModal < nModal; ++iModal) {
@@ -118,10 +118,10 @@ void MixedOperatorSecondQuant::initializeD(const FCIdump &fcidump) {
                     std::to_string(iModal + 1) + "_" + std::to_string(jModal + 1);
                 if (file_exists(f)) {
                     VibExcitation vibExc({{iMode, iModal, jModal}});
-                    auto &&op = constructK(FCIdump(f));
+                    auto &&op = constructD(FCIdump(f));
                     vibOp.append(op, vibExc);
                     if (iModal != jModal) {
-                        op = constructK(FCIdump(f));
+                        op = constructD(FCIdump(f));
                         vibOp.append(op, VibExcitation({{iMode, jModal, iModal}}));
                     }
                 }
@@ -158,11 +158,12 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(
         int verbosity = 0;
         std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
         SymmetryMatrix::dim_t dim(8);
-        for (const auto &s : orbital_symmetries) {
+        for (unsigned int s : orbital_symmetries) {
             dim.at(s - 1)++;
         }
         SymmetryMatrix::Operator result(SymmetryMatrix::dims_t{dim, dim, dim, dim}, 1, dump.parameter("IUHF")[0] > 0,
-                                        {-1, -1}, {-1, -1}, 0, true, "Hamiltonian Lambda[1]");
+                                        {-1, -1}, {-1, -1}, 0, true, false, "Hamiltonian Lambda[1]");
+        result.zero();
 
         dump.rewind();
         double value;
@@ -178,15 +179,18 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(
         unsigned int si, sj, sk, sl;
         size_t oi, oj, ok, ol;
         while ((type = dump.nextIntegral(si, oi, sj, oj, sk, ok, sl, ol, value)) != FCIdump::endOfFile) {
+            int phase = 1;
             if (si < sj || (si == sj && oi < oj)) {
                 std::swap(oi, oj);
                 std::swap(si, sj);
+                phase *= -1;
             }
             if (sk < sl || (sk == sl && ok < ol)) {
                 std::swap(ok, ol);
                 std::swap(sk, sl);
+                phase *= -1;
             }
-            unsigned int sij = si ^sj;
+            value *= phase;
 
             if (type == FCIdump::I1a) {
                 if (verbosity > 1) xout << "ha(" << oi << "," << oj << ") = " << value << std::endl;
@@ -225,12 +229,13 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructK(const FCIdump &dum
         int verbosity = 0;
         std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
         SymmetryMatrix::dim_t dim(8);
-        for (const auto &s : orbital_symmetries) {
+        for (unsigned int s : orbital_symmetries) {
             dim.at(s - 1)++;
         }
 //        SymmetryMatrix::Operator result(dim, 2, dump.parameter("IUHF")[0] > 0, 0, true, "Hamiltonian");
         SymmetryMatrix::Operator result(SymmetryMatrix::dims_t{dim, dim, dim, dim}, 1, dump.parameter("IUHF")[0] > 0,
-                                        {1, 1}, {-1, -1}, 0, true, "Hamiltonian K");
+                                        {1, 1}, {-1, -1}, 0, true, false, "Hamiltonian K");
+        result.zero();
 
         dump.rewind();
         double value;
@@ -260,7 +265,6 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructK(const FCIdump &dum
                 std::swap(ok, ol);
                 std::swap(sk, sl);
             }
-            unsigned int sij = si ^sj;
             if (type == FCIdump::I1a) {
                 integrals_a.block(si).at(oi * (oi + 1) / 2 + oj) = value;
             } else if (type == FCIdump::I1b) {
@@ -299,12 +303,13 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructD(const FCIdump &dum
         int verbosity = 0;
         std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
         SymmetryMatrix::dim_t dim(8);
-        for (const auto &s : orbital_symmetries) {
+        for (unsigned int s : orbital_symmetries) {
             dim.at(s - 1)++;
         }
 //        SymmetryMatrix::Operator result(dim, 2, dump.parameter("IUHF")[0] > 0, 0, true, "Hamiltonian");
         SymmetryMatrix::Operator result(SymmetryMatrix::dims_t{dim, dim, dim, dim}, 2, dump.parameter("IUHF")[0] > 0,
-                                        {-1, -1}, {-1, -1}, 0, true, "Hamiltonian D");
+                                        {-1, -1}, {-1, -1}, 0, true, false, "Hamiltonian D");
+        result.zero();
 
         dump.rewind();
         double value;
@@ -326,38 +331,37 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructD(const FCIdump &dum
         unsigned int si, sj, sk, sl;
         size_t oi, oj, ok, ol;
         while ((type = dump.nextIntegral(si, oi, sj, oj, sk, ok, sl, ol, value)) != FCIdump::endOfFile) {
+            int phase = 1;
             if (si < sj || (si == sj && oi < oj)) {
                 std::swap(oi, oj);
                 std::swap(si, sj);
+                phase *= -1;
             }
             if (sk < sl || (sk == sl && ok < ol)) {
                 std::swap(ok, ol);
                 std::swap(sk, sl);
+                phase *= -1;
             }
             unsigned int sij = si ^sj;
+            value *= phase;
 
             if (type == FCIdump::I2aa) {
                 (sij ? integrals_aa.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) :
                  integrals_aa.smat(sij, si, oi, oj)->block(sk)[ok * (ok - 1) / 2 + ol]) = value;
                 (sij ? integrals_aa.smat(sij, sk, ok, ol)->blockMap(si)(oi, oj) :
                  integrals_aa.smat(sij, sk, ok, ol)->block(si)[oi * (oi - 1) / 2 + oj]) = value;
-//                integrals_aa.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) = value;
             } else if (type == FCIdump::I2ab) {
                 (sij ? integrals_ab.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) :
                  integrals_ab.smat(sij, si, oi, oj)->block(sk)[ok * (ok - 1) / 2 + ol]) = value;
-//                integrals_ab.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) = value;
             } else if (type == FCIdump::I2bb) {
                 (sij ? integrals_bb.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) :
                  integrals_bb.smat(sij, si, oi, oj)->block(sk)[ok * (ok - 1) / 2 + ol]) = value;
                 (sij ? integrals_bb.smat(sij, sk, ok, ol)->blockMap(si)(oi, oj) :
                  integrals_bb.smat(sij, sk, ok, ol)->block(si)[oi * (oi - 1) / 2 + oj]) = value;
-//                integrals_bb.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) = value;
             } else if (type == FCIdump::I1a) {
                 integrals_a.block(si).at(oi * (oi - 1) / 2 + oj) = value;
-//                integrals_a.block(si).at(oi * dim.at(si) + oj) = value;
             } else if (type == FCIdump::I1b) {
                 integrals_b.block(si).at(oi * (oi - 1) / 2 + oj) = value;
-//                integrals_b.block(si).at(oi * dim.at(si) + oj) = value;
             } else if (type == FCIdump::I0)
                 result.m_O0 = value;
         }
@@ -378,6 +382,7 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructD(const FCIdump &dum
     class memory::bytestream bs(buf);
     auto result = SymmetryMatrix::Operator::construct(bs);
     if (rank != 0) free(buf);
+//    std::cout << result.str() << std::endl;
     return result;
 }
 } // namespace gci

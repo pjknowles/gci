@@ -25,32 +25,37 @@ enum class VibOpType {
  */
 class VibOp {
 public:
-    VibOp(const VibOpType &type, const std::vector<int> &mode = {}) : type(type), mode(mode) {
+    VibOp(const VibOpType &type, const std::vector<unsigned int> &mode = {}) : type(type), mode(mode) {
         switch (type) {
             case VibOpType::HO:
                 if (!mode.empty())
                     throw std::logic_error("HO is a full operator, no modes need to be specified");
                 break;
-            case VibOpType::Q: if (mode.size() != 1) throw std::logic_error("Q operator is one-dimensional");
+            case VibOpType::Q:
+                if (mode.size() != 1) throw std::logic_error("Q operator is one-dimensional");
                 break;
-            case VibOpType::dQ: if (mode.size() != 1) throw std::logic_error("dQ operator is one-dimensional");
+            case VibOpType::dQ:
+                if (mode.size() != 1) throw std::logic_error("dQ operator is one-dimensional");
                 break;
-            case VibOpType::Qsq: if (mode.size() != 2) throw std::logic_error("Qsq operator is two-dimensional");
+            case VibOpType::Qsq:
+                if (mode.size() != 2) throw std::logic_error("Qsq operator is two-dimensional");
                 break;
-            default: throw std::logic_error("Operator not implemented");
+            default:
+                throw std::logic_error("Operator not implemented");
         }
     }
 
     VibOpType type; //!< Operator type
-    std::vector<int> mode; //!< Indices of the operator (e.g. for Q_A, mode = {A})
+    std::vector<unsigned int> mode; //!< Indices of the operator (e.g. for Q_A, mode = {A})
 };
 
 /*!
  * @brief One term in the mixed operator
  */
 struct MixedOpTerm {
-    MixedOpTerm(VibOp vibOp, const FCIdump &fcidump) : vibOp(std::move(vibOp)), Hel(constructOperator(fcidump)) { };
-    MixedOpTerm(VibOp vibOp, const SymmetryMatrix::Operator &op) : vibOp(std::move(vibOp)), Hel(op) { };
+    MixedOpTerm(VibOp vibOp, const FCIdump &fcidump) : vibOp(std::move(vibOp)), Hel(constructOperator(fcidump)) {};
+
+    MixedOpTerm(VibOp vibOp, const SymmetryMatrix::Operator &op) : vibOp(std::move(vibOp)), Hel(op) {};
     VibOp vibOp;
     SymmetryMatrix::Operator Hel;
 };
@@ -105,8 +110,11 @@ public:
      * @param fcidump Name of FCIdump file passed to gci
      */
     explicit MixedOperator(const FCIdump &fcidump);
-    MixedOperator() : nMode(0), freq({}), zpe(0), Hel({0, 0}, 0, false, 0, true, "dummy"), Hmix({}), m_inc_d1(false),
-                      m_inc_d2(false), m_inc_T1(false), m_inc_T2(false) { }
+
+    MixedOperator() : nMode(0), freq({}), zpe(0), Hel({0, 0}, 0, false, 0, true, false, "dummy"), Hmix({}),
+                      m_inc_d1(false),
+                      m_inc_d2(false), m_inc_T1(false), m_inc_T2(false) {}
+
     ~MixedOperator() = default;
 
     /*!
@@ -115,21 +123,28 @@ public:
      */
     double expectVal(const HProduct &bra, const HProduct &ket, const VibOp &vibOp) const;
 
-    auto begin() const {return Hmix.begin();}
-    auto end() const {return Hmix.end();}
-    auto cbegin() const {return Hmix.cbegin();}
-    auto cend() const {return Hmix.cend();}
+    auto begin() const { return Hmix.begin(); }
+
+    auto end() const { return Hmix.end(); }
+
+    auto cbegin() const { return Hmix.cbegin(); }
+
+    auto cend() const { return Hmix.cend(); }
 
 
-    int nMode; //!< Number of vibrational modes
+    unsigned int nMode; //!< Number of vibrational modes
     std::vector<double> freq; //!< Harmonic frequencies
     double zpe; //!< Vibrational zero point energy at HO level
     SymmetryMatrix::Operator Hel; //!< Electronic Hamiltonian
     std::map<VibOpType, std::vector<MixedOpTerm>> Hmix; //!< All mixed vibrational-electronic terms, mapped by VibOpType
-    bool inc_d1() {return m_inc_d1;}
-    bool inc_d2() {return m_inc_d2;}
-    bool inc_T1() {return m_inc_T1;}
-    bool inc_T2() {return m_inc_T2;}
+    bool inc_d1() { return m_inc_d1; }
+
+    bool inc_d2() { return m_inc_d2; }
+
+    bool inc_T1() { return m_inc_T1; }
+
+    bool inc_T2() { return m_inc_T2; }
+
 protected:
     bool m_inc_d1;
     bool m_inc_d2;
@@ -165,8 +180,9 @@ protected:
      * @param ket Vibrational Hartree product for the ket
      * @return
      */
-    double QtypeOperator(const HProduct &bra, const HProduct &ket, const std::function<double(double, int, int)> &func,
-                         int targetMode) const;
+    double
+    QtypeOperator(const HProduct &bra, const HProduct &ket, const std::function<double(double, int, int)> &func,
+                  unsigned int targetMode) const;
 };
 
 }  // namespace gci

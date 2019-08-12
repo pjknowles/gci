@@ -38,7 +38,6 @@ add_library(gci
         gciTransitionDensity.cpp gciTransitionDensity.h
         gciWavefunction.cpp gciWavefunction.h
         sharedCounter.cpp sharedCounter.h
-        gciRHF.cpp gciRHF.h
         gciHProduct.cpp gciHProduct.h
         gciHProductSet.cpp gciHProductSet.h
         gciMixedOperator.cpp gciMixedOperator.h
@@ -48,6 +47,7 @@ add_library(gci
         gciMixedOperatorSecondQuant.h gciMixedOperatorSecondQuant.cpp
         gciVibOperator.cpp gciVibOperator.h
         gciVibExcitation.h)
+#target_compile_options(gci PRIVATE -Wall)
 #target_include_directories(gci INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "gci.h;gciRun.h;${CMAKE_CURRENT_BINARY_DIR}/gci-config.h")
 

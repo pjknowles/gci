@@ -69,9 +69,9 @@ public:
     VibExcitation exc; //!< excitation
 
     VibTensEl(const Container &op, VibExcitation vibExc, parity_t hermiticity, parity_t exchange) :
-            oper(op), exc(std::move(vibExc)), m_hermiticity(hermiticity), m_exchange(exchange) { }
+            oper(op), exc(std::move(vibExc)), m_hermiticity(hermiticity), m_exchange(exchange) {}
 
-    auto hermiticity() const {return m_hermiticity;}
+    auto hermiticity() const { return m_hermiticity; }
 
     /*!
      * @brief Returns the conjugate transpose of this element including change in phase
@@ -84,6 +84,7 @@ public:
         conjExc.conjugate();
         return {conjOp, conjExc, m_hermiticity, m_exchange};
     }
+
 protected:
     parity_t m_hermiticity; //!< conjugation symmetry E_{ij} -> E_{ji}
     parity_t m_exchange;//!< symmetry under echange of mode indices E_{ij}^A E_{kl}^B -> E_{kl}^B E_{ij}^A
@@ -106,10 +107,10 @@ public:
 
     explicit VibOperator(int nMode, int nModal, parity_t hermiticity = parity_t::even,
                          parity_t exchange = parity_t::even, std::string name_ = "") :
-            m_nMode(nMode), m_nModal(nModal), m_hermiticity(hermiticity), m_exchange(exchange),
-            name(std::move(name_)) { }
+            name(std::move(name_)), m_nMode(nMode), m_nModal(nModal), m_hermiticity(hermiticity),
+            m_exchange(exchange) {}
 
-    auto hermiticity() const {return m_hermiticity;}
+    auto hermiticity() const { return m_hermiticity; }
 
     /*!
      * @brief Appends a new term to the tensor.
@@ -153,11 +154,12 @@ public:
         newOp += other;
         return newOp;
     }
+
 protected:
-    parity_t m_hermiticity; //!< conjugation symmetry E_{ij} -> E_{ji}
-    parity_t m_exchange;//!< symmetry under echange of mode indices E_{ij}^A E_{kl}^B -> E_{kl}^B E_{ij}^A
     int m_nMode; //!< number of modes
     int m_nModal; //!< number of modals per mode (assumed to be the same for each mode)
+    parity_t m_hermiticity; //!< conjugation symmetry E_{ij} -> E_{ji}
+    parity_t m_exchange;//!< symmetry under echange of mode indices E_{ij}^A E_{kl}^B -> E_{kl}^B E_{ij}^A
 
     size_t hash(const VibExcitation &exc) {
         return ns_VibOperator::hash(exc, m_nMode, m_nModal, m_hermiticity, m_exchange);

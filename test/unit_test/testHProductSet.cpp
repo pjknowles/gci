@@ -2,9 +2,6 @@
 #include <gtest/gtest.h>
 #include <stdexcept>
 #include <algorithm>
-#include <typeinfo>
-#include <typeindex>
-#include <unordered_map>
 
 #include <gciHProductSet.h>
 #include <numeric>
@@ -88,7 +85,7 @@ TEST_F(HProductSetF, connectedSet_HO_operator) {
     ASSERT_TRUE(connectedSet.vibDim() == 1) << "Harmonic Oscillator is diagonal";
     ASSERT_EQ(connectedSet[0], groundState) << "Harmonic Oscillator is diagonal";
     // Some random set
-    int randomIndex = prodSet.vibDim() / 2;
+    auto randomIndex = prodSet.vibDim() / 2;
     auto refState = prodSet[randomIndex];
     connectedSet = HProductSet(refState, vibSpace, VibOp{VibOpType::HO});
     ASSERT_TRUE(connectedSet.vibDim() == 1) << "Harmonic Oscillator is diagonal";
@@ -103,7 +100,7 @@ TEST_P(HProductSetPF, connectedSet_Q_and_dQ_operators) {
     prodSet.generateFullSpace();
     // Reference 1: ground state
     auto groundState = prodSet[0];
-    int mode1 = 0, mode2 = 1;
+    const int mode1 = 0, mode2 = 1;
     auto referenceSet = std::vector<HProduct>(1);
     referenceSet[0] = HProduct{{{mode1, 1}}};
     auto connectedSet = HProductSet(groundState, vibSpace, VibOp{op, {mode1}});
@@ -131,7 +128,7 @@ INSTANTIATE_TEST_CASE_P(HProductSetF, HProductSetPF, ::testing::Values(VibOpType
 TEST_F(HProductSetF, connectedSet_Qsq_operator) {
     prodSet.generateFullSpace();
     // Qsq = Q_A * Q_B
-    int mode1 = 0, mode2 = 1;
+    const int mode1 = 0, mode2 = 1;
     auto refProd = HProduct({{mode1, 2}, {mode2, 2}});
     auto referenceSet = std::vector<HProduct>(4);
     referenceSet[0] = HProduct({{mode1, 1}, {mode2, 1}});

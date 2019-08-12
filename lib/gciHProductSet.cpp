@@ -39,7 +39,7 @@ void HProductSet::generateFullSpace() {
     m_basis.reserve(m_vibDim);
     m_basis.emplace_back(HProduct{});
     unsigned long iWfn = 1;
-    for (int exc = 1; exc < m_excLvlDim.size(); ++exc) {
+    for (size_t exc = 1; exc < m_excLvlDim.size(); ++exc) {
         auto iStart = std::accumulate(m_excLvlDim.begin(), m_excLvlDim.begin() + exc - 1, 0ul);
         auto iEnd = std::accumulate(m_excLvlDim.begin(), m_excLvlDim.begin() + exc, 0ul);
         for (auto iBase = iStart; iBase < iEnd; ++iBase) {

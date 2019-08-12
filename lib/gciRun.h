@@ -79,20 +79,9 @@ class Run {
                            double energyThreshold = (double) -1, int maxIterations = -1);
 
   void HamiltonianMatrixPrint(SymmetryMatrix::Operator &hamiltonian, const State &prototype, int verbosity = 0);
-  /*!
-   * @brief Performs RHF calculation within the space of supplied MOs
-   * @param hamiltonian The hamiltonian
-   * @param prototype A State object specifying number of electrons, symmetry, spin
-   * If it is a Wavefunction , then that will be used also for specifying the configuration space, otherwise the default FCI
-   * @param threshold Convergence threshold
-   * @param maxIterations The maximum number of iterations to perform
-   * @return the energy of the state.
-   */
-  double RHF(const SymmetryMatrix::Operator &hamiltonian, const State &prototype, double thresh=1.0e-4, int maxIterations=20);
 
   SymmetryMatrix::Operator m_hamiltonian;
  public:
-  std::unique_ptr<SymmetryMatrix::Operator> m_densityMatrix; // the (state-averaged) density matrix
   std::vector<SymmetryMatrix::Operator> m_densityMatrices; // the individual state density matrices
 
   std::vector<std::shared_ptr<Wavefunction> > m_wavefunctions;
