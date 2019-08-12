@@ -226,7 +226,7 @@ public:
      */
     std::tuple<std::vector<size_t>, std::vector<double>>
     select(const std::vector<double> &measure, const size_t maximumNumber = 1000,
-           const double threshold = 0) const {return {{0}, {0}};};
+           const double threshold = 0) const {return std::tuple<std::vector<size_t>, std::vector<double>>{{0}, {0}};};
 
     /*!
      * @copydoc IterativeSolver::vector::scal
