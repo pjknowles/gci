@@ -1,7 +1,6 @@
 #include "gciDavidson.h"
 
 #include <iomanip>
-#include <arpa/nameser.h>
 
 namespace gci {
 namespace run {
