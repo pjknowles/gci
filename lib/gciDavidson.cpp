@@ -323,6 +323,7 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
         ww.back().allocate_buffer();
         ww.back().zero();
         auto n = diagonalH->minloc(root + 1);
+        n = root;
         if (std::count(roots.begin(), roots.begin() + root, n) != 0)
             throw std::logic_error("Davidson::initialize duplicate guess vector, n =" + std::to_string(n));
         roots[root] = n;
@@ -345,7 +346,7 @@ void Davidson<t_Wavefunction, t_Operator>::action() {
         g.zero();
         if (solver.active().at(k)) {
             auto prof = profiler->push("Hc");
-            g.operatorOnWavefunction(*ham, x, parallel_stringset);
+            g.operatorOnWavefunction(*ham.get(), x, parallel_stringset);
         }
 //        write_vec<t_Wavefunction>(g, "residual berfore addVector " + std::to_string(k) + " ");
     }
@@ -377,5 +378,5 @@ template
 class gci::run::Davidson<gci::MixedWavefunction, gci::MixedOperatorSecondQuant>;
 
 template
-    class gci::run::Davidson<gci::Wavefunction, SymmetryMatrix::Operator>;
+class gci::run::Davidson<gci::Wavefunction, SymmetryMatrix::Operator>;
 

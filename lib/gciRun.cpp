@@ -1596,9 +1596,7 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
     double value;
     FCIdump::integralType type;
     auto &integrals_a = result.O1(true);
-    integrals_a.assign(0);
     auto &integrals_b = result.O1(false);
-    integrals_b.assign(0);
     auto &integrals_aa = result.O2(true, true);
     auto &integrals_ab = result.O2(true, false);
     auto &integrals_bb = result.O2(false, false);
