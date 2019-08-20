@@ -1590,6 +1590,7 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
     for (const auto &s : orbital_symmetries)
       dim.at(s - 1)++;
     SymmetryMatrix::Operator result(dim, 2, dump.parameter("IUHF")[0] > 0, 0, true, false, "Hamiltonian");
+    result.zero();
 
     dump.rewind();
     double value;
