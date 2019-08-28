@@ -11,7 +11,7 @@ declare_dependency(
 
 declare_dependency(
         IterativeSolver
-        https://gitlab+deploy-token-74790:BQ4_qi9fyN7sypf6H__m@gitlab.com/molpro/IterativeSolver
+        https://gitlab+deploy-token-74790:BQ4_qi9fyN7sypf6H__m@gitlab.com/molpro/IterativeSolver.git
 )
 
 declare_dependency(
