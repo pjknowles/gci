@@ -85,7 +85,7 @@ MixedOperator::MixedOperator
     freq.resize(nMode);
 //    std::transform(freq.begin(), freq.end(), freq.begin(), [](auto el) {return el * constants::CM_TO_AU;});
     zpe = 0.5 * std::accumulate(freq.cbegin(), freq.cend(), 0.0);
-    std::cout << "MixedOperator: zpe = " << zpe << std::endl;
+//    std::cout << "MixedOperator: zpe = " << zpe << std::endl;
     auto file_exists = [](const std::string &fname) {
         if (std::ifstream{fname}.fail()) {
             std::cout << "Warning (MixedOperator): fcidump not found   " << fname << std::endl;
