@@ -252,6 +252,8 @@ void Davidson<t_Wavefunction, t_Operator>::prepareGuess() { }
 template<>
 void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
     // Currently assumes only 1 mode
+    auto prof = profiler->push("prepareGuess");
+    std::cout << "Entered Davidson::prepareGuess()" << std::endl;
     auto nS = nState;
     auto nMode = options.parameter("NMODE", int(0));
     Wavefunction w = prototype->wavefunctionAt(0);
@@ -276,6 +278,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
             ww[root].set(ind_modal * elDim + j, elecSolver.ww[ind_elec_state].at(j));
         }
     }
+    std::cout << "Exit Davidson::prepareGuess()" << std::endl;
 }
 
 template<class t_Wavefunction, class t_Operator>
@@ -323,7 +326,7 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
         ww.back().allocate_buffer();
         ww.back().zero();
         auto n = diagonalH->minloc(root + 1);
-        n = root;
+//        n = root;
         if (std::count(roots.begin(), roots.begin() + root, n) != 0)
             throw std::logic_error("Davidson::initialize duplicate guess vector, n =" + std::to_string(n));
         roots[root] = n;
