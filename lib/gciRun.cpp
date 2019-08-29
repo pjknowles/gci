@@ -389,13 +389,13 @@ std::vector<double> Run::run() {
         if (options.parameter("VIBRONIC", 0)) {
             if (options.parameter("SECOND_QUANT", 0)) {
                 auto ham = MixedOperatorSecondQuant(FCIdump(options.parameter("FCIDUMP", "fcidump")));
-                auto wfn = MixedWavefunction(options);
+                auto wfn = MixedWavefunction(options, prototype);
                 run::Davidson<MixedWavefunction, MixedOperatorSecondQuant> solver(std::move(wfn), std::move(ham),
                                                                                   options);
                 solver.run();
             } else {
                 auto ham = MixedOperator(FCIdump(options.parameter("FCIDUMP", "fcidump")));
-                auto wfn = MixedWavefunction(options);
+                auto wfn = MixedWavefunction(options, prototype);
                 run::Davidson<MixedWavefunction, MixedOperator> solver(std::move(wfn), std::move(ham), options);
                 solver.run();
 //        auto ham2 = m_hamiltonian;
@@ -1621,26 +1621,32 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
         std::swap(sk, sl);
       }
       unsigned int sij = si ^sj;
+      unsigned int skl = sk ^sl;
 //      xout << "\nvalue: "<<value<<std::endl;
 //      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
 //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
 
       if (type == FCIdump::I2aa) {
+        if (sij != skl) continue;
         (sij ? integrals_aa.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) : integrals_aa.smat(sij, si, oi, oj)->block(sk)[
             ok * (ok + 1) / 2 + ol]) = value;
         (sij ? integrals_aa.smat(sij, sk, ok, ol)->blockMap(si)(oi, oj) : integrals_aa.smat(sij, sk, ok, ol)->block(si)[
             oi * (oi + 1) / 2 + oj]) = value;
       } else if (type == FCIdump::I2ab) {
+        if (sij != skl) continue;
         (sij ? integrals_ab.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) : integrals_ab.smat(sij, si, oi, oj)->block(sk)[
             ok * (ok + 1) / 2 + ol]) = value;
       } else if (type == FCIdump::I2bb) {
+        if (sij != skl) continue;
         (sij ? integrals_bb.smat(sij, si, oi, oj)->blockMap(sk)(ok, ol) : integrals_bb.smat(sij, si, oi, oj)->block(sk)[
             ok * (ok + 1) / 2 + ol]) = value;
         (sij ? integrals_bb.smat(sij, sk, ok, ol)->blockMap(si)(oi, oj) : integrals_bb.smat(sij, sk, ok, ol)->block(si)[
             oi * (oi + 1) / 2 + oj]) = value;
       } else if (type == FCIdump::I1a) {
+        if (si != sj) continue;
         integrals_a.block(si).at(oi * (oi + 1) / 2 + oj) = value;
       } else if (type == FCIdump::I1b) {
+        if (si != sj) continue;
         integrals_b.block(si).at(oi * (oi + 1) / 2 + oj) = value;
       } else if (type == FCIdump::I0)
         result.m_O0 = value;

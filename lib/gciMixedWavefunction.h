@@ -74,10 +74,10 @@ public:
     /*!
      * @brief Constructs the mixed wavefunction.
      */
-    explicit MixedWavefunction(const Options &options);
+    explicit MixedWavefunction(const Options &options, const State &prototype);
 
     MixedWavefunction(const MixedWavefunction &source, int option = 0)
-            : m_vibSpace(source.m_vibSpace),m_vibBasis(source.m_vibBasis), m_elDim(source.m_elDim),
+            : m_vibSpace(source.m_vibSpace), m_vibBasis(source.m_vibBasis), m_elDim(source.m_elDim),
               m_dimension(source.m_dimension) {
         if (source.m_wfn.empty()) return;
         m_wfn.emplace_back(source.m_wfn[0]);
@@ -177,13 +177,13 @@ public:
     std::vector<double> vec() const;
 
     //! A copy of the vibrational space
-    VibSpace vibSpace() const { return m_vibSpace; }
+    VibSpace vibSpace() const {return m_vibSpace;}
 
-    size_t size() const { return m_dimension; }
+    size_t size() const {return m_dimension;}
 
-    size_t elDim() const { return m_elDim; }
+    size_t elDim() const {return m_elDim;}
 
-    size_t vibDim() const { return m_vibBasis.vibDim(); }
+    size_t vibDim() const {return m_vibBasis.vibDim();}
 
 protected:
 
@@ -202,11 +202,11 @@ protected:
     std::vector<Wavefunction> m_wfn;
 
     size_t
-    wfn_size() const { return m_wfn.size(); } //!< Size of the wavefunction buffer (=size of vibrational space)
-    auto begin() { return m_wfn.begin(); } ///< beginning of this processor's data
-    auto end() { return m_wfn.end(); } ///< end of this processor's data
-    auto cbegin() const { return m_wfn.cbegin(); } ///< beginning of this processor's data
-    auto cend() const { return m_wfn.cend(); } ///< end of this processor's data
+    wfn_size() const {return m_wfn.size();} //!< Size of the wavefunction buffer (=size of vibrational space)
+    auto begin() {return m_wfn.begin();} ///< beginning of this processor's data
+    auto end() {return m_wfn.end();} ///< end of this processor's data
+    auto cbegin() const {return m_wfn.cbegin();} ///< beginning of this processor's data
+    auto cend() const {return m_wfn.cend();} ///< end of this processor's data
 
 public:
     /*!
@@ -237,8 +237,8 @@ public:
      * @todo Implement
      */
     std::tuple<std::vector<size_t>, std::vector<double>>
-    select(const std::vector<double>& measure, const size_t maximumNumber = 1000,
-           const double threshold = 0) const { return std::tuple<std::vector<size_t>, std::vector<double>>{{0}, {0}}; };
+    select(const std::vector<double> &measure, const size_t maximumNumber = 1000,
+           const double threshold = 0) const {return std::tuple<std::vector<size_t>, std::vector<double>>{{0}, {0}};};
 
     /*!
      * @copydoc IterativeSolver::vector::scal
@@ -280,7 +280,7 @@ public:
      * @copydoc IterativeSolver::vector::clone
      * @todo change to managed pointer
      */
-    MixedWavefunction *clone(int option = 0) const { return new MixedWavefunction(*this); }
+    MixedWavefunction *clone(int option = 0) const {return new MixedWavefunction(*this);}
 
     void set(double val);///< set all elements to a scalar
     void set(size_t ind, double val);///< set one element to a scalar
@@ -339,7 +339,7 @@ public:
 //    std::map<std::string, double> m_properties;
 
     //! @todo Implement
-    void settilesize(int t = -1, int a = -1, int b = -1) {};
+    void settilesize(int t = -1, int a = -1, int b = -1) { };
 };  // class MixedWavefunction
 
 double operator*(const MixedWavefunction &w1, const MixedWavefunction &w2);///< inner product of two wavefunctions

@@ -5,12 +5,12 @@
 
 namespace gci {
 
-MixedWavefunction::MixedWavefunction(const Options &options)
+MixedWavefunction::MixedWavefunction(const Options &options, const State &prototype)
         : m_vibSpace(options.parameter("NMODE", 0), options.parameter("NMODAL", 1),
                      options.parameter("VIB_EXC_LVL", 1)), m_vibBasis(m_vibSpace), m_elDim(0), m_dimension(0) {
     // Zeroth order
-    auto state = State(options);
-    m_wfn.emplace_back(state);
+//    auto state = State(options);
+    m_wfn.emplace_back(prototype);
     m_elDim = m_wfn[0].size();
     m_vibBasis.generateFullSpace();
     m_wfn.resize(m_vibBasis.vibDim(), m_wfn[0]);
