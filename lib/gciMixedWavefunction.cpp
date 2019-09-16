@@ -90,10 +90,16 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperator &ham, const M
     }
 }
 
+//TODO parallelise with mpi
+//     in current desing, running with 1 process has to be treated as a special case
 void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &ham, const MixedWavefunction &w,
                                                bool parallel_stringset) {
     auto prof = profiler->push("MixedWavefunction::operatorOnWavefunction");
-    Wavefunction wfn_scaled(m_wfn[0]);
+//    Wavefunction wfn_scaled(m_wfn[0]);
+    enum class tag {
+        wfn_buffer = 0,
+        done = 1
+    };
     for (const auto &bra : m_vibBasis) {
         auto iBra = m_vibBasis.index(bra);
         // Purely electronic operators
@@ -126,6 +132,15 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             }
         }
         // all mixed vibrational - electronic operators
+        // if (rank != 0); create wfn_res; zero it
+        // int* res_buffer;
+        // int buffer_size = m_wfn[0].size();
+        // if (rank != 0) {
+        // auto bra_wfn = Wavefunction(m_wfn[0]);
+        // auto ket_wfn = Wavefunction(m_wfn[0]);
+        // bra_wfn.allocate();
+        // ket_wfn.allocate();
+        // res_buffer = bra_wfn.buffer();
         for (const auto &mixedTerm : ham.mixedHam) {
             auto p = profiler->push(mixedTerm.first);
             const auto &vibTensor = mixedTerm.second;
@@ -136,9 +151,47 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
                 auto ket = bra.excite(vibExc);
                 if (!ket.withinSpace(m_vibSpace)) continue;
                 auto iKet = m_vibBasis.index(ket);
+                // ask NextTask() if this task is yours
+                // ask root for the ket buffer
+                //
+                /* if (! NextTask()) continue;
+                 * auto status = MPI_STATUS;
+                 * MPI_Send(iKet, 1, MPI_INT, 0, tag::wfn_buffer, MPI_COMM_COMPUT);
+                 * MPI_Recv(ket_wfn.buffer, buffer_size, MPI_DOUBLE_PRECISION, 0, tag::wfn_buffer, MPI_COMM_COMPUTE, *status);
+                 * // check status and throw an error if data was not received
+                 */
                 m_wfn[iBra].operatorOnWavefunction(op, w.m_wfn[iKet], parallel_stringset);
+//                bra_wfn.operatorOnWavefunction(op, wfn_ket, parallel_stringset);
             }
+            /* MPI_Send(1, 1, MPI_INT, 0, tag::done, MPI_COMM_COMPUT)
+             * MPI_Reduce(res_buffer, null_ptr, buffer_size, MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_COMPUT)
+             */
         }
+        /* } else {
+         *     res_buffer = m_wfn[iBra].buffer();
+         *     int n_processes_done = 0, comm_size;
+         *     MPI_STATUS status, loc_status;
+         *     MPI_Comm_Size(MPI_COMM_COMPUT, &size);
+         *     while (n_processes_done != comm_size - 1){
+         *         MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_COMPUTE, status);
+         *         switch (status.MPI_TAG){
+         *             case (tag::wfn_buffer):
+         *                 {
+         *                     int iKet;
+         *                     MPI_Recv(&iKet, 1, MPI_INT, status.MPI_SOURCE, tag::wfn_buffer, MPI_COMM_COMPUTE, loc_status);
+         *                     MPI_Send(&m_wfn[iKet].buffer(), m_wfn[iKet].size(), MPI_DOUBLE, status.MPI_SOURCE, tag::wfn_buffer, MPI_COMM_COMPUTE, loc_status);
+         *                 }
+         *             case (tag::done):
+         *                 {
+         *                     int n;
+         *                     MPI_Recv(&n, 1, MPI_INT, status.MPI_SOURCE, tag::done, MPI_COMM_COMPUTE, loc_status);
+         *                     n_processes_done += 1;
+         *                 }
+         *         }
+         *     }
+         *     MPI_Reduce(MPI_INPLACE, res_buffer, buffer_size, MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_COMPUT)
+         * }
+         */
     }
 }
 
