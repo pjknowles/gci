@@ -112,7 +112,8 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             auto p = profiler->push("Hvib");
             for (const auto &vibEl : ham.Hvib.tensor) {
                 auto val = vibEl.second.oper;
-                auto &vibExc = vibEl.second.exc;
+                auto vibExc = VibExcitation{vibEl.second.exc};
+                vibExc.conjugate();
                 auto ket = bra.excite(vibExc);
                 if (!ket.withinSpace(m_vibSpace)) continue;
                 auto iKet = m_vibBasis.index(ket);
@@ -130,7 +131,8 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             const auto &vibTensor = mixedTerm.second;
             for (const auto &vibEl : vibTensor.tensor) {
                 auto &op = vibEl.second.oper;
-                auto &vibExc = vibEl.second.exc;
+                auto vibExc = VibExcitation{vibEl.second.exc};
+                vibExc.conjugate();
                 auto ket = bra.excite(vibExc);
                 if (!ket.withinSpace(m_vibSpace)) continue;
                 auto iKet = m_vibBasis.index(ket);
