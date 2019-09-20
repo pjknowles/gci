@@ -394,10 +394,11 @@ std::vector<double> Run::run() {
                                                                                   options);
                 solver.run();
             } else {
-                auto ham = MixedOperator(FCIdump(options.parameter("FCIDUMP", "fcidump")));
-                auto wfn = MixedWavefunction(options, prototype);
-                run::Davidson<MixedWavefunction, MixedOperator> solver(std::move(wfn), std::move(ham), options);
-                solver.run();
+                throw std::runtime_error("Polynomial Hamiltonian is not supported in the new version");
+//                auto ham = MixedOperator(FCIdump(options.parameter("FCIDUMP", "fcidump")));
+//                auto wfn = MixedWavefunction(options, prototype);
+//                run::Davidson<MixedWavefunction, MixedOperator> solver(std::move(wfn), std::move(ham), options);
+//                solver.run();
 //        auto ham2 = m_hamiltonian;
 //        auto wfn2 = Wavefunction(prototype);
 //        auto solver2 = run::Davidson<Wavefunction, SymmetryMatrix::Operator>(std::move(wfn2), std::move(ham2), options);

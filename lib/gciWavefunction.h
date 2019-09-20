@@ -15,10 +15,12 @@
 #include "gciOrbitals.h"
 
 namespace gci {
+class MixedWavefunction;
 /*!
  * \brief The Wavefunction class, which holds a configuration expansion in the tensor space defined by a hamiltonian
  */
 class Wavefunction : public State {
+    friend MixedWavefunction;
  public:
   using value_type = double;
 
@@ -29,7 +31,7 @@ class Wavefunction : public State {
      * \param symmetry Spatial symmetry
      * \param ms2 Sz quantum number times 2
      */
-  Wavefunction(OrbitalSpace h, int nelec, int symmetry, int ms2) : State(h, nelec, symmetry, ms2), m_sparse(false) {
+  Wavefunction(OrbitalSpace h, int nelec, int symmetry, int ms2) : State(h, nelec, symmetry, ms2), m_sparse(false), dimension(0) {
     buildStrings();
   }
   Wavefunction(OrbitalSpace *h, int nelec, int symmetry, int ms2);
@@ -40,7 +42,7 @@ class Wavefunction : public State {
      */
   explicit Wavefunction(const State &state);
 
-  Wavefunction(const Wavefunction &source, int option) : dimension(source.dimension) {
+  Wavefunction(const Wavefunction &source, int option) :m_sparse(source.m_sparse), dimension(source.dimension) {
 //   std::cout <<"Wavefunction copy constructor, option="<<option<<std::endl;
     *this = source;
   }

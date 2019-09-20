@@ -69,82 +69,6 @@ void write_vec(const t_Wavefunction &w, const std::string &message) {
     std::cout << "}" << std::endl;
 }
 
-template<class t_Wavefunction, class t_Operator>
-void printDiagonalHFmatrixElements(const t_Wavefunction &wfn, const t_Operator &ham, int n) { }
-
-/*!
- * @brief Prints expectation values of all terms in the Hamiltonian for specified HF determinant
- * @param wfn
- * @param ham
- * @param n Index of electronic determinant
- */
-template<>
-void
-printDiagonalHFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunction &wfn, const MixedOperator &ham,
-                                                                int n) {
-    MixedOperator hamMod(ham);
-    for (auto &op : hamMod.Hmix[VibOpType::Qsq]) {
-        if (op.vibOp.mode[0] != op.vibOp.mode[1]) continue;
-        auto i = op.vibOp.mode[0];
-        op.Hel.m_O0 += std::pow(hamMod.freq[i], 2);
-    }
-    auto matEls = wfn.hfMatElems(hamMod, n);
-    std::cout << "Matrix elements over Determinant n = " << n << std::endl;
-    xout << wfn.wavefunctionAt(0).determinantAt(n).str() << std::endl;
-    for (const auto &el : matEls) {
-        std::cout << el.first << " = " << el.second << std::endl;
-    }
-}
-
-template<class t_Wavefunction, class t_Operator>
-void printMCSCFmatrixElements(const t_Wavefunction &wfn, const t_Operator &ham) { }
-
-/*!
- * @brief Prints expectation values of all terms in the Hamiltonian over MCSCF
- * @param wfn
- * @param ham
- */
-template<>
-void
-printMCSCFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunction &wfn, const MixedOperator &ham) {
-    MixedOperator hamMod(ham);
-    for (auto &op : hamMod.Hmix[VibOpType::Qsq]) {
-        if (op.vibOp.mode[0] != op.vibOp.mode[1]) continue;
-        auto i = op.vibOp.mode[0];
-        op.Hel.m_O0 += std::pow(hamMod.freq[i], 2);
-    }
-    // Write Determinants
-    for (size_t iD = 0; iD < wfn.elDim(); ++iD)
-        xout << wfn.wavefunctionAt(0).determinantAt(iD).str() << std::endl;
-    auto w_mcscf = std::vector<MixedWavefunction>(4, MixedWavefunction(wfn));
-    for (auto &el : w_mcscf) el.set(0.);
-    xout << "MCSCF expecation values of electronic terms " << std::endl;
-    w_mcscf[0].set(0, 0.967881967969);
-    w_mcscf[0].set(3, -0.251405043863);
-    w_mcscf[1].set(1, 0.707106781187);
-    w_mcscf[1].set(2, -0.707106781187);
-    w_mcscf[2].set(1, 0.707106781187);
-    w_mcscf[2].set(2, 0.707106781187);
-    w_mcscf[3].set(0, 0.251405043863);
-    w_mcscf[3].set(3, 0.967881967969);
-    for (int istate = 0; istate < 4; ++istate) {
-        auto matEls = w_mcscf[istate].ciMatElems(hamMod);
-        std::cout << "MCSCF state =  " << istate << std::endl;
-        for (const auto &el : matEls) {
-            std::cout << "  " << el.first << " = " << el.second << std::endl;
-        }
-    }
-    xout << "Ground state energies with vibrations " << std::endl;
-    // E = cT . H . C
-    auto blankW = MixedWavefunction(wfn);
-    for (int iState = 0; iState < 4; ++iState) {
-        blankW.set(0);
-        blankW.operatorOnWavefunction(ham, w_mcscf[iState]);
-        auto e = blankW.dot(w_mcscf[iState]);
-        xout << e << ",  ";
-    }
-    xout << std::endl;
-}
 
 template<class t_Wavefunction, class t_Operator>
 void printSCFmatrixElements(const t_Wavefunction &wfn, const t_Operator &ham) { }
@@ -220,32 +144,6 @@ void printCImatrixElements(const t_Wavefunction &wfn, const t_Operator &ham) {
     xout << "Energy = " << e << std::endl;
 }
 
-/*!
- * @brief Prints expectation values of all terms in the Hamiltonian over MCSCF
- * @param wfn
- * @param ham
- */
-template<>
-void
-printCImatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunction &wfn, const MixedOperator &ham) {
-    MixedWavefunction dummyWfn(wfn);
-    dummyWfn.zero();
-    dummyWfn.operatorOnWavefunction(ham, wfn, false);
-    auto e = dummyWfn.dot(wfn);
-    MixedOperator hamMod(ham);
-    for (auto &op : hamMod.Hmix[VibOpType::Qsq]) {
-        if (op.vibOp.mode[0] != op.vibOp.mode[1]) continue;
-        auto i = op.vibOp.mode[0];
-        op.Hel.m_O0 += std::pow(hamMod.freq[i], 2);
-    }
-    xout << "CI expecation values of electronic terms " << std::endl;
-    xout << "Energy = " << e << std::endl;
-    auto matEls = wfn.ciMatElems(hamMod);
-    for (const auto &el : matEls) {
-        std::cout << "  " << el.first << " = " << el.second << std::endl;
-    }
-}
-
 template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::prepareGuess() { }
 
@@ -265,7 +163,8 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
     auto modOptions = Options(options);
     modOptions.addParameter("NSTATE", (int) n);
     // Modify options to choose the correct number of electronic states
-    Davidson<Wavefunction, SymmetryMatrix::Operator> elecSolver(std::move(w), SymmetryMatrix::Operator(ham->Hel),
+    Davidson<Wavefunction, SymmetryMatrix::Operator> elecSolver(std::move(w),
+                                                                SymmetryMatrix::Operator(ham->elHam["Hel[0]"]),
                                                                 modOptions);
     elecSolver.run();
     // Loop over electronic states, loop over modals, set each element of the electronic wavefunction
@@ -288,13 +187,6 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     initialize();
     prepareGuess();
 //    printMatrix();
-//    printDiagonalHFmatrixElements(*prototype, *ham, 0);
-//    printDiagonalHFmatrixElements(*prototype, *ham, 1);
-//    printDiagonalHFmatrixElements(*prototype, *ham, 2);
-//    printDiagonalHFmatrixElements(*prototype, *ham, 3);
-//    printDiagonalHFmatrixElements(*prototype, *ham, 4);
-//    printMCSCFmatrixElements(*prototype, *ham);
-//    printSCFmatrixElements(*prototype, *ham);
     for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
         action();
         solver.addVector(ww, gg);
@@ -305,14 +197,6 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     xout << "energies: ";
     for (unsigned int i = 0; i < nState; ++i) xout << solver.eigenvalues()[i] << ", ";
     xout << std::endl;
-//    for (auto root = 0; root < nState; root++) {
-//        write_vec(ww[root],
-//                  "eigenvector " + std::to_string(root) + " active=" + std::to_string(solver.active(root)) + " error=" +
-//                  std::to_string(solver.errors()[root]) + ":    ");
-//        xout << "eigenvector " + std::to_string(root) + " active=" + std::to_string(solver.active(root)) + " error=" +
-//                std::to_string(solver.errors()[root]) << std::endl;
-//        printCImatrixElements(ww[root], *ham);
-//    }
 }
 
 template<class t_Wavefunction, class t_Operator>
@@ -320,13 +204,13 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
     if (!diagonalH) diagonalH = std::make_shared<t_Wavefunction>(*prototype, 0);
     diagonalH->allocate_buffer();
     diagonalH->diagonalOperator(*ham);
+    auto minLocs =diagonalH->minlocN(nState);
     std::vector<int> roots(nState, 0);
     for (unsigned int root = 0; root < nState; root++) {
         ww.push_back(t_Wavefunction(*prototype, 0));
         ww.back().allocate_buffer();
         ww.back().zero();
-        auto n = diagonalH->minloc(root + 1);
-//        n = root;
+        auto n = minLocs[root];
         if (std::count(roots.begin(), roots.begin() + root, n) != 0)
             throw std::logic_error("Davidson::initialize duplicate guess vector, n =" + std::to_string(n));
         roots[root] = n;
@@ -344,38 +228,32 @@ template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::action() {
     for (size_t k = 0; k < ww.size(); k++) {
         const t_Wavefunction &x = ww[k];
-//        write_vec<t_Wavefunction>(x, "eigenvector applied on Hc " + std::to_string(k) + " before update");
         t_Wavefunction &g = gg[k];
         g.zero();
         if (solver.active().at(k)) {
             auto prof = profiler->push("Hc");
             g.operatorOnWavefunction(*ham.get(), x, parallel_stringset);
         }
-//        write_vec<t_Wavefunction>(g, "residual berfore addVector " + std::to_string(k) + " ");
     }
 }
 
 template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::update() {
     auto eigval = solver.eigenvalues();
+    auto minLocs =diagonalH->minlocN(nState);
     for (size_t state = 0; state < nState; state++) {
         t_Wavefunction &cw = ww[state];
         const t_Wavefunction &gw = gg[state];
-//        write_vec<t_Wavefunction>(cw, "eigenvector " + std::to_string(state) + " before update");
-//        write_vec<t_Wavefunction>(gw, "residual " + std::to_string(state) + " ");
         auto shift = -eigval[state] + 1e-10;
         shift += 2 * std::numeric_limits<value_type>::epsilon() * std::max<value_type>(1, std::abs(
-                diagonalH->at(diagonalH->minloc(state + 1)))); // to guard against zero
+                diagonalH->at(minLocs[state]))); // to guard against zero
         cw.divide(&gw, diagonalH.get(), shift, true, true);
-//        write_vec<t_Wavefunction>(cw, "eigenvector " + std::to_string(state) + " after update");
     }
 }
 
 }  // namespace run
 }  // namespace gci
 
-template
-class gci::run::Davidson<gci::MixedWavefunction, gci::MixedOperator>;
 
 template
 class gci::run::Davidson<gci::MixedWavefunction, gci::MixedOperatorSecondQuant>;

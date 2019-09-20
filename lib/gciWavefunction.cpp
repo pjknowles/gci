@@ -21,11 +21,11 @@
 //using Wavefunction = gci::Wavefunction;
 namespace gci{
 
-Wavefunction::Wavefunction(OrbitalSpace *h, int n, int s, int m2) : State(h, n, s, m2), m_sparse(false) {
+Wavefunction::Wavefunction(OrbitalSpace *h, int n, int s, int m2) : State(h, n, s, m2), m_sparse(false), dimension(0) {
     buildStrings();
 }
 
-Wavefunction::Wavefunction(const State &state) : State(state), m_sparse(false) {
+Wavefunction::Wavefunction(const State &state) : State(state), m_sparse(false), dimension(0) {
     buildStrings();
 }
 

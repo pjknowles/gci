@@ -7,6 +7,7 @@
 
 namespace gci {
 
+class HProductSet;
 
 /*!
  * @brief Mixed electron-vibration operator in a fully second quantized form.
@@ -22,12 +23,16 @@ public:
     using hel_t = SymmetryMatrix::Operator;
     int nMode; //!< Number of vibrational modes
     int nModal; //!< Number of modals per mode (for now assumed the same for each mode)
-    hel_t Hel; //!< Purely electronic terms
+//    hel_t Hel; //!< Purely electronic terms
     VibOperator<double> Hvib;//!< Purely vibrational term
-    std::map<std::string, hel_t> nacHel; //!< Purely electronic terms from kinetic energy coupling
+    std::map<std::string, hel_t> elHam; //!< Purely electronic terms from kinetic energy coupling
     std::map<std::string, VibOperator<hel_t >> mixedHam;//!< Mixed electronic-vibrational terms
 
     explicit MixedOperatorSecondQuant(const FCIdump &fcidump);
+    /*!
+     * @brief Checks if bra and ket vibrational basis are connected by the mixed Hamiltonian
+     */
+    bool connected(const HProduct &bra, const HProduct &ket) const;
 
 protected:
     bool includeHel;

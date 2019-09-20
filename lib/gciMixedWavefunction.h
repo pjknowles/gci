@@ -32,73 +32,63 @@ namespace gci {
  * Nomenclature:
  *      modal - one particle vibrational basis function
  *
- * Currently hardcoded for working with up to second order truncated Molecular Hamiltonian (BBO Hamiltonian).
+ * The full wavefunction is stored in the global array buffer. It is ordered by the vibrational basis, with each
+ * vibrational basis having a corresponding full electronic CI vector.
+ * Psi = {psi_{p,q}_0, psi_{p,q}_1A, psi_{p,q}_2A,..., psi_{p,q}_1B, ..., psi_{p,q}_1A_1B, ...}
+ * where psi_{p,q} is the electronic CI wavefunction and indices IA imply direct product with HO basis function I of
+ * mode A.
  *
- * H = H_el + H_s + H_vib + H1_int + H2_int
+ * Prallelism
+ * ----------
+ * The full wavefunction is stored in a global array. Relevant chunks are copied into the Wavefunction buffer
+ * for computation. The buffer is copied (or accumulated etc) back into GA after which it is released.
  *
- * H_el -- BO electronic Hamiltonian
  *
- * H_s -- diagonal BO part of the Hamiltonian (purely electronic)
- *
- * H_vib -- vibrational Harmonic oscillator Hamiltonian
- *
- * H1_int = (d/dX_A H_el) dX_A + (m_dg n d_mn) d/dX_A
- * couples electronic degrees of freedom with a single vibrational mode.
- * Due to the nature of HO basis, only adjacent vibrational states are coupled
- *
- * H2_int = (d/dX_A d/dX_B H_el) dX_A dX_B
- * couples electronic degrees of freedom with two vibrational modes
- *
- * This introduces a lot of sparsity in Hamiltonian, but the wavefunction remains coupled.
- *
- * Wavefunction with only 1 mode coupling:
- * Psi = sum_A C_{p,q,I_A} |p,q> |I_A> |0_B> |0_C> ...
- *
- * Order of vibrational product basis:
- *  - index(CIS) < index(CISD)
- *  - size(CIS, mode_A) = nModal_A
- *  - Let Phi_mode_A be hartree products with mode A excited
- *    - CIS = {Phi_mode_1, Phi_mode_2, ...}
- *    - CISD = {Phi_mode_12, Phi_mode_13, ..., Phi_mode_23, ...}
- *  - and continued for CISDT, CISDTQ etc.
- *
- * In practice the coefficients C_{p,q,I_A} are stored as a vector<C_{p,q}>(n = nModes * nModals).
- * This class is in fact mostly a wrapper of gci::Wavefunction with a few hardcoded expressions for the vibrational
- * parts of the Hamiltonian.
  */
 class MixedWavefunction {
-    // Inheriting the vector class brings the functions that need to be implemented for linera algebra solver to work.
 public:
     using value_type = double;
+protected:
+
+    VibSpace m_vibSpace; //!< Parameters defining the vibrational space of current wavefunction
+    HProductSet m_vibBasis; //!< Vibrational basis for the full space of current wavefunction
+    size_t m_elDim; //!< Dimension of the electronic (slater determinant) space
+    size_t m_dimension; //!< Overall dimension of the direct product Fock space
+
+    /*!
+     * @brief Full wavefunction.
+     *
+     * Psi = {psi_{p,q}_0, psi_{p,q}_1A, psi_{p,q}_2A,..., psi_{p,q}_1B, ..., psi_{p,q}_1A_1B, ...}
+     * where psi_{p,q} is the electronic CI wavefunction and indices IA imply direct product with HO basis function I of
+     * mode A.
+     */
+//    std::vector<Wavefunction> m_wfn;
+    /*!
+     * @brief Prototype electronic wavefunction
+     *
+     * It's buffer is populated with relevant section from GA before computation
+     */
+    Wavefunction m_prototype;
+    int m_ga_handle; //!< Global Array handle, needed by GA libary
+    int m_ga_chunk; //!< GA chunck size
+    bool m_ga_allocated; //!< Flags that GA has been allocated
+    MPI_Comm m_communicator; //!< Creates a new communicator for using parallel electronic operations
+public:
 
     /*!
      * @brief Constructs the mixed wavefunction.
      */
     explicit MixedWavefunction(const Options &options, const State &prototype);
 
-    MixedWavefunction(const MixedWavefunction &source, int option = 0)
-            : m_vibSpace(source.m_vibSpace), m_vibBasis(source.m_vibBasis), m_elDim(source.m_elDim),
-              m_dimension(source.m_dimension) {
-        if (source.m_wfn.empty()) return;
-        m_wfn.emplace_back(source.m_wfn[0]);
-        m_wfn.resize(m_vibBasis.vibDim(), m_wfn[0]);
-        allocate_buffer();
-        m_wfn = source.m_wfn;
-    }
+    MixedWavefunction(const MixedWavefunction &source, int option = 0);
 
-    ~MixedWavefunction() = default;
+    ~MixedWavefunction();
 
-    //! Flags if wavefunction buffer has been allocated. Does not guarantee that each element is non-empty as well.
-    bool empty() const;
+    //! Flags if wavefunction vector has been allocated. Does not guarantee that Wavefunction buffers are allocated.
+    bool empty() const; //!< flags if GA has been created
 
-    void allocate_buffer(); //!< allocate buffer to full size
-
-    /*!
-       * \brief find the index of the smallest component
-       * \param n the n'th smallest will be found
-       * \return offset in buffer
-       */
-    size_t minloc(size_t n = 1) const;
+    void allocate_buffer(); //!< allocates GA buffer
+    void copy_buffer(const MixedWavefunction &source); //!< duplicates GA buffer
 
     /*!
        * \brief find the index of n smallest components
@@ -115,25 +105,27 @@ public:
     double at(size_t offset) const;
 
     /*!
-     * @brief Returns a constant reference to a wavefunction corresponding to vibrational product under offset
-     * @param offset Index to the vibrational product
+     * @brief Returns a wavefunction corresponding to vibrational product under offset
+     * @param iVib Index to the vibrational product
      * @return Reference to a wavefunction under offset
      */
-    const Wavefunction &wavefunctionAt(size_t offset) const {
-        return m_wfn[offset];
-    }
+    Wavefunction wavefunctionAt(size_t iVib);
 
     //! @brief Writes elements of wavefunction vector into a string
     std::string str() const;
 
+protected:
     /*!
-     * \brief Add to this object the action of an operator on another wavefunction
-     * \param ham Mixed Hamiltonian operator
-     * \param w Other mixed Wavefunction
-     * \param parallel_stringset whether to use parallel algorithm in StringSet construction
+     * @brief Updates boundaries in GA for a block corresponding to electronic wavefunction under vibrational
+     * index ``indKet``
+     * @param iVib vibrational index of the electronic Wavefunction
+     * @param lo index of the start of the block
+     * @param hi index of the end of the block (inclusive)
      */
-    void
-    operatorOnWavefunction(const MixedOperator &ham, const MixedWavefunction &w, bool parallel_stringset = false);
+    static void ga_wfn_block_bound(int iVib, int *lo, int *hi, int dimension);
+    static void ga_copy_to_local(int ga_handle, int iVib, Wavefunction &wfn, int dimension);
+    static void ga_accumulate(int ga_handle, int iVib, Wavefunction &wfn, int dimension, int scaling_constant = 1.0);
+public:
 
     /*!
      * \brief Add to this object the action of an operator on another wavefunction
@@ -146,30 +138,9 @@ public:
 
     /*!
      * @brief Set this object to the diagonal elements of the hamiltonian
-     * @param ham
-     */
-    void diagonalOperator(const MixedOperator &ham, bool parallel_stringset = false);
-
-    /*!
-     * @brief Set this object to the diagonal elements of the hamiltonian
      * \param ham Fully second quantized mixed Hamiltonian operator
      */
     void diagonalOperator(const MixedOperatorSecondQuant &ham, bool parallel_stringset = false);
-
-    /*!
-     * @brief Evaluates electronic components of the mixed Hamiltonian for a particular HF state
-     * @param ham Mixed Hamiltonian
-     * @param n HF state
-     * @return maps operator name to its expectation value. See definition for naming converntion.
-     */
-    std::map<std::string, double> hfMatElems(const MixedOperator &ham, unsigned int n) const;
-
-    /*!
-     * @brief Evaluates expectation value of electronic MixedOperator terms over electronic wfn stored at vibrational GS
-     * @param ham Mixed Hamiltonian
-     * @return maps operator name to its expectation value. See definition for naming converntion.
-     */
-    std::map<std::string, double> ciMatElems(const MixedOperator &ham) const;
 
     /*!
      * @return Returns all coefficients in a single vector
@@ -185,29 +156,6 @@ public:
 
     size_t vibDim() const {return m_vibBasis.vibDim();}
 
-protected:
-
-    VibSpace m_vibSpace; //!< Parameters defining the vibrational space of current wavefunction
-    HProductSet m_vibBasis; //!< Vibrational basis for the full space of current wavefunction
-    size_t m_elDim; //!< Dimension of the electronic (slater determinant) space
-    size_t m_dimension; //!< Overall dimension of the direct product Fock space
-
-    /*!
-     * @brief Overall wavefunction.
-     *
-     * Psi = {psi_{p,q}_0, psi_{p,q}_1A, psi_{p,q}_2A,..., psi_{p,q}_1B, ..., psi_{p,q}_1A_1B, ...}
-     * where psi_{p,q} is the electronic CI wavefunction and indices IA imply direct product with HO basis function I of
-     * mode A.
-     */
-    std::vector<Wavefunction> m_wfn;
-
-    size_t
-    wfn_size() const {return m_wfn.size();} //!< Size of the wavefunction buffer (=size of vibrational space)
-    auto begin() {return m_wfn.begin();} ///< beginning of this processor's data
-    auto end() {return m_wfn.end();} ///< end of this processor's data
-    auto cbegin() const {return m_wfn.cbegin();} ///< beginning of this processor's data
-    auto cend() const {return m_wfn.cend();} ///< end of this processor's data
-
 public:
     /*!
      * @brief Checks that the two wavefunctions are of the same electronic State and of the same dimension.
@@ -216,7 +164,7 @@ public:
 
     /*! @copydoc IterativeSolver::vector::axpy
      */
-    void axpy(double a, const MixedWavefunction &other);
+    void axpy(double a, const MixedWavefunction &x);
 
     /*!
      * @copydoc IterativeSolver::vector::axpy(scalar,const vector<scalar>&)
@@ -244,6 +192,11 @@ public:
      * @copydoc IterativeSolver::vector::scal
      */
     void scal(double a);
+    void add(const MixedWavefunction &other);
+    void add(double a);
+    void sub(const MixedWavefunction &other);
+    void sub(double a);
+    void recip();
 
     /*!
      * @copydoc IterativeSolver::vector::dot
@@ -302,19 +255,6 @@ public:
     double update(const Wavefunction &diagonalH,
                   double &eTruncated,
                   const double dEmax = 0.0) = delete;
-
-    /*!
-     * \brief addAbsPower Evaluate this[i] += factor * abs(c[I])^k * c[I]
-     * \param c
-     * \param k
-     * \param factor
-     * \return a pointer to this
-     */
-    MixedWavefunction &addAbsPower(const MixedWavefunction &c, double k = 0, double factor = 1);
-
-    //! inner product of two wavefunctions
-    friend double operator*(const MixedWavefunction &w1, const MixedWavefunction &w2);
-
     /*!
      * \brief this[i] = a[i]*b[i]
      * \param a
