@@ -1,4 +1,5 @@
 #include "gciMixedOperatorSecondQuant.h"
+#include "gciHProductSet.h"
 #include "gciRun.h"
 
 #include <utility>
@@ -16,12 +17,11 @@ auto file_exists(const std::string &fname) {
 MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
         nMode(fcidump.parameter("NMODE", std::vector<int>{0})[0]),
         nModal(fcidump.parameter("NMODAL", std::vector<int>{0})[0]),
-        Hel(constructOperator(fcidump)),
         Hvib(constructHvib(fcidump.fileName(), nMode, nModal)),
         includeHel(fcidump.parameter("INCLUDE_HEL", std::vector<int>{0})[0]),
         includeLambda(fcidump.parameter("INCLUDE_LAMBDA", std::vector<int>{0})[0]),
         includeK(fcidump.parameter("INCLUDE_K", std::vector<int>{0})[0]),
-        includeD(fcidump.parameter("INCLUDE_D", std::vector<int>{0})[0]){
+        includeD(fcidump.parameter("INCLUDE_D", std::vector<int>{0})[0]) {
     if (includeHel) initializeHel(fcidump);
     if (includeLambda) initializeLambda(fcidump);
     if (includeK) initializeK(fcidump);
@@ -29,7 +29,11 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
 }
 
 void MixedOperatorSecondQuant::initializeHel(const FCIdump &fcidump) {
-    std::string f, name = "Hel[1]";
+    std::string f = fcidump.fileName();
+    if (file_exists(f)) {
+        elHam.insert({"Hel[0]", constructOperator(FCIdump(f))});
+    }
+    std::string name = "Hel[1]";
     auto vibOp = VibOperator<hel_t>(nMode, nModal, ns_VibOperator::parity_t::none,
                                     ns_VibOperator::parity_t::even, name);
     for (int iMode = 0; iMode < nMode; ++iMode) {
@@ -78,7 +82,7 @@ void MixedOperatorSecondQuant::initializeLambda(const FCIdump &fcidump) {
 void MixedOperatorSecondQuant::initializeK(const FCIdump &fcidump) {
     std::string f = fcidump.fileName() + "_K";
     if (file_exists(f)) {
-        nacHel.insert({"K[0]", constructK(FCIdump(f))});
+        elHam.insert({"K[0]", constructK(FCIdump(f))});
     }
     std::string name = "K[1]";
     auto vibOp = VibOperator<hel_t>(nMode, nModal, ns_VibOperator::parity_t::none,
@@ -106,7 +110,7 @@ void MixedOperatorSecondQuant::initializeK(const FCIdump &fcidump) {
 void MixedOperatorSecondQuant::initializeD(const FCIdump &fcidump) {
     std::string f = fcidump.fileName() + "_D";
     if (file_exists(f)) {
-        nacHel.insert({"D[0]", constructD(FCIdump(f))});
+        elHam.insert({"D[0]", constructD(FCIdump(f))});
     }
     std::string name = "D[1]";
     auto vibOp = VibOperator<hel_t>(nMode, nModal, ns_VibOperator::parity_t::none,
@@ -132,17 +136,22 @@ void MixedOperatorSecondQuant::initializeD(const FCIdump &fcidump) {
 }
 
 VibOperator<double> MixedOperatorSecondQuant::constructHvib(const std::string &fcidump_name, int nmode, int nmodal) {
-    VibOperator<double> vibOp(nmode, nmodal, ns_VibOperator::parity_t::even, ns_VibOperator::parity_t::even, "Hvib");
+    VibOperator<double> vibOp(nmode, nmodal, ns_VibOperator::parity_t::none, ns_VibOperator::parity_t::even, "Hvib");
     FCIdump dump(fcidump_name + "_Hvib");
     dump.rewind();
     double value;
-    int i, j, k, l;
-    while (dump.nextIntegral(i, j, k, l, value) != FCIdump::endOfFile) {
+    int iMode, jModal, kModal, l;
+    while (dump.nextIntegral(iMode, jModal, kModal, l, value) != FCIdump::endOfFile) {
         // Assume only 1MC, no constants
-        if (i == 0 || j == 0 || k == 0 || l != 0 || i > nmode) throw std::logic_error("Hvib file in the wrong format");
-        if (j > nmodal || k > nmodal) continue;
-        VibExcitation vibExc({{i - 1, j - 1, k - 1}});
+        if (iMode == 0 || jModal == 0 || kModal == 0 || l != 0 || iMode > nmode)
+            throw std::logic_error("Hvib file in the wrong format");
+        if (jModal > nmodal || kModal > nmodal) continue;
+        VibExcitation vibExc({{iMode - 1, jModal - 1, kModal - 1}});
         vibOp.append(value, vibExc);
+        if (jModal != kModal) {
+            vibExc.conjugate();
+            vibOp.append(value, vibExc);
+        }
     }
     return vibOp;
 }
@@ -395,4 +404,19 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructD(const FCIdump &dum
 //    std::cout << result.str() << std::endl;
     return result;
 }
+
+bool MixedOperatorSecondQuant::connected(const HProduct &bra, const HProduct &ket) const {
+    for (const auto &mixedTerm : mixedHam) {
+        const auto &vibTensor = mixedTerm.second;
+        for (const auto &vibEl : vibTensor.tensor) {
+            auto &op = vibEl.second.oper;
+            auto vibExc = VibExcitation{vibEl.second.exc};
+            auto new_bra = ket.excite(vibExc);
+            if (new_bra == bra) return true;
+        }
+    }
+    return false;
+}
+
+
 } // namespace gci

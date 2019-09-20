@@ -11,6 +11,14 @@ namespace gci {
 
 /*!
  * @brief Collection of Hartree products.
+ *
+ * Order of vibrational product basis:
+ *  - index(CIS) < index(CISD)
+ *  - size(CIS, mode_A) = nModal_A
+ *  - Let Phi_mode_A be hartree products with mode A excited
+ *    - CIS = {Phi_mode_1, Phi_mode_2, ...}
+ *    - CISD = {Phi_mode_12, Phi_mode_13, ..., Phi_mode_23, ...}
+ *  - and continued for CISDT, CISDTQ etc.
  */
 class HProductSet {
 public:

@@ -21,6 +21,9 @@ class HProduct {
 public:
     using modal_t = std::array<int, 2>;
     using product_t = std::vector<modal_t>;
+protected:
+    product_t m_prod; //!< excitations representing the Hartree product
+public:
     /*!
      * @brief Constructs an empty Hartree product representing the ground state.
      * @warning This is the preferred way to construct an empty product.
@@ -92,7 +95,6 @@ public:
     //! @brief List of excited modes in `this` product
     std::vector<int> excitedModes() const;
 protected:
-    product_t m_prod; //!< excitations representing the Hartree product
 
     /*!
      * @brief Orders `this` Hartree product
