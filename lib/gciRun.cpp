@@ -17,10 +17,10 @@ int gci::parallel_size = 1;
 int gci::parallel_rank = 0;
 bool gci::molpro_plugin = false;
 MPI_Comm gci::molpro_plugin_intercomm = MPI_COMM_NULL;
-std::unique_ptr<sharedCounter> gci::_nextval_counter = nullptr;
-int64_t gci::__my_first_task = 0;
-int64_t gci::__task = 0;
-int64_t gci::__task_granularity = 1;
+std::map<MPI_Comm, std::unique_ptr<sharedCounter>> _nextval_counter;
+std::map<MPI_Comm, long int> __my_first_task{{MPI_COMM_COMPUTE, 0}};
+std::map<MPI_Comm, long int> __task{{MPI_COMM_COMPUTE, 0}};
+std::map<MPI_Comm, long int> __task_granularity{{MPI_COMM_COMPUTE, 1}};
 
 using ParameterVectorSet = std::vector<Wavefunction>;
 using scalar = double;
@@ -282,7 +282,7 @@ Run::Run(std::string fcidump)
 std::unique_ptr<Profiler> gci::profiler = nullptr;
 std::vector<double> Run::run() {
   if (profiler == nullptr) profiler.reset(new Profiler("GCI"));
-  _nextval_counter.reset(new sharedCounter());
+  create_new_counter(MPI_COMM_COMPUTE);
   profiler->reset("GCI");
   int activeLvl = options.parameter("PROFACTIVE",-1);
   if (activeLvl >= 0)  profiler->active(activeLvl);
@@ -435,7 +435,7 @@ std::vector<double> Run::run() {
     if (profile > 1) xout << profiler->str(profile, false) << std::endl;
     xout << profiler->str(profile, true) << std::endl;
   }
-  _nextval_counter.reset(nullptr);
+  _nextval_counter[MPI_COMM_COMPUTE].reset(nullptr);
 
   if (false) { // just for a test
     energies.clear();
@@ -498,7 +498,7 @@ std::vector<double> Run::run() {
 Run::~Run() {
   std::cout << *profiler.get() << std::endl;
   profiler.release();
-  _nextval_counter.release();
+//  _nextval_counter.release();
 }
 
 namespace gci {

@@ -46,6 +46,7 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces,
                                int creations,
                                int sym,
                                bool parallel) {
+    parallel = false;
     auto p = profiler->push("StringSet::addByOperators[]");
     //std::cout <<"referenceSpaces="<<&referenceSpaces<<std::endl;std::cout.flush();
 //  std::cout << "addByOperators: referenceSpaces.size()=" << referenceSpaces.size() << std::endl;
@@ -56,7 +57,7 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces,
             ntask += referenceSpace.size();
         }
         //  xout << "parallel_rank="<<parallel_rank<<", ntask="<<ntask<<std::endl;
-        DivideTasks(ntask);
+//        DivideTasks(ntask);
     }
 //  xout << "about to call addByOperators " << annihilations << creations << sym << std::endl;
     for (const auto &referenceSpace : referenceSpaces) {
@@ -66,7 +67,7 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces,
 //  xout << "size="<<size()<<std::endl;
 #ifdef HAVE_MPI_H
     if (parallel) {
-        EndTasks();
+//        EndTasks();
         auto pp = profiler->push("StringSet::addByOperators:distribute");
         std::vector<char> serialised;
         for (const auto &s : *this) {
@@ -184,6 +185,7 @@ void StringSet::addByOperators(const StringSet &referenceSpace,
                                int creations,
                                int sym,
                                bool parallel) {
+    parallel = false;
     size_t count = 0;
     size_t countall = 0;
     bool first = empty();
@@ -201,8 +203,8 @@ void StringSet::addByOperators(const StringSet &referenceSpace,
     for (auto from : referenceSpace) {
 //    xout << "next reference" << std::endl;
         countall++;
-        if (parallel)
-            if (!NextTask()) continue;
+//        if (parallel)
+//            if (!NextTask()) continue;
 //    if (parallel && countall%parallel_size != parallel_rank) continue;
         count++;
 //    xout << "from=" << from.str(5) << std::endl;

@@ -14,27 +14,28 @@ MPI_Comm create_new_comm(MPI_Comm head_comm = MPI_COMM_COMPUTE) {
     return new_comm;
 }
 
-MixedWavefunction::MixedWavefunction(const Options &options, const State &prototype)
-        : m_vibSpace(options.parameter("NMODE", 0), options.parameter("NMODAL", 1),
+MixedWavefunction::MixedWavefunction(const Options &options, const State &prototype, MPI_Comm head_commun)
+        : m_head_communicator(head_commun), m_child_communicator(create_new_comm(m_head_communicator)),
+          m_vibSpace(options.parameter("NMODE", 0), options.parameter("NMODAL", 1),
                      options.parameter("VIB_EXC_LVL", 1)), m_vibBasis(m_vibSpace), m_elDim(0), m_dimension(0),
-          m_prototype(prototype), m_ga_handle(-1), m_ga_chunk(-1), m_ga_allocated(false),
-          m_communicator(create_new_comm()) {
+          m_prototype(prototype), m_ga_handle(-1), m_ga_chunk(-1), m_ga_allocated(false) {
     m_elDim = m_prototype.size();
     m_vibBasis.generateFullSpace();
     m_dimension = m_vibBasis.vibDim() * m_elDim;
 }
 
-MixedWavefunction::MixedWavefunction(const MixedWavefunction &source, int option)
-        : m_vibSpace(source.m_vibSpace), m_vibBasis(source.m_vibBasis), m_elDim(source.m_elDim),
+MixedWavefunction::MixedWavefunction(const MixedWavefunction &source, int option, MPI_Comm head_commun)
+        : m_head_communicator(head_commun), m_child_communicator(create_new_comm(m_head_communicator)),
+          m_vibSpace(source.m_vibSpace), m_vibBasis(source.m_vibBasis), m_elDim(source.m_elDim),
           m_dimension(source.m_dimension), m_prototype(source.m_prototype), m_ga_handle(-1),
-          m_ga_chunk(source.m_ga_chunk), m_ga_allocated(false), m_communicator(create_new_comm()) {
+          m_ga_chunk(source.m_ga_chunk), m_ga_allocated(false) {
     copy_buffer(source);
     allocate_buffer();
 }
 
 MixedWavefunction::~MixedWavefunction() {
     if (!empty()) GA_Destroy(m_ga_handle);
-    MPI_Comm_free(&m_communicator);
+    MPI_Comm_free(&m_child_communicator);
 }
 
 
@@ -158,7 +159,7 @@ void MixedWavefunction::ga_accumulate(int ga_handle, int iVib, Wavefunction &wfn
 
 void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &ham, const MixedWavefunction &w,
                                                bool parallel_stringset) {
-    DivideTasks(1000000000, 1, 1);
+    DivideTasks(1000000000, 1, 1, m_head_communicator);
     auto prof = profiler->push("MixedWavefunction::operatorOnWavefunction");
     auto res = Wavefunction{m_prototype};
     auto ketWfn = Wavefunction{m_prototype};
@@ -167,7 +168,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
     for (const auto &bra : m_vibBasis) {
         auto iBra = m_vibBasis.index(bra);
         // Purely electronic operators
-        if (NextTask()) {
+        if (NextTask(m_head_communicator)) {
             auto p = profiler->push("Hel");
             ga_copy_to_local(m_ga_handle, iBra, ketWfn, m_dimension);
             res.zero();
@@ -178,7 +179,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             ga_accumulate(m_ga_handle, iBra, res, m_dimension);
         }
         // Purely vibrational operators
-        if (NextTask()) {
+        if (NextTask(m_head_communicator)) {
             auto p = profiler->push("Hvib");
             res.zero();
             for (const auto &vibEl : ham.Hvib.tensor) {
@@ -198,7 +199,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             auto p = profiler->push("Hmixed");
             auto iKet = m_vibBasis.index(bra);
             if (!ham.connected(bra, ket)) continue;
-            if (!NextTask()) continue;
+            if (!NextTask(m_head_communicator)) continue;
             ga_copy_to_local(m_ga_handle, iKet, ketWfn, m_dimension);
             res.zero();
             for (const auto &mixedTerm : ham.mixedHam) {
@@ -219,7 +220,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
 
 void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bool parallel_stringset) {
     auto p = profiler->push("MixedWavefunction::diagonalOperator");
-    DivideTasks(1000000000, 1, 1);
+    DivideTasks(1000000000, 1, 1, m_head_communicator);
     auto res = Wavefunction{m_prototype};
     auto wfn = Wavefunction{m_prototype};
     res.allocate_buffer();
@@ -227,7 +228,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
     for (const auto &bra : m_vibBasis) {
         auto iBra = m_vibBasis.index(bra);
         // Purely electronic operators
-        if (NextTask()) {
+        if (NextTask(m_head_communicator)) {
             res.zero();
             for (const auto &hel : ham.elHam) {
                 res.diagonalOperator(hel.second);
@@ -235,7 +236,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
             ga_accumulate(m_ga_handle, iBra, res, m_dimension);
         }
         // Pure vibrational operator
-        if (NextTask()) {
+        if (NextTask(m_head_communicator)) {
             res.zero();
             for (const auto &vibEl : ham.Hvib.tensor) {
                 auto val = vibEl.second.oper;
@@ -253,7 +254,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
                 auto &vibExc = vibEl.second.exc;
                 auto ket = bra.excite(vibExc);
                 if (ket != bra) continue;
-                if (!NextTask()) continue;
+                if (!NextTask(m_head_communicator)) continue;
                 res.zero();
                 res.diagonalOperator(op);
                 ga_accumulate(m_ga_handle, iBra, res, m_dimension);
