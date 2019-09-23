@@ -832,7 +832,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
         //      xout <<"residual after alpha-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
     }
 
-    EndTasks();
+    EndTasks(m_communicator);
 
     if (m_sparse) {
         gsum(buffer_sparse, m_communicator);
@@ -1051,7 +1051,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
         }
     }
 
-    EndTasks();
+    EndTasks(m_communicator);
 
     gsum(result);
 //  std::cout << "Density before from_dirac:\n"<<result<<std::endl;
@@ -1124,7 +1124,7 @@ std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> &edge
             }
     }
     if (parallel) {
-        EndTasks();
+        EndTasks(m_communicator);
         std::vector<double> dcumulative(cumulative.size());
         for (size_t i = 0; i < cumulative.size(); i++) dcumulative[i] = (double) cumulative[i];
         gsum(&dcumulative[0], cumulative.size(), m_communicator);

@@ -1,5 +1,4 @@
 #include "gciMixedOperatorSecondQuant.h"
-#include "gciHProductSet.h"
 #include "gciRun.h"
 
 #include <utility>
@@ -31,7 +30,7 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
 void MixedOperatorSecondQuant::initializeHel(const FCIdump &fcidump) {
     std::string f = fcidump.fileName();
     if (file_exists(f)) {
-        elHam.insert({"Hel[0]", constructOperator(FCIdump(f))});
+        elHam.insert({"Hel[0]", std::make_unique<hel_t>(constructOperator(FCIdump(f)))});
     }
     std::string name = "Hel[1]";
     auto vibOp = VibOperator<hel_t>(nMode, nModal, ns_VibOperator::parity_t::none,
@@ -82,7 +81,7 @@ void MixedOperatorSecondQuant::initializeLambda(const FCIdump &fcidump) {
 void MixedOperatorSecondQuant::initializeK(const FCIdump &fcidump) {
     std::string f = fcidump.fileName() + "_K";
     if (file_exists(f)) {
-        elHam.insert({"K[0]", constructK(FCIdump(f))});
+        elHam.insert({"K[0]", std::make_unique<hel_t>(constructK(FCIdump(f)))});
     }
     std::string name = "K[1]";
     auto vibOp = VibOperator<hel_t>(nMode, nModal, ns_VibOperator::parity_t::none,
@@ -110,7 +109,7 @@ void MixedOperatorSecondQuant::initializeK(const FCIdump &fcidump) {
 void MixedOperatorSecondQuant::initializeD(const FCIdump &fcidump) {
     std::string f = fcidump.fileName() + "_D";
     if (file_exists(f)) {
-        elHam.insert({"D[0]", constructD(FCIdump(f))});
+        elHam.insert({"D[0]", std::make_unique<hel_t>(constructD(FCIdump(f)))});
     }
     std::string name = "D[1]";
     auto vibOp = VibOperator<hel_t>(nMode, nModal, ns_VibOperator::parity_t::none,

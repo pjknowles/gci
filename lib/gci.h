@@ -59,7 +59,7 @@ extern bool molpro_plugin;
 //extern std::unique_ptr<sharedCounter> _nextval_counter;
 extern std::map<MPI_Comm, std::unique_ptr<sharedCounter>> _nextval_counter;
 
-void create_new_counter(MPI_Comm communicator) {
+inline void create_new_counter(MPI_Comm communicator) {
     if (_nextval_counter.find(communicator) == _nextval_counter.end()) {
         _nextval_counter[communicator] = std::make_unique<sharedCounter>(sharedCounter());
     }

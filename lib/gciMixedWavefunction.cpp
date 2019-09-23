@@ -45,14 +45,16 @@ bool MixedWavefunction::empty() const {
 
 void MixedWavefunction::allocate_buffer() {
     auto dim = (int) m_dimension;
-    m_ga_handle = NGA_Create(C_DBL, 1, &dim, "MixedWavefunction", &m_ga_chunk);
+    char name[]  = "MixedWavefunction";
+    m_ga_handle = NGA_Create(C_DBL, 1, &dim, name, &m_ga_chunk);
     m_ga_allocated = true;
 }
 
 void MixedWavefunction::copy_buffer(const MixedWavefunction &source) {
     if (source.empty()) return;
     if (empty()) {
-        m_ga_handle = GA_Duplicate(source.m_ga_handle, "MixedWavefunction");
+        char name[]  = "MixedWavefunction";
+        m_ga_handle = GA_Duplicate(source.m_ga_handle, name);
         m_ga_chunk = source.m_ga_chunk;
         m_ga_allocated = true;
     } else GA_Copy(source.m_ga_handle, m_ga_handle);
@@ -122,7 +124,7 @@ double MixedWavefunction::at(size_t ind) const {
     return *buffer;
 }
 
-Wavefunction MixedWavefunction::wavefunctionAt(size_t iVib) {
+Wavefunction MixedWavefunction::wavefunctionAt(size_t iVib) const {
     auto wfn = Wavefunction{m_prototype};
     ga_copy_to_local(m_ga_handle, iVib, wfn, m_dimension);
     return wfn;
@@ -174,7 +176,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             res.zero();
             for (const auto &hel : ham.elHam) {
                 auto p = profiler->push(hel.first);
-                res.operatorOnWavefunction(hel.second, ketWfn, parallel_stringset);
+                res.operatorOnWavefunction(*hel.second, ketWfn, parallel_stringset);
             }
             ga_accumulate(m_ga_handle, iBra, res, m_dimension);
         }
@@ -231,7 +233,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
         if (NextTask(m_head_communicator)) {
             res.zero();
             for (const auto &hel : ham.elHam) {
-                res.diagonalOperator(hel.second);
+                res.diagonalOperator(*hel.second);
             }
             ga_accumulate(m_ga_handle, iBra, res, m_dimension);
         }
