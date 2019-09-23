@@ -30,6 +30,7 @@ public:
     std::map<std::string, double> m_properties;
     std::map<size_t, double> buffer_sparse; ///< alternative storage to buffer, useful when very sparse
     bool m_sparse; ///< whether the coefficients are stored in buffer_sparse instead of buffer
+    MPI_Comm m_communicator;
 protected:
     memory::vector<double> buffer; ///< buffer to hold coefficients describing the object
     size_t dimension; ///< the size of the space
@@ -44,17 +45,17 @@ public:
        * \param symmetry Spatial symmetry
        * \param ms2 Sz quantum number times 2
        */
-    Wavefunction(OrbitalSpace h, int nelec, int symmetry, int ms2);
+    Wavefunction(OrbitalSpace h, int nelec, int symmetry, int ms2, MPI_Comm communicator = MPI_COMM_COMPUTE);
 
-    Wavefunction(OrbitalSpace *h, int nelec, int symmetry, int ms2);
+    Wavefunction(OrbitalSpace *h, int nelec, int symmetry, int ms2, MPI_Comm communicator = MPI_COMM_COMPUTE);
 
     /*!
        * \brief Construct a Wavefunction object from a State prototype
        * \param state the State prototype
        */
-    explicit Wavefunction(const State &state);
+    explicit Wavefunction(const State &state, MPI_Comm communicator = MPI_COMM_COMPUTE);
 
-    Wavefunction(const Wavefunction &source, int option);
+    Wavefunction(const Wavefunction &source, int option, MPI_Comm communicator = MPI_COMM_COMPUTE);
 
     std::vector<StringSet> alphaStrings; ///< The alpha-spin strings defining the CI basis
     std::vector<StringSet> betaStrings; ///< The beta-spin strings defining the CI basis

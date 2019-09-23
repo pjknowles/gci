@@ -48,6 +48,8 @@ namespace gci {
 class MixedWavefunction {
 public:
     using value_type = double;
+    MPI_Comm m_head_communicator; //!< Outer communicator
+    MPI_Comm m_child_communicator; //!< Communicator for children Wavefunction objects
 protected:
 
     VibSpace m_vibSpace; //!< Parameters defining the vibrational space of current wavefunction
@@ -72,15 +74,15 @@ protected:
     int m_ga_handle; //!< Global Array handle, needed by GA libary
     int m_ga_chunk; //!< GA chunck size
     bool m_ga_allocated; //!< Flags that GA has been allocated
-    MPI_Comm m_communicator; //!< Creates a new communicator for using parallel electronic operations
 public:
 
     /*!
      * @brief Constructs the mixed wavefunction.
      */
-    explicit MixedWavefunction(const Options &options, const State &prototype);
+    explicit MixedWavefunction(const Options &options, const State &prototype,
+                               MPI_Comm head_commun = MPI_COMM_COMPUTE);
 
-    MixedWavefunction(const MixedWavefunction &source, int option = 0);
+    MixedWavefunction(const MixedWavefunction &source, int option = 0, MPI_Comm head_commun = MPI_COMM_COMPUTE);
 
     ~MixedWavefunction();
 

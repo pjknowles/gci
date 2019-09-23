@@ -1,43 +1,42 @@
+#include "gciWavefunction.h"
+
 #include "gci.h"
 #include "gciRun.h"
-#include "gciWavefunction.h"
-#include <sstream>
-#include <iostream>
 #include "gciMolpro.h"
 #include "gciStringSet.h"
 #include "gciTransitionDensity.h"
-#include "Profiler.h"
-#include <algorithm>
-#include <assert.h>
 #include "gciOrbitals.h"
-#include <chrono>
+
+#include <iostream>
+#include <algorithm>
+#include <cassert>
 #include <ctime>
 #include <iomanip>
 #include <vector>
 #include <cmath>
 #include <set>
 
+#include <Profiler.h>
 
-//using Wavefunction = gci::Wavefunction;
 namespace gci {
 
-Wavefunction::Wavefunction(OrbitalSpace h, int nelec, int symmetry, int ms2)
-        : State(h, nelec, symmetry, ms2), m_sparse(false), dimension(0) {
+Wavefunction::Wavefunction(OrbitalSpace h, int nelec, int symmetry, int ms2, MPI_Comm communicator)
+        : State(h, nelec, symmetry, ms2), m_sparse(false), m_communicator(communicator), dimension(0) {
     buildStrings();
 }
 
-Wavefunction::Wavefunction(OrbitalSpace *h, int n, int s, int m2)
-        : State(h, n, s, m2), m_sparse(false), dimension(0) {
+Wavefunction::Wavefunction(OrbitalSpace *h, int n, int s, int m2, MPI_Comm communicator)
+        : State(h, n, s, m2), m_sparse(false), m_communicator(communicator), dimension(0) {
     buildStrings();
 }
 
-Wavefunction::Wavefunction(const State &state)
-        : State(state), m_sparse(false), dimension(0) {
+Wavefunction::Wavefunction(const State &state, MPI_Comm communicator)
+        : State(state), m_sparse(false), m_communicator(communicator), dimension(0) {
     buildStrings();
 }
 
-Wavefunction::Wavefunction(const Wavefunction &source, int option)
-        : m_sparse(source.m_sparse), dimension(source.dimension) {
+Wavefunction::Wavefunction(const Wavefunction &source, int option, MPI_Comm communicator)
+        : m_sparse(source.m_sparse), m_communicator(communicator), dimension(source.dimension) {
     *this = source;
 }
 
@@ -163,7 +162,7 @@ void Wavefunction::diagonalOperator(const SymmetryMatrix::Operator &op) {
                     }
                 }
             }
-            gather_chunks(&buffer[offset], nsa * nsb, chunk * nsb);
+            gather_chunks(&buffer[offset], nsa * nsb, chunk * nsb, m_communicator);
         }
         offset += nsa * nsb;
     }
@@ -325,6 +324,7 @@ double Wavefunction::dot(const std::map<size_t, double> &other) const {
         }
     return result;
 }
+
 void Wavefunction::times(const Wavefunction *a, const Wavefunction *b) {
     const auto wa = dynamic_cast<const Wavefunction *>(a);
     const auto wb = dynamic_cast<const Wavefunction *>(b);
@@ -565,7 +565,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
     //  xout <<"residual after 0-electron:"<<std::endl<<str(2)<<std::endl;
 
     //  xout <<std::endl<<"w in operatorOnWavefunction="<<w.str(2)<<std::endl;
-    DivideTasks(99999999, 1, 1);
+    DivideTasks(99999999, 1, 1, m_communicator);
     const auto alphaActiveStrings = w.activeStrings(true);
     const auto betaActiveStrings = w.activeStrings(false);
 //  xout << "betaActiveStrings"<<std::endl;
@@ -604,7 +604,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                     for (StringSet::const_iterator aa1, aa0 = aa.begin();
                          aa1 = aa0 + nsaaMax > aa.end() ? aa.end() : aa0 + nsaaMax, aa0 < aa.end();
                          aa0 = aa1) { // loop over alpha batches
-                        if (!NextTask()) continue;
+                        if (!NextTask(m_communicator)) continue;
                         TransitionDensity d(w,
                                             aa0,
                                             aa1,
@@ -634,7 +634,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                     for (StringSet::const_iterator bb1, bb0 = bb.begin();
                          bb1 = bb0 + nsbbMax > bb.end() ? bb.end() : bb0 + nsbbMax, bb0 < bb.end();
                          bb0 = bb1) { // loop over beta batches
-                        if (!NextTask()) continue;
+                        if (!NextTask(m_communicator)) continue;
                         TransitionDensity d(w,
                                             w.alphaStrings[syma].begin(),
                                             w.alphaStrings[syma].end(),
@@ -685,7 +685,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                      bb0 = bb1) { // loop over beta batches
                     nsa = aa1 - aa0;
                     nsb = bb1 - bb0;
-                    if (NextTask()) {
+                    if (NextTask(m_communicator)) {
                         //                    xout << "offset="<<offset <<", nsa="<<nsa <<", nsb="<<nsb<<std::endl;
                         //        xout << bb0-bb.begin()<<std::endl;
                         {
@@ -738,7 +738,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
 //      xout << "number of alpha-alpha-excited strings=" << aa.size() << std::endl;
             if (aa.empty()) continue;
             for (unsigned int symb = 0; symb < 8; symb++) {
-                if (!NextTask()) continue;
+                if (!NextTask(m_communicator)) continue;
                 auto praa = profiler->push("aa1 loop");
                 unsigned int symexc = syma ^symb ^w.symmetry;
                 //size_t nexc = h.pairSpace.find(-1)->second[symexc];
@@ -769,7 +769,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                 StringSet bb(betaActiveStrings, 2, 0, symb, parallel_stringset);
                 if (bb.empty()) continue;
                 for (unsigned int syma = 0; syma < 8; syma++) {
-                    if (!NextTask()) continue;
+                    if (!NextTask(m_communicator)) continue;
                     unsigned int symexc = symb ^syma ^w.symmetry;
                     size_t nexc = h.O2(false, false, false).block_size(symexc);
                     size_t nsa = alphaStrings[syma].size();
@@ -819,7 +819,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                              bb1 = bb0 + nsbbMax > bb.end() ? bb.end() : bb0 + nsbbMax, bb0 < bb.end();
                              bb0 = bb1) { // loop over beta batches
                             size_t nsb = bb1 - bb0;
-                            if (!NextTask()) continue;
+                            if (!NextTask(m_communicator)) continue;
                             TransitionDensity d(w, aa0, aa1, bb0, bb1, SymmetryMatrix::parityNone, false, false);
                             TransitionDensity e(d, false);
                             MXM(&e[0], &d[0], &h.O2(true, false, false).block(symexc)[0], nsa * nsb, nexc, nexc, false);
@@ -835,9 +835,9 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
     EndTasks();
 
     if (m_sparse) {
-        gsum(buffer_sparse);
+        gsum(buffer_sparse, m_communicator);
     } else {
-        gsum(&buffer[0], buffer.size());
+        gsum(&buffer[0], buffer.size(), m_communicator);
     }
 }
 
@@ -860,7 +860,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
     result.m_O0 = (*this) * (*bra);
 //  std::cout << "@@@ density after zero before construct\n"<<result.str("result",3)<<std::endl;
 
-    DivideTasks(99999999, 1, 1);
+    DivideTasks(99999999, 1, 1, m_communicator);
 
     {
         auto p = profiler->push("1-electron");
@@ -870,7 +870,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
             unsigned int symb = symmetry ^syma;
             nsa = alphaStrings[syma].size();
             nsb = betaStrings[symb].size();
-            if (!NextTask() || nsa * nsb == 0) continue;
+            if (!NextTask(m_communicator) || nsa * nsb == 0) continue;
             {
                 TransitionDensity d(*this,
                                     alphaStrings[syma].begin(),
@@ -934,7 +934,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
             profiler->stop("StringSet aa");
             if (aa.empty()) continue;
             for (unsigned int symb = 0; symb < 8; symb++) {
-                if (!NextTask()) continue;
+                if (!NextTask(m_communicator)) continue;
                 auto praa = profiler->push("aa1 loop");
                 unsigned int symexc = syma ^symb ^symmetry;
                 //size_t nexc = h.pairSpace.find(-1)->second[symexc];
@@ -978,7 +978,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
             StringSet bb(betaStrings, 2, 0, symb, parallel_stringset);
             if (bb.empty()) continue;
             for (unsigned int syma = 0; syma < 8; syma++) {
-                if (!NextTask()) continue;
+                if (!NextTask(m_communicator)) continue;
                 unsigned int symexc = symb ^syma ^symmetry;
                 size_t nexc = result.O2(false, false, false).block_size(symexc);
                 size_t nsa = alphaStrings[syma].size();
@@ -1028,7 +1028,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
                              bb1 = bb0 + nsbbMax > bb.end() ? bb.end() : bb0 + nsbbMax, bb0 < bb.end();
                              bb0 = bb1) { // loop over beta batches
                             size_t nsb = bb1 - bb0;
-                            if (!NextTask()) continue;
+                            if (!NextTask(m_communicator)) continue;
                             TransitionDensity d(*this, aa0, aa1, bb0, bb1, SymmetryMatrix::parityNone, false, false);
                             TransitionDensity e(*bra, aa0, aa1, bb0, bb1, SymmetryMatrix::parityNone, false, false);
 //                      xout <<"D: "<<d.str(2)<<std::endl;
@@ -1100,13 +1100,13 @@ void Wavefunction::getAll(File &f, int index) {
     auto p = profiler->push("Wavefunction::getAll");
     getw(f, index);
     size_t chunk = (buffer.size() - 1) / parallel_size + 1;
-    gather_chunks(&buffer[0], buffer.size(), chunk);
+    gather_chunks(&buffer[0], buffer.size(), chunk, m_communicator);
     p += buffer.size();
 }
 
 void Wavefunction::replicate() {
     size_t chunk = (buffer.size() - 1) / parallel_size + 1;
-    gather_chunks(&buffer[0], buffer.size(), chunk);
+    gather_chunks(&buffer[0], buffer.size(), chunk, m_communicator);
 
 }
 
@@ -1116,9 +1116,9 @@ std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> &edge
                                                  std::size_t stop) {
     if (stop > edges.size()) stop = edges.size();
     std::vector<std::size_t> cumulative(edges.size(), 0);
-    if (parallel) DivideTasks(edges.size());
+    if (parallel) DivideTasks(edges.size(), 0, 0, m_communicator);
     for (size_t i = start; i < stop; i++) {
-        if (parallel && NextTask())
+        if (parallel && NextTask(m_communicator))
             for (double j : buffer) {
                 if (std::fabs(j) > edges[i]) cumulative[i]++;
             }
@@ -1127,7 +1127,7 @@ std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> &edge
         EndTasks();
         std::vector<double> dcumulative(cumulative.size());
         for (size_t i = 0; i < cumulative.size(); i++) dcumulative[i] = (double) cumulative[i];
-        gsum(&dcumulative[0], cumulative.size());
+        gsum(&dcumulative[0], cumulative.size(), m_communicator);
         for (size_t i = 0; i < cumulative.size(); i++) cumulative[i] = (std::size_t) dcumulative[i];
     }
     return cumulative;
