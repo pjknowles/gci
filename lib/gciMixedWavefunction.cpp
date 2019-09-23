@@ -7,9 +7,9 @@
 
 namespace gci {
 
-MPI_Comm create_new_comm() {
+MPI_Comm create_new_comm(MPI_Comm head_comm = MPI_COMM_COMPUTE) {
     MPI_Comm new_comm;
-    MPI_Comm_split(MPI_COMM_COMPUTE, GA_Nodeid(), GA_Nodeid(), &new_comm);
+    MPI_Comm_split(head_comm, GA_Nodeid(), GA_Nodeid(), &new_comm);
     if (new_comm == nullptr) throw std::runtime_error("Failed to create a new communicator");
     return new_comm;
 }
@@ -113,7 +113,6 @@ std::vector<size_t> MixedWavefunction::minlocN(size_t n) const {
 
 
 double MixedWavefunction::at(size_t ind) const {
-    //TODO change this to search in GA directly
     if (ind >= m_dimension) throw std::logic_error("Out of bounds");
     if (empty()) throw std::logic_error("GA was not allocated");
     value_type *buffer;

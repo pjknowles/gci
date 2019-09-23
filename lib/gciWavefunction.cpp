@@ -19,14 +19,26 @@
 
 
 //using Wavefunction = gci::Wavefunction;
-namespace gci{
+namespace gci {
 
-Wavefunction::Wavefunction(OrbitalSpace *h, int n, int s, int m2) : State(h, n, s, m2), m_sparse(false), dimension(0) {
+Wavefunction::Wavefunction(OrbitalSpace h, int nelec, int symmetry, int ms2)
+        : State(h, nelec, symmetry, ms2), m_sparse(false), dimension(0) {
     buildStrings();
 }
 
-Wavefunction::Wavefunction(const State &state) : State(state), m_sparse(false), dimension(0) {
+Wavefunction::Wavefunction(OrbitalSpace *h, int n, int s, int m2)
+        : State(h, n, s, m2), m_sparse(false), dimension(0) {
     buildStrings();
+}
+
+Wavefunction::Wavefunction(const State &state)
+        : State(state), m_sparse(false), dimension(0) {
+    buildStrings();
+}
+
+Wavefunction::Wavefunction(const Wavefunction &source, int option)
+        : m_sparse(source.m_sparse), dimension(source.dimension) {
+    *this = source;
 }
 
 void Wavefunction::buildStrings() {
@@ -102,43 +114,52 @@ void Wavefunction::diagonalOperator(const SymmetryMatrix::Operator &op) {
             for (size_t ia = chunk * parallel_rank; ia < chunk * (parallel_rank + 1) && ia < nsa; ia++) {
                 std::vector<double> on(onb);
                 for (size_t i = 0; i < nact; i++) {
-                    for (size_t ib = 0; ib < nsb; ib++)
+                    for (size_t ib = 0; ib < nsb; ib++) {
                         on[ib + i * nsb] += ona[ia + i * nsa];
+                    }
                 }
-                for (size_t i = 0; i < nact; i++)
-                    for (size_t ib = 0; ib < nsb; ib++)
+                for (size_t i = 0; i < nact; i++) {
+                    for (size_t ib = 0; ib < nsb; ib++) {
                         buffer[offset + ia * nsb + ib] += on[ib + i * nsb] * ha[i];
+                    }
+                }
                 if (op.m_rank > 1) {
                     for (size_t i = 0; i < nact; i++) {
                         for (size_t j = 0; j <= i; j++) {
                             double zz = Jaa(j, i) - (double) 0.5 * Kaa(j, i);
                             if (i == j) zz *= (double) 0.5;
-                            for (size_t ib = 0; ib < nsb; ib++)
+                            for (size_t ib = 0; ib < nsb; ib++) {
                                 buffer[offset + ia * nsb + ib] += on[ib + i * nsb] * on[ib + j * nsb] * zz;
+                            }
                         }
                     }
                     double vv = (double) ms2 * ms2;
                     std::vector<double> f(nsb, (double) 0);
-                    for (size_t i = 0; i < nact; i++)
+                    for (size_t i = 0; i < nact; i++) {
                         for (size_t ib = 0; ib < nsb; ib++) {
                             on[ib + i * nsb] *= ((double) 2 -
                                                  on[ib + i * nsb]); // on becomes a mask for singly-occupied orbitals
                             f[ib] += on[ib + i * nsb];
                         }
-                    for (size_t ib = 0; ib < nsb; ib++)
+                    }
+                    for (size_t ib = 0; ib < nsb; ib++) {
                         f[ib] = f[ib] < (double) 1.1 ? (double) 1.1
-                                                     : f[ib]; // mask off singularities (this code does nothing for 0 or 1 open-shell orbitals)
-                    for (size_t ib = 0; ib < nsb; ib++)
+                                                     : f[ib];
+                    } // mask off singularities (this code does nothing for 0 or 1 open-shell orbitals)
+                    for (size_t ib = 0; ib < nsb; ib++) {
                         f[ib] = (vv - f[ib]) / (f[ib] * (f[ib] - (double) 1));
+                    }
                     for (size_t i = 0; i < nact; i++) {
                         for (size_t j = 0; j < i; j++) {
                             double zz = -(double) 0.5 * Kaa(i, j);
-                            for (size_t ib = 0; ib < nsb; ib++)
+                            for (size_t ib = 0; ib < nsb; ib++) {
                                 buffer[offset + ia * nsb + ib] += f[ib] * on[ib + i * nsb] * on[ib + j * nsb] * zz;
+                            }
                         }
                         double zz = -(double) 0.25 * Kaa(i, i);
-                        for (size_t ib = 0; ib < nsb; ib++)
+                        for (size_t ib = 0; ib < nsb; ib++) {
                             buffer[offset + ia * nsb + ib] += on[ib + i * nsb] * zz;
+                        }
                     }
                 }
             }
@@ -160,8 +181,9 @@ void Wavefunction::axpy(double a, const Wavefunction &xx) {
 }
 
 void Wavefunction::axpy(double a, const std::map<size_t, double> &x) {
-    for (const auto &xx : x)
+    for (const auto &xx : x) {
         buffer[xx.first] += xx.second * a;
+    }
 }
 
 std::tuple<std::vector<size_t>, std::vector<double> > Wavefunction::select(const Wavefunction &measure,
@@ -216,8 +238,9 @@ Wavefunction &Wavefunction::operator+=(const Wavefunction &other) {
 
 Wavefunction &Wavefunction::operator-=(const Wavefunction &other) {
     if (!compatible(other)) throw std::domain_error("attempt to add incompatible Wavefunction objects");
-    for (size_t i = 0; i < buffer.size(); i++)
+    for (size_t i = 0; i < buffer.size(); i++) {
         buffer[i] -= other.buffer[i];
+    }
     return *this;
 }
 
@@ -233,8 +256,9 @@ Wavefunction &Wavefunction::operator-=(const double other) {
 
 Wavefunction &Wavefunction::operator/=(const Wavefunction &other) {
     if (!compatible(other)) throw std::domain_error("attempt to add incompatible Wavefunction objects");
-    for (size_t i = 0; i < buffer.size(); i++)
+    for (size_t i = 0; i < buffer.size(); i++) {
         buffer[i] /= other.buffer[i];
+    }
     return *this;
 }
 
@@ -288,11 +312,25 @@ double Wavefunction::dot(const Wavefunction &other) const {
     return (*this) * ((dynamic_cast<const Wavefunction &>(other)));
 }
 
+double Wavefunction::dot(const std::map<size_t, double> &other) const {
+    double result = 0;
+    if (m_sparse)
+        for (const auto &o : other) {
+            if (buffer_sparse.count(o.first))
+                result += buffer_sparse.at(o.first) * o.second;
+        }
+    else
+        for (const auto &o : other) {
+            result += buffer[o.first] * o.second;
+        }
+    return result;
+}
 void Wavefunction::times(const Wavefunction *a, const Wavefunction *b) {
     const auto wa = dynamic_cast<const Wavefunction *>(a);
     const auto wb = dynamic_cast<const Wavefunction *>(b);
-    for (size_t i = 0; i < buffer.size(); i++)
+    for (size_t i = 0; i < buffer.size(); i++) {
         buffer[i] = wa->buffer[i] * wb->buffer[i];
+    }
 }
 
 void Wavefunction::divide(const Wavefunction *a,
@@ -304,34 +342,40 @@ void Wavefunction::divide(const Wavefunction *a,
     const auto wb = dynamic_cast<const Wavefunction *>(b);
     if (negative) {
         if (append) {
-            for (size_t i = 0; i < buffer.size(); i++)
+            for (size_t i = 0; i < buffer.size(); i++) {
                 buffer[i] -= wa->buffer[i] / (wb->buffer[i] + shift);
+            }
         } else {
-            for (size_t i = 0; i < buffer.size(); i++)
+            for (size_t i = 0; i < buffer.size(); i++) {
                 buffer[i] = -wa->buffer[i] / (wb->buffer[i] + shift);
+            }
         }
     } else {
         if (append) {
-            for (size_t i = 0; i < buffer.size(); i++)
+            for (size_t i = 0; i < buffer.size(); i++) {
                 buffer[i] += wa->buffer[i] / (wb->buffer[i] + shift);
+            }
         } else {
-            for (size_t i = 0; i < buffer.size(); i++)
+            for (size_t i = 0; i < buffer.size(); i++) {
                 buffer[i] = wa->buffer[i] / (wb->buffer[i] + shift);
+            }
         }
     }
 }
 
 void Wavefunction::zero() {
-    for (auto &b : buffer)
+    for (auto &b : buffer) {
         b = 0;
+    }
 }
 
 double operator*(const Wavefunction &w1, const Wavefunction &w2) {
     if (!w1.compatible(w2))
         throw std::domain_error("attempt to form scalar product between incompatible Wavefunction objects");
     auto result = (double) 0;
-    for (size_t i = 0; i < w1.buffer.size(); i++)
+    for (size_t i = 0; i < w1.buffer.size(); i++) {
         result += w1.buffer[i] * w2.buffer[i];
+    }
     return result;
 }
 
@@ -356,10 +400,12 @@ std::string Wavefunction::str(int verbosity, unsigned int columns) const {
             if (!alphaStrings[syma].empty() && !betaStrings[symb].empty()) {
                 if (verbosity >= 1) s << std::endl << "Alpha strings of symmetry " << syma + 1 << ":";
                 if (verbosity >= 2) {
-                    for (const auto &i : alphaStrings[syma])
+                    for (const auto &i : alphaStrings[syma]) {
                         s << std::endl << i.str();
-                    for (const auto &i : betaStrings[symb])
+                    }
+                    for (const auto &i : betaStrings[symb]) {
                         s << std::endl << i.str();
+                    }
                 }
                 if (!m_sparse && buffer.size() == dimension && verbosity >= 0) {
                     s << std::endl << "Values:";
@@ -374,8 +420,9 @@ std::string Wavefunction::str(int verbosity, unsigned int columns) const {
         }
         if (m_sparse && !buffer_sparse.empty() && verbosity >= 0) {
             s << std::endl << "Sparse storage, values:";
-            for (const auto &b : buffer_sparse)
+            for (const auto &b : buffer_sparse) {
                 s << std::endl << determinantAt(b.first) << " : " << b.second;
+            }
         }
     }
     return "Wavefunction object\n" + this->State::str(verbosity) + s.str();
@@ -496,19 +543,22 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                                           const Wavefunction &w,
                                           bool parallel_stringset) { // FIXME not really thoroughly checked if the symmetry of h is not zero.
     auto prof = profiler->push("operatorOnWavefunction" + std::string(m_sparse ? "/sparse" : "") +
-                                    std::string(w.m_sparse ? "/sparse" : ""));
+                               std::string(w.m_sparse ? "/sparse" : ""));
     if (m_sparse) buffer_sparse.clear();
     if (parallel_rank == 0) {
         if (m_sparse) {
             if (!w.m_sparse) throw std::runtime_error("Cannot make sparse residual from full vector");
-            for (const auto &b : w.buffer_sparse)
+            for (const auto &b : w.buffer_sparse) {
                 buffer_sparse[b.first] += h.m_O0 * b.second;
+            }
         } else if (w.m_sparse) {
-            for (const auto &b : w.buffer_sparse)
+            for (const auto &b : w.buffer_sparse) {
                 buffer[b.first] += h.m_O0 * b.second;
+            }
         } else {
-            for (size_t i = 0; i < buffer.size(); i++)
+            for (size_t i = 0; i < buffer.size(); i++) {
                 buffer[i] += h.m_O0 * w.buffer[i];
+            }
         }
     } else if (!m_sparse)
         for (auto &b: buffer) b = 0;
@@ -527,9 +577,10 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
         size_t nsbbMax = 1000000000;
         std::vector<StringSet> bbs;
 //    xout << "before bbs emplace "<<std::endl;
-        for (unsigned int symb = 0; symb < 8; symb++)
+        for (unsigned int symb = 0; symb < 8; symb++) {
 //        bbs.emplace_back(w.betaStrings,1,0,symb,parallel_stringset);
             bbs.emplace_back(betaActiveStrings, 1, 0, symb, parallel_stringset);
+        }
 //    xout << "after bbs emplace "<<std::endl;
         for (unsigned int syma = 0; syma < 8; syma++) {
 //          StringSet aa(w.alphaStrings,1,0,syma,parallel_stringset);
@@ -650,10 +701,12 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                                 memory::vector<double> result(nsa * nsb);
                                 MXM(result.data(), &d[0], &(*h.O1(true).data())[0],
                                     nsa * nsb, w.orbitalSpace->total(0, 1), 1, false);
-                                for (size_t ia = 0; ia < nsa; ia++)
-                                    for (size_t ib = 0; ib < nsb; ib++)
+                                for (size_t ia = 0; ia < nsa; ia++) {
+                                    for (size_t ib = 0; ib < nsb; ib++) {
                                         buffer[offset + ia * bb.size() + bb0 - bb.begin() + ib]
                                                 += result[ia * nsb + ib];
+                                    }
+                                }
                             }
                         }
                         if (h.m_uhf) {
@@ -855,7 +908,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
         }
         std::vector<bool> spincases(1, true);
         if (result.m_uhf) spincases.push_back(false);
-        for (auto spincase : spincases)
+        for (auto spincase : spincases) {
             if (result.O1(spincase).parity() == SymmetryMatrix::parityEven) {
                 if (result.O1(spincase).symmetry() == 0) {
 //          result.O1(spincase) *=.5;
@@ -867,6 +920,7 @@ SymmetryMatrix::Operator Wavefunction::density(int rank,
                     throw std::runtime_error("non-symmetric density not yet supported");
                 }
             }
+        }
 
     }
 
@@ -1063,10 +1117,12 @@ std::vector<std::size_t> Wavefunction::histogram(const std::vector<double> &edge
     if (stop > edges.size()) stop = edges.size();
     std::vector<std::size_t> cumulative(edges.size(), 0);
     if (parallel) DivideTasks(edges.size());
-    for (size_t i = start; i < stop; i++)
+    for (size_t i = start; i < stop; i++) {
         if (parallel && NextTask())
-            for (double j : buffer)
+            for (double j : buffer) {
                 if (std::fabs(j) > edges[i]) cumulative[i]++;
+            }
+    }
     if (parallel) {
         EndTasks();
         std::vector<double> dcumulative(cumulative.size());
@@ -1081,9 +1137,10 @@ double Wavefunction::norm(const double k) {
     auto result = (double) 0;
     size_t imin = 0;
     size_t imax = buffer.size();
-    for (size_t i = imin; i < imax; i++)
+    for (size_t i = imin; i < imax; i++) {
         if (buffer[i])
             result += pow(fabs(buffer[i]), k);
+    }
     return result;
 }
 
@@ -1096,11 +1153,12 @@ Wavefunction &Wavefunction::addAbsPower(const Wavefunction &c, const double k, c
 //  xout <<std::endl;
     size_t imin = 0;
     size_t imax = buffer.size();
-    for (size_t i = imin; i < imax; i++)
+    for (size_t i = imin; i < imax; i++) {
         if (k == -1)
             buffer[i] += c.buffer[i] < 0 ? -factor : factor;
         else if (c.buffer[i])
             buffer[i] += factor * pow(fabs(c.buffer[i]), k) * c.buffer[i];
+    }
 //  xout <<"addAbsPower final=";
 //  for (size_t i=0; i<buffer.size(); i++)
 //    xout <<" "<<buffer[i];
@@ -1133,10 +1191,12 @@ std::vector<StringSet> Wavefunction::activeStrings(bool spinUp) const {
     if (m_sparse) {
         auto axis = spinUp ? 1 : 0;
         String proto;
-        for (unsigned int sym = 0; sym < 8; sym++)
+        for (unsigned int sym = 0; sym < 8; sym++) {
             if (!sources[sym].empty()) proto = sources[sym].front();
-        for (unsigned int sym = 0; sym < 8; sym++)
+        }
+        for (unsigned int sym = 0; sym < 8; sym++) {
             results[sym] = StringSet(proto, false, static_cast<int>(sym));
+        }
         for (const auto &ww : buffer_sparse) {
             const auto det = determinantAt(ww.first);
 //      xout << "activeStrings " << ww.first << " : " << ww.second << std::endl;
