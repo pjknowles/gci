@@ -14,6 +14,10 @@ foreach (dep FCIdump IterativeSolver memory molpro_plugin Profiler symmetry_matr
     get_dependency(${depl})
     list(APPEND DEPENDENCIES ${dep})
 endforeach ()
+if (NOT TARGET ga::ga)
+    get_dependency(ga)
+    list(APPEND DEPENDENCIES ga)
+endif ()
 if (Molpro_SOURCE_DIR)
     get_dependency(ppidd)
     list(APPEND DEPENDENCIES ppidd)
@@ -47,14 +51,11 @@ add_library(gci
         gciMixedOperatorSecondQuant.h gciMixedOperatorSecondQuant.cpp
         gciVibOperator.cpp gciVibOperator.h
         gciVibExcitation.h)
-#target_compile_options(gci PRIVATE -Wall)
-#target_include_directories(gci INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "gci.h;gciRun.h;${CMAKE_CURRENT_BINARY_DIR}/gci-config.h")
 
 if (Molpro_SOURCE_DIR)
     target_compile_definitions(gci PRIVATE MOLPRO)
-    get_dependency(ppidd)
-    list(APPEND DEPENDENCIES ppidd)
 endif ()
 
 find_package(BLAS)
@@ -73,13 +74,16 @@ endif ()
 target_link_libraries(gci PUBLIC
         ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
 
-target_include_directories(gci PRIVATE ${MPI_CXX_INCLUDE_PATH})
-target_link_libraries(gci PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
-target_compile_options(gci PRIVATE ${MPI_CXX_COMPILE_FLAGS})
+#target_include_directories(gci PRIVATE ${MPI_CXX_INCLUDE_PATH})
+#target_link_libraries(gci PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
+#target_compile_options(gci PRIVATE ${MPI_CXX_COMPILE_FLAGS})
 
 if (MPI_CXX_FOUND)
     target_link_libraries(gci PUBLIC MPI::MPI_CXX)
 endif ()
 
+if (TARGET ga::ga)
+    target_link_libraries(gci PUBLIC ga::ga)
+endif()
 
 configure_library(${PROJECT_NAME} ${DEPENDENCIES})

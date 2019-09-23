@@ -5,10 +5,11 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include "memory.h"
+#include <memory.h>
 #include <unistd.h>
 #include <cstring>
 #include <fcntl.h>
+#include <ga.h>
 using namespace gci;
 
 
@@ -33,6 +34,7 @@ int main(int argc, char *argv[])
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &parallel_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &parallel_rank);
+  GA_Initialize();
   if (parallel_rank > 0) freopen("/dev/null", "w", stdout);
   PluginGuest plugin("MOLPRO");
   if (plugin.active()) {
@@ -94,6 +96,7 @@ int main(int argc, char *argv[])
   xout << "initial memory=" << memory_allocated << ", remaining memory=" << memory_remaining() << std::endl;
   if (plugin.active())
     plugin.send("");
+  GA_Terminate();
   MPI_Finalize();
   return 0;
 }

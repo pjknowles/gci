@@ -163,8 +163,9 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
     auto modOptions = Options(options);
     modOptions.addParameter("NSTATE", (int) n);
     // Modify options to choose the correct number of electronic states
+    SymmetryMatrix::Operator* h = ham->elHam["Hel[0]"].get();
     Davidson<Wavefunction, SymmetryMatrix::Operator> elecSolver(std::move(w),
-                                                                SymmetryMatrix::Operator(ham->elHam["Hel[0]"]),
+                                                                SymmetryMatrix::Operator{*h},
                                                                 modOptions);
     elecSolver.run();
     // Loop over electronic states, loop over modals, set each element of the electronic wavefunction
@@ -204,7 +205,7 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
     if (!diagonalH) diagonalH = std::make_shared<t_Wavefunction>(*prototype, 0);
     diagonalH->allocate_buffer();
     diagonalH->diagonalOperator(*ham);
-    auto minLocs =diagonalH->minlocN(nState);
+    auto minLocs = diagonalH->minlocN(nState);
     std::vector<int> roots(nState, 0);
     for (unsigned int root = 0; root < nState; root++) {
         ww.push_back(t_Wavefunction(*prototype, 0));
@@ -240,7 +241,7 @@ void Davidson<t_Wavefunction, t_Operator>::action() {
 template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::update() {
     auto eigval = solver.eigenvalues();
-    auto minLocs =diagonalH->minlocN(nState);
+    auto minLocs = diagonalH->minlocN(nState);
     for (size_t state = 0; state < nState; state++) {
         t_Wavefunction &cw = ww[state];
         const t_Wavefunction &gw = gg[state];

@@ -10,18 +10,19 @@
 #include "gciMixedWavefunction.h"
 #include "gciDavidson.h"
 
-using namespace gci;
 
-
-int gci::parallel_size = 1;
-int gci::parallel_rank = 0;
-bool gci::molpro_plugin = false;
-MPI_Comm gci::molpro_plugin_intercomm = MPI_COMM_NULL;
+namespace gci {
+int parallel_size = 1;
+int parallel_rank = 0;
+bool molpro_plugin = false;
+MPI_Comm molpro_plugin_intercomm = MPI_COMM_NULL;
 std::map<MPI_Comm, std::unique_ptr<sharedCounter>> _nextval_counter;
 std::map<MPI_Comm, long int> __my_first_task{{MPI_COMM_COMPUTE, 0}};
 std::map<MPI_Comm, long int> __task{{MPI_COMM_COMPUTE, 0}};
 std::map<MPI_Comm, long int> __task_granularity{{MPI_COMM_COMPUTE, 1}};
+} // namespace gci
 
+using namespace gci;
 using ParameterVectorSet = std::vector<Wavefunction>;
 using scalar = double;
 
@@ -750,7 +751,7 @@ std::vector<double> Run::CSDavidson(const SymmetryMatrix::Operator &ham,
         g.getw(gfile, i);
         reducedHamiltonian[i + n * (n + 1)] = g * w;
       }
-      gsum(&reducedHamiltonian[n * (n + 1)], n + 1);
+      gsum(&reducedHamiltonian[n * (n + 1)], n + 1, MPI_COMM_COMPUTE);
       for (int i = 0; i < n + 1; i++)
         reducedHamiltonian[n + i * (n + 1)] = reducedHamiltonian[i + n * (n + 1)];
     }
@@ -877,13 +878,13 @@ std::vector<double> Run::CSDavidson(const SymmetryMatrix::Operator &ham,
     for (int i = 0; i <= n; i++) {
       g.getw(wfile, i);
       double factor = -(g * w) / (g * g);
-      gsum(&factor, 1);
+      gsum(&factor, 1, MPI_COMM_COMPUTE);
 //      w += factor*g;
       w.axpy(factor, g);
     }
     profiler->stop("Davidson residual");
     double norm2 = w * w;
-    gsum(&norm2, 1);
+    gsum(&norm2, 1, MPI_COMM_COMPUTE);
 
     double econv = 0;
     for (int i = 0; i < (int) e.size(); i++) {
@@ -1018,7 +1019,7 @@ std::vector<double> Run::RSPT(const std::vector<SymmetryMatrix::Operator *> &ham
 //      xout <<"contribution from n="<<n<<", k="<<k<<" to E("<<n+k<<")="<<g*w<<std::endl;
         e[n + k] += g * w;
       }
-      gsum(&e[n + 1], (size_t) (hams.size() - 1));
+      gsum(&e[n + 1], (size_t) (hams.size() - 1), MPI_COMM_COMPUTE);
     }
     xout << "n=" << n << ", E(n+1)=" << e[n + 1] << std::endl;
     if ((e[n + 1] < 0 ? -e[n + 1] : e[n + 1]) < energyThreshold && e[n + 1] != (double) 0) {
@@ -1945,18 +1946,18 @@ SymmetryMatrix::Operator gci::sameSpinOperator(const SymmetryMatrix::Operator& h
 void gci::gsum(SymmetryMatrix::Operator& op) {
   std::vector<double> O0;
   O0.push_back(op.m_O0);
-  ::gci::gsum(O0);
+  ::gci::gsum(O0, MPI_COMM_COMPUTE);
   op.m_O0 = O0[0];
   if (op.m_rank > 0) {
-    ::gci::gsum(*op.O1(true).data());
+    ::gci::gsum(*op.O1(true).data(), MPI_COMM_COMPUTE);
     if (op.m_uhf)
-      ::gci::gsum(*op.O1(false).data());
+      ::gci::gsum(*op.O1(false).data(), MPI_COMM_COMPUTE);
   }
   if (op.m_rank > 1) {
-    ::gci::gsum(*op.O2(true, true).data());
+    ::gci::gsum(*op.O2(true, true).data(), MPI_COMM_COMPUTE);
     if (op.m_uhf) {
-      ::gci::gsum(*op.O2(true, false).data());
-      ::gci::gsum(*op.O2(false, false).data());
+      ::gci::gsum(*op.O2(true, false).data(), MPI_COMM_COMPUTE);
+      ::gci::gsum(*op.O2(false, false).data(), MPI_COMM_COMPUTE);
     }
   }
 }
