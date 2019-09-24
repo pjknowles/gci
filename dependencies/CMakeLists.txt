@@ -35,7 +35,7 @@ declare_dependency(
 )
 
 find_program(ga-config ga-config)
-if (ga-config)
+if (ga-config AND FALSE)
     foreach (f cflags cppflags ldflags libs)
         execute_process(COMMAND ${ga-config} --${f} OUTPUT_VARIABLE ga-${f})
         string(STRIP "${ga-${f}}" ga-${f})
@@ -45,9 +45,9 @@ if (ga-config)
     target_link_options(ga::ga INTERFACE ${ga-ldflags})
     target_compile_options(ga::ga INTERFACE ${ga-cflags} ${ga-cppflags})
     message("Using local global array installation")
-else (ga-config)
+else ()
     declare_dependency(
             ga
             https://github.com/GlobalArrays/ga.git
     )
-endif (ga-config)
+endif ()
