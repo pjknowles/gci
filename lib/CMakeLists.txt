@@ -82,7 +82,7 @@ if (MPI_CXX_FOUND)
     target_link_libraries(gci PUBLIC MPI::MPI_CXX)
 endif ()
 
-if (TARGET ga::ga)
+if (TARGET ga::ga AND FALSE)
     target_link_libraries(gci PUBLIC ga::ga)
 endif()
 

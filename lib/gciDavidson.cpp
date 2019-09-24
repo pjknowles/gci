@@ -1,6 +1,7 @@
 #include "gciDavidson.h"
 
 #include <iomanip>
+#include <ga.h>
 
 namespace gci {
 namespace run {
@@ -25,34 +26,42 @@ Davidson<t_Wavefunction, t_Operator>::Davidson(t_Wavefunction &&prototype,
 
 template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::message() {
-    std::cout << "Davidson eigensolver, maximum iterations=" << maxIterations;
-    std::cout << "; number of states=" << nState;
-    std::cout << "; energy threshold=" << std::scientific << std::setprecision(1) << energyThreshold << std::endl;
-    std::cout << "size of Fock space=" << prototype->size() << std::endl;
-    xout << std::fixed << std::setprecision(12);
+    if (GA_Nodeid() == 0) {
+        std::cout << "Davidson eigensolver, maximum iterations=" << maxIterations;
+        std::cout << "; number of states=" << nState;
+        std::cout << "; energy threshold=" << std::scientific << std::setprecision(1) << energyThreshold << std::endl;
+        std::cout << "size of Fock space=" << prototype->size() << std::endl;
+        xout << std::fixed << std::setprecision(12);
+    }
 }
 
 template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::printMatrix() {
+    if (GA_Nodeid() != 0) return;
     t_Wavefunction w(ww[0]);
     t_Wavefunction action(gg[0]);
     w.allocate_buffer();
     action.allocate_buffer();
     auto n = w.size();
     std::vector<std::vector<double>> H(n, std::vector<double>(n, 0));
-    std::cout << "Hamiltonian matrix (nxn):" << std::endl;
-    std::cout << "n = " << n << std::endl;
-    std::cout << " H = {";
+    if (GA_Nodeid() == 0) {
+        std::cout << "Hamiltonian matrix (nxn):" << std::endl;
+        std::cout << "n = " << n << std::endl;
+        std::cout << " H = {";
+    }
     for (size_t i = 0; i < n; ++i) {
         w.zero();
         w.set(i, 1.0);
         action.zero();
         action.operatorOnWavefunction(*ham, w);
-        std::cout << "{";
+        if (GA_Nodeid() == 0)
+            std::cout << "{";
         for (size_t j = 0; j < n; ++j) {
             H[i][j] = action.at(j);
-            if (j == n - 1) std::cout << H[i][j] << "";
-            else std::cout << H[i][j] << ",";
+            if (GA_Nodeid() == 0) {
+                if (j == n - 1) std::cout << H[i][j] << "";
+                else std::cout << H[i][j] << ",";
+            }
         }
         if (i == n - 1) std::cout << "}};" << std::endl;
         else std::cout << "}," << std::endl;
@@ -62,86 +71,16 @@ void Davidson<t_Wavefunction, t_Operator>::printMatrix() {
 template<class t_Wavefunction>
 void write_vec(const t_Wavefunction &w, const std::string &message) {
     size_t n = w.size();
-    std::cout << message << "  {";
+
+    if (GA_Nodeid() == 0)
+        std::cout << message << "  {";
     for (size_t i = 0; i < n; ++i) {
-        std::cout << w.at(i) << ", ";
+        auto v = w.at(i);
+        if (GA_Nodeid() == 0)
+            std::cout << v << ", ";
     }
-    std::cout << "}" << std::endl;
-}
-
-
-template<class t_Wavefunction, class t_Operator>
-void printSCFmatrixElements(const t_Wavefunction &wfn, const t_Operator &ham) { }
-
-/*!
- * @brief Prints expectation values of all terms in the Hamiltonian over Slater Determinants
- */
-template<>
-void
-printSCFmatrixElements<MixedWavefunction, MixedOperator>(const MixedWavefunction &wfn, const MixedOperator &ham) {
-    MixedOperator hamMod(ham);
-    for (auto &op : hamMod.Hmix[VibOpType::Qsq]) {
-        if (op.vibOp.mode[0] != op.vibOp.mode[1]) continue;
-        auto i = op.vibOp.mode[0];
-        op.Hel.m_O0 += std::pow(hamMod.freq[i], 2);
-    }
-    std::map<VibOpType, const char *> rename{{VibOpType::HO, "HO"}, {VibOpType::dQ, "T1"}, {VibOpType::Q, "H1"},
-                                             {VibOpType::Qsq, "H2"}};
-    Wavefunction w(wfn.wavefunctionAt(0));
-    Wavefunction action(w);
-    w.allocate_buffer();
-    action.allocate_buffer();
-    auto n = w.size();
-    std::vector<std::vector<double>> H(n, std::vector<double>(n, 0));
-    std::cout << "Hamiltonian matrix (nxn):" << std::endl;
-    std::cout << "n = " << n << std::endl;
-    std::cout << "Hel\n{";
-    for (size_t i = 0; i < n; ++i) {
-        w.zero();
-        w.set(i, 1.0);
-        action.zero();
-        action.operatorOnWavefunction(hamMod.Hel, w);
-        std::cout << "{";
-        for (size_t j = 0; j < n; ++j) {
-            H[i][j] = action.at(j);
-            if (j == n - 1) std::cout << H[i][j] << "";
-            else std::cout << H[i][j] << ",";
-        }
-        if (i == n - 1) std::cout << "}};" << std::endl;
-        else std::cout << "}," << std::endl;
-    }
-    for (const auto &hamTerm : hamMod) {
-        for (const auto &op : hamTerm.second) {
-            std::string name = rename[op.vibOp.type];
-            std::for_each(op.vibOp.mode.begin(), op.vibOp.mode.end(),
-                          [&name](const auto el) {name += "_" + std::to_string(el);});
-            std::cout << name << "\n{";
-            for (size_t i = 0; i < n; ++i) {
-                w.zero();
-                w.set(i, 1.0);
-                action.zero();
-                action.operatorOnWavefunction(op.Hel, w);
-                std::cout << "{";
-                for (size_t j = 0; j < n; ++j) {
-                    H[i][j] = action.at(j);
-                    if (j == n - 1) std::cout << H[i][j] << "";
-                    else std::cout << H[i][j] << ",";
-                }
-                if (i == n - 1) std::cout << "}};" << std::endl;
-                else std::cout << "}," << std::endl;
-            }
-        }
-    }
-}
-
-template<class t_Wavefunction, class t_Operator>
-void printCImatrixElements(const t_Wavefunction &wfn, const t_Operator &ham) {
-    t_Wavefunction dummyWfn(wfn);
-    dummyWfn.zero();
-    dummyWfn.operatorOnWavefunction(ham, wfn, false);
-    auto e = dummyWfn.dot(wfn);
-    xout << "CI expecation values of electronic terms " << std::endl;
-    xout << "Energy = " << e << std::endl;
+    if (GA_Nodeid() == 0)
+        std::cout << "}" << std::endl;
 }
 
 template<class t_Wavefunction, class t_Operator>
@@ -151,7 +90,8 @@ template<>
 void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
     // Currently assumes only 1 mode
     auto prof = profiler->push("prepareGuess");
-    std::cout << "Entered Davidson::prepareGuess()" << std::endl;
+    if (GA_Nodeid() == 0)
+        std::cout << "Entered Davidson::prepareGuess()" << std::endl;
     auto nS = nState;
     auto nMode = options.parameter("NMODE", int(0));
     Wavefunction w = prototype->wavefunctionAt(0);
@@ -163,7 +103,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
     auto modOptions = Options(options);
     modOptions.addParameter("NSTATE", (int) n);
     // Modify options to choose the correct number of electronic states
-    SymmetryMatrix::Operator* h = ham->elHam["Hel[0]"].get();
+    SymmetryMatrix::Operator *h = ham->elHam["Hel[0]"].get();
     Davidson<Wavefunction, SymmetryMatrix::Operator> elecSolver(std::move(w),
                                                                 SymmetryMatrix::Operator{*h},
                                                                 modOptions);
@@ -178,7 +118,8 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
             ww[root].set(ind_modal * elDim + j, elecSolver.ww[ind_elec_state].at(j));
         }
     }
-    std::cout << "Exit Davidson::prepareGuess()" << std::endl;
+    if (GA_Nodeid() == 0)
+        std::cout << "Exit Davidson::prepareGuess()" << std::endl;
 }
 
 template<class t_Wavefunction, class t_Operator>
@@ -195,9 +136,11 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
 //        if (solver.endIteration(ww, gg) && iteration > 4) break;
         if (solver.endIteration(ww, gg)) break;
     }
-    xout << "energies: ";
-    for (unsigned int i = 0; i < nState; ++i) xout << solver.eigenvalues()[i] << ", ";
-    xout << std::endl;
+    if (GA_Nodeid() == 0) {
+        xout << "energies: ";
+        for (unsigned int i = 0; i < nState; ++i) xout << solver.eigenvalues()[i] << ", ";
+        xout << std::endl;
+    }
 }
 
 template<class t_Wavefunction, class t_Operator>
@@ -208,12 +151,13 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
     auto minLocs = diagonalH->minlocN(nState);
     std::vector<int> roots(nState, 0);
     for (unsigned int root = 0; root < nState; root++) {
-        ww.push_back(t_Wavefunction(*prototype, 0));
+        ww.emplace_back(*prototype, 0);
         ww.back().allocate_buffer();
         ww.back().zero();
         auto n = minLocs[root];
-        if (std::count(roots.begin(), roots.begin() + root, n) != 0)
-            throw std::logic_error("Davidson::initialize duplicate guess vector, n =" + std::to_string(n));
+        if (GA_Nodeid() == 0)
+            if (std::count(roots.begin(), roots.begin() + root, n) != 0)
+                throw std::logic_error("Davidson::initialize duplicate guess vector, n =" + std::to_string(n));
         roots[root] = n;
         ww.back().set(n, 1.0);
         gg.emplace_back(*prototype, 0);
@@ -233,7 +177,7 @@ void Davidson<t_Wavefunction, t_Operator>::action() {
         g.zero();
         if (solver.active().at(k)) {
             auto prof = profiler->push("Hc");
-            g.operatorOnWavefunction(*ham.get(), x, parallel_stringset);
+            g.operatorOnWavefunction(*ham, x, false);
         }
     }
 }
