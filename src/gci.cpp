@@ -32,9 +32,9 @@ int main(int argc, char *argv[])
   char fcidumpname[1024] = "gci.fcidump";
   molpro_plugin = false;
   MPI_Init(&argc, &argv);
+  GA_Initialize();
   MPI_Comm_size(MPI_COMM_WORLD, &parallel_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &parallel_rank);
-  GA_Initialize();
   if (parallel_rank > 0) freopen("/dev/null", "w", stdout);
   PluginGuest plugin("MOLPRO");
   if (plugin.active()) {
