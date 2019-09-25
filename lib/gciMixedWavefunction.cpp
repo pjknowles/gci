@@ -8,9 +8,9 @@
 namespace gci {
 
 MPI_Comm create_new_comm(MPI_Comm head_comm = MPI_COMM_COMPUTE) {
-    MPI_Comm new_comm;
+    MPI_Comm new_comm=MPI_COMM_NULL;
     MPI_Comm_split(head_comm, GA_Nodeid(), GA_Nodeid(), &new_comm);
-    if (new_comm == nullptr) throw std::runtime_error("Failed to create a new communicator");
+    if (new_comm == MPI_COMM_NULL) throw std::runtime_error("Failed to create a new communicator");
     return new_comm;
 }
 

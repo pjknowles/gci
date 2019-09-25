@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include <mpi.h>
 #include <gci.h>
+#include <ga.h>
 #include <sharedCounter.h>
 
 using namespace gci;
@@ -21,11 +22,13 @@ int main(int argc, char **argv) {
     int result;
     profiler = std::make_unique<Profiler>(Profiler("GCI"));
     MPI_Init(&argc, &argv);
+    GA_Initialize();
     MPI_Comm_rank(MPI_COMM_COMPUTE, &parallel_rank);
     MPI_Comm_size(MPI_COMM_COMPUTE, &parallel_size);
     result = RUN_ALL_TESTS();
     profiler.reset();
-    _nextval_counter.reset();
+    _nextval_counter[MPI_COMM_COMPUTE].reset();
+    GA_Terminate();
     MPI_Finalize();
     return result;
 }
