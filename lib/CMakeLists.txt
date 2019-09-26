@@ -41,7 +41,7 @@ add_library(gci
         gciSymmetrySpace.cpp gciSymmetrySpace.h
         gciTransitionDensity.cpp gciTransitionDensity.h
         gciWavefunction.cpp gciWavefunction.h
-        sharedCounter.cpp sharedCounter.h
+        SharedCounter.cpp SharedCounter.h
         gciHProduct.cpp gciHProduct.h
         gciHProductSet.cpp gciHProductSet.h
         gciMixedOperator.cpp gciMixedOperator.h

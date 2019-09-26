@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include "Profiler.h"
 #include <cstdint>
-#include "sharedCounter.h"
+#include "SharedCounter.h"
 #include "memory.h"
 
 #ifndef MOLPRO
@@ -56,12 +56,12 @@ extern MPI_Comm molpro_plugin_intercomm;
 extern bool molpro_plugin;
 
 // shared counter
-//extern std::unique_ptr<sharedCounter> _nextval_counter;
-extern std::map<MPI_Comm, std::unique_ptr<sharedCounter>> _nextval_counter;
+//extern std::unique_ptr<SharedCounter> _nextval_counter;
+extern std::map<MPI_Comm, std::unique_ptr<SharedCounter>> _nextval_counter;
 
 inline void create_new_counter(MPI_Comm communicator) {
     if (_nextval_counter.find(communicator) == _nextval_counter.end()) {
-        _nextval_counter[communicator] = std::make_unique<sharedCounter>(sharedCounter());
+        _nextval_counter[communicator] = std::make_unique<SharedCounter>(SharedCounter());
         _nextval_counter[communicator]->reset();
     }
 }
@@ -69,7 +69,7 @@ inline void create_new_counter(MPI_Comm communicator) {
 inline long nextval(MPI_Comm communicator, int64_t option = parallel_size) {
     if (option < 0) {
         if (_nextval_counter[communicator] == nullptr)
-            _nextval_counter[communicator] = std::make_unique<sharedCounter>();
+            _nextval_counter[communicator] = std::make_unique<SharedCounter>();
         _nextval_counter[communicator]->reset();
         return 0;
     }

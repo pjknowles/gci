@@ -3,8 +3,10 @@
 #ifdef MOLPRO
 #include "molpro_config.h"
 #endif
-#if !defined(MOLPRO) || defined(HAVE_MPI_H)
+#if !defined(MOLPRO)
+
 #include "mpi.h"
+
 #ifdef MOLPRO
 #include "ppidd.h"
 #define MPI_COMM_COMPUTE MPI_Comm_f2c(PPIDD_Worker_comm())
@@ -17,21 +19,24 @@
 #define MPI_Win int
 #define MPI_COMM_COMPUTE 0
 #endif
+
 #include <vector>
 #include <cstddef>
 
-class sharedCounter {
- public:
-  explicit sharedCounter(const MPI_Comm &communicator = MPI_COMM_COMPUTE);
-  ~sharedCounter();
-  int increment(int amount = 1);
-  void reset();
- private:
-  MPI_Win m_win;
-  int m_hostrank;
-  int m_myval;
-  std::vector<int> m_data;
-  int m_rank, m_size;
+class SharedCounter {
+public:
+    explicit SharedCounter(const MPI_Comm &communicator = MPI_COMM_COMPUTE);
+    ~SharedCounter();
+    int increment(int amount = 1);
+    void reset();
+private:
+    MPI_Comm m_communicator;
+    int m_hostrank;
+    long int m_myval;
+    int m_ga_handle;
+    int m_ga_pgroup;
+    int m_rank;
+    int m_size;
 };
 
 #endif // SHAREDCOUNTER_H

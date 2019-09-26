@@ -3,7 +3,7 @@
 #include <mpi.h>
 #include <gci.h>
 #include <ga.h>
-#include <sharedCounter.h>
+#include <SharedCounter.h>
 
 using namespace gci;
 
