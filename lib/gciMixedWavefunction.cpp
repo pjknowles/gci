@@ -8,9 +8,9 @@
 namespace gci {
 
 MPI_Comm create_new_comm(MPI_Comm head_comm = MPI_COMM_COMPUTE) {
-    MPI_Comm new_comm=MPI_COMM_NULL;
+    MPI_Comm new_comm = MPI_COMM_NULL;
     MPI_Comm_split(head_comm, GA_Nodeid(), GA_Nodeid(), &new_comm);
-    if (new_comm == MPI_COMM_NULL) throw std::runtime_error("Failed to create a new communicator");
+    if (new_comm == MPI_COMM_NULL) GA_Error((char *) "Failed to create a new communicator", 0);
     return new_comm;
 }
 
@@ -44,16 +44,31 @@ bool MixedWavefunction::empty() const {
 }
 
 void MixedWavefunction::allocate_buffer() {
-    auto dim = (int) m_dimension;
-    char name[]  = "MixedWavefunction";
-    m_ga_handle = NGA_Create(C_DBL, 1, &dim, name, &m_ga_chunk);
+//  global processor ranks
+    int loc_size, glob_size, glob_rank;
+    MPI_Comm_size(m_head_communicator, &loc_size);
+    MPI_Comm_size(MPI_COMM_COMPUTE, &glob_size);
+    MPI_Comm_rank(MPI_COMM_COMPUTE, &glob_rank);
+    std::vector<int> glob_ranks{loc_size};
+    MPI_Allgather(&glob_rank, 1, MPI_INT, &glob_ranks[0], loc_size, MPI_INT, m_head_communicator);
+// create new GA processor group
+    m_ga_pgroup = GA_Pgroup_create(&glob_ranks[0], loc_size);
+    m_ga_handle = NGA_Create_handle();
+    NGA_Set_pgroup(m_ga_handle, m_ga_pgroup);
+    auto dims = (int) m_dimension;
+    NGA_Set_data(m_ga_handle, 1, &dims, C_DBL);
+    NGA_Set_array_name(m_ga_handle, (char *) "MixedWavefunction");
+    NGA_Set_chunk(m_ga_handle, &m_ga_chunk);
+    auto err = GA_Allocate(m_ga_handle);
+    if (err) GA_Error((char *) "Failed to allocate", 0);
     m_ga_allocated = true;
 }
 
+//TODO does it still work if source has a different communicator?
 void MixedWavefunction::copy_buffer(const MixedWavefunction &source) {
     if (source.empty()) return;
     if (empty()) {
-        char name[]  = "MixedWavefunction";
+        char name[] = "MixedWavefunction";
         m_ga_handle = GA_Duplicate(source.m_ga_handle, name);
         m_ga_chunk = source.m_ga_chunk;
         m_ga_allocated = true;
@@ -75,7 +90,7 @@ std::vector<size_t> MixedWavefunction::minlocN(size_t n) const {
     double *buffer = nullptr;
     int ld;
     NGA_Access(m_ga_handle, &lo, &hi, &buffer, &ld);
-    if (buffer == nullptr) throw std::runtime_error("");
+    if (buffer == nullptr) GA_Error((char *) "Failed to access local GA buffer", 0);
     // search for n lowest numbers
     auto nmin = length > n ? n : length;
     std::vector<size_t> minInd(n, 0);
