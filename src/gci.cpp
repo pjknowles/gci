@@ -1,4 +1,4 @@
-#include "sharedCounter.h"
+#include "SharedCounter.h"
 //TODO a cleaner separation of library-internal headers
 #include "gci.h"
 #include "gciRun.h"

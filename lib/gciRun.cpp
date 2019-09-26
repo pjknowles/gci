@@ -16,7 +16,7 @@ int parallel_size = 1;
 int parallel_rank = 0;
 bool molpro_plugin = false;
 MPI_Comm molpro_plugin_intercomm = MPI_COMM_NULL;
-std::map<MPI_Comm, std::unique_ptr<sharedCounter>> _nextval_counter;
+std::map<MPI_Comm, std::unique_ptr<SharedCounter>> _nextval_counter;
 std::map<MPI_Comm, long int> __my_first_task{{MPI_COMM_COMPUTE, 0}};
 std::map<MPI_Comm, long int> __task{{MPI_COMM_COMPUTE, 0}};
 std::map<MPI_Comm, long int> __task_granularity{{MPI_COMM_COMPUTE, 1}};
