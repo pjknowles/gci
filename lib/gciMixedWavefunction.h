@@ -58,20 +58,13 @@ protected:
     size_t m_dimension; //!< Overall dimension of the direct product Fock space
 
     /*!
-     * @brief Full wavefunction.
-     *
-     * Psi = {psi_{p,q}_0, psi_{p,q}_1A, psi_{p,q}_2A,..., psi_{p,q}_1B, ..., psi_{p,q}_1A_1B, ...}
-     * where psi_{p,q} is the electronic CI wavefunction and indices IA imply direct product with HO basis function I of
-     * mode A.
-     */
-//    std::vector<Wavefunction> m_wfn;
-    /*!
      * @brief Prototype electronic wavefunction
      *
      * It's buffer is populated with relevant section from GA before computation
      */
     Wavefunction m_prototype;
     int m_ga_handle; //!< Global Array handle, needed by GA libary
+    int m_ga_pgroup; //!< Global Array processor group handle
     int m_ga_chunk; //!< GA chunck size
     bool m_ga_allocated; //!< Flags that GA has been allocated
 public:
