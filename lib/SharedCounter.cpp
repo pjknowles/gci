@@ -20,8 +20,9 @@ SharedCounter::SharedCounter(const MPI_Comm &communicator)
     NGA_Set_data(m_ga_handle, 1, &dims, C_LONG);
     NGA_Set_array_name(m_ga_handle, (char *) "SharedCounter");
     NGA_Set_chunk(m_ga_handle, &chunk);
-    auto err = GA_Allocate(m_ga_handle);
-    if (err) GA_Error((char *) "Failed to allocate", 0);
+    auto succ = GA_Allocate(m_ga_handle);
+    if (!succ) GA_Error((char *) "Failed to allocate", 0);
+    GA_Check_handle(m_ga_handle, (char *) "Failed in SharedCounter constructor");
     reset();
 #endif
 }
@@ -35,6 +36,7 @@ SharedCounter::~SharedCounter() {
 void SharedCounter::reset() {
     m_myval = 0;
 #ifndef SHAREDCOUNTER_DUMMY
+    GA_Check_handle(m_ga_handle, (char *) "Failed in SharedCounter::reset()");
     GA_Zero(m_ga_handle);
 #endif
 }

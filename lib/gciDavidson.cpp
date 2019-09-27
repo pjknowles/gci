@@ -148,6 +148,14 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
     if (!diagonalH) diagonalH = std::make_shared<t_Wavefunction>(*prototype, 0);
     diagonalH->allocate_buffer();
     diagonalH->diagonalOperator(*ham);
+    //diagonalH->set(1.0);
+    //std::vector<double> v(100);
+    //for (auto i=0; i < 100; ++i){
+    //    v[i] = diagonalH->at(i);
+    //}
+    //for (auto el: v){
+    //    xout << el << ", " << std::endl;
+    //}
     auto minLocs = diagonalH->minlocN(nState);
     std::vector<int> roots(nState, 0);
     for (unsigned int root = 0; root < nState; root++) {
@@ -160,6 +168,9 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
                 throw std::logic_error("Davidson::initialize duplicate guess vector, n =" + std::to_string(n));
         roots[root] = n;
         ww.back().set(n, 1.0);
+        for (auto i =0; i <=root; ++i){
+            std::cout << i << " " << root << " " <<  ww[i].dot(ww.back()) << std::endl;
+        }
         gg.emplace_back(*prototype, 0);
         gg.back().allocate_buffer();
         gg.back().settilesize(

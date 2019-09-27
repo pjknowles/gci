@@ -119,7 +119,7 @@ protected:
      */
     static void ga_wfn_block_bound(int iVib, int *lo, int *hi, int dimension);
     static void ga_copy_to_local(int ga_handle, int iVib, Wavefunction &wfn, int dimension);
-    static void ga_accumulate(int ga_handle, int iVib, Wavefunction &wfn, int dimension, int scaling_constant = 1.0);
+    static void ga_accumulate(int ga_handle, int iVib, Wavefunction &wfn, int dimension, double scaling_constant = 1.0);
 public:
 
     /*!

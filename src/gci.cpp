@@ -10,6 +10,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <ga.h>
+#include <ma.h>
 using namespace gci;
 
 
@@ -51,6 +52,7 @@ int main(int argc, char *argv[])
       memory = static_cast<size_t>(std::stol(s.substr(equals + 1)));
   }
   memory_initialize(memory);
+  MA_init(C_DBL, 10000, (int) memory);
   std::cout << "memory initialised to " << memory_remaining() << std::endl;
   size_t memory_allocated = memory_remaining();
 
