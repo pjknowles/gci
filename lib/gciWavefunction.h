@@ -31,6 +31,8 @@ public:
     std::map<size_t, double> buffer_sparse; ///< alternative storage to buffer, useful when very sparse
     bool m_sparse; ///< whether the coefficients are stored in buffer_sparse instead of buffer
     MPI_Comm m_communicator;
+    int m_parallel_size;
+    int m_parallel_rank;
 protected:
     memory::vector<double> buffer; ///< buffer to hold coefficients describing the object
     size_t dimension; ///< the size of the space

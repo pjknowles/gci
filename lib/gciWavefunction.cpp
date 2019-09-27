@@ -20,24 +20,47 @@
 
 namespace gci {
 
+int _mpi_rank(MPI_Comm comm){
+    int r;
+    MPI_Comm_rank(comm, &r);
+    return r;
+}
+
+int _mpi_size(MPI_Comm comm){
+    int s;
+    MPI_Comm_size(comm, &s);
+    return s;
+}
+
 Wavefunction::Wavefunction(OrbitalSpace h, int nelec, int symmetry, int ms2, MPI_Comm communicator)
-        : State(h, nelec, symmetry, ms2), m_sparse(false), m_communicator(communicator), dimension(0) {
+        : State(h, nelec, symmetry, ms2), m_sparse(false), m_communicator(communicator),
+        m_parallel_rank(_mpi_rank(m_communicator)),m_parallel_size(_mpi_size(m_communicator)),
+        dimension(0) {
     buildStrings();
 }
 
 Wavefunction::Wavefunction(OrbitalSpace *h, int n, int s, int m2, MPI_Comm communicator)
-        : State(h, n, s, m2), m_sparse(false), m_communicator(communicator), dimension(0) {
+        : State(h, n, s, m2), m_sparse(false), m_communicator(communicator),
+        m_parallel_rank(_mpi_rank(m_communicator)),m_parallel_size(_mpi_size(m_communicator)),
+        dimension(0) {
     buildStrings();
 }
 
 Wavefunction::Wavefunction(const State &state, MPI_Comm communicator)
-        : State(state), m_sparse(false), m_communicator(communicator), dimension(0) {
+        : State(state), m_sparse(false), m_communicator(communicator),
+        m_parallel_rank(_mpi_rank(m_communicator)),m_parallel_size(_mpi_size(m_communicator)),
+        dimension(0) {
     buildStrings();
 }
 
 Wavefunction::Wavefunction(const Wavefunction &source, int option, MPI_Comm communicator)
-        : m_sparse(source.m_sparse), m_communicator(communicator), dimension(source.dimension) {
+        : m_sparse(source.m_sparse), m_communicator(communicator),
+        m_parallel_rank(_mpi_rank(m_communicator)),m_parallel_size(_mpi_size(m_communicator)),
+        dimension(source.dimension) {
     *this = source;
+    m_communicator = communicator;
+    m_parallel_rank =_mpi_rank(m_communicator);
+    m_parallel_size = _mpi_size(m_communicator);
 }
 
 void Wavefunction::buildStrings() {
@@ -109,8 +132,8 @@ void Wavefunction::diagonalOperator(const SymmetryMatrix::Operator &op) {
         if (false && orbitalSpace->spinUnrestricted) { // UHF
         } else { // RHF
             // static task distribution
-            size_t chunk = (nsa - 1) / parallel_size + 1;
-            for (size_t ia = chunk * parallel_rank; ia < chunk * (parallel_rank + 1) && ia < nsa; ia++) {
+            size_t chunk = (nsa - 1) / m_parallel_size + 1;
+            for (size_t ia = chunk * m_parallel_rank; ia < chunk * (m_parallel_rank + 1) && ia < nsa; ia++) {
                 std::vector<double> on(onb);
                 for (size_t i = 0; i < nact; i++) {
                     for (size_t ib = 0; ib < nsb; ib++) {
@@ -545,7 +568,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
     auto prof = profiler->push("operatorOnWavefunction" + std::string(m_sparse ? "/sparse" : "") +
                                std::string(w.m_sparse ? "/sparse" : ""));
     if (m_sparse) buffer_sparse.clear();
-    if (parallel_rank == 0) {
+    if (m_parallel_rank == 0) {
         if (m_sparse) {
             if (!w.m_sparse) throw std::runtime_error("Cannot make sparse residual from full vector");
             for (const auto &b : w.buffer_sparse) {
@@ -759,7 +782,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
             }
         }
     }
-    //  xout <<"residual after alpha-alpha on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
+    //  xout <<"residual after alpha-alpha on process "<<m_parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
 
     if (h.m_rank > 1)
         if (true || h.m_uhf) { // two-electron contribution, beta-beta
@@ -793,7 +816,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                     }
                 }
             }
-            //      xout <<"residual after beta-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
+            //      xout <<"residual after beta-beta on process "<<m_parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
         }
 
     if (h.m_rank > 1) { // two-electron contribution, alpha-beta
@@ -829,7 +852,7 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
                 }
             }
         }
-        //      xout <<"residual after alpha-beta on process "<<parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
+        //      xout <<"residual after alpha-beta on process "<<m_parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
     }
 
     EndTasks(m_communicator);
@@ -1078,8 +1101,8 @@ Orbitals Wavefunction::naturalOrbitals() {
 
 void Wavefunction::putw(File &f, int index) {
     auto p = profiler->push("Wavefunction::putw");
-    size_t chunk = (buffer.size() - 1) / parallel_size + 1;
-    size_t offset = chunk * parallel_rank;
+    size_t chunk = (buffer.size() - 1) / m_parallel_size + 1;
+    size_t offset = chunk * m_parallel_rank;
     if (chunk + offset > buffer.size()) chunk = buffer.size() - offset;
     if (offset < buffer.size())
         f.write(&buffer[offset], chunk, index * chunk);
@@ -1088,8 +1111,8 @@ void Wavefunction::putw(File &f, int index) {
 
 void Wavefunction::getw(File &f, int index) {
     auto p = profiler->push("Wavefunction::getw");
-    size_t chunk = (buffer.size() - 1) / parallel_size + 1;
-    size_t offset = chunk * parallel_rank;
+    size_t chunk = (buffer.size() - 1) / m_parallel_size + 1;
+    size_t offset = chunk * m_parallel_rank;
     if (chunk + offset > buffer.size()) chunk = buffer.size() - offset;
     if (offset < buffer.size())
         f.read(&buffer[offset], chunk, index * chunk);
@@ -1099,13 +1122,13 @@ void Wavefunction::getw(File &f, int index) {
 void Wavefunction::getAll(File &f, int index) {
     auto p = profiler->push("Wavefunction::getAll");
     getw(f, index);
-    size_t chunk = (buffer.size() - 1) / parallel_size + 1;
+    size_t chunk = (buffer.size() - 1) / m_parallel_size + 1;
     gather_chunks(&buffer[0], buffer.size(), chunk, m_communicator);
     p += buffer.size();
 }
 
 void Wavefunction::replicate() {
-    size_t chunk = (buffer.size() - 1) / parallel_size + 1;
+    size_t chunk = (buffer.size() - 1) / m_parallel_size + 1;
     gather_chunks(&buffer[0], buffer.size(), chunk, m_communicator);
 
 }

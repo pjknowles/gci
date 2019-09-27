@@ -59,6 +59,7 @@ extern bool molpro_plugin;
 
 // shared counter
 extern std::map<MPI_Comm, std::unique_ptr<SharedCounter>> _nextval_counter;
+extern MPI_Comm _sub_communicator;
 extern std::map<MPI_Comm, int> _ga_pgroups;
 
 
@@ -85,6 +86,9 @@ extern std::map<MPI_Comm, long int> __task_granularity, __task, __my_first_task;
 inline void DivideTasks(std::size_t ntasks, std::size_t nMinBatch, std::size_t nMaxBatch,
                         MPI_Comm communicator) {
     {
+        int parallel_rank, parallel_size;
+        MPI_Comm_size(communicator, &parallel_size);
+        MPI_Comm_rank(communicator, &parallel_rank);
         // simple static LB
         size_t task_gran = ((ntasks - 1) / parallel_size + 1);
         task_gran = task_gran > 0 ? task_gran : 1;
@@ -114,6 +118,9 @@ inline void EndTasks(MPI_Comm communicator) {
 // simple task distribution assembly
 
 inline void gather_chunks(double *buffer, const size_t length, const size_t chunk, MPI_Comm communicator) {
+    int parallel_rank, parallel_size;
+    MPI_Comm_size(communicator, &parallel_size);
+    MPI_Comm_rank(communicator, &parallel_rank);
     {
         std::vector<int> recvcounts(static_cast<unsigned long>(parallel_size)),
                 displs(static_cast<unsigned long>(parallel_size));
@@ -142,6 +149,9 @@ inline void gather_chunks(double *buffer, const size_t length, const size_t chun
 
 void inline gsum(double *buffer, size_t len, MPI_Comm communicator) {
 #ifdef HAVE_MPI_H
+    int parallel_rank, parallel_size;
+    MPI_Comm_size(communicator, &parallel_size);
+    MPI_Comm_rank(communicator, &parallel_rank);
     std::vector<double> result;
     if (parallel_rank == 0)
         result.resize(len);
@@ -154,6 +164,9 @@ void inline gsum(double *buffer, size_t len, MPI_Comm communicator) {
 
 void inline gsum(std::map<size_t, double> &buffer, MPI_Comm communicator) {
 #ifdef HAVE_MPI_H
+    int parallel_rank, parallel_size;
+    MPI_Comm_size(communicator, &parallel_size);
+    MPI_Comm_rank(communicator, &parallel_rank);
     std::map<size_t, double> result;
     for (int rank = 0; rank < parallel_size; rank++) {
         size_t siz = buffer.size();

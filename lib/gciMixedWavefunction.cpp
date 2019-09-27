@@ -7,35 +7,29 @@
 
 namespace gci {
 
-MPI_Comm create_new_comm(MPI_Comm head_comm = MPI_COMM_COMPUTE) {
-    MPI_Comm new_comm = MPI_COMM_NULL;
-    MPI_Comm_split(head_comm, GA_Nodeid(), GA_Nodeid(), &new_comm);
-    if (new_comm == MPI_COMM_NULL) GA_Error((char *) "Failed to create a new communicator", 0);
-    return new_comm;
-}
 
 MixedWavefunction::MixedWavefunction(const Options &options, const State &prototype, MPI_Comm head_commun)
-        : m_head_communicator(head_commun), m_child_communicator(create_new_comm(m_head_communicator)),
+        : m_head_communicator(head_commun), m_child_communicator(_sub_communicator),
           m_vibSpace(options.parameter("NMODE", 0), options.parameter("NMODAL", 1),
                      options.parameter("VIB_EXC_LVL", 1)), m_vibBasis(m_vibSpace), m_elDim(0), m_dimension(0),
-          m_prototype(prototype), m_ga_handle(-1), m_ga_chunk(1), m_ga_allocated(false) {
+          m_prototype(prototype, m_child_communicator), m_ga_handle(-1), m_ga_chunk(1), m_ga_allocated(false) {
     m_elDim = m_prototype.size();
     m_vibBasis.generateFullSpace();
     m_dimension = m_vibBasis.vibDim() * m_elDim;
 }
 
 MixedWavefunction::MixedWavefunction(const MixedWavefunction &source, int option, MPI_Comm head_commun)
-        : m_head_communicator(head_commun), m_child_communicator(create_new_comm(m_head_communicator)),
+        : m_head_communicator(source.m_head_communicator), m_child_communicator(source.m_child_communicator),
           m_vibSpace(source.m_vibSpace), m_vibBasis(source.m_vibBasis), m_elDim(source.m_elDim),
           m_dimension(source.m_dimension), m_prototype(source.m_prototype), m_ga_handle(-1),
           m_ga_chunk(source.m_ga_chunk), m_ga_allocated(false) {
     copy_buffer(source);
-    allocate_buffer();
+//    allocate_buffer();
 }
 
 MixedWavefunction::~MixedWavefunction() {
     if (!empty()) GA_Destroy(m_ga_handle);
-    MPI_Comm_free(&m_child_communicator);
+//    MPI_Comm_free(&m_child_communicator);
 }
 
 
@@ -44,6 +38,7 @@ bool MixedWavefunction::empty() const {
 }
 
 void MixedWavefunction::allocate_buffer() {
+    if (!empty()) return;
     if (_ga_pgroups.find(m_head_communicator) == _ga_pgroups.end()){
 //  global processor ranks
         int loc_size, glob_size, glob_rank;
@@ -51,7 +46,7 @@ void MixedWavefunction::allocate_buffer() {
         MPI_Comm_size(MPI_COMM_COMPUTE, &glob_size);
         MPI_Comm_rank(MPI_COMM_COMPUTE, &glob_rank);
         std::vector<int> glob_ranks{loc_size};
-        MPI_Allgather(&glob_rank, 1, MPI_INT, &glob_ranks[0], loc_size, MPI_INT, m_head_communicator);
+        MPI_Allgather(&glob_rank, 1, MPI_INT, &glob_ranks[0], 1, MPI_INT, m_head_communicator);
 // create new GA processor group
         m_ga_pgroup = GA_Pgroup_create(&glob_ranks[0], loc_size);
         _ga_pgroups[m_head_communicator] = m_ga_pgroup;
@@ -75,7 +70,9 @@ void MixedWavefunction::copy_buffer(const MixedWavefunction &source) {
         m_ga_handle = GA_Duplicate(source.m_ga_handle, name);
         m_ga_chunk = source.m_ga_chunk;
         m_ga_allocated = true;
-    } else GA_Copy(source.m_ga_handle, m_ga_handle);
+        m_ga_pgroup = source.m_ga_pgroup;
+    } 
+    GA_Copy(source.m_ga_handle, m_ga_handle);
 }
 
 /*
@@ -122,9 +119,10 @@ std::vector<size_t> MixedWavefunction::minlocN(size_t n) const {
         minInd.resize(n * nproc);
         minVal.resize(n * nproc);
     }
+    MPI_Barrier(m_head_communicator);
     if (iproc == 0) {
-        MPI_Gather(MPI_IN_PLACE, n, MPI_SIZE_T, minInd.data(), n * nproc, MPI_SIZE_T, 0, m_head_communicator);
-        MPI_Gather(MPI_IN_PLACE, n, MPI_DOUBLE, minVal.data(), n * nproc, MPI_DOUBLE, 0, m_head_communicator);
+        MPI_Gather(MPI_IN_PLACE, n, MPI_SIZE_T, minInd.data(), n, MPI_SIZE_T, 0, m_head_communicator);
+        MPI_Gather(MPI_IN_PLACE, n, MPI_DOUBLE, minVal.data(), n, MPI_DOUBLE, 0, m_head_communicator);
         std::vector<value_type> sort_permutation(minVal.size());
         std::iota(sort_permutation.begin(), sort_permutation.end(), 0);
         std::sort(sort_permutation.begin(), sort_permutation.end(),
@@ -151,10 +149,10 @@ double MixedWavefunction::at(size_t ind) const {
     return buffer;
 }
 
-Wavefunction MixedWavefunction::wavefunctionAt(size_t iVib) const {
-    auto wfn = Wavefunction{m_prototype};
+Wavefunction MixedWavefunction::wavefunctionAt(size_t iVib, MPI_Comm commun) const {
+    auto wfn = Wavefunction{m_prototype, 0, commun};
     wfn.allocate_buffer();
-    ga_copy_to_local(m_ga_handle, iVib, wfn, m_elDim);
+    if (!empty()) ga_copy_to_local(m_ga_handle, iVib, wfn, m_elDim);
     return wfn;
 }
 
@@ -191,8 +189,8 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
                                                bool parallel_stringset) {
     DivideTasks(1000000000, 1, 1, m_head_communicator);
     auto prof = profiler->push("MixedWavefunction::operatorOnWavefunction");
-    auto res = Wavefunction{m_prototype};
-    auto ketWfn = Wavefunction{m_prototype};
+    auto res = Wavefunction{m_prototype, 0, m_child_communicator};
+    auto ketWfn = Wavefunction{m_prototype, 0, m_child_communicator};
     res.allocate_buffer();
     ketWfn.allocate_buffer();
     for (const auto &bra : m_vibBasis) {
@@ -200,7 +198,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
         // Purely electronic operators
         if (NextTask(m_head_communicator)) {
             auto p = profiler->push("Hel");
-            ga_copy_to_local(m_ga_handle, iBra, ketWfn, m_elDim);
+            ga_copy_to_local(w.m_ga_handle, iBra, ketWfn, m_elDim);
             res.zero();
             for (const auto &hel : ham.elHam) {
                 auto p = profiler->push(hel.first);
@@ -219,7 +217,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
                 auto ket = bra.excite(vibExc);
                 if (!ket.withinSpace(m_vibSpace)) continue;
                 auto iKet = m_vibBasis.index(ket);
-                ga_copy_to_local(m_ga_handle, iKet, ketWfn, m_elDim);
+                ga_copy_to_local(w.m_ga_handle, iKet, ketWfn, m_elDim);
                 res.axpy(val, ketWfn);
             }
             ga_accumulate(m_ga_handle, iBra, res, m_elDim);
@@ -230,7 +228,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             auto iKet = m_vibBasis.index(bra);
             if (!ham.connected(bra, ket)) continue;
             if (!NextTask(m_head_communicator)) continue;
-            ga_copy_to_local(m_ga_handle, iKet, ketWfn, m_elDim);
+            ga_copy_to_local(w.m_ga_handle, iKet, ketWfn, m_elDim);
             res.zero();
             for (const auto &mixedTerm : ham.mixedHam) {
                 const auto &vibTensor = mixedTerm.second;
@@ -246,13 +244,15 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             ga_accumulate(m_ga_handle, iBra, res, m_elDim);
         }
     }
+    //MPI_Barrier(m_head_communicator);
+    GA_Pgroup_sync(m_ga_pgroup);
 }
 
 void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bool parallel_stringset) {
     auto p = profiler->push("MixedWavefunction::diagonalOperator");
     DivideTasks(1000000000, 1, 1, m_head_communicator);
-    auto res = Wavefunction{m_prototype};
-    auto wfn = Wavefunction{m_prototype};
+    auto res = Wavefunction{m_prototype, 0, m_child_communicator};
+    auto wfn = Wavefunction{m_prototype, 0, m_child_communicator};
     res.allocate_buffer();
     wfn.allocate_buffer();
     for (const auto &bra : m_vibBasis) {
@@ -291,10 +291,12 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
             }
         }
     }
+    //MPI_Barrier(m_head_communicator);
+    GA_Pgroup_sync(m_ga_pgroup);
 }
 
 std::vector<double> MixedWavefunction::vec() const {
-    if (!empty()) return {};
+    if (empty()) return {};
     std::vector<double> vec(m_dimension);
     value_type *buffer = vec.data();
     int lo=0, hi=m_dimension-1, ld = m_dimension;
@@ -312,9 +314,9 @@ bool MixedWavefunction::compatible(const MixedWavefunction &other) const {
 
 void MixedWavefunction::axpy(double a, const MixedWavefunction &x) {
     if (!compatible(x)) throw std::domain_error("Attempting to add incompatible MixedWavefunction objects");
-    if (empty() || !x.empty()) throw std::runtime_error("GA not allocated");
-    double b = 1.0;
-    GA_Add(&a, m_ga_handle, &b, x.m_ga_handle, m_ga_handle);
+    if (empty() || x.empty()) throw std::runtime_error("GA not allocated");
+    double one = 1.0;
+    GA_Add(&one, m_ga_handle, &a, x.m_ga_handle, m_ga_handle);
 }
 
 void MixedWavefunction::scal(double a) {
@@ -400,7 +402,7 @@ MixedWavefunction &MixedWavefunction::operator-() {
 
 MixedWavefunction &MixedWavefunction::operator/=(const MixedWavefunction &other) {
     if (!compatible(other)) throw std::domain_error("Attempting to divide incompatible MixedWavefunction objects");
-    if (empty() || !other.empty()) throw std::runtime_error("GA not allocated");
+    if (empty() || other.empty()) throw std::runtime_error("GA not allocated");
     GA_Elem_divide(m_ga_handle, other.m_ga_handle, m_ga_handle);
     return *this;
 }
@@ -409,7 +411,7 @@ void MixedWavefunction::times(const MixedWavefunction *a, const MixedWavefunctio
     if (a == nullptr || b == nullptr) throw std::logic_error("Vectors cannot be null");
     if (!compatible(*a) || !compatible(*b))
         throw std::domain_error("Attempting to divide incompatible MixedWavefunction objects");
-    if (empty() || !a->empty() || b->empty()) throw std::runtime_error("GA not allocated");
+    if (empty() || a->empty() || b->empty()) throw std::runtime_error("GA not allocated");
     GA_Elem_multiply(a->m_ga_handle, b->m_ga_handle, m_ga_handle);
 }
 
@@ -419,7 +421,7 @@ void MixedWavefunction::divide(const MixedWavefunction *a, const MixedWavefuncti
     if (a == nullptr || b == nullptr) throw std::logic_error("Vectors cannot be null");
     if (!compatible(*a) || !compatible(*b))
         throw std::domain_error("Attempting to divide incompatible MixedWavefunction objects");
-    if (empty() || !a->empty() || b->empty()) throw std::runtime_error("GA not allocated");
+    if (empty() || a->empty() || b->empty()) throw std::runtime_error("GA not allocated");
     shift = negative ? -shift : shift;
     auto b_shifted = MixedWavefunction(*b);
     b_shifted.add(shift);

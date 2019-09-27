@@ -94,7 +94,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
         std::cout << "Entered Davidson::prepareGuess()" << std::endl;
     auto nS = nState;
     auto nMode = options.parameter("NMODE", int(0));
-    Wavefunction w = prototype->wavefunctionAt(0);
+    Wavefunction w = prototype->wavefunctionAt(0, MPI_COMM_COMPUTE);
     if (nMode != 1) return;
     auto nM = options.parameter("NMODAL", int(0));
     auto n = nS / nM;
@@ -118,6 +118,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
             ww[root].set(ind_modal * elDim + j, elecSolver.ww[ind_elec_state].at(j));
         }
     }
+    MPI_Barrier(MPI_COMM_COMPUTE);
     if (GA_Nodeid() == 0)
         std::cout << "Exit Davidson::prepareGuess()" << std::endl;
 }
