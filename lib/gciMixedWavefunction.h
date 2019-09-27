@@ -104,7 +104,7 @@ public:
      * @param iVib Index to the vibrational product
      * @return Reference to a wavefunction under offset
      */
-    Wavefunction wavefunctionAt(size_t iVib) const;
+    Wavefunction wavefunctionAt(size_t iVib, MPI_Comm commun) const;
 
     //! @brief Writes elements of wavefunction vector into a string
     std::string str() const;

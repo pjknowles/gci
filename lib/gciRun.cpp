@@ -9,15 +9,25 @@
 #include "gciMixedOperator.h"
 #include "gciMixedWavefunction.h"
 #include "gciDavidson.h"
+#include <ga.h>
 
 
 namespace gci {
+
+MPI_Comm create_new_comm() {
+    MPI_Comm new_comm = MPI_COMM_NULL;
+    MPI_Comm_split(MPI_COMM_COMPUTE, GA_Nodeid(), GA_Nodeid(), &new_comm);
+    if (new_comm == MPI_COMM_NULL) GA_Error((char *) "Failed to create a new communicator", 0);
+    return new_comm;
+}
+
 int parallel_size = 1;
 int parallel_rank = 0;
 bool molpro_plugin = false;
 MPI_Comm molpro_plugin_intercomm = MPI_COMM_NULL;
 std::map<MPI_Comm, std::unique_ptr<SharedCounter>> _nextval_counter;
 std::map<MPI_Comm, int> _ga_pgroups;
+MPI_Comm _sub_communicator;
 std::map<MPI_Comm, long int> __my_first_task{{MPI_COMM_COMPUTE, 0}};
 std::map<MPI_Comm, long int> __task{{MPI_COMM_COMPUTE, 0}};
 std::map<MPI_Comm, long int> __task_granularity{{MPI_COMM_COMPUTE, 1}};
@@ -26,6 +36,7 @@ std::map<MPI_Comm, long int> __task_granularity{{MPI_COMM_COMPUTE, 1}};
 using namespace gci;
 using ParameterVectorSet = std::vector<Wavefunction>;
 using scalar = double;
+
 
 static double _lastEnergy;
 static double _mu;
@@ -285,6 +296,7 @@ std::unique_ptr<Profiler> gci::profiler = nullptr;
 std::vector<double> Run::run() {
   if (profiler == nullptr) profiler.reset(new Profiler("GCI"));
   create_new_counter(MPI_COMM_COMPUTE);
+  _sub_communicator = create_new_comm();
   profiler->reset("GCI");
   int activeLvl = options.parameter("PROFACTIVE",-1);
   if (activeLvl >= 0)  profiler->active(activeLvl);

@@ -10,8 +10,8 @@ SharedCounter::SharedCounter(const MPI_Comm &communicator)
     MPI_Comm_rank(m_communicator, &m_rank);
     MPI_Comm_size(MPI_COMM_COMPUTE, &glob_size);
     MPI_Comm_rank(MPI_COMM_COMPUTE, &glob_rank);
-    std::vector<int> glob_ranks{m_size};
-    MPI_Allgather(&glob_rank, 1, MPI_INT, &glob_ranks[0], m_size, MPI_INT, m_communicator);
+    std::vector<int> glob_ranks{m_size, 0};
+    MPI_Allgather(&glob_rank, 1, MPI_INT, glob_ranks.data(), 1, MPI_INT, m_communicator);
 // create new processor group from the communicator
     m_ga_pgroup = GA_Pgroup_create(&glob_ranks[0], m_size);
     m_ga_handle = NGA_Create_handle();
@@ -43,8 +43,8 @@ void SharedCounter::reset() {
 
 
 int SharedCounter::increment(int amount) {
-    m_myval += amount;
     auto glob_val = m_myval;
+    m_myval += amount;
 #ifndef SHAREDCOUNTER_DUMMY
     int subscript = 0;
     glob_val = NGA_Read_inc(m_ga_handle, &subscript, (long int) amount);
