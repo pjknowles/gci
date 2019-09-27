@@ -26,6 +26,7 @@
 class SharedCounter {
 public:
     explicit SharedCounter(const MPI_Comm &communicator = MPI_COMM_COMPUTE);
+    SharedCounter(const SharedCounter & ) = delete;
     ~SharedCounter();
     int increment(int amount = 1);
     void reset();

@@ -18,7 +18,7 @@ MixedWavefunction::MixedWavefunction(const Options &options, const State &protot
         : m_head_communicator(head_commun), m_child_communicator(create_new_comm(m_head_communicator)),
           m_vibSpace(options.parameter("NMODE", 0), options.parameter("NMODAL", 1),
                      options.parameter("VIB_EXC_LVL", 1)), m_vibBasis(m_vibSpace), m_elDim(0), m_dimension(0),
-          m_prototype(prototype), m_ga_handle(-1), m_ga_chunk(-1), m_ga_allocated(false) {
+          m_prototype(prototype), m_ga_handle(-1), m_ga_chunk(1), m_ga_allocated(false) {
     m_elDim = m_prototype.size();
     m_vibBasis.generateFullSpace();
     m_dimension = m_vibBasis.vibDim() * m_elDim;
@@ -44,23 +44,26 @@ bool MixedWavefunction::empty() const {
 }
 
 void MixedWavefunction::allocate_buffer() {
+    if (_ga_pgroups.find(m_head_communicator) == _ga_pgroups.end()){
 //  global processor ranks
-    int loc_size, glob_size, glob_rank;
-    MPI_Comm_size(m_head_communicator, &loc_size);
-    MPI_Comm_size(MPI_COMM_COMPUTE, &glob_size);
-    MPI_Comm_rank(MPI_COMM_COMPUTE, &glob_rank);
-    std::vector<int> glob_ranks{loc_size};
-    MPI_Allgather(&glob_rank, 1, MPI_INT, &glob_ranks[0], loc_size, MPI_INT, m_head_communicator);
+        int loc_size, glob_size, glob_rank;
+        MPI_Comm_size(m_head_communicator, &loc_size);
+        MPI_Comm_size(MPI_COMM_COMPUTE, &glob_size);
+        MPI_Comm_rank(MPI_COMM_COMPUTE, &glob_rank);
+        std::vector<int> glob_ranks{loc_size};
+        MPI_Allgather(&glob_rank, 1, MPI_INT, &glob_ranks[0], loc_size, MPI_INT, m_head_communicator);
 // create new GA processor group
-    m_ga_pgroup = GA_Pgroup_create(&glob_ranks[0], loc_size);
+        m_ga_pgroup = GA_Pgroup_create(&glob_ranks[0], loc_size);
+        _ga_pgroups[m_head_communicator] = m_ga_pgroup;
+    } else m_ga_pgroup = _ga_pgroups[m_head_communicator];
     m_ga_handle = NGA_Create_handle();
     NGA_Set_pgroup(m_ga_handle, m_ga_pgroup);
     auto dims = (int) m_dimension;
     NGA_Set_data(m_ga_handle, 1, &dims, C_DBL);
     NGA_Set_array_name(m_ga_handle, (char *) "MixedWavefunction");
     NGA_Set_chunk(m_ga_handle, &m_ga_chunk);
-    auto err = GA_Allocate(m_ga_handle);
-    if (err) GA_Error((char *) "Failed to allocate", 0);
+    auto succ = GA_Allocate(m_ga_handle);
+    if (!succ) GA_Error((char *) "Failed to allocate", 0);
     m_ga_allocated = true;
 }
 
@@ -89,6 +92,11 @@ std::vector<size_t> MixedWavefunction::minlocN(size_t n) const {
     auto length = hi - lo;
     double *buffer = nullptr;
     int ld;
+    std::array<double,10> arr;
+    for (int i =0; i < 10; ++i){
+        arr[i] = at(i);
+    }
+    std::cout << arr[0] << std::endl;
     NGA_Access(m_ga_handle, &lo, &hi, &buffer, &ld);
     if (buffer == nullptr) GA_Error((char *) "Failed to access local GA buffer", 0);
     // search for n lowest numbers
@@ -96,14 +104,14 @@ std::vector<size_t> MixedWavefunction::minlocN(size_t n) const {
     std::vector<size_t> minInd(n, 0);
     std::vector<value_type> minVal(n, DBL_MAX);
     auto ptr_to_min = std::min_element(buffer, buffer + length);
-    size_t min_ind = (ptr_to_min - buffer) * sizeof(*buffer);
+    size_t min_ind = (ptr_to_min - buffer);
     value_type prev_min = *ptr_to_min;
     minInd[0] = lo + min_ind;
     minVal[0] = prev_min;
     for (int i = 1; i < nmin; ++i) {
         ptr_to_min = std::min_element(buffer, buffer + length,
-                                      [prev_min](double el1, double el2) {return el1 < el2 && el2 > prev_min;});
-        min_ind = (ptr_to_min - buffer) * sizeof(*buffer);
+                                      [prev_min](double el1, double el2) {return el1 < el2 && el1 > prev_min;});
+        min_ind = (ptr_to_min - buffer);
         prev_min = *ptr_to_min;
         minInd[i] = lo + min_ind;
         minVal[i] = prev_min;
@@ -114,9 +122,9 @@ std::vector<size_t> MixedWavefunction::minlocN(size_t n) const {
         minInd.resize(n * nproc);
         minVal.resize(n * nproc);
     }
-    MPI_Gather(minInd.data(), n, MPI_SIZE_T, minInd.data(), n, MPI_SIZE_T, 0, MPI_COMM_COMPUTE);
-    MPI_Gather(minVal.data(), n, MPI_SIZE_T, minVal.data(), n, MPI_SIZE_T, 0, MPI_COMM_COMPUTE);
     if (iproc == 0) {
+        MPI_Gather(MPI_IN_PLACE, n, MPI_SIZE_T, minInd.data(), n * nproc, MPI_SIZE_T, 0, m_head_communicator);
+        MPI_Gather(MPI_IN_PLACE, n, MPI_DOUBLE, minVal.data(), n * nproc, MPI_DOUBLE, 0, m_head_communicator);
         std::vector<value_type> sort_permutation(minVal.size());
         std::iota(sort_permutation.begin(), sort_permutation.end(), 0);
         std::sort(sort_permutation.begin(), sort_permutation.end(),
@@ -125,7 +133,11 @@ std::vector<size_t> MixedWavefunction::minlocN(size_t n) const {
                        [minInd](auto i) {return minInd[i];});
         minInd.resize(n);
     }
-    MPI_Bcast(minInd.data(), n, MPI_SIZE_T, 0, MPI_COMM_COMPUTE);
+    else{
+        MPI_Gather(minInd.data(), n, MPI_SIZE_T, minInd.data(), n * nproc, MPI_SIZE_T, 0, m_head_communicator);
+        MPI_Gather(minVal.data(), n, MPI_DOUBLE, minVal.data(), n * nproc, MPI_DOUBLE, 0, m_head_communicator);
+    }
+    MPI_Bcast(minInd.data(), n, MPI_SIZE_T, 0, m_head_communicator);
     return minInd;
 }
 
@@ -133,15 +145,16 @@ std::vector<size_t> MixedWavefunction::minlocN(size_t n) const {
 double MixedWavefunction::at(size_t ind) const {
     if (ind >= m_dimension) throw std::logic_error("Out of bounds");
     if (empty()) throw std::logic_error("GA was not allocated");
-    value_type *buffer;
-    int lo = ind, high = ind, ld = m_dimension;
+    value_type buffer;
+    int lo = ind, high = ind, ld = 1;
     NGA_Get(m_ga_handle, &lo, &high, &buffer, &ld);
-    return *buffer;
+    return buffer;
 }
 
 Wavefunction MixedWavefunction::wavefunctionAt(size_t iVib) const {
     auto wfn = Wavefunction{m_prototype};
-    ga_copy_to_local(m_ga_handle, iVib, wfn, m_dimension);
+    wfn.allocate_buffer();
+    ga_copy_to_local(m_ga_handle, iVib, wfn, m_elDim);
     return wfn;
 }
 
@@ -163,15 +176,15 @@ void MixedWavefunction::ga_copy_to_local(int ga_handle, int iVib, Wavefunction &
     value_type *buffer = wfn.buffer.data();
     int lo, hi, ld = dimension;
     ga_wfn_block_bound(iVib, &lo, &hi, dimension);
-    NGA_Get(ga_handle, &lo, &hi, &buffer, &ld);
+    NGA_Get(ga_handle, &lo, &hi, buffer, &ld);
 }
 
-void MixedWavefunction::ga_accumulate(int ga_handle, int iVib, Wavefunction &wfn, int dimension, int scaling_constant) {
+void MixedWavefunction::ga_accumulate(int ga_handle, int iVib, Wavefunction &wfn, int dimension, value_type scaling_constant) {
     auto p = profiler->push("ga_accumulate");
     value_type *buffer = wfn.buffer.data();
     int lo, hi, ld = dimension;
     ga_wfn_block_bound(iVib, &lo, &hi, dimension);
-    NGA_Acc(ga_handle, &lo, &hi, &buffer, &ld, &scaling_constant);
+    NGA_Acc(ga_handle, &lo, &hi, buffer, &ld, &scaling_constant);
 }
 
 void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &ham, const MixedWavefunction &w,
@@ -187,13 +200,13 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
         // Purely electronic operators
         if (NextTask(m_head_communicator)) {
             auto p = profiler->push("Hel");
-            ga_copy_to_local(m_ga_handle, iBra, ketWfn, m_dimension);
+            ga_copy_to_local(m_ga_handle, iBra, ketWfn, m_elDim);
             res.zero();
             for (const auto &hel : ham.elHam) {
                 auto p = profiler->push(hel.first);
                 res.operatorOnWavefunction(*hel.second, ketWfn, parallel_stringset);
             }
-            ga_accumulate(m_ga_handle, iBra, res, m_dimension);
+            ga_accumulate(m_ga_handle, iBra, res, m_elDim);
         }
         // Purely vibrational operators
         if (NextTask(m_head_communicator)) {
@@ -206,10 +219,10 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
                 auto ket = bra.excite(vibExc);
                 if (!ket.withinSpace(m_vibSpace)) continue;
                 auto iKet = m_vibBasis.index(ket);
-                ga_copy_to_local(m_ga_handle, iKet, ketWfn, m_dimension);
+                ga_copy_to_local(m_ga_handle, iKet, ketWfn, m_elDim);
                 res.axpy(val, ketWfn);
             }
-            ga_accumulate(m_ga_handle, iBra, res, m_dimension);
+            ga_accumulate(m_ga_handle, iBra, res, m_elDim);
         }
         // Mixed operators
         for (const auto &ket : m_vibBasis) {
@@ -217,7 +230,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             auto iKet = m_vibBasis.index(bra);
             if (!ham.connected(bra, ket)) continue;
             if (!NextTask(m_head_communicator)) continue;
-            ga_copy_to_local(m_ga_handle, iKet, ketWfn, m_dimension);
+            ga_copy_to_local(m_ga_handle, iKet, ketWfn, m_elDim);
             res.zero();
             for (const auto &mixedTerm : ham.mixedHam) {
                 const auto &vibTensor = mixedTerm.second;
@@ -230,7 +243,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
                     res.operatorOnWavefunction(op, ketWfn, parallel_stringset);
                 }
             }
-            ga_accumulate(m_ga_handle, iBra, res, m_dimension);
+            ga_accumulate(m_ga_handle, iBra, res, m_elDim);
         }
     }
 }
@@ -250,7 +263,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
             for (const auto &hel : ham.elHam) {
                 res.diagonalOperator(*hel.second);
             }
-            ga_accumulate(m_ga_handle, iBra, res, m_dimension);
+            ga_accumulate(m_ga_handle, iBra, res, m_elDim);
         }
         // Pure vibrational operator
         if (NextTask(m_head_communicator)) {
@@ -262,7 +275,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
                 if (ket != bra) continue;
                 res += val;
             }
-            ga_accumulate(m_ga_handle, iBra, res, m_dimension);
+            ga_accumulate(m_ga_handle, iBra, res, m_elDim);
         }
         // all mixed vibrational - electronic operators
         for (const auto &mixedTerm : ham.mixedHam) {
@@ -274,7 +287,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
                 if (!NextTask(m_head_communicator)) continue;
                 res.zero();
                 res.diagonalOperator(op);
-                ga_accumulate(m_ga_handle, iBra, res, m_dimension);
+                ga_accumulate(m_ga_handle, iBra, res, m_elDim);
             }
         }
     }
@@ -284,8 +297,8 @@ std::vector<double> MixedWavefunction::vec() const {
     if (!empty()) return {};
     std::vector<double> vec(m_dimension);
     value_type *buffer = vec.data();
-    int lo, hi, ld = m_dimension;
-    NGA_Get(m_ga_handle, &lo, &hi, &buffer, &ld);
+    int lo=0, hi=m_dimension-1, ld = m_dimension;
+    NGA_Get(m_ga_handle, &lo, &hi, buffer, &ld);
     return vec;
 }
 
@@ -351,7 +364,8 @@ void MixedWavefunction::set(size_t ind, double val) {
     if (ind >= m_dimension) throw std::logic_error("Out of bounds");
     if (empty()) throw std::logic_error("GA not allocated");
     int i = ind;
-    NGA_Scatter(m_ga_handle, &val, (int **) (&i), 1);
+    int * subs = &i;
+    NGA_Scatter(m_ga_handle, &val, &subs, 1);
 }
 
 MixedWavefunction &MixedWavefunction::operator*=(const double &value) {

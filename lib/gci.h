@@ -5,10 +5,11 @@
 #include <vector>
 #include <cstring>
 #include <stdexcept>
-#include "Profiler.h"
+#include <Profiler.h>
 #include <cstdint>
+#include <memory.h>
+
 #include "SharedCounter.h"
-#include "memory.h"
 
 #ifndef MOLPRO
 #define xout std::cout
@@ -18,6 +19,7 @@
 #include "ppidd.h"
 #ifdef HAVE_MPI_H
 #include <mpi.h>
+#include <ga.h>
 #define MPI_COMM_COMPUTE MPI_Comm_f2c(PPIDD_Worker_comm())
 #else
 #define MPI_COMM_NULL 0
@@ -39,7 +41,7 @@
 #elif SIZE_MAX == ULLONG_MAX
 #define MPI_SIZE_T MPI_UNSIGNED_LONG_LONG
 #else
-#error "what is happening here?"
+#error "MPI_SIZE_T cannot be deduced"
 #endif
 #endif
 
@@ -56,12 +58,13 @@ extern MPI_Comm molpro_plugin_intercomm;
 extern bool molpro_plugin;
 
 // shared counter
-//extern std::unique_ptr<SharedCounter> _nextval_counter;
 extern std::map<MPI_Comm, std::unique_ptr<SharedCounter>> _nextval_counter;
+extern std::map<MPI_Comm, int> _ga_pgroups;
+
 
 inline void create_new_counter(MPI_Comm communicator) {
     if (_nextval_counter.find(communicator) == _nextval_counter.end()) {
-        _nextval_counter[communicator] = std::make_unique<SharedCounter>(SharedCounter());
+        _nextval_counter[communicator] = std::make_unique<SharedCounter>(communicator);
         _nextval_counter[communicator]->reset();
     }
 }
@@ -69,7 +72,7 @@ inline void create_new_counter(MPI_Comm communicator) {
 inline long nextval(MPI_Comm communicator, int64_t option = parallel_size) {
     if (option < 0) {
         if (_nextval_counter[communicator] == nullptr)
-            _nextval_counter[communicator] = std::make_unique<SharedCounter>();
+            _nextval_counter[communicator] = std::make_unique<SharedCounter>(communicator);
         _nextval_counter[communicator]->reset();
         return 0;
     }
