@@ -8,13 +8,29 @@
 
 namespace gci {
 
+int get_communicator_size(MPI_Comm comm) {
+    int size;
+    MPI_Comm_size(comm, &size);
+    return size;
+}
 
-Array::Array(size_t dimension, MPI_Comm commun)
-        : m_communicator(commun), m_dimension(dimension), m_ga_handle(0), m_ga_chunk(1), m_ga_pgroup(0),
-          m_ga_allocated(false) { }
+int get_communicator_rank(MPI_Comm comm) {
+    int rank;
+    MPI_Comm_rank(comm, &rank);
+    return rank;
+}
+
+Array::Array(MPI_Comm comm) : m_communicator(comm), m_comm_rank(get_communicator_rank(comm)),
+                              m_comm_size(get_communicator_size(comm)), m_dimension(0), m_ga_handle(0), m_ga_pgroup(0),
+                              m_ga_chunk(1), m_ga_allocated(false) { }
+
+Array::Array(size_t dimension, MPI_Comm comm)
+        : m_communicator(comm), m_comm_rank(get_communicator_rank(comm)), m_comm_size(get_communicator_size(comm)),
+          m_dimension(dimension), m_ga_handle(0), m_ga_chunk(1), m_ga_pgroup(0), m_ga_allocated(false) { }
 
 Array::Array(const Array &source)
-        : m_communicator(source.m_communicator), m_dimension(source.m_dimension), m_ga_handle(0),
+        : m_communicator(source.m_communicator), m_comm_rank(source.m_comm_rank),
+          m_comm_size(source.m_comm_size), m_dimension(source.m_dimension), m_ga_handle(0),
           m_ga_chunk(source.m_ga_chunk), m_ga_pgroup(0), m_ga_allocated(false) {
     *this = source;
 }
@@ -58,6 +74,10 @@ void Array::allocate_buffer() {
     auto succ = GA_Allocate(m_ga_handle);
     if (!succ) GA_Error((char *) "Failed to allocate", 1);
     m_ga_allocated = true;
+}
+
+void Array::sync() {
+    GA_Pgroup_sync(m_ga_pgroup);
 }
 
 void Array::copy_buffer(const Array &source) {
@@ -141,16 +161,6 @@ double Array::at(size_t ind) const {
     return buffer;
 }
 
-std::string Array::str() const {
-    auto data = vec();
-    std::string out = "Array elements: ";
-    for (const auto &datum : data) {
-        out += std::to_string(datum) + ", ";
-    }
-    return out;
-}
-
-
 std::vector<double> Array::vec() const {
     if (empty()) return {};
     std::vector<double> vec(m_dimension);
@@ -158,6 +168,52 @@ std::vector<double> Array::vec() const {
     int lo = 0, hi = m_dimension - 1, ld = m_dimension;
     NGA_Get(m_ga_handle, &lo, &hi, buffer, &ld);
     return vec;
+}
+
+std::vector<double> Array::get(int lo, int hi) {
+    if (empty()) return {};
+    int ld, n = lo - hi + 1;
+    auto data = std::vector<double>(n);
+    NGA_Get(m_ga_handle, &lo, &hi, data.data(), &ld);
+    return data;
+}
+
+void Array::put(int lo, int hi, double *data) {
+    if (empty()) GA_Error((char *) "Attempting to put data into an empty GA", 1);
+    int ld;
+    NGA_Put(m_ga_handle, &lo, &hi, data, &ld);
+}
+
+std::vector<double> Array::gather(std::vector<int> &indices) const {
+    int n = indices.size();
+    std::vector<double> data(n, 0.);
+    int **subsarray = new int *[n];
+    for (int i = 0; i < n; ++i) {
+        subsarray[i] = &(indices.at(i));
+    }
+    NGA_Gather(m_ga_handle, data.data(), subsarray, n);
+    delete[] subsarray;
+    return data;
+}
+
+void Array::scatter(std::vector<int> &indices, std::vector<double> &vals) {
+    int n = indices.size();
+    int **subsarray = new int *[n];
+    for (int i = 0; i < n; ++i) {
+        subsarray[i] = &(indices.at(i));
+    }
+    NGA_Scatter(m_ga_handle, vals.data(), subsarray, n);
+    delete[] subsarray;
+}
+
+void Array::scatter_acc(std::vector<int> &indices, std::vector<double> &vals, double alpha) {
+    int n = indices.size();
+    int **subsarray = new int *[n];
+    for (int i = 0; i < n; ++i) {
+        subsarray[i] = &(indices.at(i));
+    }
+    NGA_Scatter_acc(m_ga_handle, vals.data(), subsarray, n, &alpha);
+    delete[] subsarray;
 }
 
 bool Array::compatible(const Array &other) const {
@@ -171,49 +227,22 @@ void Array::axpy(double a, const Array &x) {
     GA_Add(&one, m_ga_handle, &a, x.m_ga_handle, m_ga_handle);
 }
 
-std::vector<double> Array::gather(std::vector<int> indices) {
-    int n = indices.size();
-    std::vector<double> data(n, 0.);
-    int **subsarray = new int *[n];
-    for (int i = 0; i < n; ++i) {
-        subsarray[i] = &(indices.at(i));
-    }
-    NGA_Gather(m_ga_handle, data.data(), subsarray, n);
-    delete[] subsarray;
-    return data;
-}
-
-void Array::scatter(std::vector<int> indices, std::vector<double> vals) {
-    int n = indices.size();
-    int **subsarray = new int *[n];
-    for (int i = 0; i < n; ++i) {
-        subsarray[i] = &(indices.at(i));
-    }
-    NGA_Scatter(m_ga_handle, vals.data(), subsarray, n);
-    delete[] subsarray;
-}
-
-void Array::axpy(double a, const std::map<size_t, double> &x_const) {
-    // 1) gather the elements
-    // 2) do axpy
-    // 3) scatter the elements back
-    auto x = const_cast<std::map<size_t, double> &>(x_const);
+void Array::axpy(double a, const std::map<size_t, double> &x) {
+    // TODO do I really need to cast away the const to get values from a map???
     int n = x.size();
     std::vector<int> indices;
+    std::vector<double> vals;
     indices.reserve(n);
+    vals.reserve(n);
     for (const auto &xx : x) {
         indices.push_back(xx.first);
+        vals.push_back(xx.second);
     }
-    auto vals = gather(indices);
-    for (int i = 0; i < n; ++i) {
-        const auto ind = (size_t) indices[i];
-        vals[i] += a * x[ind];
-    }
-    scatter(indices, vals);
+    scatter_acc(indices, vals, a);
 }
 
 void Array::scal(double a) {
-    if (empty()) throw std::runtime_error("GA not allocated");
+    if (empty()) GA_Error((char *) "GA not allocated", 1);
     GA_Scale(m_ga_handle, &a);
 }
 
@@ -246,9 +275,20 @@ double Array::dot(const Array &other) const {
 
 double Array::dot(const std::map<size_t, double> &other) const {
     double result = 0;
-    for (const auto &o : other) {
-        result += at(o.first) * o.second;
+    if (m_comm_rank == 0) {
+        auto n = other.size();
+        std::vector<int> indices;
+        std::vector<double> other_vals;
+        indices.reserve(n);
+        other_vals.reserve(n);
+        for (const auto &item : other) {
+            indices.push_back(item.first);
+            other_vals.push_back(item.second);
+        }
+        auto this_vals = gather(indices);
+        result = std::inner_product(this_vals.begin(), this_vals.end(), other_vals.begin(), 0.);
     }
+    MPI_Bcast(&result, 1, MPI_DOUBLE, 0, m_communicator);
     return result;
 }
 
@@ -263,11 +303,8 @@ void Array::set(double val) {
 }
 
 void Array::set(size_t ind, double val) {
-    if (ind >= m_dimension) GA_Error((char *) "Out of bounds", 1);
-    if (empty()) GA_Error((char *) "GA not allocated", 1);
-    int i = ind;
-    int *subs = &i;
-    NGA_Scatter(m_ga_handle, &val, &subs, 1);
+    auto data = std::vector<double>{val};
+    put(ind, ind, data.data());
 }
 
 Array &Array::operator*=(double value) {

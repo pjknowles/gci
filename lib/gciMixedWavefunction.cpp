@@ -174,4 +174,10 @@ bool MixedWavefunction::compatible(const MixedWavefunction &other) const {
     return sameSize && sameElectronicWfn && sameVibBasis;
 }
 
+//bool MixedWavefunction::compatible(const Array &other) const {
+//    auto other_wfn = dynamic_cast<const MixedWavefunction *>(&other);
+//    if (other_wfn == nullptr) return Array::compatible(other);
+//    else return compatible(*other_wfn);
+//}
+
 }  // namespace gci
