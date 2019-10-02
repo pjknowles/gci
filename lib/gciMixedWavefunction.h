@@ -47,7 +47,7 @@ namespace gci {
  *
  *
  */
-class MixedWavefunction : public Array {
+class MixedWavefunction : virtual public Array {
 public:
     MPI_Comm m_child_communicator; //!< Communicator for children Wavefunction objects
 protected:
@@ -111,6 +111,8 @@ public:
      * @brief Checks that the two wavefunctions are of the same electronic State and of the same dimension.
      */
     bool compatible(const MixedWavefunction &other) const;
+    //! Checks that wavefunctions are compatible during Array operations
+//    bool compatible(const Array &other) const override;
 
     void settilesize(int a, int b, int c) { };
 };  // class MixedWavefunction
