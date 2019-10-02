@@ -196,7 +196,7 @@ TEST_F(ArrayRangeF, at) {
 
 TEST_F(ArrayRangeF, minlocN) {
     int n = 10;
-    auto ref_minloc_ind = std::vector<int>(n);
+    auto ref_minloc_ind = std::vector<size_t>(n);
     std::iota(ref_minloc_ind.begin(), ref_minloc_ind.end(), 0);
     auto minloc_ind = minlocN(n);
     auto l = Lock();
@@ -207,7 +207,7 @@ TEST_F(ArrayRangeF, minlocN_reverse) {
     int n = 10;
     std::reverse(values.begin(), values.end());
     put(0, dim - 1, values.data());
-    auto ref_minloc_ind = std::vector<int>(n);
+    auto ref_minloc_ind = std::vector<size_t>(n);
     std::iota(ref_minloc_ind.rbegin(), ref_minloc_ind.rend(), dim - n - 1);
     auto minloc_ind = minlocN(n);
     auto l = Lock();

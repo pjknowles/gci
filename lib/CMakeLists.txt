@@ -72,16 +72,12 @@ endif ()
 target_link_libraries(gci PUBLIC
         ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
 
-#target_include_directories(gci PRIVATE ${MPI_CXX_INCLUDE_PATH})
-#target_link_libraries(gci PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
-#target_compile_options(gci PRIVATE ${MPI_CXX_COMPILE_FLAGS})
-
 if (MPI_CXX_FOUND)
     target_link_libraries(gci PUBLIC MPI::MPI_CXX)
 endif ()
 
 if (TARGET ga::ga AND FALSE)
     target_link_libraries(gci PUBLIC ga::ga)
-endif()
+endif ()
 
 configure_library(${PROJECT_NAME} ${DEPENDENCIES})
