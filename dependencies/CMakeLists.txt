@@ -46,6 +46,7 @@ if (ga-config AND FALSE)
     target_compile_options(ga::ga INTERFACE ${ga-cflags} ${ga-cppflags})
     message("Using local global array installation")
 else ()
+    set(GA_RUNTIME "MPI_PR" CACHE STRING "overwriting default for GA runtime protocol")
     declare_dependency(
             ga
             https://github.com/GlobalArrays/ga.git

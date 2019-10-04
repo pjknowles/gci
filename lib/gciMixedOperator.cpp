@@ -13,7 +13,7 @@ SymmetryMatrix::Operator constructOperatorT1(const FCIdump &dump) {
     int lPortableByteStream;
     int rank = 0;
 #ifdef HAVE_MPI_H
-    MPI_Comm_rank(MPI_COMM_COMPUTE, &rank);
+    MPI_Comm_rank(mpi_comm_compute, &rank);
 #endif
     if (rank == 0) {
         int verbosity = 0;
@@ -62,11 +62,11 @@ SymmetryMatrix::Operator constructOperatorT1(const FCIdump &dump) {
         lPortableByteStream = portableByteStream.size();
     }
 #ifdef HAVE_MPI_H
-    MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, MPI_COMM_COMPUTE);
+    MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, mpi_comm_compute);
 #endif
     char *buf = (rank == 0) ? portableByteStream.data() : (char *) malloc(lPortableByteStream);
 #ifdef HAVE_MPI_H
-    MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, MPI_COMM_COMPUTE);
+    MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, mpi_comm_compute);
 #endif
     class memory::bytestream bs(buf);
     auto result = SymmetryMatrix::Operator::construct(bs);

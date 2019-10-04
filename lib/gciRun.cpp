@@ -16,7 +16,7 @@ namespace gci {
 
 MPI_Comm create_new_comm() {
     MPI_Comm new_comm = MPI_COMM_NULL;
-    MPI_Comm_split(MPI_COMM_COMPUTE, GA_Nodeid(), GA_Nodeid(), &new_comm);
+    MPI_Comm_split(mpi_comm_compute, GA_Nodeid(), GA_Nodeid(), &new_comm);
     if (new_comm == MPI_COMM_NULL) GA_Error((char *) "Failed to create a new communicator", 0);
     return new_comm;
 }
@@ -28,9 +28,10 @@ MPI_Comm molpro_plugin_intercomm = MPI_COMM_NULL;
 std::map<MPI_Comm, std::unique_ptr<SharedCounter>> _nextval_counter;
 std::map<MPI_Comm, int> _ga_pgroups;
 MPI_Comm _sub_communicator;
-std::map<MPI_Comm, long int> __my_first_task{{MPI_COMM_COMPUTE, 0}};
-std::map<MPI_Comm, long int> __task{{MPI_COMM_COMPUTE, 0}};
-std::map<MPI_Comm, long int> __task_granularity{{MPI_COMM_COMPUTE, 1}};
+MPI_Comm mpi_comm_compute;
+std::map<MPI_Comm, long int> __my_first_task{{mpi_comm_compute, 0}};
+std::map<MPI_Comm, long int> __task{{mpi_comm_compute, 0}};
+std::map<MPI_Comm, long int> __task_granularity{{mpi_comm_compute, 1}};
 } // namespace gci
 
 using namespace gci;
@@ -266,8 +267,8 @@ struct updater {
 Run::Run(std::string fcidump)
     : m_hamiltonian(constructOperator(FCIdump(fcidump))) {
 #ifdef HAVE_MPI_H
-    MPI_Comm_rank(MPI_COMM_COMPUTE, &parallel_rank);
-    MPI_Comm_size(MPI_COMM_COMPUTE, &parallel_size);
+    MPI_Comm_rank(mpi_comm_compute, &parallel_rank);
+    MPI_Comm_size(mpi_comm_compute, &parallel_size);
     xout << "Parallel run of " << parallel_size << " processes" << std::endl;
     int lendata = 0;
     if (parallel_rank == 0) {
@@ -275,10 +276,10 @@ Run::Run(std::string fcidump)
         options.addParameter("FCIDUMP", fcidump);
         lendata = (int) options.data().size();
     }
-    MPI_Bcast(&lendata, (int) 1, MPI_INT, 0, MPI_COMM_COMPUTE);
+    MPI_Bcast(&lendata, (int) 1, MPI_INT, 0, mpi_comm_compute);
     auto *buf = (char *) malloc(static_cast<size_t>(lendata + 1));
     if (parallel_rank == 0) for (auto i = 0; i < lendata; i++) buf[i] = options.data()[i];
-    MPI_Bcast(&buf[0], lendata, MPI_CHAR, 0, MPI_COMM_COMPUTE);
+    MPI_Bcast(&buf[0], lendata, MPI_CHAR, 0, mpi_comm_compute);
     buf[lendata] = (char) 0;
     options = Options(buf);
     free(buf);
@@ -295,7 +296,7 @@ Run::Run(std::string fcidump)
 std::unique_ptr<Profiler> gci::profiler = nullptr;
 std::vector<double> Run::run() {
   if (profiler == nullptr) profiler.reset(new Profiler("GCI"));
-  create_new_counter(MPI_COMM_COMPUTE);
+  create_new_counter(mpi_comm_compute);
   _sub_communicator = create_new_comm();
   profiler->reset("GCI");
   int activeLvl = options.parameter("PROFACTIVE",-1);
@@ -412,7 +413,7 @@ std::vector<double> Run::run() {
             }
         } else {
             auto ham = m_hamiltonian;
-            auto wfn = Wavefunction{prototype, MPI_COMM_COMPUTE};
+            auto wfn = Wavefunction{prototype, mpi_comm_compute};
             auto solver = run::Davidson<Wavefunction, SymmetryMatrix::Operator>(std::move(wfn), std::move(ham),
                                                                                 options);
             solver.run();
@@ -441,7 +442,7 @@ std::vector<double> Run::run() {
     if (profile > 1) xout << profiler->str(profile, false) << std::endl;
     xout << profiler->str(profile, true) << std::endl;
   }
-  _nextval_counter[MPI_COMM_COMPUTE].reset(nullptr);
+  _nextval_counter[mpi_comm_compute].reset(nullptr);
 
   if (false) { // just for a test
     energies.clear();
@@ -756,7 +757,7 @@ std::vector<double> Run::CSDavidson(const SymmetryMatrix::Operator &ham,
         g.getw(gfile, i);
         reducedHamiltonian[i + n * (n + 1)] = g * w;
       }
-      gsum(&reducedHamiltonian[n * (n + 1)], n + 1, MPI_COMM_COMPUTE);
+      gsum(&reducedHamiltonian[n * (n + 1)], n + 1, mpi_comm_compute);
       for (int i = 0; i < n + 1; i++)
         reducedHamiltonian[n + i * (n + 1)] = reducedHamiltonian[i + n * (n + 1)];
     }
@@ -883,13 +884,13 @@ std::vector<double> Run::CSDavidson(const SymmetryMatrix::Operator &ham,
     for (int i = 0; i <= n; i++) {
       g.getw(wfile, i);
       double factor = -(g * w) / (g * g);
-      gsum(&factor, 1, MPI_COMM_COMPUTE);
+      gsum(&factor, 1, mpi_comm_compute);
 //      w += factor*g;
       w.axpy(factor, g);
     }
     profiler->stop("Davidson residual");
     double norm2 = w * w;
-    gsum(&norm2, 1, MPI_COMM_COMPUTE);
+    gsum(&norm2, 1, mpi_comm_compute);
 
     double econv = 0;
     for (int i = 0; i < (int) e.size(); i++) {
@@ -1024,7 +1025,7 @@ std::vector<double> Run::RSPT(const std::vector<SymmetryMatrix::Operator *> &ham
 //      xout <<"contribution from n="<<n<<", k="<<k<<" to E("<<n+k<<")="<<g*w<<std::endl;
         e[n + k] += g * w;
       }
-      gsum(&e[n + 1], (size_t) (hams.size() - 1), MPI_COMM_COMPUTE);
+      gsum(&e[n + 1], (size_t) (hams.size() - 1), mpi_comm_compute);
     }
     xout << "n=" << n << ", E(n+1)=" << e[n + 1] << std::endl;
     if ((e[n + 1] < 0 ? -e[n + 1] : e[n + 1]) < energyThreshold && e[n + 1] != (double) 0) {
@@ -1588,7 +1589,7 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
   int lPortableByteStream;
   int rank = 0;
 #ifdef HAVE_MPI_H
-  MPI_Comm_rank(MPI_COMM_COMPUTE, &rank);
+  MPI_Comm_rank(mpi_comm_compute, &rank);
 #endif
   if (rank == 0) {
     int verbosity = 0;
@@ -1666,11 +1667,11 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
     lPortableByteStream = portableByteStream.size();
   }
 #ifdef HAVE_MPI_H
-  MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, MPI_COMM_COMPUTE);
+  MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, mpi_comm_compute);
 #endif
   char *buf = (rank == 0) ? portableByteStream.data() : (char *) malloc(lPortableByteStream);
 #ifdef HAVE_MPI_H
-  MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, MPI_COMM_COMPUTE);
+  MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, mpi_comm_compute);
 #endif
   class memory::bytestream bs(buf);
   auto result = SymmetryMatrix::Operator::construct(bs);
@@ -1951,18 +1952,18 @@ SymmetryMatrix::Operator gci::sameSpinOperator(const SymmetryMatrix::Operator& h
 void gci::gsum(SymmetryMatrix::Operator& op) {
   std::vector<double> O0;
   O0.push_back(op.m_O0);
-  ::gci::gsum(O0, MPI_COMM_COMPUTE);
+  ::gci::gsum(O0, mpi_comm_compute);
   op.m_O0 = O0[0];
   if (op.m_rank > 0) {
-    ::gci::gsum(*op.O1(true).data(), MPI_COMM_COMPUTE);
+    ::gci::gsum(*op.O1(true).data(), mpi_comm_compute);
     if (op.m_uhf)
-      ::gci::gsum(*op.O1(false).data(), MPI_COMM_COMPUTE);
+      ::gci::gsum(*op.O1(false).data(), mpi_comm_compute);
   }
   if (op.m_rank > 1) {
-    ::gci::gsum(*op.O2(true, true).data(), MPI_COMM_COMPUTE);
+    ::gci::gsum(*op.O2(true, true).data(), mpi_comm_compute);
     if (op.m_uhf) {
-      ::gci::gsum(*op.O2(true, false).data(), MPI_COMM_COMPUTE);
-      ::gci::gsum(*op.O2(false, false).data(), MPI_COMM_COMPUTE);
+      ::gci::gsum(*op.O2(true, false).data(), mpi_comm_compute);
+      ::gci::gsum(*op.O2(false, false).data(), mpi_comm_compute);
     }
   }
 }

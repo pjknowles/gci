@@ -28,7 +28,7 @@ protected:
     bool m_ga_allocated; //!< Flags that GA has been allocated
 public:
 
-    Array() : m_communicator(nullptr), m_comm_rank(0), m_comm_size(0), m_dimension(0), m_ga_handle(0),
+    Array() : m_communicator(), m_comm_rank(0), m_comm_size(0), m_dimension(0), m_ga_handle(0),
               m_ga_pgroup(0), m_ga_chunk(1), m_ga_allocated(false) { }
 
     explicit Array(MPI_Comm comm);

@@ -1,15 +1,16 @@
 #include "SharedCounter.h"
 
-#include <ga.h>
+#include "gci.h"
 
+namespace gci {
 SharedCounter::SharedCounter(const MPI_Comm &communicator)
         : m_communicator(communicator), m_hostrank(0), m_myval(0), m_ga_handle(0), m_rank(0), m_size(1) {
 #ifndef SHAREDCOUNTER_DUMMY
     int glob_size, glob_rank;
     MPI_Comm_size(m_communicator, &m_size);
     MPI_Comm_rank(m_communicator, &m_rank);
-    MPI_Comm_size(MPI_COMM_COMPUTE, &glob_size);
-    MPI_Comm_rank(MPI_COMM_COMPUTE, &glob_rank);
+    MPI_Comm_size(mpi_comm_compute, &glob_size);
+    MPI_Comm_rank(mpi_comm_compute, &glob_rank);
     std::vector<int> glob_ranks{m_size, 0};
     MPI_Allgather(&glob_rank, 1, MPI_INT, glob_ranks.data(), 1, MPI_INT, m_communicator);
 // create new processor group from the communicator
@@ -51,3 +52,4 @@ int SharedCounter::increment(int amount) {
 #endif
     return glob_val;
 }
+} // namespace gci
