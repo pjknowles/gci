@@ -47,17 +47,17 @@ public:
        * \param symmetry Spatial symmetry
        * \param ms2 Sz quantum number times 2
        */
-    Wavefunction(OrbitalSpace h, int nelec, int symmetry, int ms2, MPI_Comm communicator = MPI_COMM_COMPUTE);
+    Wavefunction(OrbitalSpace h, int nelec, int symmetry, int ms2, MPI_Comm communicator = mpi_comm_compute);
 
-    Wavefunction(OrbitalSpace *h, int nelec, int symmetry, int ms2, MPI_Comm communicator = MPI_COMM_COMPUTE);
+    Wavefunction(OrbitalSpace *h, int nelec, int symmetry, int ms2, MPI_Comm communicator = mpi_comm_compute);
 
     /*!
        * \brief Construct a Wavefunction object from a State prototype
        * \param state the State prototype
        */
-    explicit Wavefunction(const State &state, MPI_Comm communicator = MPI_COMM_COMPUTE);
+    explicit Wavefunction(const State &state, MPI_Comm communicator = mpi_comm_compute);
 
-    Wavefunction(const Wavefunction &source, int option, MPI_Comm communicator = MPI_COMM_COMPUTE);
+    Wavefunction(const Wavefunction &source, int option, MPI_Comm communicator = mpi_comm_compute);
 
     std::vector<StringSet> alphaStrings; ///< The alpha-spin strings defining the CI basis
     std::vector<StringSet> betaStrings; ///< The beta-spin strings defining the CI basis

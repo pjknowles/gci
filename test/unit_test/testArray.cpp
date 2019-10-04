@@ -39,25 +39,25 @@ TEST_F(ArrayWithMutexF, constructor_empty) {
 
 TEST(Array, constructor_with_commun) {
     auto l = Lock();
-    auto a = Array(MPI_COMM_COMPUTE);
+    auto a = Array(mpi_comm_compute);
 }
 
 TEST(Array, constructor_with_dimension) {
     auto l = Lock();
     int dim = 100;
-    auto a = Array(dim, MPI_COMM_COMPUTE);
+    auto a = Array(dim, mpi_comm_compute);
 }
 
 TEST(Array, constructor_copy) {
     auto l = Lock();
     int dim = 100;
-    auto a = Array(dim, MPI_COMM_COMPUTE);
+    auto a = Array(dim, mpi_comm_compute);
     auto b = Array(a);
 }
 
 class ArrayInitializationF : public ArrayWithMutexF, public Array {
 public:
-    ArrayInitializationF() : Array(dim, MPI_COMM_COMPUTE) { };
+    ArrayInitializationF() : Array(dim, mpi_comm_compute) { };
     const int dim = 100;
 };
 
@@ -137,7 +137,7 @@ TEST_F(ArrayInitializationF, set) {
 class ArrayRangeF : public ArrayWithMutexF, public Array {
 public:
     //! Stores a range in the buffer {0, 1, 2, 3, 4, 5, .., dim-1}
-    ArrayRangeF() : Array(dim, MPI_COMM_COMPUTE), p_rank(GA_Nodeid()), p_size(GA_Nnodes()) {
+    ArrayRangeF() : Array(dim, mpi_comm_compute), p_rank(GA_Nodeid()), p_size(GA_Nnodes()) {
         allocate_buffer();
         values.reserve(dim);
         std::iota(values.begin(), values.end(), 0.);
@@ -259,7 +259,7 @@ TEST_F(ArrayRangeF, recip) {
 
 class ArrayCollectiveOpF : public ArrayWithMutexF {
 public:
-    ArrayCollectiveOpF() : a(dim, MPI_COMM_COMPUTE), b(dim, MPI_COMM_COMPUTE) {
+    ArrayCollectiveOpF() : a(dim, mpi_comm_compute), b(dim, mpi_comm_compute) {
         a.allocate_buffer();
         b.allocate_buffer();
         range_alpha.resize(dim);

@@ -57,8 +57,8 @@ void Array::allocate_buffer() {
 //  global processor ranks
         int loc_size, glob_size, glob_rank;
         MPI_Comm_size(m_communicator, &loc_size);
-        MPI_Comm_size(MPI_COMM_COMPUTE, &glob_size);
-        MPI_Comm_rank(MPI_COMM_COMPUTE, &glob_rank);
+        MPI_Comm_size(mpi_comm_compute, &glob_size);
+        MPI_Comm_rank(mpi_comm_compute, &glob_rank);
         std::vector<int> glob_ranks{loc_size};
         MPI_Allgather(&glob_rank, 1, MPI_INT, &glob_ranks[0], 1, MPI_INT, m_communicator);
 // create new GA processor group

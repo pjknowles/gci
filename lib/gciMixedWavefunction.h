@@ -63,7 +63,7 @@ protected:
     Wavefunction m_prototype;
 public:
     explicit MixedWavefunction(const Options &options, const State &prototype,
-                               MPI_Comm head_commun = MPI_COMM_COMPUTE);
+                               MPI_Comm head_commun = mpi_comm_compute);
 
     MixedWavefunction(const MixedWavefunction &source, int option = 0);
 

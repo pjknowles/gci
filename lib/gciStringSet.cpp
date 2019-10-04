@@ -102,21 +102,21 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces,
         if (parallel_rank > 0) {
             //    std::cout << "slave "<<std::endl;    std::cout.flush();
             auto len = (int) size();
-            MPI_Send(&len, (int) 1, MPI_INT, 0, 0, MPI_COMM_COMPUTE);
+            MPI_Send(&len, (int) 1, MPI_INT, 0, 0, mpi_comm_compute);
             //    xout << "slave sends len="<<len<<std::endl;
             if (len > 0) {
                 bytestreamsize = (int) serialised.size() / size();
-                MPI_Send(&bytestreamsize, (int) 1, MPI_INT, 0, 1, MPI_COMM_COMPUTE);
-                MPI_Send(&serialised[0], len * bytestreamsize, MPI_BYTE, 0, 2, MPI_COMM_COMPUTE);
+                MPI_Send(&bytestreamsize, (int) 1, MPI_INT, 0, 1, mpi_comm_compute);
+                MPI_Send(&serialised[0], len * bytestreamsize, MPI_BYTE, 0, 2, mpi_comm_compute);
             }
-            MPI_Bcast(&len, (int) 1, MPI_INT, 0, MPI_COMM_COMPUTE);
-            MPI_Bcast(&bytestreamsize, (int) 1, MPI_INT, 0, MPI_COMM_COMPUTE);
+            MPI_Bcast(&len, (int) 1, MPI_INT, 0, mpi_comm_compute);
+            MPI_Bcast(&bytestreamsize, (int) 1, MPI_INT, 0, mpi_comm_compute);
             //        std::cout << "slave after receving broadcast len "<<len<<", bytestreamsize="<<bytestreamsize<<std::endl; std::cout.flush();
             serialised.resize(static_cast<unsigned long>(len * bytestreamsize));
             clear();
             addressMap.clear();
             //    xout << "slave ready to bcast"<<std::endl;
-            MPI_Bcast(&serialised[0], len * bytestreamsize, MPI_BYTE, 0, MPI_COMM_COMPUTE);
+            MPI_Bcast(&serialised[0], len * bytestreamsize, MPI_BYTE, 0, mpi_comm_compute);
             for (size_t k = 0; k < (size_t) len; k++) {
                 std::vector<char> s(static_cast<unsigned long>(bytestreamsize));
                 memcpy(&s[0], &serialised[k * bytestreamsize], static_cast<size_t>(bytestreamsize));
@@ -131,13 +131,13 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces,
             for (int iproc = 1; iproc < parallel_size; iproc++) {
                 int len;
                 MPI_Status status;
-                MPI_Recv(&len, (int) 1, MPI_INT, iproc, 0, MPI_COMM_COMPUTE, &status);
+                MPI_Recv(&len, (int) 1, MPI_INT, iproc, 0, mpi_comm_compute, &status);
                 //    xout << "master receives len="<<len<<std::endl;
                 if (len > 0) {
-                    MPI_Recv(&bytestreamsize, (int) 1, MPI_INT, iproc, 1, MPI_COMM_COMPUTE, &status);
+                    MPI_Recv(&bytestreamsize, (int) 1, MPI_INT, iproc, 1, mpi_comm_compute, &status);
                     //      xout <<"received len="<<len<<", bytestreamsize="<<bytestreamsize<<std::endl;
                     serialised.resize((size_t) len * bytestreamsize);
-                    MPI_Recv(&serialised[0], len * bytestreamsize, MPI_BYTE, iproc, 2, MPI_COMM_COMPUTE, &status);
+                    MPI_Recv(&serialised[0], len * bytestreamsize, MPI_BYTE, iproc, 2, mpi_comm_compute, &status);
                     for (size_t k = 0; k < (size_t) len; k++) {
                         std::vector<char> s(static_cast<unsigned long>(bytestreamsize));
                         memcpy(&s[0], &serialised[k * bytestreamsize], static_cast<size_t>(bytestreamsize));
@@ -159,11 +159,11 @@ void StringSet::addByOperators(const std::vector<StringSet> &referenceSpaces,
             //        xout <<"master after serialising global list"<<std::endl;
             //    xout << "master ready to bcast len="<<len<<", bytestreamsize="<<bytestreamsize<<std::endl;
             bytestreamsize = serialised.size() / std::max((int) size(), 1);
-            MPI_Bcast(&len, (int) 1, MPI_INT, 0, MPI_COMM_COMPUTE);
-            MPI_Bcast(&bytestreamsize, (int) 1, MPI_INT, 0, MPI_COMM_COMPUTE);
+            MPI_Bcast(&len, (int) 1, MPI_INT, 0, mpi_comm_compute);
+            MPI_Bcast(&bytestreamsize, (int) 1, MPI_INT, 0, mpi_comm_compute);
             //xout <<"master after broadcasting len"<<std::endl;
             //    xout << "master ready to bcast"<<std::endl;
-            MPI_Bcast(&serialised[0], len * bytestreamsize, MPI_BYTE, 0, MPI_COMM_COMPUTE);
+            MPI_Bcast(&serialised[0], len * bytestreamsize, MPI_BYTE, 0, mpi_comm_compute);
             //        xout <<"master after broadcasting global list"<<std::endl;
         }
         //    xout << "Reached end of forked code rank="<<parallel_rank<<std::endl;

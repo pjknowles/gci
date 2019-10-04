@@ -1,8 +1,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <mpi.h>
 #include <gci.h>
-#include <ga.h>
 #include <SharedCounter.h>
 
 
@@ -12,11 +10,12 @@ int main(int argc, char **argv) {
     gci::profiler = std::make_unique<Profiler>(Profiler("GCI"));
     MPI_Init(&argc, &argv);
     GA_Initialize();
-    MPI_Comm_rank(MPI_COMM_COMPUTE, &gci::parallel_rank);
-    MPI_Comm_size(MPI_COMM_COMPUTE, &gci::parallel_size);
+    gci::mpi_comm_compute = GA_MPI_Comm();
+    MPI_Comm_rank(gci::mpi_comm_compute, &gci::parallel_rank);
+    MPI_Comm_size(gci::mpi_comm_compute, &gci::parallel_size);
     result = RUN_ALL_TESTS();
     gci::profiler.reset();
-    gci::_nextval_counter[MPI_COMM_COMPUTE].reset(nullptr);
+    gci::_nextval_counter[gci::mpi_comm_compute].reset(nullptr);
     GA_Terminate();
     MPI_Finalize();
     return result;

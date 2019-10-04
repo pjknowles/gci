@@ -11,6 +11,9 @@
 
 #include "SharedCounter.h"
 
+#include <ga.h>
+#include <ga-mpi.h>
+
 #ifndef MOLPRO
 #define xout std::cout
 #else
@@ -18,8 +21,6 @@
 #include "gciMolpro.h"
 #include "ppidd.h"
 #ifdef HAVE_MPI_H
-#include <mpi.h>
-#include <ga.h>
 #define MPI_COMM_COMPUTE MPI_Comm_f2c(PPIDD_Worker_comm())
 #else
 #define MPI_COMM_NULL 0
@@ -55,6 +56,7 @@ extern std::unique_ptr<Profiler> profiler; // global profiler
 extern int parallel_rank, parallel_size;
 
 extern MPI_Comm molpro_plugin_intercomm;
+extern MPI_Comm mpi_comm_compute;
 extern bool molpro_plugin;
 
 // shared counter
