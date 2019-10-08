@@ -11,10 +11,10 @@ SharedCounter::SharedCounter(const MPI_Comm &communicator)
     MPI_Comm_rank(m_communicator, &m_rank);
     MPI_Comm_size(mpi_comm_compute, &glob_size);
     MPI_Comm_rank(mpi_comm_compute, &glob_rank);
-    std::vector<int> glob_ranks{m_size, 0};
+    auto glob_ranks = std::vector<int>(m_size, 0);
     MPI_Allgather(&glob_rank, 1, MPI_INT, glob_ranks.data(), 1, MPI_INT, m_communicator);
 // create new processor group from the communicator
-    m_ga_pgroup = GA_Pgroup_create(&glob_ranks[0], m_size);
+    m_ga_pgroup = GA_Pgroup_create(glob_ranks.data(), m_size);
     m_ga_handle = NGA_Create_handle();
     NGA_Set_pgroup(m_ga_handle, m_ga_pgroup);
     int dims = 1, chunk = 1;
