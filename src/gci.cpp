@@ -6,6 +6,7 @@
 #include <memory.h>
 #include <unistd.h>
 #include <cstring>
+#include <ma.h>
 
 #ifndef MOLPRO
 
@@ -38,6 +39,7 @@ int main(int argc, char *argv[])
             memory = static_cast<size_t>(std::stol(s.substr(equals + 1)));
     }
     memory_initialize(memory);
+    MA_init(C_DBL, memory/2, memory/2);
     std::cout << "memory initialised to " << memory_remaining() << std::endl;
     size_t memory_allocated = memory_remaining();
 

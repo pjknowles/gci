@@ -59,10 +59,10 @@ void Array::allocate_buffer() {
         MPI_Comm_size(m_communicator, &loc_size);
         MPI_Comm_size(mpi_comm_compute, &glob_size);
         MPI_Comm_rank(mpi_comm_compute, &glob_rank);
-        std::vector<int> glob_ranks{loc_size};
-        MPI_Allgather(&glob_rank, 1, MPI_INT, &glob_ranks[0], 1, MPI_INT, m_communicator);
+        auto glob_ranks = std::vector<int>(loc_size);
+        MPI_Allgather(&glob_rank, 1, MPI_INT, glob_ranks.data(), 1, MPI_INT, m_communicator);
 // create new GA processor group
-        m_ga_pgroup = GA_Pgroup_create(&glob_ranks[0], loc_size);
+        m_ga_pgroup = GA_Pgroup_create(glob_ranks.data(), loc_size);
         _ga_pgroups[m_communicator] = m_ga_pgroup;
     } else m_ga_pgroup = _ga_pgroups[m_communicator];
     m_ga_handle = NGA_Create_handle();
@@ -105,11 +105,11 @@ std::vector<size_t> Array::minlocN(size_t n) const {
     // get distribution of GA local to this process, and access the buffer
     int lo, hi, ld;
     NGA_Distribution(m_ga_handle, iproc, &lo, &hi);
-    auto length = hi - lo;
     double *buffer = nullptr;
     NGA_Access(m_ga_handle, &lo, &hi, &buffer, &ld);
     if (buffer == nullptr) GA_Error((char *) "Failed to access local GA buffer", 1);
     // search for n lowest numbers
+    auto length = hi - lo + 1;
     auto nmin = length > n ? n : length;
     std::vector<size_t> minInd(n, 0);
     std::vector<double> minVal(n, DBL_MAX);
@@ -120,7 +120,7 @@ std::vector<size_t> Array::minlocN(size_t n) const {
     minVal[0] = prev_min;
     for (int i = 1; i < nmin; ++i) {
         ptr_to_min = std::min_element(buffer, buffer + length,
-                                      [prev_min](double el1, double el2) {return el1 < el2 && el1 > prev_min;});
+                                      [prev_min](double el, double smallest) {return el < smallest && el > prev_min || smallest <= prev_min;});
         min_ind = (ptr_to_min - buffer);
         prev_min = *ptr_to_min;
         minInd[i] = lo + min_ind;
@@ -172,7 +172,7 @@ std::vector<double> Array::vec() const {
 
 std::vector<double> Array::get(int lo, int hi) {
     if (empty()) return {};
-    int ld, n = lo - hi + 1;
+    int ld, n = hi - lo + 1;
     auto data = std::vector<double>(n);
     NGA_Get(m_ga_handle, &lo, &hi, data.data(), &ld);
     return data;
