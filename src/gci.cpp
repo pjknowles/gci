@@ -21,8 +21,10 @@ int main(int argc, char *argv[])
     MPI_Init(&argc, &argv);
     GA_Initialize();
     gci::mpi_comm_compute = GA_MPI_Comm();
-    MPI_Comm_size(MPI_COMM_WORLD, &gci::parallel_size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &gci::parallel_rank);
+    MPI_Comm_size(gci::mpi_comm_compute, &gci::parallel_size);
+    MPI_Comm_rank(gci::mpi_comm_compute, &gci::parallel_rank);
+    std::cout << "rank = " << gci::parallel_rank << std::endl;
+    std::cout << "size = " << gci::parallel_size << std::endl;
     if (gci::parallel_rank > 0) freopen("/dev/null", "w", stdout);
     PluginGuest plugin("MOLPRO");
     if (plugin.active()) {
