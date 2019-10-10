@@ -29,7 +29,7 @@ MixedWavefunction::MixedWavefunction(const MixedWavefunction &source, int option
 Wavefunction MixedWavefunction::wavefunctionAt(size_t iVib, MPI_Comm commun) const {
     auto wfn = Wavefunction{m_prototype, 0, commun};
     wfn.allocate_buffer();
-    if (!empty()) ga_copy_to_local(m_ga_handle, iVib, wfn);
+    if (!empty()) copy_to_local(iVib, wfn);
     return wfn;
 }
 
@@ -38,22 +38,31 @@ void MixedWavefunction::ga_wfn_block_bound(int iVib, int *lo, int *hi, int dimen
     hi[0] = lo[0] + dimension - 1;
 }
 
-void MixedWavefunction::ga_copy_to_local(int ga_handle, int iVib, Wavefunction &wfn) {
-    auto p = profiler->push("ga_copy_to_local");
+void MixedWavefunction::copy_to_local(int iVib, Wavefunction &wfn) const {
+    auto p = profiler->push("copy_to_local");
     double *buffer = wfn.buffer.data();
     auto dimension = wfn.dimension;
     int lo, hi, ld = dimension;
     ga_wfn_block_bound(iVib, &lo, &hi, dimension);
-    NGA_Get(ga_handle, &lo, &hi, buffer, &ld);
+    NGA_Get(m_ga_handle, &lo, &hi, buffer, &ld);
 }
 
-void MixedWavefunction::ga_accumulate(int ga_handle, int iVib, Wavefunction &wfn, double scaling_constant) {
-    auto p = profiler->push("ga_accumulate");
+void MixedWavefunction::put(int iVib, Wavefunction &wfn) {
+    auto p = profiler->push("put");
     double *buffer = wfn.buffer.data();
     auto dimension = wfn.dimension;
     int lo, hi, ld = dimension;
     ga_wfn_block_bound(iVib, &lo, &hi, dimension);
-    NGA_Acc(ga_handle, &lo, &hi, buffer, &ld, &scaling_constant);
+    Array::put(lo, hi, buffer);
+}
+
+void MixedWavefunction::accumulate(int iVib, Wavefunction &wfn, double scaling_constant) {
+    auto p = profiler->push("accumulate");
+    double *buffer = wfn.buffer.data();
+    auto dimension = wfn.dimension;
+    int lo, hi, ld = dimension;
+    ga_wfn_block_bound(iVib, &lo, &hi, dimension);
+    NGA_Acc(m_ga_handle, &lo, &hi, buffer, &ld, &scaling_constant);
 }
 
 void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &ham, const MixedWavefunction &w,
@@ -69,13 +78,13 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
         // Purely electronic operators
         if (NextTask(m_communicator)) {
             auto p = profiler->push("Hel");
-            ga_copy_to_local(w.m_ga_handle, iBra, ketWfn);
+            copy_to_local(iBra, ketWfn);
             res.zero();
             for (const auto &hel : ham.elHam) {
                 auto p = profiler->push(hel.first);
                 res.operatorOnWavefunction(*hel.second, ketWfn, parallel_stringset);
             }
-            ga_accumulate(m_ga_handle, iBra, res);
+            accumulate(iBra, res);
         }
         // Purely vibrational operators
         if (NextTask(m_communicator)) {
@@ -88,10 +97,10 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
                 auto ket = bra.excite(vibExc);
                 if (!ket.withinSpace(m_vibSpace)) continue;
                 auto iKet = m_vibBasis.index(ket);
-                ga_copy_to_local(w.m_ga_handle, iKet, ketWfn);
+                copy_to_local(iKet, ketWfn);
                 res.axpy(val, ketWfn);
             }
-            ga_accumulate(m_ga_handle, iBra, res);
+            accumulate(iBra, res);
         }
         // Mixed operators
         for (const auto &ket : m_vibBasis) {
@@ -99,7 +108,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             auto iKet = m_vibBasis.index(bra);
             if (!ham.connected(bra, ket)) continue;
             if (!NextTask(m_communicator)) continue;
-            ga_copy_to_local(w.m_ga_handle, iKet, ketWfn);
+            copy_to_local(iKet, ketWfn);
             res.zero();
             for (const auto &mixedTerm : ham.mixedHam) {
                 const auto &vibTensor = mixedTerm.second;
@@ -112,7 +121,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
                     res.operatorOnWavefunction(op, ketWfn, parallel_stringset);
                 }
             }
-            ga_accumulate(m_ga_handle, iBra, res);
+            accumulate(iBra, res);
         }
     }
     //MPI_Barrier(m_communicator);
@@ -135,7 +144,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
             for (const auto &hel : ham.elHam) {
                 res.diagonalOperator(*hel.second);
             }
-            ga_accumulate(m_ga_handle, iBra, res);
+            accumulate(iBra, res);
         }
         // Pure vibrational operator
         if (NextTask(m_communicator)) {
@@ -147,7 +156,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
                 if (ket != bra) continue;
                 res += val;
             }
-            ga_accumulate(m_ga_handle, iBra, res);
+            accumulate(iBra, res);
         }
         // all mixed vibrational - electronic operators
         for (const auto &mixedTerm : ham.mixedHam) {
@@ -159,7 +168,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
                 if (!NextTask(m_communicator)) continue;
                 res.zero();
                 res.diagonalOperator(op);
-                ga_accumulate(m_ga_handle, iBra, res);
+                accumulate(iBra, res);
             }
         }
     }
