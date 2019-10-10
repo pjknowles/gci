@@ -111,12 +111,9 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
     // Loop over electronic states, loop over modals, set each element of the electronic wavefunction
     for (unsigned int root = 0; root < nState; root++) {
         auto ind_elec_state = root / nM;
-        auto ind_modal = root - ind_elec_state * nM;
-        auto elDim = ww[0].elDim();
-        ww[root].set(0.0);
-        for (size_t j = 0; j < elDim; ++j) {
-            ww[root].set(ind_modal * elDim + j, elecSolver.ww[ind_elec_state].at(j));
-        }
+        auto iVib = root - ind_elec_state * nM;
+        ww[root].zero();
+        ww[root].put(iVib, elecSolver.ww[ind_elec_state]);
     }
     MPI_Barrier(mpi_comm_compute);
     if (GA_Nodeid() == 0)

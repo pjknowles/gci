@@ -79,18 +79,18 @@ public:
     VibSpace vibSpace() const {return m_vibSpace;}///< copy of the vibrational space
     size_t elDim() const {return m_elDim;} ///< size of electronic Fock space
     size_t vibDim() const {return m_vibBasis.vibDim();}///< size of vibrational Fock space
-protected:
+
     /*!
-     * @brief Updates boundaries in GA for a block corresponding to electronic wavefunction under vibrational
+     * @brief Gets boundaries in GA for a block corresponding to electronic wavefunction under vibrational
      * index ``indKet``
      * @param iVib vibrational index of the electronic Wavefunction
      * @param lo index of the start of the block
      * @param hi index of the end of the block (inclusive)
      */
     static void ga_wfn_block_bound(int iVib, int *lo, int *hi, int dimension);
-    static void ga_copy_to_local(int ga_handle, int iVib, Wavefunction &wfn);
-    static void ga_accumulate(int ga_handle, int iVib, Wavefunction &wfn, double scaling_constant = 1.0);
-public:
+    void copy_to_local(int iVib, Wavefunction &wfn) const;
+    void put(int iVib, Wavefunction &wfn);
+    void accumulate(int iVib, Wavefunction &wfn, double scaling_constant = 1.0);
 
     /*!
      * \brief Add to this object the action of an operator on another wavefunction
