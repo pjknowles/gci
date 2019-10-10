@@ -151,16 +151,18 @@ inline void gather_chunks(double *buffer, const size_t length, const size_t chun
 
 void inline gsum(double *buffer, size_t len, MPI_Comm communicator) {
 #ifdef HAVE_MPI_H
-    int parallel_rank, parallel_size;
-    MPI_Comm_size(communicator, &parallel_size);
-    MPI_Comm_rank(communicator, &parallel_rank);
-    std::vector<double> result;
-    if (parallel_rank == 0)
-        result.resize(len);
-    MPI_Reduce(buffer, &result[0], (int) len, MPI_DOUBLE, MPI_SUM, 0, communicator);
-    if (parallel_rank == 0)
-        std::memcpy(buffer, &result[0], sizeof(double) * len);
-    MPI_Bcast(buffer, (int) len, MPI_DOUBLE, 0, communicator);
+//    int parallel_rank, parallel_size;
+//    MPI_Comm_size(communicator, &parallel_size);
+//    MPI_Comm_rank(communicator, &parallel_rank);
+//    std::vector<double> result;
+//    if (parallel_rank == 0)
+//        result.resize(len);
+//    MPI_Reduce(buffer, &result[0], (int) len, MPI_DOUBLE, MPI_SUM, 0, communicator);
+//    if (parallel_rank == 0)
+//        std::memcpy(buffer, &result[0], sizeof(double) * len);
+//    MPI_Bcast(buffer, (int) len, MPI_DOUBLE, 0, communicator);
+// It should be possible to do this with a single collective call.
+    MPI_Allreduce(MPI_IN_PLACE, buffer, len, MPI_DOUBLE, MPI_SUM, communicator);
 #endif
 }
 
