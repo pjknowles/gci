@@ -5,6 +5,8 @@
 #include <ga.h>
 #include <cfloat>
 #include <numeric>
+#include <algorithm>
+#include <cmath>
 
 namespace gci {
 

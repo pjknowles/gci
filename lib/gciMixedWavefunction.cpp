@@ -121,6 +121,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
 
 void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bool parallel_stringset) {
     auto p = profiler->push("MixedWavefunction::diagonalOperator");
+    zero();
     DivideTasks(1000000000, 1, 1, m_communicator);
     auto res = Wavefunction{m_prototype, 0, m_child_communicator};
     auto wfn = Wavefunction{m_prototype, 0, m_child_communicator};
@@ -162,8 +163,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
             }
         }
     }
-    //MPI_Barrier(m_communicator);
-    GA_Pgroup_sync(m_ga_pgroup);
+    sync();
 }
 
 bool MixedWavefunction::compatible(const MixedWavefunction &other) const {
