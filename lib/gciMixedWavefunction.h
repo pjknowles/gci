@@ -97,9 +97,12 @@ public:
      * \param ham Fully second quantized mixed Hamiltonian operator
      * \param w Other mixed Wavefunction
      * \param parallel_stringset whether to use parallel algorithm in StringSet construction
+     * \param with_sync whether to syncronise the processes at the end of operation.
+     *                  Calculations without a sync have to DivideTasks beforhand, 
+     *                  since it requires a sync.
      */
     void operatorOnWavefunction(const MixedOperatorSecondQuant &ham, const MixedWavefunction &w,
-                                bool parallel_stringset = false);
+                                bool parallel_stringset = false, bool with_sync = true);
 
     /*!
      * @brief Set this object to the diagonal elements of the hamiltonian

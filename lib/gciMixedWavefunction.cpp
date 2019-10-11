@@ -66,8 +66,9 @@ void MixedWavefunction::accumulate(int iVib, Wavefunction &wfn, double scaling_c
 }
 
 void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &ham, const MixedWavefunction &w,
-                                               bool parallel_stringset) {
-    DivideTasks(1000000000, 1, 1, m_communicator);
+                                               bool parallel_stringset, bool with_sync) {
+    if (with_sync) 
+        DivideTasks(1000000000, 1, 1, m_communicator);
     auto prof = profiler->push("MixedWavefunction::operatorOnWavefunction");
     auto res = Wavefunction{m_prototype, 0, m_child_communicator};
     auto ketWfn = Wavefunction{m_prototype, 0, m_child_communicator};
@@ -124,8 +125,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             accumulate(iBra, res);
         }
     }
-    //MPI_Barrier(m_communicator);
-    GA_Pgroup_sync(m_ga_pgroup);
+    if (with_sync) sync();
 }
 
 void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bool parallel_stringset) {

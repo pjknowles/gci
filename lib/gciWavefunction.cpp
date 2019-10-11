@@ -55,10 +55,10 @@ Wavefunction::Wavefunction(const State &state, MPI_Comm communicator)
 
 Wavefunction::Wavefunction(const Wavefunction &source, int option, MPI_Comm communicator)
         : m_sparse(source.m_sparse), m_communicator(communicator),
-        m_parallel_rank(_mpi_rank(m_communicator)),m_parallel_size(_mpi_size(m_communicator)),
-        dimension(source.dimension) {
+        m_parallel_rank(-1), m_parallel_size(0), dimension(source.dimension) {
     *this = source;
-    m_communicator = communicator;
+    if (m_communicator == MPI_COMM_NULL)
+        m_communicator = source.m_communicator;
     m_parallel_rank =_mpi_rank(m_communicator);
     m_parallel_size = _mpi_size(m_communicator);
 }
@@ -821,14 +821,16 @@ void Wavefunction::operatorOnWavefunction(const SymmetryMatrix::Operator &h,
 
     if (h.m_rank > 1) { // two-electron contribution, alpha-beta
         auto p = profiler->push("ab integrals");
-        size_t nsaaMax = 128; // temporary static
-        size_t nsbbMax = 128; // temporary static
         for (unsigned int symb = 0; symb < 8; symb++) {
             StringSet bb(betaActiveStrings, 1, 0, symb, parallel_stringset);
             if (bb.empty()) continue;
+            size_t nsbbMax = std::min((size_t) 256, bb.size() / m_parallel_size); // temporary static
+            nsbbMax = std::max(nsbbMax, (size_t) 16);
             for (unsigned int syma = 0; syma < 8; syma++) {
                 StringSet aa(alphaActiveStrings, 1, 0, syma, parallel_stringset);
                 if (aa.empty()) continue;
+                size_t nsaaMax = std::min((size_t) 256, aa.size() / m_parallel_size); // temporary static
+                nsaaMax = std::max(nsaaMax, (size_t) 16);
                 unsigned int symexc = symb ^syma ^w.symmetry;
                 size_t nexc = h.O2(true, false, false).block_size(symexc);
                 {
