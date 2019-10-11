@@ -33,8 +33,8 @@ public:
     MPI_Comm m_communicator;
     int m_parallel_size;
     int m_parallel_rank;
-protected:
     memory::vector<double> buffer; ///< buffer to hold coefficients describing the object
+protected:
     size_t dimension; ///< the size of the space
     std::vector<size_t> _blockOffset;
     int m_tilesize = -1, m_alphatilesize = -1, m_betatilesize = -1;
@@ -57,7 +57,7 @@ public:
        */
     explicit Wavefunction(const State &state, MPI_Comm communicator = mpi_comm_compute);
 
-    Wavefunction(const Wavefunction &source, int option, MPI_Comm communicator = mpi_comm_compute);
+    Wavefunction(const Wavefunction &source, int option, MPI_Comm communicator = MPI_COMM_NULL);
 
     std::vector<StringSet> alphaStrings; ///< The alpha-spin strings defining the CI basis
     std::vector<StringSet> betaStrings; ///< The beta-spin strings defining the CI basis

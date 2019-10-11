@@ -23,8 +23,8 @@ int main(int argc, char *argv[])
     gci::mpi_comm_compute = GA_MPI_Comm();
     MPI_Comm_size(gci::mpi_comm_compute, &gci::parallel_size);
     MPI_Comm_rank(gci::mpi_comm_compute, &gci::parallel_rank);
-    std::cout << "rank = " << gci::parallel_rank << std::endl;
-    std::cout << "size = " << gci::parallel_size << std::endl;
+    if (gci::parallel_rank == 0)
+        std::cout << "MPI_Comm_size = " << gci::parallel_size << std::endl;
     if (gci::parallel_rank > 0) freopen("/dev/null", "w", stdout);
     PluginGuest plugin("MOLPRO");
     if (plugin.active()) {
@@ -42,7 +42,8 @@ int main(int argc, char *argv[])
     }
     memory_initialize(memory);
     MA_init(C_DBL, memory/2, memory/2);
-    std::cout << "memory initialised to " << memory_remaining() << std::endl;
+    if (gci::parallel_rank == 0)
+        std::cout << "memory initialised to " << memory_remaining() << std::endl;
     size_t memory_allocated = memory_remaining();
 
     {

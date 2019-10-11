@@ -49,7 +49,7 @@ public:
      */
     void copy_buffer(const Array &source);
 
-    void sync();//!< synchronises all processes in this group and ensures GA operations completed
+    void sync() const;//!< synchronises all processes in this group and ensures GA operations completed
     double at(size_t offset) const; //!< get element at the offset. Blocking with one-sided communication.
     void zero(); ///< Set all elements to zero. Collective communication
     void set(double val);///< set all elements to a scalar. Collective communication

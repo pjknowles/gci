@@ -78,7 +78,7 @@ void Array::allocate_buffer() {
     m_ga_allocated = true;
 }
 
-void Array::sync() {
+void Array::sync() const {
     GA_Pgroup_sync(m_ga_pgroup);
 }
 
