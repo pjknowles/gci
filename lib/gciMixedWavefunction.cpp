@@ -29,7 +29,7 @@ MixedWavefunction::MixedWavefunction(const MixedWavefunction &source, int option
 Wavefunction MixedWavefunction::wavefunctionAt(size_t iVib, MPI_Comm commun) const {
     auto wfn = Wavefunction{m_prototype, 0, commun};
     wfn.allocate_buffer();
-    if (!empty()) copy_to_local(iVib, wfn);
+    if (!empty()) copy_to_local(m_ga_handle, iVib, wfn);
     return wfn;
 }
 
@@ -38,13 +38,13 @@ void MixedWavefunction::ga_wfn_block_bound(int iVib, int *lo, int *hi, int dimen
     hi[0] = lo[0] + dimension - 1;
 }
 
-void MixedWavefunction::copy_to_local(int iVib, Wavefunction &wfn) const {
+void MixedWavefunction::copy_to_local(int ga_handle, int iVib, Wavefunction &wfn) const {
     auto p = profiler->push("copy_to_local");
     double *buffer = wfn.buffer.data();
     auto dimension = wfn.dimension;
     int lo, hi, ld = dimension;
     ga_wfn_block_bound(iVib, &lo, &hi, dimension);
-    NGA_Get(m_ga_handle, &lo, &hi, buffer, &ld);
+    NGA_Get(ga_handle, &lo, &hi, buffer, &ld);
 }
 
 void MixedWavefunction::put(int iVib, Wavefunction &wfn) {
@@ -78,7 +78,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
         // Purely electronic operators
         if (NextTask(m_communicator)) {
             auto p = profiler->push("Hel");
-            copy_to_local(iBra, ketWfn);
+            copy_to_local(w.m_ga_handle, iBra, ketWfn);
             res.zero();
             for (const auto &hel : ham.elHam) {
                 auto p = profiler->push(hel.first);
@@ -97,7 +97,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
                 auto ket = bra.excite(vibExc);
                 if (!ket.withinSpace(m_vibSpace)) continue;
                 auto iKet = m_vibBasis.index(ket);
-                copy_to_local(iKet, ketWfn);
+                copy_to_local(w.m_ga_handle, iKet, ketWfn);
                 res.axpy(val, ketWfn);
             }
             accumulate(iBra, res);
@@ -108,7 +108,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             auto iKet = m_vibBasis.index(bra);
             if (!ham.connected(bra, ket)) continue;
             if (!NextTask(m_communicator)) continue;
-            copy_to_local(iKet, ketWfn);
+            copy_to_local(w.m_ga_handle, iKet, ketWfn);
             res.zero();
             for (const auto &mixedTerm : ham.mixedHam) {
                 const auto &vibTensor = mixedTerm.second;

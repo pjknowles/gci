@@ -88,7 +88,7 @@ public:
      * @param hi index of the end of the block (inclusive)
      */
     static void ga_wfn_block_bound(int iVib, int *lo, int *hi, int dimension);
-    void copy_to_local(int iVib, Wavefunction &wfn) const;
+    void copy_to_local(int ga_handle, int iVib, Wavefunction &wfn) const;
     void put(int iVib, Wavefunction &wfn);
     void accumulate(int iVib, Wavefunction &wfn, double scaling_constant = 1.0);
 
