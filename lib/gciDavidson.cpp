@@ -109,13 +109,17 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
                                                                 modOptions);
     elecSolver.run();
     // Loop over electronic states, loop over modals, set each element of the electronic wavefunction
-    for (unsigned int root = 0; root < nState; root++) {
-        auto ind_elec_state = root / nM;
-        auto iVib = root - ind_elec_state * nM;
-        ww[root].zero();
-        ww[root].put(iVib, elecSolver.ww[ind_elec_state]);
+    for (auto &root : ww) root.zero();
+    if (GA_Nodeid() == 0) {
+        GA_Init_fence();
+        for (unsigned int root = 0; root < nState; root++) {
+            auto ind_elec_state = root / nM;
+            auto iVib = root - ind_elec_state * nM;
+            ww[root].put(iVib, elecSolver.ww[ind_elec_state]);
+        }
+        GA_Fence();
     }
-    MPI_Barrier(mpi_comm_compute);
+    for (auto &root : ww) root.sync();
     if (GA_Nodeid() == 0)
         std::cout << "Exit Davidson::prepareGuess()" << std::endl;
 }
@@ -166,8 +170,8 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
                 throw std::logic_error("Davidson::initialize duplicate guess vector, n =" + std::to_string(n));
         roots[root] = n;
         ww.back().set(n, 1.0);
-        for (auto i =0; i <=root; ++i){
-            std::cout << i << " " << root << " " <<  ww[i].dot(ww.back()) << std::endl;
+        for (auto i = 0; i <= root; ++i) {
+            std::cout << i << " " << root << " " << ww[i].dot(ww.back()) << std::endl;
         }
         gg.emplace_back(*prototype, 0);
         gg.back().allocate_buffer();
