@@ -121,11 +121,11 @@ TEST_F(ArrayInitializationF, get) {
 TEST_F(ArrayInitializationF, put) {
     allocate_buffer();
     {
+        auto l = Lock();
         auto range = std::vector<double>(dim);
         std::iota(range.begin(), range.end(), m_comm_rank);
         put(0, dim - 1, range.data());
         auto from_ga_buffer = get(0, dim - 1);
-        auto l = Lock();
         ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), range));
     }
     sync();
@@ -134,16 +134,16 @@ TEST_F(ArrayInitializationF, put) {
 TEST_F(ArrayInitializationF, set) {
     zero(true, true);
     auto ref_values = std::vector<double>(dim, 0.);
+    auto from_ga_buffer = vec();
     {
         auto l = Lock();
-        auto from_ga_buffer = vec();
         ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), ref_values));
     }
-    set(42.0, false, true);
+    set(42.0, true, true);
+    from_ga_buffer = vec();
     {
         auto l = Lock();
         std::fill(ref_values.begin(), ref_values.end(), 42.0);
-        auto from_ga_buffer = vec();
         ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), ref_values));
     }
     sync();
@@ -177,6 +177,7 @@ public:
 };
 
 TEST_F(ArrayRangeF, gather) {
+    sync();
     auto from_ga_buffer = gather(sub_indices);
     {
         auto l = Lock();
@@ -199,6 +200,7 @@ TEST_F(ArrayRangeF, scatter) {
 }
 
 TEST_F(ArrayRangeF, scatter_acc) {
+    sync();
     {
         auto l = Lock();
         scatter_acc(sub_indices, sub_values, 1.0);
