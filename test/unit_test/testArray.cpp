@@ -13,10 +13,14 @@ using ::testing::ContainerEq;
 using ::testing::Each;
 
 namespace gci {
-int n_lock_calls=0;
+int n_lock_calls = 0;
+
 class Lock {
 public:
-    explicit Lock(int mutex = 0) : mutex(mutex) {GA_Lock(mutex);++n_lock_calls;}
+    explicit Lock(int mutex = 0) : mutex(mutex) {
+        GA_Lock(mutex);
+        ++n_lock_calls;
+    }
 
     ~Lock() {GA_Unlock(mutex);}
 
@@ -54,7 +58,7 @@ TEST_F(ArrayWithMutexF, constructor_copy) {
 
 class ArrayInitializationF : public ::testing::Test, public Array {
 public:
-    ArrayInitializationF() : Array(dim, mpi_comm_compute) {sync(); };
+    ArrayInitializationF() : Array(dim, mpi_comm_compute) {sync();};
     static const int dim = 100;
 };
 
@@ -77,14 +81,14 @@ TEST_F(ArrayInitializationF, allocate_buffer) {
 }
 
 TEST_F(ArrayInitializationF, zero) {
-    zero();
+    zero(false, true);
     auto l = Lock();
     EXPECT_TRUE(m_ga_allocated);
     ASSERT_FALSE(empty());
 }
 
 TEST_F(ArrayInitializationF, vec) {
-    zero();
+    zero(true, true);
     auto data = vec();
     auto empty_vec = std::vector<double>(data.size(), 0.);
     auto l = Lock();
@@ -92,7 +96,7 @@ TEST_F(ArrayInitializationF, vec) {
 }
 
 TEST_F(ArrayInitializationF, get) {
-    zero();
+    zero(true, true);
     auto data = get(0, 10);
     auto ref_vec = std::vector<double>(data.size(), 0.);
     {
@@ -109,21 +113,23 @@ TEST_F(ArrayInitializationF, put) {
     allocate_buffer();
     auto range = std::vector<double>(dim);
     std::iota(range.begin(), range.end(), 0);
-    put(0, dim - 1, range.data());
+    if (m_comm_rank == 0)
+        put(0, dim - 1, range.data());
+    sync();
     auto from_ga_buffer = get(0, dim - 1);
     auto l = Lock();
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), range));
 }
 
 TEST_F(ArrayInitializationF, set) {
-    zero();
+    zero(true, true);
     auto ref_values = std::vector<double>(dim, 0.);
     auto from_ga_buffer = vec();
     {
         auto l = Lock();
         ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), ref_values));
     }
-    set(42.0);
+    set(42.0, true, true);
     std::fill(ref_values.begin(), ref_values.end(), 42.0);
     from_ga_buffer = vec();
     auto l = Lock();
@@ -165,7 +171,7 @@ TEST_F(ArrayRangeF, gather) {
 }
 
 TEST_F(ArrayRangeF, scatter) {
-    zero();
+    zero(true, true);
     scatter(sub_indices, sub_values);
     auto from_ga_buffer = gather(sub_indices);
     auto l = Lock();
@@ -217,7 +223,7 @@ TEST_F(ArrayRangeF, minlocN_reverse) {
 
 TEST_F(ArrayRangeF, scal_double) {
     double alpha = 1.5;
-    scal(alpha);
+    scal(alpha, false, true);
     for (auto &el : values) {
         el *= alpha;
     }
@@ -228,7 +234,7 @@ TEST_F(ArrayRangeF, scal_double) {
 
 TEST_F(ArrayRangeF, add_double) {
     double alpha = 100.;
-    add(alpha);
+    add(alpha, false, true);
     for (auto &el : values) {
         el += alpha;
     }
@@ -239,7 +245,7 @@ TEST_F(ArrayRangeF, add_double) {
 
 TEST_F(ArrayRangeF, sub_double) {
     double alpha = 100.;
-    sub(alpha);
+    sub(alpha, false, true);
     for (auto &el : values) {
         el -= alpha;
     }
@@ -249,7 +255,7 @@ TEST_F(ArrayRangeF, sub_double) {
 }
 
 TEST_F(ArrayRangeF, recip) {
-    recip();
+    recip(false, true);
     for (auto &el : values) {
         el = 1. / el;
     }
@@ -260,7 +266,8 @@ TEST_F(ArrayRangeF, recip) {
 
 class ArrayCollectiveOpF : public ::testing::Test {
 public:
-    ArrayCollectiveOpF() : alpha(1.0), beta(2.0), a(dim, mpi_comm_compute), b(dim, mpi_comm_compute) {
+    ArrayCollectiveOpF() : alpha(1.0), beta(2.0), p_rank(GA_Nodeid()), p_size(GA_Nnodes()), a(dim, mpi_comm_compute),
+                           b(dim, mpi_comm_compute) {
         a.allocate_buffer();
         b.allocate_buffer();
         range_alpha.resize(dim);
@@ -280,11 +287,12 @@ public:
         sync();
     }
 
-    static const int dim=100;
+    static const int dim = 100;
     const double alpha;
     const double beta;
     std::vector<double> range_alpha;
     std::vector<double> range_beta;
+    int p_rank, p_size;
     Array a;
     Array b;
     static const int every_nth_element = 5; // period for selection of sparse array elements
@@ -296,6 +304,7 @@ TEST_F(ArrayCollectiveOpF, add) {
     a.set(alpha);
     b.set(beta);
     a.add(b);
+    sync();
     auto from_ga_buffer_a = a.vec();
     auto from_ga_buffer_b = b.vec();
     auto l = Lock();
@@ -307,6 +316,7 @@ TEST_F(ArrayCollectiveOpF, sub) {
     a.set(alpha);
     b.set(beta);
     a.sub(b);
+    sync();
     auto from_ga_buffer_a = a.vec();
     auto from_ga_buffer_b = b.vec();
     auto l = Lock();
@@ -319,6 +329,7 @@ TEST_F(ArrayCollectiveOpF, axpy_Reference) {
     a.set(alpha);
     b.set(beta);
     a.axpy(scale, b);
+    sync();
     auto from_ga_buffer_a = a.vec();
     auto from_ga_buffer_b = b.vec();
     auto l = Lock();
@@ -330,7 +341,7 @@ TEST_F(ArrayCollectiveOpF, axpy_Pointer) {
     double scale = -3.0;
     a.set(alpha);
     b.set(beta);
-    a.axpy(scale, &b);
+    a.axpy(scale, &b, false, true);
     auto from_ga_buffer_a = a.vec();
     auto from_ga_buffer_b = b.vec();
     auto l = Lock();
@@ -341,7 +352,7 @@ TEST_F(ArrayCollectiveOpF, axpy_Pointer) {
 TEST_F(ArrayCollectiveOpF, axpy_map) {
     a.set(alpha);
     double scale = 5.0;
-    a.axpy(scale, sparse_array);
+    a.axpy(scale, sparse_array, false, true);
     auto from_ga_buffer_a = a.vec();
     auto ref_vals = std::vector<double>(dim, alpha);
     for (const auto &item : sparse_array) {
@@ -352,16 +363,19 @@ TEST_F(ArrayCollectiveOpF, axpy_map) {
 }
 
 TEST_F(ArrayCollectiveOpF, dot_Array) {
-    a.put(0, dim - 1, range_alpha.data());
-    b.put(0, dim - 1, range_beta.data());
-    auto ga_dot = a.dot(b);
+    if (p_rank == 0) {
+        a.put(0, dim - 1, range_alpha.data());
+        b.put(0, dim - 1, range_beta.data());
+    }
+    auto ga_dot = a.dot(b, true);
     double ref_dot = std::inner_product(range_alpha.begin(), range_alpha.end(), range_beta.begin(), 0.);
     auto l = Lock();
     ASSERT_THAT(ga_dot, DoubleEq(ref_dot));
 }
 
 TEST_F(ArrayCollectiveOpF, dot_map) {
-    a.put(0, dim - 1, range_alpha.data());
+    if (p_rank == 0)
+        a.put(0, dim - 1, range_alpha.data());
     auto ga_dot = a.dot(sparse_array);
     double ref_dot = 0.;
     for (const auto &item : sparse_array) {
@@ -375,7 +389,7 @@ TEST_F(ArrayCollectiveOpF, times) {
     a.set(alpha);
     b.set(beta);
     auto c = Array{a};
-    c.times(&a, &b);
+    c.times(&a, &b, false, true);
     auto from_ga_buffer_a = a.vec();
     auto from_ga_buffer_b = b.vec();
     auto from_ga_buffer_c = c.vec();
@@ -394,7 +408,7 @@ TEST_F(ArrayCollectiveOpF, divide_append_negative) {
     a.set(alpha);
     b.set(beta);
     auto c = Array{a};
-    c.divide(&a, &b, shift, true, true);
+    c.divide(&a, &b, shift, true, true, false, true);
     auto from_ga_buffer_a = a.vec();
     auto from_ga_buffer_b = b.vec();
     auto from_ga_buffer_c = c.vec();
@@ -413,7 +427,7 @@ TEST_F(ArrayCollectiveOpF, divide_append_positive) {
     a.set(alpha);
     b.set(beta);
     auto c = Array{a};
-    c.divide(&a, &b, shift, true, false);
+    c.divide(&a, &b, shift, true, false, false, true);
     auto from_ga_buffer_a = a.vec();
     auto from_ga_buffer_b = b.vec();
     auto from_ga_buffer_c = c.vec();
@@ -432,7 +446,7 @@ TEST_F(ArrayCollectiveOpF, divide_overwrite_positive) {
     a.set(alpha);
     b.set(beta);
     auto c = Array{a};
-    c.divide(&a, &b, shift, false, false);
+    c.divide(&a, &b, shift, false, false, false, true);
     auto from_ga_buffer_a = a.vec();
     auto from_ga_buffer_b = b.vec();
     auto from_ga_buffer_c = c.vec();
