@@ -96,6 +96,28 @@ void Array::copy_buffer(const Array &source) {
     GA_Copy(source.m_ga_handle, m_ga_handle);
 }
 
+Array::LocalBuffer::LocalBuffer(const Array &source) : m_ga_handle(source.m_ga_handle), lo(0), hi(0), ld(0),
+                                                       buffer(nullptr) {
+    NGA_Distribution(m_ga_handle, source.m_comm_rank, &lo, &hi);
+    NGA_Access(m_ga_handle, &lo, &hi, &buffer, &ld);
+    if (buffer == nullptr) GA_Error((char *) "Array::LocalBuffer::LocalBuffer() Failed to get local buffer", 1);
+}
+
+Array::LocalBuffer::~LocalBuffer() {NGA_Release(m_ga_handle, &lo, &hi);}
+
+bool Array::LocalBuffer::compatible(const LocalBuffer &other) {
+    return (size() == other.size() && lo == other.lo && hi == other.hi);
+}
+
+size_t Array::LocalBuffer::size() const {return hi - lo + 1;}
+
+double *Array::LocalBuffer::begin() {return buffer;}
+
+double *Array::LocalBuffer::end() {return buffer + size();}
+
+double &Array::LocalBuffer::operator[](size_t i) {return buffer[i];}
+
+
 /*
  * Each process searches for lowest n numbers in it's local GA buffer, if it has one.
  * Then, sends them to root who does the final sort
@@ -122,7 +144,9 @@ std::vector<size_t> Array::minlocN(size_t n) const {
     minVal[0] = prev_min;
     for (int i = 1; i < nmin; ++i) {
         ptr_to_min = std::min_element(buffer, buffer + length,
-                                      [prev_min](double el, double smallest) {return el < smallest && el > prev_min || smallest <= prev_min;});
+                                      [prev_min](double el, double smallest) {
+                                          return el < smallest && el > prev_min || smallest <= prev_min;
+                                      });
         min_ind = (ptr_to_min - buffer);
         prev_min = *ptr_to_min;
         minInd[i] = lo + min_ind;
@@ -161,6 +185,28 @@ double Array::at(size_t ind) const {
     int lo = ind, high = ind, ld = 1;
     NGA_Get(m_ga_handle, &lo, &high, &buffer, &ld);
     return buffer;
+}
+
+void Array::zero(bool with_sync_before, bool with_sync_after) {
+    if (empty()) allocate_buffer();
+    set(0., with_sync_before, with_sync_after);
+}
+
+void Array::set(double val, bool with_sync_before, bool with_sync_after) {
+    if (empty()) GA_Error((char *) "Array::set() GA not allocated", 1);
+    if (with_sync_before) sync();
+    auto y_vec = Array::LocalBuffer(*this);
+    for (double &y : y_vec) {
+        y = val;
+    }
+    if (with_sync_after) sync();
+}
+
+void Array::set(size_t ind, double val, bool with_sync_before, bool with_sync_after) {
+    auto data = std::vector<double>{val};
+    if (with_sync_before) sync();
+    put(ind, ind, data.data());
+    if (with_sync_after) sync();
 }
 
 std::vector<double> Array::vec() const {
@@ -222,15 +268,24 @@ bool Array::compatible(const Array &other) const {
     return m_dimension == other.m_dimension;
 }
 
-void Array::axpy(double a, const Array &x) {
-    if (!compatible(x)) GA_Error((char *) "Attempting to add incompatible Array objects", 1);
-    if (empty() || x.empty()) GA_Error((char *) "GA not allocated", 1);
-    double one = 1.0;
-    GA_Add(&one, m_ga_handle, &a, x.m_ga_handle, m_ga_handle);
+void Array::axpy(double a, const Array &x, bool with_sync_before, bool with_sync_after) {
+    if (!compatible(x)) GA_Error((char *) "Array::axpy() Attempting to add incompatible Array objects", 1);
+    if (empty() || x.empty()) GA_Error((char *) "Array::axpy() GA not allocated", 1);
+    if (with_sync_before) sync();
+    auto y_vec = Array::LocalBuffer(*this);
+    auto x_vec = Array::LocalBuffer(x);
+    if (!y_vec.compatible(x_vec)) GA_Error((char *) "Array::axpy() incompatible local buffers", 1);
+    for (size_t i = 0; i < y_vec.size(); ++i) {
+        y_vec[i] += a * x_vec[i];
+    }
+    if (with_sync_after) sync();
 }
 
-void Array::axpy(double a, const std::map<size_t, double> &x) {
-    // TODO do I really need to cast away the const to get values from a map???
+void Array::axpy(double a, const Array *other, bool with_sync_before, bool with_sync_after) {
+    axpy(a, *other, with_sync_before, with_sync_after);
+}
+
+void Array::axpy(double a, const std::map<size_t, double> &x, bool with_sync_before, bool with_sync_after) {
     int n = x.size();
     std::vector<int> indices;
     std::vector<double> vals;
@@ -243,39 +298,68 @@ void Array::axpy(double a, const std::map<size_t, double> &x) {
     scatter_acc(indices, vals, a);
 }
 
-void Array::scal(double a) {
-    if (empty()) GA_Error((char *) "GA not allocated", 1);
-    GA_Scale(m_ga_handle, &a);
+void Array::scal(double a, bool with_sync_before, bool with_sync_after) {
+    if (empty()) GA_Error((char *) "Array::scal() GA not allocated", 1);
+    if (with_sync_before) sync();
+    auto y_vec = Array::LocalBuffer(*this);
+    for (double &y : y_vec) {
+        y *= a;
+    }
+    if (with_sync_after) sync();
 }
 
-void Array::add(const Array &other) {
-    axpy(1.0, other);
+void Array::add(const Array &other, bool with_sync_before, bool with_sync_after) {
+    axpy(1.0, other, with_sync_before, with_sync_after);
 }
 
-void Array::add(double a) {
-    GA_Add_constant(m_ga_handle, &a);
+void Array::add(double a, bool with_sync_before, bool with_sync_after) {
+    if (empty()) GA_Error((char *) "Array::add() GA not allocated", 1);
+    if (with_sync_before) sync();
+    auto y_vec = Array::LocalBuffer(*this);
+    for (double &y : y_vec) {
+        y += a;
+    }
+    if (with_sync_after) sync();
 }
 
-void Array::sub(const Array &other) {
-    axpy(-1.0, other);
+void Array::sub(const Array &other, bool with_sync_before, bool with_sync_after) {
+    axpy(-1.0, other, with_sync_before, with_sync_after);
 }
 
-void Array::sub(double a) {
-    add(-a);
+void Array::sub(double a, bool with_sync_before, bool with_sync_after) {
+    add(-a, with_sync_before, with_sync_after);
 }
 
-void Array::recip() {
-    if (empty()) GA_Error((char *) "GA not allocated", 1);
-    GA_Recip(m_ga_handle);
+void Array::recip(bool with_sync_before, bool with_sync_after) {
+    if (empty()) GA_Error((char *) "Array::recip() GA not allocated", 1);
+    if (with_sync_before) sync();
+    auto y_vec = Array::LocalBuffer(*this);
+    for (double &y : y_vec) {
+        y = 1.0 / y;
+    }
+    if (with_sync_after) sync();
 }
 
-double Array::dot(const Array &other) const {
-    if (!compatible(other)) GA_Error((char *) "Attempt to form scalar product between incompatible Array objects", 1);
-    if (empty()) GA_Error((char *) "GA not allocated", 1);
-    return GA_Ddot(m_ga_handle, other.m_ga_handle);
+double Array::dot(const Array &other, bool with_sync_before) const {
+    if (!compatible(other))
+        GA_Error((char *) "Array::dot() Attempt to form scalar product between incompatible Array objects", 1);
+    if (empty()) GA_Error((char *) "Array::dot() GA not allocated", 1);
+    if (with_sync_before) sync();
+    auto y_vec = Array::LocalBuffer(*this);
+    auto x_vec = Array::LocalBuffer(other);
+    if (!y_vec.compatible(x_vec)) GA_Error((char *) "Array::axpy() GA not allocated", 1);
+    auto a = std::inner_product(y_vec.begin(), y_vec.end(), x_vec.begin(), 0.);
+    MPI_Allreduce(MPI_IN_PLACE, &a, 1, MPI_DOUBLE, MPI_SUM, m_communicator);
+    return a;
 }
 
-double Array::dot(const std::map<size_t, double> &other) const {
+double Array::dot(const Array *other, bool with_sync_before) const {
+    return dot(*other, with_sync_before);
+}
+
+double Array::dot(const std::map<size_t, double> &other, bool with_sync_before) const {
+    if (empty()) GA_Error((char *) "Array::dot() GA not allocated", 1);
+    if (with_sync_before) sync();
     double result = 0;
     if (m_comm_rank == 0) {
         auto n = other.size();
@@ -294,48 +378,33 @@ double Array::dot(const std::map<size_t, double> &other) const {
     return result;
 }
 
-void Array::zero() {
-    if (empty()) allocate_buffer();
-    GA_Zero(m_ga_handle);
-}
-
-void Array::set(double val) {
-    if (empty()) GA_Error((char *) "GA not allocated", 1);
-    GA_Fill(m_ga_handle, &val);
-}
-
-void Array::set(size_t ind, double val) {
-    auto data = std::vector<double>{val};
-    put(ind, ind, data.data());
-}
-
 Array &Array::operator*=(double value) {
-    scal(value);
+    scal(value, true, true);
     return *this;
 }
 
 Array &Array::operator+=(const Array &other) {
-    add(other);
+    add(other, true, true);
     return *this;
 }
 
 Array &Array::operator-=(const Array &other) {
-    sub(other);
+    sub(other, true, true);
     return *this;
 }
 
 Array &Array::operator+=(double value) {
-    add(value);
+    add(value, true, true);
     return *this;
 }
 
 Array &Array::operator-=(double value) {
-    sub(value);
+    sub(value, true, true);
     return *this;
 }
 
 Array &Array::operator-() {
-    scal(-1.0);
+    scal(-1.0, true, true);
     return *this;
 }
 
@@ -346,27 +415,47 @@ Array &Array::operator/=(const Array &other) {
     return *this;
 }
 
-void Array::times(const Array *a, const Array *b) {
-    if (a == nullptr || b == nullptr) GA_Error((char *) "Vectors cannot be null", 1);
-    if (!compatible(*a) || !compatible(*b)) GA_Error((char *) "Attempting to divide incompatible Array objects", 1);
-    if (empty() || a->empty() || b->empty()) GA_Error((char *) "GA not allocated", 1);
-    GA_Elem_multiply(a->m_ga_handle, b->m_ga_handle, m_ga_handle);
+void Array::times(const Array *a, const Array *b, bool with_sync_before, bool with_sync_after) {
+    if (a == nullptr || b == nullptr)
+        GA_Error((char *) "Array::times() Vectors cannot be null", 1);
+    if (!compatible(*a) || !compatible(*b))
+        GA_Error((char *) "Array::times() Attempting to divide incompatible Array objects", 1);
+    if (empty() || a->empty() || b->empty())
+        GA_Error((char *) "Array::times() GA not allocated", 1);
+    if (with_sync_before) sync();
+    auto y_vec = Array::LocalBuffer(*this);
+    auto a_vec = Array::LocalBuffer(*a);
+    auto b_vec = Array::LocalBuffer(*b);
+    if (!y_vec.compatible(a_vec) || !y_vec.compatible(b_vec))
+        GA_Error((char *) "Array::times() incompatible local buffers", 1);
+    for (size_t i = 0; i < y_vec.size(); ++i) {
+        y_vec[i] = a_vec[i] * b_vec[i];
+    }
+    if (with_sync_after) sync();
 }
 
 // this[i] = a[i]/(b[i]+shift)
-void Array::divide(const Array *a, const Array *b,
-                   double shift, bool append, bool negative) {
+void Array::divide(const Array *a, const Array *b, double shift, bool append, bool negative, bool with_sync_before,
+                   bool with_sync_after) {
     if (a == nullptr || b == nullptr) GA_Error((char *) "Vectors cannot be null", 1);
     if (!compatible(*a) || !compatible(*b)) GA_Error((char *) "Attempting to divide incompatible Array objects", 1);
     if (empty() || a->empty() || b->empty()) GA_Error((char *) "GA not allocated", 1);
+    if (with_sync_before) sync();
+    auto y_vec = Array::LocalBuffer(*this);
+    auto a_vec = Array::LocalBuffer(*a);
+    auto b_vec = Array::LocalBuffer(*b);
+    if (!y_vec.compatible(a_vec) || !y_vec.compatible(b_vec))
+        GA_Error((char *) "Array::divide() incompatible local buffers", 1);
     shift = negative ? -shift : shift;
-    auto b_shifted = Array(*b);
-    b_shifted.add(shift);
-    if (append) {
-        GA_Elem_divide(a->m_ga_handle, b_shifted.m_ga_handle, b_shifted.m_ga_handle);
-        add(b_shifted);
-    } else
-        GA_Elem_divide(a->m_ga_handle, b_shifted.m_ga_handle, m_ga_handle);
+    if (append)
+        for (size_t i = 0; i < y_vec.size(); ++i) {
+            y_vec[i] += a_vec[i] / (b_vec[i] + shift);
+        }
+    else
+        for (size_t i = 0; i < y_vec.size(); ++i) {
+            y_vec[i] = a_vec[i] / (b_vec[i] + shift);
+        }
+    if (with_sync_after) sync();
 }
 
 

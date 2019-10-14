@@ -12,7 +12,7 @@
 namespace gci {
 
 /*!
- * @brief Wrapper over globa array exposing functionality required by IterativeSolver and Array
+ * @brief Wrapper over global array exposing functionality required by IterativeSolver and MixedWavefunction
  */
 class Array {
 public:
@@ -49,12 +49,32 @@ public:
      */
     void copy_buffer(const Array &source);
 
+    /*!
+     * @brief Provides access to the local portion of GA buffer
+     */
+    class LocalBuffer {
+    public:
+        LocalBuffer(const Array &source);
+        ~LocalBuffer();
+        size_t size() const;
+        double *begin();
+        double *end();
+        bool compatible(const LocalBuffer &other);
+        double &operator[](size_t i);
+
+        int m_ga_handle, lo, hi, ld;
+        double *buffer;
+    };
+
     void sync() const;//!< synchronises all processes in this group and ensures GA operations completed
     double at(size_t offset) const; //!< get element at the offset. Blocking with one-sided communication.
-    void zero(); ///< Set all elements to zero. Collective communication
-    void set(double val);///< set all elements to a scalar. Collective communication
+    void zero(bool with_sync_before = false,
+              bool with_sync_after = false); ///< Set all local elements to zero
+    void set(double val, bool with_sync_before = false,
+             bool with_sync_after = false);///< set all local elements to a scalar
     // Use put instead.
-    void set(size_t ind, double val);///< set one element to a scalar
+    void set(size_t ind, double val, bool with_sync_before = false,
+             bool with_sync_after = false);///< set one element to a scalar. Global operation
 
     /*!
      * @brief gets buffer[lo:hi] from global array (hi inclusive, i.e. not pythonic)
@@ -113,59 +133,61 @@ public:
      * Blocking, collective communication
      * \param a the factor defining the multiple
      * \param x the other wavefunction
+     * \param with_sync_before synchronise at the start
+     * \param with_sync_after synchronise at the end
      */
-    void axpy(double a, const Array &x);
-
-    void axpy(double a, const Array *other) {
-        axpy(a, *other);
-    }
-
-    void axpy(double a, const std::map<size_t, double> &x);
-
+    void axpy(double a, const Array &x, bool with_sync_before = false, bool with_sync_after = false);
+    void axpy(double a, const Array *other, bool with_sync_before = false, bool with_sync_after = false);
+    void axpy(double a, const std::map<size_t, double> &x, bool with_sync_before = false, bool with_sync_after = false);
 
     /*!
-     * @copydoc IterativeSolver::vector::scal
+     * @brief
+     * @param a
+     * @param with_sync_before
+     * @param with_sync_after
      */
-    void scal(double a); ///< Scale by a constant. Collective communication
-    void add(const Array &other); ///< Add another array to this. Collective communication
-    void add(double a); ///< Add a constant. Collective communication
-    void sub(const Array &other); ///< Subtract another array from this. Collective communication
-    void sub(double a); ///< Subtract a constant. Collective communication
-    void recip(); ///< Take element-wise reciprocal of this. Collective communication
+    //! Scale by a constant. Works on local buffer
+    void scal(double a, bool with_sync_before = false, bool with_sync_after = false);
+    //! Add another array to this. Works on local buffer
+    void add(const Array &other, bool with_sync_before = false, bool with_sync_after = false);
+    //! Add a constant. Works on local buffer
+    void add(double a, bool with_sync_before = false, bool with_sync_after = false);
+    //! Subtract another array from this. Works on local buffer
+    void sub(const Array &other, bool with_sync_before = false, bool with_sync_after = false);
+    //! Subtract a constant. Works on local buffer
+    void sub(double a, bool with_sync_before = false, bool with_sync_after = false);
+    //! Take element-wise reciprocal of this. Works on local buffer
+    void recip(bool with_sync_before = false, bool with_sync_after = false);
 
     /*!
      * @brief Scalar product with another array.
      * Collective communication. Both arrays should be part of the same processor group (same communicator).
+     * The result is broadcast to each process.
      */
-    double dot(const Array &other) const;
-
-    double dot(const Array *other) const {
-        return dot(*other);
-    }
-
-    double dot(const std::map<size_t, double> &other) const;
+    double dot(const Array &other, bool with_sync_before = false) const;
+    double dot(const Array *other, bool with_sync_before = false) const;
+    double dot(const std::map<size_t, double> &other, bool with_sync_after = false) const;
 
     Array &operator=(const Array &source) noexcept;
-    Array &operator*=(double value); //!< multiply by a scalar. Collective communication
-    Array &operator+=(const Array &other); //!< add another array. Collective communication
-    Array &operator-=(const Array &other); //!< subtract another array. Collective communication
-    Array &operator+=(double); //!< add a scalar to every element. Collective communication
-    Array &operator-=(double); //!< subtract a scalar from every element. Collective communication
-    Array &operator-(); //!< unary minus. Collective communication
-    Array &operator/=(const Array &other); //!< element-by-element division. Collective communication
+    Array &operator*=(double value); //!< multiply by a scalar. Collective communication with synchronization
+    Array &operator+=(const Array &other); //!< add another array. Collective communication with synchronization
+    Array &operator-=(const Array &other); //!< subtract another array. Collective communication with synchronization
+    Array &operator+=(double); //!< add a scalar to every element. Collective communication with synchronization
+    Array &operator-=(double); //!< subtract a scalar from every element. Collective communication with synchronization
+    Array &operator-(); //!< unary minus. Collective communication with synchronization
+    //! element-by-element division. Collective communication with synchronization
+    Array &operator/=(const Array &other);
 
-    void times(const Array *a, const Array *b); ///< this[i] = a[i]*b[i]. Collective communication
+    //! this[i] = a[i]*b[i]. Collective communication
+    void times(const Array *a, const Array *b, bool with_sync_before = false, bool with_sync_after = false);
 
     /*!
      * \brief this[i] = a[i]/(b[i]+shift)
-     * Collective communication.
-     * \param a
-     * \param b
-     * \param shift
      * \param append Whether to do += or =
-     * \param negative Whether - or +
+     * \param negative Whether -shift or +shift
      */
-    void divide(const Array *a, const Array *b, double shift = 0, bool append = false, bool negative = false);
+    void divide(const Array *a, const Array *b, double shift = 0, bool append = false, bool negative = false,
+                bool with_sync_before = false, bool with_sync_after = false);
 };  // class Array
 
 double operator*(const Array &w1, const Array &w2);///< inner product of two wavefunctions. Collective communication
