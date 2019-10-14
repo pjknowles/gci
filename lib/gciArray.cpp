@@ -6,7 +6,6 @@
 #include <cfloat>
 #include <numeric>
 #include <algorithm>
-#include <cmath>
 
 namespace gci {
 
@@ -145,7 +144,7 @@ std::vector<size_t> Array::minlocN(size_t n) const {
     for (int i = 1; i < nmin; ++i) {
         ptr_to_min = std::min_element(buffer, buffer + length,
                                       [prev_min](double el, double smallest) {
-                                          return el < smallest && el > prev_min || smallest <= prev_min;
+                                          return (el < smallest && el > prev_min) || smallest <= prev_min;
                                       });
         min_ind = (ptr_to_min - buffer);
         prev_min = *ptr_to_min;
