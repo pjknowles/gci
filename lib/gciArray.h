@@ -54,7 +54,7 @@ public:
      */
     class LocalBuffer {
     public:
-        LocalBuffer(const Array &source);
+        explicit LocalBuffer(const Array &source);
         ~LocalBuffer();
         size_t size() const;
         double *begin();
