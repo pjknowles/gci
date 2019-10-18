@@ -1,14 +1,15 @@
 get_dependency(googletest)
 include(GoogleTest)
 
-add_executable(test-gci
-        testVibSpace.cpp
-        testHProduct.cpp
-        testMixedOperator.cpp
-        testHProductSet.cpp
-        )
-target_link_libraries(test-gci PUBLIC gci gmock_main)
-gtest_discover_tests(test-gci)
+#This is outdated
+#add_executable(test-gci
+#        testVibSpace.cpp
+#        testHProduct.cpp
+#        testMixedOperator.cpp
+#        testHProductSet.cpp
+#        )
+#target_link_libraries(test-gci PUBLIC gci gmock_main)
+#gtest_discover_tests(test-gci)
 
 add_executable(test-gci-array
         main.cpp
