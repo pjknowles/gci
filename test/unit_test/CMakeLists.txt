@@ -16,7 +16,7 @@ add_executable(test-gci-array
         )
 target_link_libraries(test-gci-array PUBLIC gci gmock_main)
 add_test(NAME test-gci-array
-        COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ${MPIEXEC_PREFLAGS}
+        COMMAND ${MPIEXEC_EXECUTABLE} ${MPIOPTIONS} ${MPIEXEC_NUMPROC_FLAG} 2 ${MPIEXEC_PREFLAGS}
         ${CMAKE_CURRENT_BINARY_DIR}/test-gci-array ${MPIEXEC_POSTFLAGS}
         )
 
