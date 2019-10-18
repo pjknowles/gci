@@ -9,15 +9,25 @@ else ()
     message(STATUS "Building GCI with Fortran support")
     set(FORTRAN ON)
 endif ()
-foreach (dep FCIdump IterativeSolver memory molpro_plugin Profiler symmetry_matrix)
+foreach (dep FCIdump IterativeSolver memory molpro_plugin Profiler symmetry_matrix ga)
     string(TOLOWER ${dep} depl)
     get_dependency(${depl})
     list(APPEND DEPENDENCIES ${dep})
 endforeach ()
-if (NOT TARGET ga::ga)
-    get_dependency(ga)
-    list(APPEND DEPENDENCIES ga)
-endif ()
+foreach (t ga ga_src dra eaf elio sf linalg)
+    message("Export target ${t}")
+    install(TARGETS ${t} EXPORT gaTargets
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+            INCLUDES DESTINATION include
+            PUBLIC_HEADER DESTINATION include
+            )
+endforeach ()
+install(EXPORT gaTargets
+        FILE gaTargets.cmake
+        NAMESPACE ga::
+        DESTINATION lib/cmake/ga)
+
 if (Molpro_SOURCE_DIR)
     get_dependency(ppidd)
     list(APPEND DEPENDENCIES ppidd)
@@ -76,8 +86,5 @@ if (MPI_CXX_FOUND)
     target_link_libraries(gci PUBLIC MPI::MPI_CXX)
 endif ()
 
-if (TARGET ga::ga AND FALSE)
-    target_link_libraries(gci PUBLIC ga::ga)
-endif ()
-
 configure_library(${PROJECT_NAME} ${DEPENDENCIES})
+
