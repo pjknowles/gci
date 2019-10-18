@@ -4,7 +4,7 @@ foreach (fil ${TESTS})
     get_filename_component(nam ${fil} NAME_WE)
     configure_file(${fil} ${CMAKE_CURRENT_BINARY_DIR}/${file} COPYONLY)
     add_test(NAME ${nam}
-            COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_PREFLAGS}
+            COMMAND ${MPIEXEC_EXECUTABLE} ${MPIOPTIONS} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_PREFLAGS}
             ${PROJECT_BINARY_DIR}/gci.exe ${MPIEXEC_POSTFLAGS} ${fil}
             )
 endforeach ()
