@@ -124,7 +124,7 @@ TEST_F(ArrayInitializationF, put) {
         auto l = Lock();
         auto range = std::vector<double>(dim);
         std::iota(range.begin(), range.end(), m_comm_rank);
-        put(0, dim - 1, range.data());
+        put(0, dim - 1, range.data(), true);
         auto from_ga_buffer = get(0, dim - 1);
         ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), range));
     }
@@ -158,7 +158,7 @@ public:
         values.resize(dim);
         std::iota(values.begin(), values.end(), 1.);
         if (p_rank == 0)
-            put(0, (int) values.size() - 1, values.data());
+            put(0, (int) values.size() - 1, values.data(), true);
         sub_indices.reserve(sub_dim);
         sub_values.reserve(sub_dim);
         for (auto el : {0, 1, 11, 31, 40, 99}) {
@@ -244,7 +244,7 @@ TEST_F(ArrayRangeF, minlocN_reverse) {
     int n = 10;
     std::reverse(values.begin(), values.end());
     if (p_rank == 0)
-        put(0, dim - 1, values.data());
+        put(0, dim - 1, values.data(), true);
     sync();
     auto ref_minloc_ind = std::vector<size_t>(n);
     std::iota(ref_minloc_ind.rbegin(), ref_minloc_ind.rend(), dim - n);
@@ -422,8 +422,8 @@ TEST_F(ArrayCollectiveOpF, axpy_map) {
 
 TEST_F(ArrayCollectiveOpF, dot_Array) {
     if (p_rank == 0) {
-        a.put(0, dim - 1, range_alpha.data());
-        b.put(0, dim - 1, range_beta.data());
+        a.put(0, dim - 1, range_alpha.data(), true);
+        b.put(0, dim - 1, range_beta.data(), true);
     }
     auto ga_dot = a.dot(b, true);
     double ref_dot = std::inner_product(range_alpha.begin(), range_alpha.end(), range_beta.begin(), 0.);
@@ -436,7 +436,7 @@ TEST_F(ArrayCollectiveOpF, dot_Array) {
 
 TEST_F(ArrayCollectiveOpF, dot_map) {
     if (p_rank == 0)
-        a.put(0, dim - 1, range_alpha.data());
+        a.put(0, dim - 1, range_alpha.data(), true);
     auto ga_dot = a.dot(sparse_array, true);
     double ref_dot = 0.;
     for (const auto &item : sparse_array) {
