@@ -15,7 +15,7 @@ foreach (dep FCIdump IterativeSolver memory molpro_plugin Profiler symmetry_matr
     list(APPEND DEPENDENCIES ${dep})
 endforeach ()
 foreach (t ga ga_src dra eaf elio sf linalg)
-    message("Export target ${t}")
+#    message("Export target ${t}")
     install(TARGETS ${t} EXPORT gaTargets
             LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib
