@@ -225,10 +225,12 @@ std::vector<double> Array::get(int lo, int hi) {
     return data;
 }
 
-void Array::put(int lo, int hi, double *data) {
+void Array::put(int lo, int hi, double *data, bool with_fence) {
     if (empty()) GA_Error((char *) "Attempting to put data into an empty GA", 1);
     int ld;
+    if (with_fence) GA_Init_fence();
     NGA_Put(m_ga_handle, &lo, &hi, data, &ld);
+    if (with_fence) GA_Fence();
 }
 
 std::vector<double> Array::gather(std::vector<int> &indices) const {

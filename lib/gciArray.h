@@ -86,7 +86,7 @@ public:
      * @brief  puts data array into GA's buffer[lo:hi] (hi inclusive, i.e. not pythonic)
      * Blocking with one-sided communication
      */
-    void put(int lo, int hi, double *data);
+    void put(int lo, int hi, double *data, bool with_fence = false);
 
     /*!
      * @brief gets elements with discontinuos indices from GA
