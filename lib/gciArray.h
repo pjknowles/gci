@@ -6,10 +6,16 @@
 #include <memory>
 #include <map>
 #include <mpi.h>
+#include <hdf5.h>
 
 //typedef struct _gci_mpi_comm_dummy *MPI_Comm;
 
 namespace gci {
+//TODO  1) store the wavefunction on file (hdf5)
+//      2) backup current solutions during Davidson
+//      3) restart Davidson from previous backup
+//      4) use option = 3 in copy constructor to store the wfn on file
+//         if set, linear algebra routines should work on local buffers
 
 /*!
  * @brief Wrapper over global array exposing functionality required by IterativeSolver and MixedWavefunction

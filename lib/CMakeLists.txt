@@ -15,7 +15,7 @@ foreach (dep FCIdump IterativeSolver memory molpro_plugin Profiler symmetry_matr
     list(APPEND DEPENDENCIES ${dep})
 endforeach ()
 foreach (t ga ga_src dra eaf elio sf linalg)
-#    message("Export target ${t}")
+    #    message("Export target ${t}")
     install(TARGETS ${t} EXPORT gaTargets
             LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib
@@ -87,6 +87,13 @@ target_link_libraries(gci PUBLIC
 if (MPI_CXX_FOUND)
     target_link_libraries(gci PUBLIC MPI::MPI_CXX)
 endif ()
+
+set(HDF5_PREFER_PARALLEL ON)
+set(HDF5_USE_STATIC_LIBRARIES ON)
+find_package(HDF5 REQUIRED COMPONENTS C)
+target_link_libraries(gci PUBLIC ${HDF5_LIBRARIES})
+target_include_directories(gci PUBLIC ${HDF5_INCLUDE_DIRS})
+target_compile_definitions(gci PUBLIC ${HDF5_DEFINITIONS})
 
 configure_library(${PROJECT_NAME} ${DEPENDENCIES})
 
