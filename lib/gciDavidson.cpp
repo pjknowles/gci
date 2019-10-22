@@ -200,17 +200,11 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
 //    printMatrix();
     for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
         backup();
-        GA_Mask_sync(1, 1);
         action();
-        GA_Mask_sync(0, 0);
         solver.addVector(ww, gg);
-        GA_Mask_sync(1, 1);
         update();
-        GA_Mask_sync(0, 0);
         if (solver.endIteration(ww, gg)) break;
-        GA_Mask_sync(1, 1);
     }
-    GA_Mask_sync(1, 1);
     backup();
     if (GA_Nodeid() == 0) {
         xout << "energies: ";
