@@ -1,4 +1,6 @@
 #include "gciDavidson.h"
+#include "gciWavefunction.h"
+#include "gciMixedWavefunction.h"
 
 #include <iomanip>
 #include <ga.h>
@@ -17,7 +19,9 @@ Davidson<t_Wavefunction, t_Operator>::Davidson(t_Wavefunction &&prototype,
           nState(options.parameter("NSTATE", 1)),
           maxIterations(options.parameter("MAXIT", 1000)),
           solverVerbosity(options.parameter("SOLVER_VERBOSITY", 1)),
-          parallel_stringset(options.parameter("PARALLEL_STRINGSET")) {
+          parallel_stringset(options.parameter("PARALLEL_STRINGSET")),
+          restart_file(options.parameter("RESTART_FILE", "")),
+          backup_file(options.parameter("BACKUP_FILE", "")), backup_id(-1) {
     solver.m_thresh = energyThreshold;
     solver.m_verbosity = solverVerbosity;
     solver.m_maxIterations = (unsigned int) maxIterations;
@@ -84,17 +88,83 @@ void write_vec(const t_Wavefunction &w, const std::string &message) {
 }
 
 template<class t_Wavefunction, class t_Operator>
+void davidson_read_write_wfn(typename Davidson<t_Wavefunction, t_Operator>::ParameterVectorSet &ww,
+                             const std::string &fname, bool save) { }
+
+hid_t open_hdf5_file(const std::string &fname, MPI_Comm communicator, bool overwite) {
+    std::remove(fname.c_str());
+    auto plist_id = H5Pcreate(H5P_FILE_ACCESS);
+    H5Pset_fapl_mpio(plist_id, communicator, MPI_INFO_NULL);
+    hid_t id;
+    if (overwite)
+        id = H5Fcreate(fname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
+    else
+        id = H5Fcreate(fname.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT, plist_id);
+    H5Pclose(plist_id);
+    if (id < 0) throw std::runtime_error("Error in creating file");
+    return id;
+}
+
+hid_t open_or_create_hdf5_dataset(const hid_t &location, const std::string &dataset_name, const hid_t &dtype_id,
+                                  const size_t &length) {
+    hid_t dataset;
+    if (H5Lexists(location, dataset_name.c_str(), H5P_DEFAULT) > 0)
+        dataset = H5Dopen(location, dataset_name.c_str(), H5P_DEFAULT);
+    else {
+        hsize_t dimensions[1] = {length};
+        auto space = H5Screate_simple(1, dimensions, nullptr);
+        dataset = H5Dcreate(location, dataset_name.c_str(), dtype_id, space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        H5Sclose(space);
+    }
+    return dataset;
+}
+
+template<>
+void davidson_read_write_wfn<MixedWavefunction, MixedOperatorSecondQuant>(
+        typename Davidson<MixedWavefunction, MixedOperatorSecondQuant>::ParameterVectorSet &ww,
+        const std::string &fname, bool save) {
+    if (fname.empty()) return;
+    // Store current solution vectors, overwriting previous ones
+    auto id = open_hdf5_file(fname, mpi_comm_compute, !save);
+    for (auto i = 0ul; i < ww.size(); ++i) {
+        auto dataset = open_or_create_hdf5_dataset(id, "result_" + std::to_string(i), H5T_NATIVE_DOUBLE,
+                                                   ww[i].size());
+        auto buffer = Array::LocalBuffer(ww[i]);
+        hsize_t count[1] = {(hsize_t) buffer.size()};
+        hsize_t offset[1] = {(hsize_t) buffer.lo};
+        auto memspace = H5Screate_simple(1, count, nullptr);
+        auto fspace = H5Dget_space(dataset);
+        H5Sselect_hyperslab(fspace, H5S_SELECT_SET, offset, nullptr, count, nullptr);
+        auto plist_id = H5Pcreate(H5P_DATASET_XFER);
+        H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_INDEPENDENT);
+        if (save)
+            H5Dwrite(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, &buffer[0]);
+        else
+            H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, &buffer[0]);
+        H5Dclose(dataset);
+        H5Sclose(fspace);
+        H5Sclose(memspace);
+        H5Pclose(plist_id);
+    }
+    H5Fclose(id);
+}
+
+template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::prepareGuess() { }
 
 template<>
 void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
+    if (!restart_file.empty()) {
+        davidson_read_write_wfn<MixedWavefunction, MixedOperatorSecondQuant>(ww, backup_file, false);
+        return;
+    }
     // Currently assumes only 1 mode
     auto prof = profiler->push("prepareGuess");
     auto nMode = options.parameter("NMODE", int(0));
     if (nMode != 1) return;
     for (auto &root : ww) root.zero();
     auto id = GA_Nodeid();
-    if (id == 0){
+    if (id == 0) {
         std::cout << "Entered Davidson::prepareGuess()" << std::endl;
         auto nS = nState;
         Wavefunction w = prototype->wavefunctionAt(0, ww[0].m_child_communicator);
@@ -129,17 +199,19 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     prepareGuess();
 //    printMatrix();
     for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
-        GA_Mask_sync(1,1);
+        backup();
+        GA_Mask_sync(1, 1);
         action();
-        GA_Mask_sync(0,0);
+        GA_Mask_sync(0, 0);
         solver.addVector(ww, gg);
-        GA_Mask_sync(1,1);
+        GA_Mask_sync(1, 1);
         update();
-        GA_Mask_sync(0,0);
+        GA_Mask_sync(0, 0);
         if (solver.endIteration(ww, gg)) break;
-        GA_Mask_sync(1,1);
+        GA_Mask_sync(1, 1);
     }
-    GA_Mask_sync(1,1);
+    GA_Mask_sync(1, 1);
+    backup();
     if (GA_Nodeid() == 0) {
         xout << "energies: ";
         for (unsigned int i = 0; i < nState; ++i) xout << solver.eigenvalues()[i] << ", ";
@@ -152,14 +224,6 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
     if (!diagonalH) diagonalH = std::make_shared<t_Wavefunction>(*prototype, 0);
     diagonalH->allocate_buffer();
     diagonalH->diagonalOperator(*ham);
-    //diagonalH->set(1.0);
-    //std::vector<double> v(100);
-    //for (auto i=0; i < 100; ++i){
-    //    v[i] = diagonalH->at(i);
-    //}
-    //for (auto el: v){
-    //    xout << el << ", " << std::endl;
-    //}
     auto minLocs = diagonalH->minlocN(nState);
     std::vector<int> roots(nState, 0);
     for (unsigned int root = 0; root < nState; root++) {
@@ -172,9 +236,6 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
                 throw std::logic_error("Davidson::initialize duplicate guess vector, n =" + std::to_string(n));
         roots[root] = n;
         ww.back().set(n, 1.0);
-//        for (auto i = 0; i <= root; ++i) {
-//            std::cout << i << " " << root << " " << ww[i].dot(ww.back()) << std::endl;
-//        }
         gg.emplace_back(*prototype, 0);
         gg.back().allocate_buffer();
         gg.back().settilesize(
@@ -224,6 +285,15 @@ void Davidson<t_Wavefunction, t_Operator>::update() {
                 diagonalH->at(minLocs[state]))); // to guard against zero
         cw.divide(&gw, diagonalH.get(), shift, true, true);
     }
+}
+
+template<class t_Wavefunction, class t_Operator>
+void Davidson<t_Wavefunction, t_Operator>::backup() {
+    davidson_read_write_wfn<t_Wavefunction, t_Operator>(ww, backup_file, true);
+}
+
+template<>
+void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::backup() {
 }
 
 }  // namespace run

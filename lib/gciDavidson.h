@@ -4,11 +4,10 @@
 #include <vector>
 #include <IterativeSolver.h>
 #include <Operator.h>
+#include <hdf5.h>
 
 #include "gci.h"
 #include "gciOptions.h"
-#include "gciWavefunction.h"
-#include "gciMixedWavefunction.h"
 
 /*
  * Now that there are two wavefunction objects and two operators (pure electronic and mixed). There is no
@@ -88,6 +87,8 @@ protected:
     void action();
     //! Get the new vector, $r = A u - \lambda u$
     void update();
+    //! Store the current solutions in a backup file
+    void backup();
     IterativeSolver::LinearEigensystem<t_Wavefunction> solver; //!< Iterative solver
 
     double energyThreshold;
@@ -95,7 +96,13 @@ protected:
     unsigned int maxIterations;
     int solverVerbosity;
     int parallel_stringset;
+    std::string restart_file;
+    std::string backup_file;
 };
+
+template<class t_Wavefunction, class t_Operator>
+void davidson_read_write_wfn(typename Davidson<t_Wavefunction, t_Operator>::ParameterVectorSet &ww,
+                             const std::string &fname, bool save);
 
 }  // namespace run
 }  // namespace gci
