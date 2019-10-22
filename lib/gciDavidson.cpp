@@ -21,7 +21,7 @@ Davidson<t_Wavefunction, t_Operator>::Davidson(t_Wavefunction &&prototype,
           solverVerbosity(options.parameter("SOLVER_VERBOSITY", 1)),
           parallel_stringset(options.parameter("PARALLEL_STRINGSET")),
           restart_file(options.parameter("RESTART_FILE", "")),
-          backup_file(options.parameter("BACKUP_FILE", "")), backup_id(-1) {
+          backup_file(options.parameter("BACKUP_FILE", "")) {
     solver.m_thresh = energyThreshold;
     solver.m_verbosity = solverVerbosity;
     solver.m_maxIterations = (unsigned int) maxIterations;
