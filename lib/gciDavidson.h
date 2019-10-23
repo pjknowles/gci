@@ -88,7 +88,7 @@ protected:
     //! Get the new vector, $r = A u - \lambda u$
     void update();
     //! Store the current solutions in a backup file
-    void backup();
+    void backup(std::vector<t_Wavefunction> &ww);
     IterativeSolver::LinearEigensystem<t_Wavefunction> solver; //!< Iterative solver
 
     double energyThreshold;
@@ -101,11 +101,8 @@ protected:
 };
 
 template<class t_Wavefunction>
-void davidson_read_write_wfn(typename std::vector<t_Wavefunction> &ww,
+void davidson_read_write_wfn(std::vector<t_Wavefunction> &ww,
                              const std::string &fname, bool save);
-
-template<class t_Wavefunction>
-void davidson_read_write_array(t_Wavefunction &w, const std::string &fname, unsigned int i, hid_t id, bool save);
 
 }  // namespace run
 }  // namespace gci
