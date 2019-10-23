@@ -11,13 +11,14 @@ include(GoogleTest)
 #target_link_libraries(test-gci PUBLIC gci gmock_main)
 #gtest_discover_tests(test-gci)
 
-add_executable(test-gci-array
+add_executable(test-gci-parallel
         main.cpp
         testArray.cpp
+        testDavidson.cpp
         )
-target_link_libraries(test-gci-array PUBLIC gci gmock_main)
-add_test(NAME test-gci-array
+target_link_libraries(test-gci-parallel PUBLIC gci gmock_main)
+add_test(NAME test-gci-parallel
         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIOPTIONS} ${MPIEXEC_NUMPROC_FLAG} 2 ${MPIEXEC_PREFLAGS}
-        ${CMAKE_CURRENT_BINARY_DIR}/test-gci-array ${MPIEXEC_POSTFLAGS}
+        ${CMAKE_CURRENT_BINARY_DIR}/test-gci-parallel ${MPIEXEC_POSTFLAGS}
         )
 

@@ -100,9 +100,12 @@ protected:
     std::string backup_file;
 };
 
-template<class t_Wavefunction, class t_Operator>
-void davidson_read_write_wfn(typename Davidson<t_Wavefunction, t_Operator>::ParameterVectorSet &ww,
+template<class t_Wavefunction>
+void davidson_read_write_wfn(typename std::vector<t_Wavefunction> &ww,
                              const std::string &fname, bool save);
+
+template<class t_Wavefunction>
+void davidson_read_write_array(t_Wavefunction &w, const std::string &fname, unsigned int i, hid_t id, bool save);
 
 }  // namespace run
 }  // namespace gci
