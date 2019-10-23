@@ -116,22 +116,11 @@ hid_t open_or_create_hdf5_dataset(const hid_t &location, const std::string &data
     return dataset;
 }
 
-template<typename t_Wavefunction>
-void davidson_read_write_wfn(std::vector<t_Wavefunction> &ww, const std::string &fname, bool save) {
-    if (fname.empty())
-        return;
-    auto id = open_hdf5_file(fname, mpi_comm_compute, save);
-    for (auto i = 0ul; i < ww.size(); ++i) {
-        davidson_read_write_array(ww[i], fname, i, id, save);
-    }
-    H5Fclose(id);
-}
-
 template<class t_Wavefunction>
-void davidson_read_write_array(t_Wavefunction &w, const std::string &fname, unsigned int i, hid_t id, bool save) { }
+typename std::enable_if<!std::is_base_of<Array, t_Wavefunction>::value>::type
+davidson_read_write_array(t_Wavefunction &w, const std::string &fname, unsigned int i, hid_t id, bool save) { }
 
-template<>
-void davidson_read_write_array<Array>(Array &w, const std::string &fname, unsigned int i, hid_t id, bool save) {
+void davidson_read_write_array(Array &w, const std::string &fname, unsigned int i, hid_t id, bool save) {
     auto dataset = open_or_create_hdf5_dataset(id, "result_" + std::to_string(i), H5T_NATIVE_DOUBLE, w.size());
     auto buffer = Array::LocalBuffer(w);
     hsize_t count[1] = {(hsize_t) buffer.size()};
@@ -154,13 +143,24 @@ void davidson_read_write_array<Array>(Array &w, const std::string &fname, unsign
     H5Pclose(plist_id);
 }
 
+template<typename t_Wavefunction>
+void davidson_read_write_wfn(std::vector<t_Wavefunction> &ww, const std::string &fname, bool save) {
+    if (fname.empty())
+        return;
+    auto id = open_hdf5_file(fname, mpi_comm_compute, save);
+    for (auto i = 0ul; i < ww.size(); ++i) {
+        davidson_read_write_array(ww[i], fname, i, id, save);
+    }
+    H5Fclose(id);
+}
+
 template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::prepareGuess() { }
 
 template<>
 void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
     if (!restart_file.empty()) {
-        davidson_read_write_wfn<MixedWavefunction>(ww, backup_file, false);
+        davidson_read_write_wfn<MixedWavefunction>(ww, restart_file, false);
         return;
     }
     // Currently assumes only 1 mode
@@ -179,6 +179,8 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
         n += (n == 1 && nS > 3 && w.size() > 3) ? 2 : 0;
         auto modOptions = Options(options);
         modOptions.addParameter("NSTATE", (int) n);
+        modOptions.addParameter("BACKUP_FILE", "");
+        modOptions.addParameter("RESTART_FILE", "");
         // Modify options to choose the correct number of electronic states
         SymmetryMatrix::Operator *h = ham->elHam["Hel[0]"].get();
         Davidson<Wavefunction, SymmetryMatrix::Operator> elecSolver(std::move(w),
@@ -204,13 +206,12 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     prepareGuess();
 //    printMatrix();
     for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
-        backup();
         action();
         solver.addVector(ww, gg);
+        backup(ww);
         update();
         if (solver.endIteration(ww, gg)) break;
     }
-    backup();
     if (GA_Nodeid() == 0) {
         xout << "energies: ";
         for (unsigned int i = 0; i < nState; ++i) xout << solver.eigenvalues()[i] << ", ";
@@ -287,12 +288,8 @@ void Davidson<t_Wavefunction, t_Operator>::update() {
 }
 
 template<class t_Wavefunction, class t_Operator>
-void Davidson<t_Wavefunction, t_Operator>::backup() {
+void Davidson<t_Wavefunction, t_Operator>::backup(std::vector<t_Wavefunction> &ww) {
     davidson_read_write_wfn<t_Wavefunction>(ww, backup_file, true);
-}
-
-template<>
-void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::backup() {
 }
 
 template
