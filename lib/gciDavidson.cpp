@@ -87,16 +87,17 @@ void write_vec(const t_Wavefunction &w, const std::string &message) {
         std::cout << "}" << std::endl;
 }
 
-hid_t open_hdf5_file(const std::string &fname, MPI_Comm communicator, bool overwite) {
-    std::remove(fname.c_str());
+hid_t open_hdf5_file(const std::string &fname, MPI_Comm communicator, bool save) {
     auto plist_id = H5Pcreate(H5P_FILE_ACCESS);
     H5Pset_fapl_mpio(plist_id, communicator, MPI_INFO_NULL);
     hid_t id;
-    if (overwite)
+    if (save){
         id = H5Fcreate(fname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
-    else
-        id = H5Fcreate(fname.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT, plist_id);
-    H5Pclose(plist_id);
+        H5Pclose(plist_id);
+    } else{
+        id = H5Fopen(fname.c_str(), H5F_ACC_RDONLY, plist_id);
+        H5Pclose(plist_id);
+    }
     if (id < 0) throw std::runtime_error("Error in creating file");
     return id;
 }
@@ -119,7 +120,7 @@ template<typename t_Wavefunction>
 void davidson_read_write_wfn(std::vector<t_Wavefunction> &ww, const std::string &fname, bool save) {
     if (fname.empty())
         return;
-    auto id = open_hdf5_file(fname, mpi_comm_compute, !save);
+    auto id = open_hdf5_file(fname, mpi_comm_compute, save);
     for (auto i = 0ul; i < ww.size(); ++i) {
         davidson_read_write_array(ww[i], fname, i, id, save);
     }
@@ -131,22 +132,22 @@ void davidson_read_write_array(t_Wavefunction &w, const std::string &fname, unsi
 
 template<>
 void davidson_read_write_array<Array>(Array &w, const std::string &fname, unsigned int i, hid_t id, bool save) {
-    if (fname.empty())
-        return;
     auto dataset = open_or_create_hdf5_dataset(id, "result_" + std::to_string(i), H5T_NATIVE_DOUBLE, w.size());
     auto buffer = Array::LocalBuffer(w);
     hsize_t count[1] = {(hsize_t) buffer.size()};
     hsize_t offset[1] = {(hsize_t) buffer.lo};
     auto memspace = H5Screate_simple(1, count, nullptr);
     auto fspace = H5Dget_space(dataset);
-    H5Sselect_hyperslab(fspace, H5S_SELECT_SET, offset,
-                        nullptr, count, nullptr);
+    H5Sselect_hyperslab(fspace, H5S_SELECT_SET, offset, nullptr, count, nullptr);
     auto plist_id = H5Pcreate(H5P_DATASET_XFER);
     H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_INDEPENDENT);
-    if (save)
-        H5Dwrite(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, &buffer[0]);
-    else
-        H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, &buffer[0]);
+    if (save){
+        auto error = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, &buffer[0]);
+        if (error < 0) throw std::runtime_error("davidson_read_write_array(): write failed");
+    } else{
+        auto error = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, &buffer[0]);
+        if (error < 0) throw std::runtime_error("davidson_read_write_array(): read failed");
+    }
     H5Dclose(dataset);
     H5Sclose(fspace);
     H5Sclose(memspace);

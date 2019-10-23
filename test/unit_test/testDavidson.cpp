@@ -25,7 +25,7 @@ public:
 //!@todo there should be a temporary directory for test files
 class DavidsonReadWriteF : public ::testing::Test {
 public:
-    DavidsonReadWriteF() : dim(100), nS(3), p_rank(GA_Nodeid()), fname("test_read_write_array") {
+    DavidsonReadWriteF() : dim(100), nS(3), p_rank(GA_Nodeid()), fname("test_read_write_array.h5") {
         ref_values.resize(nS);
         for (auto i = 0ul; i < nS; ++i) {
             for (auto j = 0ul; j < dim; ++j)
