@@ -179,6 +179,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
         n += (n == 1 && nS > 3 && w.size() > 3) ? 2 : 0;
         auto modOptions = Options(options);
         modOptions.addParameter("NSTATE", (int) n);
+        modOptions.addParameter("MAXIT", (int) 100);
         modOptions.addParameter("BACKUP_FILE", "");
         modOptions.addParameter("RESTART_FILE", "");
         // Modify options to choose the correct number of electronic states
@@ -204,6 +205,7 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     message();
     initialize();
     prepareGuess();
+    backup(ww);
 //    printMatrix();
     for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
         action();
@@ -212,7 +214,7 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
         update();
         if (solver.endIteration(ww, gg)) break;
     }
-    if (GA_Nodeid() == 0) {
+    if (maxIterations > 0) {
         xout << "energies: ";
         for (unsigned int i = 0; i < nState; ++i) xout << solver.eigenvalues()[i] << ", ";
         xout << std::endl;
