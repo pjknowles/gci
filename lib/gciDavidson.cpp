@@ -91,10 +91,10 @@ hid_t open_hdf5_file(const std::string &fname, MPI_Comm communicator, bool save)
     auto plist_id = H5Pcreate(H5P_FILE_ACCESS);
     H5Pset_fapl_mpio(plist_id, communicator, MPI_INFO_NULL);
     hid_t id;
-    if (save){
+    if (save) {
         id = H5Fcreate(fname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
         H5Pclose(plist_id);
-    } else{
+    } else {
         id = H5Fopen(fname.c_str(), H5F_ACC_RDONLY, plist_id);
         H5Pclose(plist_id);
     }
@@ -130,10 +130,10 @@ void davidson_read_write_array(Array &w, const std::string &fname, unsigned int 
     H5Sselect_hyperslab(fspace, H5S_SELECT_SET, offset, nullptr, count, nullptr);
     auto plist_id = H5Pcreate(H5P_DATASET_XFER);
     H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_INDEPENDENT);
-    if (save){
+    if (save) {
         auto error = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, &buffer[0]);
         if (error < 0) throw std::runtime_error("davidson_read_write_array(): write failed");
-    } else{
+    } else {
         auto error = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, &buffer[0]);
         if (error < 0) throw std::runtime_error("davidson_read_write_array(): read failed");
     }
@@ -226,13 +226,15 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
     if (!diagonalH) diagonalH = std::make_shared<t_Wavefunction>(*prototype, 0);
     diagonalH->allocate_buffer();
     diagonalH->diagonalOperator(*ham);
-    auto minLocs = diagonalH->minlocN(nState);
+    diag_minlocN = diagonalH->minlocN(nState);
+    for (auto i = 0ul; i < nState; ++i)
+        diag_val_at_minlocN.push_back(diagonalH->at(diag_minlocN[i]));
     std::vector<int> roots(nState, 0);
     for (unsigned int root = 0; root < nState; root++) {
         ww.emplace_back(*prototype, 0);
         ww.back().allocate_buffer();
         ww.back().zero();
-        auto n = minLocs[root];
+        auto n = diag_minlocN[root];
         if (GA_Nodeid() == 0)
             if (std::count(roots.begin(), roots.begin() + root, n) != 0)
                 throw std::logic_error("Davidson::initialize duplicate guess vector, n =" + std::to_string(n));
@@ -278,13 +280,12 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::action() {
 template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::update() {
     auto eigval = solver.eigenvalues();
-    auto minLocs = diagonalH->minlocN(nState);
     for (size_t state = 0; state < nState; state++) {
         t_Wavefunction &cw = ww[state];
         const t_Wavefunction &gw = gg[state];
         auto shift = -eigval[state] + 1e-10;
-        shift += 2 * std::numeric_limits<value_type>::epsilon() * std::max<value_type>(1, std::abs(
-                diagonalH->at(minLocs[state]))); // to guard against zero
+        shift += 2 * std::numeric_limits<value_type>::epsilon()
+                 * std::max<value_type>(1, std::abs(diag_val_at_minlocN[state])); // to guard against zero
         cw.divide(&gw, diagonalH.get(), shift, true, true);
     }
 }

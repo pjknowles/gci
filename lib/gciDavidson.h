@@ -98,6 +98,8 @@ protected:
     int parallel_stringset;
     std::string restart_file;
     std::string backup_file;
+    std::vector<size_t> diag_minlocN;
+    std::vector<double> diag_val_at_minlocN;
 };
 
 template<class t_Wavefunction>
