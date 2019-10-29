@@ -13,14 +13,29 @@ auto file_exists(const std::string &fname) {
     return true;
 }
 
-MixedOperatorSecondQuant::MixedOperatorSecondQuant(const FCIdump &fcidump) :
-        nMode(fcidump.parameter("NMODE", std::vector<int>{0})[0]),
-        nModal(fcidump.parameter("NMODAL", std::vector<int>{0})[0]),
-        Hvib(constructHvib(fcidump.fileName(), nMode, nModal)),
-        includeHel(fcidump.parameter("INCLUDE_HEL", std::vector<int>{0})[0]),
-        includeLambda(fcidump.parameter("INCLUDE_LAMBDA", std::vector<int>{0})[0]),
-        includeK(fcidump.parameter("INCLUDE_K", std::vector<int>{0})[0]),
-        includeD(fcidump.parameter("INCLUDE_D", std::vector<int>{0})[0]) {
+inline auto _fcidump_f(const Options &options) {return options.parameter("FCIDUMP", "");}
+
+inline auto _nMode(const Options &options) {return options.parameter("NMODE", 0);}
+
+inline auto _nModal(const Options &options) {return options.parameter("NMODAL", 0);}
+
+MixedOperatorSecondQuant::MixedOperatorSecondQuant(const Options &options) :
+//        nMode(fcidump.parameter("NMODE", std::vector<int>{0})[0]),
+//        nModal(fcidump.parameter("NMODAL", std::vector<int>{0})[0]),
+//        Hvib(constructHvib(fcidump.fileName(), nMode, nModal)),
+//        includeHel(fcidump.parameter("INCLUDE_HEL", std::vector<int>{0})[0]),
+//        includeLambda(fcidump.parameter("INCLUDE_LAMBDA", std::vector<int>{0})[0]),
+//        includeK(fcidump.parameter("INCLUDE_K", std::vector<int>{0})[0]),
+//        includeD(fcidump.parameter("INCLUDE_D", std::vector<int>{0})[0]) {
+        fcidump_f(_fcidump_f(options)),
+        nMode(_nMode(options)),
+        nModal(_nModal(options)),
+        Hvib(constructHvib(_fcidump_f(options), _nMode(options), _nModal(options))),
+        includeHel(options.parameter("INCLUDE_HEL", 0)),
+        includeLambda(options.parameter("INCLUDE_LAMBDA", 0)),
+        includeK(options.parameter("INCLUDE_K", 0)),
+        includeD(options.parameter("INCLUDE_D", 0)) {
+    FCIdump fcidump(fcidump_f);
     if (includeHel) initializeHel(fcidump);
     if (includeLambda) initializeLambda(fcidump);
     if (includeK) initializeK(fcidump);

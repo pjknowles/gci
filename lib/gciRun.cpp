@@ -403,7 +403,7 @@ std::vector<double> Run::run() {
     } else if (method == "DAVIDSON") {
         if (options.parameter("VIBRONIC", 0)) {
             if (options.parameter("SECOND_QUANT", 0)) {
-                auto ham = MixedOperatorSecondQuant(FCIdump(options.parameter("FCIDUMP", "fcidump")));
+                auto ham = MixedOperatorSecondQuant(options);
                 auto wfn = MixedWavefunction(options, prototype);
                 auto solver = run::Davidson<MixedWavefunction, MixedOperatorSecondQuant>{std::move(wfn),
                                                                                           std::move(ham), options};

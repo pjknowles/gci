@@ -2,8 +2,9 @@
 #define GCI_GCIMIXEDOPERATORSECONDQUANT_H
 
 #include "gciVibOperator.h"
-
+#include "gciOptions.h"
 #include <FCIdump.h>
+
 
 namespace gci {
 
@@ -28,13 +29,14 @@ public:
     std::map<std::string, std::unique_ptr<hel_t>> elHam; //!< Purely electronic terms from kinetic energy coupling
     std::map<std::string, VibOperator<hel_t >> mixedHam;//!< Mixed electronic-vibrational terms
 
-    explicit MixedOperatorSecondQuant(const FCIdump &fcidump);
+    explicit MixedOperatorSecondQuant(const Options &options);
     /*!
      * @brief Checks if bra and ket vibrational basis are connected by the mixed Hamiltonian
      */
     bool connected(const HProduct &bra, const HProduct &ket) const;
 
 protected:
+    std::string fcidump_f;
     bool includeHel;
     bool includeLambda;
     bool includeK;
