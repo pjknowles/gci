@@ -6,8 +6,6 @@
 #include <cfloat>
 #include <numeric>
 #include <algorithm>
-#include <chrono>
-#include <thread>
 
 namespace gci {
 
