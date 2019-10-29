@@ -35,7 +35,7 @@ declare_dependency(
 )
 
 find_program(ga-config ga-config)
-set(GA_RUNTIME "MPI_PR" CACHE STRING "overwriting default for GA runtime protocol")
+set(GA_RUNTIME "MPI_RMA" CACHE STRING "overwriting default for GA runtime protocol")
 declare_dependency(
         ga
         https://github.com/GlobalArrays/ga.git
