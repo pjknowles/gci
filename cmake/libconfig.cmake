@@ -14,6 +14,7 @@ function(declare_dependency NAME URL)
     FetchContent_Declare(
             ${_dependency_name}
             SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/${NAME}"
+            SUBBUILD_DIR "${CMAKE_SOURCE_DIR}/dependencies/${NAME}-subbuild"
             GIT_REPOSITORY ${URL}
             GIT_TAG ${GIT_TAG}
             UPDATE_COMMAND "${CMAKE_SOURCE_DIR}/dependencies/checkout.sh" ${NAME} ${CMAKE_BUILD_TYPE}
