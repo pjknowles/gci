@@ -152,19 +152,16 @@ TEST_F(ArrayInitializationF, set) {
 
 class ArrayRangeF : public ::testing::Test, public Array {
 public:
-    //! Stores a range in the buffer {0, 1, 2, 3, 4, 5, .., dim-1}
+    //! Stores a range in the buffer {1, 2, 3, 4, 5, .., dim}
     ArrayRangeF() : Array((size_t) dim, mpi_comm_compute), p_rank(GA_Nodeid()), p_size(GA_Nnodes()) {
         allocate_buffer();
         values.resize(dim);
         std::iota(values.begin(), values.end(), 1.);
-        if (p_rank == 0)
-            put(0, (int) values.size() - 1, values.data(), true);
-        sub_indices.reserve(sub_dim);
-        sub_values.reserve(sub_dim);
-        for (auto el : {0, 1, 11, 31, 40, 99}) {
-            sub_indices.push_back(el);
+        auto buffer = LocalBuffer(*this);
+        std::copy(values.begin() + buffer.lo, values.begin() + buffer.hi+1, buffer.begin());
+        sub_indices = {0, 1, 11, 31, 40, 99};
+        for (auto el : sub_indices)
             sub_values.push_back(values[el]);
-        }
     }
 
 

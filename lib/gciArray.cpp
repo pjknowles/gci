@@ -6,6 +6,8 @@
 #include <cfloat>
 #include <numeric>
 #include <algorithm>
+#include <chrono>
+#include <thread>
 
 namespace gci {
 
@@ -123,42 +125,35 @@ double &Array::LocalBuffer::operator[](size_t i) {return buffer[i];}
  */
 std::vector<size_t> Array::minlocN(size_t n) const {
     if (empty()) return {};
-    auto iproc = GA_Nodeid();
-    auto nproc = GA_Nnodes();
-    // get distribution of GA local to this process, and access the buffer
-    int lo, hi, ld;
-    NGA_Distribution(m_ga_handle, iproc, &lo, &hi);
-    double *buffer = nullptr;
-    NGA_Access(m_ga_handle, &lo, &hi, &buffer, &ld);
-    if (buffer == nullptr) GA_Error((char *) "Failed to access local GA buffer", 1);
-    // search for n lowest numbers
-    auto length = hi - lo + 1;
+    // Search local buffer first
+    auto buffer = Array::LocalBuffer(*this);
+    auto length = buffer.size();
     auto nmin = length > n ? n : length;
     std::vector<size_t> minInd(n, 0);
     std::vector<double> minVal(n, DBL_MAX);
-    auto ptr_to_min = std::min_element(buffer, buffer + length);
-    size_t min_ind = (ptr_to_min - buffer);
-    double prev_min = *ptr_to_min;
-    minInd[0] = lo + min_ind;
-    minVal[0] = prev_min;
-    for (int i = 1; i < nmin; ++i) {
-        ptr_to_min = std::min_element(buffer, buffer + length,
-                                      [prev_min](double el, double smallest) {
-                                          return (el < smallest && el > prev_min) || smallest <= prev_min;
-                                      });
-        min_ind = (ptr_to_min - buffer);
-        prev_min = *ptr_to_min;
-        minInd[i] = lo + min_ind;
+    double *ptr_to_min;
+    double prev_min;
+    for (auto i = 0ul; i < nmin; ++i) {
+        if (i == 0)
+            ptr_to_min = std::min_element(buffer.begin(), buffer.end());
+        else
+            ptr_to_min = std::min_element(buffer.begin(), buffer.end(),
+                                          [prev_min](double el, double smallest) {
+                                              return (el < smallest && el > prev_min) ||
+                                                     (smallest <= prev_min && el > prev_min);
+                                          });
+        auto min_ind = std::distance(buffer.begin(), ptr_to_min);
+        prev_min = ptr_to_min[0];
+        minInd[i] = buffer.lo + min_ind;
         minVal[i] = prev_min;
     }
-    NGA_Release(m_ga_handle, &lo, &hi);
     // root collects values, does the final sort and sends the result back
-    if (iproc == 0) {
-        minInd.resize(n * nproc);
-        minVal.resize(n * nproc);
+    if (m_comm_rank == 0) {
+        minInd.resize(n * m_comm_size);
+        minVal.resize(n * m_comm_size);
     }
     MPI_Barrier(m_communicator);
-    if (iproc == 0) {
+    if (m_comm_rank == 0) {
         MPI_Gather(MPI_IN_PLACE, n, MPI_SIZE_T, minInd.data(), n, MPI_SIZE_T, 0, m_communicator);
         MPI_Gather(MPI_IN_PLACE, n, MPI_DOUBLE, minVal.data(), n, MPI_DOUBLE, 0, m_communicator);
         std::vector<double> sort_permutation(minVal.size());
@@ -169,8 +164,8 @@ std::vector<size_t> Array::minlocN(size_t n) const {
                        [minInd](auto i) {return minInd[i];});
         minInd.resize(n);
     } else {
-        MPI_Gather(minInd.data(), n, MPI_SIZE_T, minInd.data(), n * nproc, MPI_SIZE_T, 0, m_communicator);
-        MPI_Gather(minVal.data(), n, MPI_DOUBLE, minVal.data(), n * nproc, MPI_DOUBLE, 0, m_communicator);
+        MPI_Gather(minInd.data(), n, MPI_SIZE_T, minInd.data(), n, MPI_SIZE_T, 0, m_communicator);
+        MPI_Gather(minVal.data(), n, MPI_DOUBLE, minVal.data(), n, MPI_DOUBLE, 0, m_communicator);
     }
     MPI_Bcast(minInd.data(), n, MPI_SIZE_T, 0, m_communicator);
     return minInd;
