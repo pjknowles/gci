@@ -76,7 +76,9 @@ endif ()
 STRING(FIND "${BLAS_LIBRARIES}" "mkl" POS)
 if (POS GREATER -1)
     messagev("Found MKL")
-    target_compile_definitions(gci PRIVATE -DEIGEN_USE_MKL_ALL)
+    if (NOT Molpro_SOURCE_DIR)
+        target_compile_definitions(gci PRIVATE -DEIGEN_USE_MKL_ALL)
+    endif ()
 endif ()
 
 target_link_libraries(gci PUBLIC
