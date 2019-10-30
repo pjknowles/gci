@@ -1,6 +1,7 @@
 #include "gciDavidson.h"
 #include "gciWavefunction.h"
 #include "gciMixedWavefunction.h"
+#include "gciUtils.h"
 
 #include <iomanip>
 #include <ga.h>
@@ -87,41 +88,12 @@ void write_vec(const t_Wavefunction &w, const std::string &message) {
         std::cout << "}" << std::endl;
 }
 
-hid_t open_hdf5_file(const std::string &fname, MPI_Comm communicator, bool save) {
-    auto plist_id = H5Pcreate(H5P_FILE_ACCESS);
-    H5Pset_fapl_mpio(plist_id, communicator, MPI_INFO_NULL);
-    hid_t id;
-    if (save) {
-        id = H5Fcreate(fname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
-        H5Pclose(plist_id);
-    } else {
-        id = H5Fopen(fname.c_str(), H5F_ACC_RDONLY, plist_id);
-        H5Pclose(plist_id);
-    }
-    if (id < 0) throw std::runtime_error("Error in creating file");
-    return id;
-}
-
-hid_t open_or_create_hdf5_dataset(const hid_t &location, const std::string &dataset_name, const hid_t &dtype_id,
-                                  const size_t &length) {
-    hid_t dataset;
-    if (H5Lexists(location, dataset_name.c_str(), H5P_DEFAULT) > 0)
-        dataset = H5Dopen(location, dataset_name.c_str(), H5P_DEFAULT);
-    else {
-        hsize_t dimensions[1] = {length};
-        auto space = H5Screate_simple(1, dimensions, nullptr);
-        dataset = H5Dcreate(location, dataset_name.c_str(), dtype_id, space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-        H5Sclose(space);
-    }
-    return dataset;
-}
-
 template<class t_Wavefunction>
 typename std::enable_if<!std::is_base_of<Array, t_Wavefunction>::value>::type
 davidson_read_write_array(t_Wavefunction &w, const std::string &fname, unsigned int i, hid_t id, bool save) { }
 
 void davidson_read_write_array(Array &w, const std::string &fname, unsigned int i, hid_t id, bool save) {
-    auto dataset = open_or_create_hdf5_dataset(id, "result_" + std::to_string(i), H5T_NATIVE_DOUBLE, w.size());
+    auto dataset = utils::open_or_create_hdf5_dataset(id, "result_" + std::to_string(i), H5T_NATIVE_DOUBLE, w.size());
     auto buffer = Array::LocalBuffer(w);
     hsize_t count[1] = {(hsize_t) buffer.size()};
     hsize_t offset[1] = {(hsize_t) buffer.lo};
@@ -147,7 +119,7 @@ template<typename t_Wavefunction>
 void davidson_read_write_wfn(std::vector<t_Wavefunction> &ww, const std::string &fname, bool save) {
     if (fname.empty())
         return;
-    auto id = open_hdf5_file(fname, mpi_comm_compute, save);
+    auto id = utils::open_hdf5_file(fname, mpi_comm_compute, save);
     for (auto i = 0ul; i < ww.size(); ++i) {
         davidson_read_write_array(ww[i], fname, i, id, save);
     }

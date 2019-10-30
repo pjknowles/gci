@@ -60,7 +60,8 @@ add_library(gci
         gciDavidson.h gciDavidson.cpp
         gciMixedOperatorSecondQuant.h gciMixedOperatorSecondQuant.cpp
         gciVibOperator.cpp gciVibOperator.h
-        gciVibExcitation.h gciArray.cpp gciArray.h)
+        gciVibExcitation.h gciArray.cpp gciArray.h
+        gciUtils.h gciUtils.cpp)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "gci.h;gciRun.h;${CMAKE_CURRENT_BINARY_DIR}/gci-config.h")
 
