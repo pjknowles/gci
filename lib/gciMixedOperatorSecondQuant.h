@@ -4,11 +4,11 @@
 #include "gciVibOperator.h"
 #include "gciOptions.h"
 #include <FCIdump.h>
+#include <bits/shared_ptr.h>
 
 
 namespace gci {
 
-class HProductSet;
 
 /*!
  * @brief Mixed electron-vibration operator in a fully second quantized form.

@@ -58,6 +58,7 @@ add_library(gci
         gciMixedWavefunction.cpp gciMixedWavefunction.h
         gciVibSpace.cpp gciVibSpace.h
         gciDavidson.h gciDavidson.cpp
+        gciPersistentOperator.h gciPersistentOperator.cpp
         gciMixedOperatorSecondQuant.h gciMixedOperatorSecondQuant.cpp
         gciVibOperator.cpp gciVibOperator.h
         gciVibExcitation.h gciArray.cpp gciArray.h
