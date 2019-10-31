@@ -1,17 +1,11 @@
 #include "gciMixedOperatorSecondQuant.h"
 #include "gciRun.h"
+#include "gciUtils.h"
+#include "gciPersistentOperator.h"
 
 #include <utility>
 
 namespace gci {
-
-auto file_exists(const std::string &fname) {
-    if (std::ifstream{fname}.fail()) {
-        std::cout << "Warning (MixedOperatorSecondQuant): fcidump not found   " << fname << std::endl;
-        return false;
-    }
-    return true;
-}
 
 inline auto _fcidump_f(const Options &options) {return options.parameter("FCIDUMP", "");}
 
@@ -20,13 +14,6 @@ inline auto _nMode(const Options &options) {return options.parameter("NMODE", 0)
 inline auto _nModal(const Options &options) {return options.parameter("NMODAL", 0);}
 
 MixedOperatorSecondQuant::MixedOperatorSecondQuant(const Options &options) :
-//        nMode(fcidump.parameter("NMODE", std::vector<int>{0})[0]),
-//        nModal(fcidump.parameter("NMODAL", std::vector<int>{0})[0]),
-//        Hvib(constructHvib(fcidump.fileName(), nMode, nModal)),
-//        includeHel(fcidump.parameter("INCLUDE_HEL", std::vector<int>{0})[0]),
-//        includeLambda(fcidump.parameter("INCLUDE_LAMBDA", std::vector<int>{0})[0]),
-//        includeK(fcidump.parameter("INCLUDE_K", std::vector<int>{0})[0]),
-//        includeD(fcidump.parameter("INCLUDE_D", std::vector<int>{0})[0]) {
         fcidump_f(_fcidump_f(options)),
         nMode(_nMode(options)),
         nModal(_nModal(options)),
@@ -44,7 +31,7 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const Options &options) :
 
 void MixedOperatorSecondQuant::initializeHel(const FCIdump &fcidump) {
     std::string f = fcidump.fileName();
-    if (file_exists(f)) {
+    if (utils::file_exists(f, "MixedOperatorSecondQuant::initializeHel(): fcidump not found, " + f)) {
         elHam.insert({"Hel[0]", std::make_unique<hel_t>(constructOperator(FCIdump(f)))});
     }
     std::string name = "Hel[1]";
@@ -55,7 +42,7 @@ void MixedOperatorSecondQuant::initializeHel(const FCIdump &fcidump) {
             for (int jModal = 0; jModal <= iModal; ++jModal) {
                 f = fcidump.fileName() + "_Hel_" + std::to_string(iMode + 1) + "_" +
                     std::to_string(iModal + 1) + "_" + std::to_string(jModal + 1);
-                if (file_exists(f)) {
+                if (utils::file_exists(f, "MixedOperatorSecondQuant::initializeHel(): fcidump not found, " + f)) {
                     VibExcitation vibExc({{iMode, iModal, jModal}});
                     auto &&op = constructOperator(FCIdump(f));
                     vibOp.append(op, vibExc);
@@ -78,7 +65,7 @@ void MixedOperatorSecondQuant::initializeLambda(const FCIdump &fcidump) {
             for (int jModal = 0; jModal < iModal; ++jModal) {
                 f = fcidump.fileName() + "_Lambda_" + std::to_string(iMode + 1) + "_" + std::to_string(iModal + 1) +
                     "_" + std::to_string(jModal + 1);
-                if (file_exists(f)) {
+                if (utils::file_exists(f, "MixedOperatorSecondQuant::initializeLambda(): fcidump not found, " + f)) {
                     VibExcitation vibExc({{iMode, iModal, jModal}});
                     auto &&op = constructOperatorAntisymm1el(FCIdump(f));
                     vibOp.append(op, vibExc);
@@ -95,7 +82,7 @@ void MixedOperatorSecondQuant::initializeLambda(const FCIdump &fcidump) {
 
 void MixedOperatorSecondQuant::initializeK(const FCIdump &fcidump) {
     std::string f = fcidump.fileName() + "_K";
-    if (file_exists(f)) {
+    if (utils::file_exists(f, "MixedOperatorSecondQuant::initializeK(): fcidump not found, " + f)) {
         elHam.insert({"K[0]", std::make_unique<hel_t>(constructK(FCIdump(f)))});
     }
     std::string name = "K[1]";
@@ -106,7 +93,7 @@ void MixedOperatorSecondQuant::initializeK(const FCIdump &fcidump) {
             for (int jModal = 0; jModal <= iModal; ++jModal) {
                 f = fcidump.fileName() + "_K_" + std::to_string(iMode + 1) + "_" + std::to_string(iModal + 1) +
                     "_" + std::to_string(jModal + 1);
-                if (file_exists(f)) {
+                if (utils::file_exists(f, "MixedOperatorSecondQuant::initializeK(): fcidump not found, " + f)) {
                     VibExcitation vibExc({{iMode, iModal, jModal}});
                     auto &&op = constructK(FCIdump(f));
                     vibOp.append(op, vibExc);
@@ -123,7 +110,7 @@ void MixedOperatorSecondQuant::initializeK(const FCIdump &fcidump) {
 
 void MixedOperatorSecondQuant::initializeD(const FCIdump &fcidump) {
     std::string f = fcidump.fileName() + "_D";
-    if (file_exists(f)) {
+    if (utils::file_exists(f, "MixedOperatorSecondQuant::initializeD(): fcidump not found, " + f)) {
         elHam.insert({"D[0]", std::make_unique<hel_t>(constructD(FCIdump(f)))});
     }
     std::string name = "D[1]";
@@ -134,7 +121,7 @@ void MixedOperatorSecondQuant::initializeD(const FCIdump &fcidump) {
             for (int jModal = 0; jModal <= iModal; ++jModal) {
                 f = fcidump.fileName() + "_D_" + std::to_string(iMode + 1) + "_" +
                     std::to_string(iModal + 1) + "_" + std::to_string(jModal + 1);
-                if (file_exists(f)) {
+                if (utils::file_exists(f, "MixedOperatorSecondQuant::initializeD(): fcidump not found, " + f)) {
                     VibExcitation vibExc({{iMode, iModal, jModal}});
                     auto &&op = constructD(FCIdump(f));
                     vibOp.append(op, vibExc);

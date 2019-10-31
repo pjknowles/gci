@@ -1,8 +1,20 @@
 #include "gciUtils.h"
 #include <stdexcept>
+#include <iostream>
+#include <fstream>
 
 namespace gci {
-namespace utils {
+namespace utils{
+
+bool file_exists(const std::string &fname, const std::string &message) {
+    if (std::ifstream{fname}.fail()) {
+        if (!message.empty())
+            std::cout << message << std::endl;
+        return false;
+    }
+    return true;
+}
+
 hid_t open_hdf5_file(const std::string &fname, MPI_Comm communicator, bool create) {
     auto plist_id = H5Pcreate(H5P_FILE_ACCESS);
     H5Pset_fapl_mpio(plist_id, communicator, MPI_INFO_NULL);
@@ -31,5 +43,6 @@ hid_t open_or_create_hdf5_dataset(const hid_t &location, const std::string &data
     }
     return dataset;
 }
+
 } // namespace utils
 } // namespace gci
