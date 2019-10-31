@@ -4,7 +4,7 @@
 #include <fstream>
 
 namespace gci {
-namespace utils{
+namespace utils {
 
 bool file_exists(const std::string &fname, const std::string &message) {
     if (std::ifstream{fname}.fail()) {
@@ -29,6 +29,8 @@ hid_t open_hdf5_file(const std::string &fname, MPI_Comm communicator, bool creat
     if (id < 0) throw std::runtime_error("open_hdf5_file(): failed to open/create file");
     return id;
 }
+
+bool hdf5_file_open(hid_t file_id) {return H5Fget_obj_count(file_id, H5F_OBJ_FILE) > 0;}
 
 hid_t open_or_create_hdf5_dataset(const hid_t &location, const std::string &dataset_name, const hid_t &dtype_id,
                                   const size_t &length) {
