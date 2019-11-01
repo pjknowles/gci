@@ -4,23 +4,14 @@
 #include <gciDavidson.h>
 #include <gciMixedWavefunction.h>
 
+#include "parallel_utils.h"
+
 using ::testing::Pointwise;
 using ::testing::DoubleEq;
 using ::testing::ContainerEq;
 using ::testing::Each;
 
 namespace gci {
-
-class Lock {
-public:
-    explicit Lock(int mutex = 0) : mutex(mutex) {
-        GA_Lock(mutex);
-    }
-
-    ~Lock() {GA_Unlock(mutex);}
-
-    int mutex;
-};
 
 //!@todo there should be a temporary directory for test files
 class DavidsonReadWriteF : public ::testing::Test {
