@@ -53,17 +53,16 @@ TEST_F(PersistentOperatorDataF, construct_from_op_rank1) {
 }
 
 TEST_F(PersistentOperatorDataF, construct_from_op_rank2) {
-    std::unique_ptr<PersistentOperator> p_op;
+    PersistentOperator p_op;
     if (gci::parallel_rank == 0)
-        p_op = std::make_unique<PersistentOperator>(op_rank2, op_rank2->m_description, 0, file_id);
-    else {
-        p_op = std::make_unique<PersistentOperator>(nullptr, op_rank2->m_description, 0, file_id);
-    }
+        p_op = PersistentOperator(op_rank2, op_rank2->m_description, 0, file_id);
+    else
+        p_op = PersistentOperator(nullptr, op_rank2->m_description, 0, file_id);
     {
         auto l = Lock();
-        EXPECT_EQ(p_op->description(), op_rank2->m_description);
+        EXPECT_EQ(p_op.description(), op_rank2->m_description);
         EXPECT_TRUE(utils::file_exists(fname_hdf5)) << "operator should be stored on hdf5";
-        auto op = p_op->get();
+        auto op = p_op.get();
         EXPECT_NE(op, op_rank2) << "get() creates a new object";
         //TODO check for equality of buffers
     }
