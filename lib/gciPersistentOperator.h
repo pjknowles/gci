@@ -9,6 +9,8 @@ namespace gci {
 
 /*!
  * @brief stores SymmetryMatrix::Operator either in memory for small operators or on disk in an hdf5 file.
+ * @note the hdf5 file should have already been created and should be open whenever ``PersistentOperator``
+ * is used
  */
 class PersistentOperator {
 protected:
@@ -30,7 +32,7 @@ public:
 protected:
     //! converts operator to bytestream and writes it to hdf5 file
     void store_bytestream(const SymmetryMatrix::Operator &op_);
-    //! participates in update hdf5 data structure without writing to it
+    //! participates in updating hdf5 data structure without writing to it
     void store_bytestream(const std::string &_description, size_t size);
 };
 
