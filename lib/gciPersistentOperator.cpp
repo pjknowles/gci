@@ -16,6 +16,14 @@ PersistentOperator::PersistentOperator(std::shared_ptr<SymmetryMatrix::Operator>
     }
 }
 
+PersistentOperator::PersistentOperator(std::string _description, size_t size, hid_t id)
+        : m_file_id(id), m_description(std::move(_description)), m_on_disk(false) {
+    if (!utils::hdf5_file_open(id))
+        throw std::runtime_error("PersistentOperator::PersistentOperator(): hdf5 file is not open");
+    store_bytestream(_description, size);
+    m_on_disk = true;
+}
+
 std::string PersistentOperator::description() {return m_description;}
 
 PersistentOperator::PersistentOperator(hid_t id, std::string _description)
@@ -30,6 +38,11 @@ void PersistentOperator::store_bytestream(const SymmetryMatrix::Operator &op_) {
     if (status < 0) throw std::runtime_error("PersistentOperator::store_bytestream(): write failed");
     H5Dclose(dataset);
     H5Pclose(plist_id);
+}
+
+void PersistentOperator::store_bytestream(const std::string &_description, size_t size) {
+    auto dataset = utils::open_or_create_hdf5_dataset(m_file_id, m_description, H5T_NATIVE_CHAR, size);
+    H5Dclose(dataset);
 }
 
 std::shared_ptr<SymmetryMatrix::Operator> PersistentOperator::get() {
