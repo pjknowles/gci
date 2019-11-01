@@ -31,9 +31,7 @@ public:
 
     ~PersistentOperatorDataF() {
         H5Fclose(file_id);
-        if (gci::parallel_rank == 0) {
-            std::remove(fname_hdf5.c_str());
-        }
+        if (gci::parallel_rank == 0) std::remove(fname_hdf5.c_str());
     }
 
     std::string fname_op_rank1;
@@ -44,22 +42,23 @@ public:
     std::shared_ptr<SymmetryMatrix::Operator> op_rank2;
 };
 
-//TEST_F(PersistentOperatorDataF, construct_from_op_rank1) {
-//    {
-//        auto l = Lock();
-//        auto p_op = PersistentOperator(op_rank1, file_id);
-//        EXPECT_EQ(p_op.description(), op_rank1->m_description);
-//        EXPECT_EQ(p_op.get(), op_rank1) << "should point to the same object";
-//    }
-//    GA_Sync();
-//}
+TEST_F(PersistentOperatorDataF, construct_from_op_rank1) {
+    {
+        auto l = Lock();
+        auto p_op = PersistentOperator(op_rank1, op_rank1->m_description, 0, file_id, true);
+        EXPECT_EQ(p_op.description(), op_rank1->m_description);
+        EXPECT_EQ(p_op.get(), op_rank1) << "should point to the same object";
+    }
+    GA_Sync();
+}
 
 TEST_F(PersistentOperatorDataF, construct_from_op_rank2) {
     std::unique_ptr<PersistentOperator> p_op;
     if (gci::parallel_rank == 0)
-        p_op = std::make_unique<PersistentOperator>(op_rank2, file_id);
-    else
-        p_op = std::make_unique<PersistentOperator>(op_rank2->m_description, op_rank2->bytestream().size(), file_id);
+        p_op = std::make_unique<PersistentOperator>(op_rank2, op_rank2->m_description, 0, file_id);
+    else {
+        p_op = std::make_unique<PersistentOperator>(nullptr, op_rank2->m_description, 0, file_id);
+    }
     {
         auto l = Lock();
         EXPECT_EQ(p_op->description(), op_rank2->m_description);
@@ -73,9 +72,9 @@ TEST_F(PersistentOperatorDataF, construct_from_op_rank2) {
 
 TEST_F(PersistentOperatorDataF, construct_from_hdf5) {
     if (gci::parallel_rank == 0)
-        auto p_op = PersistentOperator(op_rank2, file_id);
+        auto p_op = PersistentOperator(op_rank2, op_rank2->m_description, 0, file_id);
     else
-        auto p_op = PersistentOperator(op_rank2->m_description, op_rank2->bytestream().size(), file_id);
+        auto p_op = PersistentOperator(nullptr, op_rank2->m_description, 0, file_id);
     {
         auto l = Lock();
         EXPECT_TRUE(utils::file_exists(fname_hdf5)) << "operator should be stored on hdf5";

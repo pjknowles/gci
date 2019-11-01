@@ -3,7 +3,6 @@
 
 #include <ga.h>
 #include <mpi.h>
-#include <stdexcept>
 
 namespace gci {
 
@@ -83,7 +82,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             res.zero();
             for (const auto &hel : ham.elHam) {
                 auto p = profiler->push(hel.first);
-                res.operatorOnWavefunction(*hel.second, ketWfn, parallel_stringset);
+                res.operatorOnWavefunction(*hel.second.get(), ketWfn, parallel_stringset);
             }
             accumulate(iBra, res);
         }
@@ -119,7 +118,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
                     vibExc.conjugate();
                     auto connected_ket = bra.excite(vibExc);
                     if (connected_ket != ket) continue;
-                    res.operatorOnWavefunction(op, ketWfn, parallel_stringset);
+                    res.operatorOnWavefunction(*op.get(), ketWfn, parallel_stringset);
                 }
             }
             accumulate(iBra, res);
@@ -142,7 +141,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
         if (NextTask(m_communicator)) {
             res.zero();
             for (const auto &hel : ham.elHam) {
-                res.diagonalOperator(*hel.second);
+                res.diagonalOperator(*hel.second.get());
             }
             accumulate(iBra, res);
         }
@@ -167,7 +166,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
                 if (ket != bra) continue;
                 if (!NextTask(m_communicator)) continue;
                 res.zero();
-                res.diagonalOperator(op);
+                res.diagonalOperator(*op.get());
                 accumulate(iBra, res);
             }
         }
