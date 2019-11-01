@@ -63,17 +63,13 @@ TEST_F(PersistentOperatorDataF, construct_from_op_rank2) {
 }
 
 TEST_F(PersistentOperatorDataF, construct_from_hdf5) {
-    std::cout << "construct_from_hdf5: entered"<<std::endl;
     if (gci::parallel_rank == 0) {
         {
             auto p_op = PersistentOperator(op_rank2, file_id);
-            std::cout << "construct_from_hdf5: persistent operator generated"<<std::endl;
         }
         EXPECT_TRUE(utils::file_exists(fname_hdf5)) << "operator should be stored on hdf5";
         auto p_op = PersistentOperator(file_id, op_rank2->m_description);
-        std::cout << "construct_from_hdf5: persistent operator from file generated"<<std::endl;
         auto op = p_op.get();
-        std::cout << "construct_from_hdf5: get()"<<std::endl;
         EXPECT_NE(op, op_rank2) << "get() creates a new object";
         auto bs_ref = op_rank2->bytestream();
         auto bs = op->bytestream();
