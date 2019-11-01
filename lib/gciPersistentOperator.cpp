@@ -6,11 +6,11 @@ namespace gci {
 
 PersistentOperator::PersistentOperator(std::shared_ptr<SymmetryMatrix::Operator> &op, hid_t id)
         : m_file_id(id), m_description(op->m_description), m_on_disk(false) {
-    if (!utils::hdf5_file_open(id))
-        throw std::runtime_error("PersistentOperator::PersistentOperator(): hdf5 file is not open");
     if (op->m_rank < 2)
         m_op = op;
     else {
+        if (!utils::hdf5_file_open(id))
+            throw std::runtime_error("PersistentOperator::PersistentOperator(): hdf5 file is not open");
         store_bytestream(*op);
         m_on_disk = true;
     }
