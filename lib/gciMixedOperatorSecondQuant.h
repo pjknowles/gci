@@ -1,10 +1,11 @@
 #ifndef GCI_GCIMIXEDOPERATORSECONDQUANT_H
 #define GCI_GCIMIXEDOPERATORSECONDQUANT_H
 
+#include <FCIdump.h>
+
 #include "gciVibOperator.h"
 #include "gciOptions.h"
-#include <FCIdump.h>
-#include <bits/shared_ptr.h>
+#include "gciPersistentOperator.h"
 
 
 namespace gci {
@@ -17,30 +18,38 @@ namespace gci {
  *
  * @note Only 1MC operators are currently implemented
  *
+ * Large electronic operators from the mixed-tensor are stored on an hdf5-file.
+ * This is handled by ``PersistentOperator``, which requires that the hdf5-file be open
+ * externally and remain open while ``PersistentOperator`` is in use.
+ *
  *
  */
 class MixedOperatorSecondQuant {
+protected:
+    std::string m_fcidump_f; //!< base name for dump files storing electronic operators of the mixed Tensor
+    std::string hdf5_fname; //!< file name for hdf5 where large eletronic operators are stored
+    hid_t hid_file; //!< id of the hdf5 file
+    bool includeHel;
+    bool includeLambda;
+    bool includeK;
+    bool includeD;
 public:
-    using hel_t = SymmetryMatrix::Operator;
+    using hel_t = PersistentOperator;
     int nMode; //!< Number of vibrational modes
     int nModal; //!< Number of modals per mode (for now assumed the same for each mode)
 //    hel_t Hel; //!< Purely electronic terms
     VibOperator<double> Hvib;//!< Purely vibrational term
-    std::map<std::string, std::unique_ptr<hel_t>> elHam; //!< Purely electronic terms from kinetic energy coupling
+    std::map<std::string, hel_t> elHam; //!< Purely electronic terms from kinetic energy coupling
     std::map<std::string, VibOperator<hel_t >> mixedHam;//!< Mixed electronic-vibrational terms
 
     explicit MixedOperatorSecondQuant(const Options &options);
+    ~MixedOperatorSecondQuant();
     /*!
      * @brief Checks if bra and ket vibrational basis are connected by the mixed Hamiltonian
      */
     bool connected(const HProduct &bra, const HProduct &ket) const;
 
 protected:
-    std::string fcidump_f;
-    bool includeHel;
-    bool includeLambda;
-    bool includeK;
-    bool includeD;
 
     /*!
      * @brief Constructs purely vibrational operator

@@ -3,25 +3,19 @@
 #include "gci.h"
 
 namespace gci {
+PersistentOperator::PersistentOperator() : m_file_id(-1), m_on_disk(false) { }
 
-PersistentOperator::PersistentOperator(std::shared_ptr<SymmetryMatrix::Operator> &op, hid_t id)
-        : m_file_id(id), m_description(op->m_description), m_on_disk(false) {
-    if (op->m_rank < 2)
+PersistentOperator::PersistentOperator(const std::shared_ptr<SymmetryMatrix::Operator> &op, std::string _description,
+                                       int root, hid_t id, bool in_memory)
+        : m_file_id(id), m_description(std::move(_description)), m_on_disk(false) {
+    if (op->m_rank < 2 || in_memory) {
         m_op = op;
-    else {
+    } else {
         if (!utils::hdf5_file_open(id))
             throw std::runtime_error("PersistentOperator::PersistentOperator(): hdf5 file is not open");
-        store_bytestream(*op);
+        store_bytestream(op, root);
         m_on_disk = true;
     }
-}
-
-PersistentOperator::PersistentOperator(std::string _description, size_t size, hid_t id)
-        : m_file_id(id), m_description(std::move(_description)), m_on_disk(false) {
-    if (!utils::hdf5_file_open(id))
-        throw std::runtime_error("PersistentOperator::PersistentOperator(): hdf5 file is not open");
-    store_bytestream(_description, size);
-    m_on_disk = true;
 }
 
 std::string PersistentOperator::description() {return m_description;}
@@ -29,23 +23,28 @@ std::string PersistentOperator::description() {return m_description;}
 PersistentOperator::PersistentOperator(hid_t id, std::string _description)
         : m_file_id(id), m_description(std::move(_description)), m_on_disk(true) { }
 
-void PersistentOperator::store_bytestream(const SymmetryMatrix::Operator &op_) {
-    auto bs = op_.bytestream();
-    auto dataset = utils::open_or_create_hdf5_dataset(m_file_id, m_description, H5T_NATIVE_CHAR, bs.size());
-    auto plist_id = H5Pcreate(H5P_DATASET_XFER);
-    H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_INDEPENDENT);
-    auto status = H5Dwrite(dataset, H5T_NATIVE_CHAR, H5S_ALL, H5S_ALL, plist_id, &bs.data().front());
-    if (status < 0) throw std::runtime_error("PersistentOperator::store_bytestream(): write failed");
+void PersistentOperator::store_bytestream(const std::shared_ptr<SymmetryMatrix::Operator> &op, int root) {
+    hid_t dataset;
+    if (gci::parallel_rank == root) {
+        auto bs = op->bytestream();
+        unsigned long size = bs.size();
+        MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG, root, gci::mpi_comm_compute);
+        dataset = utils::open_or_create_hdf5_dataset(m_file_id, m_description, H5T_NATIVE_CHAR, bs.size());
+        auto plist = H5Pcreate(H5P_DATASET_XFER);
+        H5Pset_dxpl_mpio(plist, H5FD_MPIO_INDEPENDENT);
+        auto status = H5Dwrite(dataset, H5T_NATIVE_CHAR, H5S_ALL, H5S_ALL, plist, &bs.data().front());
+        if (status < 0) throw std::runtime_error("PersistentOperator::store_bytestream(): write failed");
+        H5Pclose(plist);
+    } else {
+        unsigned long size;
+        MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG, root, gci::mpi_comm_compute);
+        dataset = utils::open_or_create_hdf5_dataset(m_file_id, m_description, H5T_NATIVE_CHAR, size);
+    }
     H5Dclose(dataset);
-    H5Pclose(plist_id);
 }
 
-void PersistentOperator::store_bytestream(const std::string &_description, size_t size) {
-    auto dataset = utils::open_or_create_hdf5_dataset(m_file_id, m_description, H5T_NATIVE_CHAR, size);
-    H5Dclose(dataset);
-}
 
-std::shared_ptr<SymmetryMatrix::Operator> PersistentOperator::get() {
+std::shared_ptr<SymmetryMatrix::Operator> PersistentOperator::get() const {
     if (!m_on_disk) return m_op;
     auto buffer = std::vector<char>();
     // get size of the dataset and allocate a buffer
