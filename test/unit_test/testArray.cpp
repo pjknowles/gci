@@ -7,25 +7,15 @@
 #include <numeric>
 #include <ga.h>
 
+#include "parallel_utils.h"
+
 using ::testing::Pointwise;
 using ::testing::DoubleEq;
 using ::testing::ContainerEq;
 using ::testing::Each;
 
 namespace gci {
-int n_lock_calls = 0;
 
-class Lock {
-public:
-    explicit Lock(int mutex = 0) : mutex(mutex) {
-        GA_Lock(mutex);
-        ++n_lock_calls;
-    }
-
-    ~Lock() {GA_Unlock(mutex);}
-
-    int mutex;
-};
 
 TEST(Array, constructor_empty) {
     auto l = Lock();
@@ -158,7 +148,7 @@ public:
         values.resize(dim);
         std::iota(values.begin(), values.end(), 1.);
         auto buffer = LocalBuffer(*this);
-        std::copy(values.begin() + buffer.lo, values.begin() + buffer.hi+1, buffer.begin());
+        std::copy(values.begin() + buffer.lo, values.begin() + buffer.hi + 1, buffer.begin());
         sub_indices = {0, 1, 11, 31, 40, 99};
         for (auto el : sub_indices)
             sub_values.push_back(values[el]);

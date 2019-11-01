@@ -17,7 +17,7 @@ target_link_libraries(test-gci PUBLIC gci gmock_main)
 gtest_discover_tests(test-gci)
 
 add_executable(test-gci-parallel
-        main.cpp
+        main.cpp parallel_utils.h
         testArray.cpp
         testDavidson.cpp
         testPersistentOperator.cpp
