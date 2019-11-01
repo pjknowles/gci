@@ -22,8 +22,8 @@ public:
         if (!utils::file_exists(fname_op_rank2))
             throw std::runtime_error("PersistentOperatorDataF::PersistentOperatorDataF() test file not found");
         FCIdump dump1(fname_op_rank1);
-        op_rank2 = std::make_shared<SymmetryMatrix::Operator>(constructOperator(dump1));
-        op_rank2->m_description = "Rank 1 operator";
+        op_rank1 = std::make_shared<SymmetryMatrix::Operator>(constructOperator(dump1));
+        op_rank1->m_description = "Rank 1 operator";
         FCIdump dump2(fname_op_rank2);
         op_rank2 = std::make_shared<SymmetryMatrix::Operator>(constructOperator(dump2));
         op_rank2->m_description = "Rank 2 operator";
@@ -44,15 +44,15 @@ public:
     std::shared_ptr<SymmetryMatrix::Operator> op_rank2;
 };
 
-TEST_F(PersistentOperatorDataF, construct_from_op_rank1) {
-    {
-        auto l = Lock();
-        auto p_op = PersistentOperator(op_rank1, file_id);
-        EXPECT_EQ(p_op.description(), op_rank1->m_description);
-        EXPECT_EQ(p_op.get(), op_rank1) << "should point to the same object";
-    }
-    GA_Sync();
-}
+//TEST_F(PersistentOperatorDataF, construct_from_op_rank1) {
+//    {
+//        auto l = Lock();
+//        auto p_op = PersistentOperator(op_rank1, file_id);
+//        EXPECT_EQ(p_op.description(), op_rank1->m_description);
+//        EXPECT_EQ(p_op.get(), op_rank1) << "should point to the same object";
+//    }
+//    GA_Sync();
+//}
 
 TEST_F(PersistentOperatorDataF, construct_from_op_rank2) {
     std::unique_ptr<PersistentOperator> p_op;
