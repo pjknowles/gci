@@ -8,7 +8,8 @@ PersistentOperator::PersistentOperator() : m_file_id(-1), m_on_disk(false) { }
 PersistentOperator::PersistentOperator(const std::shared_ptr<SymmetryMatrix::Operator> &op, std::string _description,
                                        int root, hid_t id, bool in_memory)
         : m_file_id(id), m_description(std::move(_description)), m_on_disk(false) {
-    if (op->m_rank < 2 || in_memory) {
+    auto rank = op == nullptr ? 2 : op->m_rank;
+    if (rank < 2 || in_memory) {
         m_op = op;
     } else {
         if (!utils::hdf5_file_open(id))
@@ -26,6 +27,7 @@ PersistentOperator::PersistentOperator(hid_t id, std::string _description)
 void PersistentOperator::store_bytestream(const std::shared_ptr<SymmetryMatrix::Operator> &op, int root) {
     hid_t dataset;
     if (gci::parallel_rank == root) {
+        if (op == nullptr) throw std::runtime_error("PersistentOperator::store_bytestream() *operator is nullptr");
         auto bs = op->bytestream();
         unsigned long size = bs.size();
         MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG, root, gci::mpi_comm_compute);
