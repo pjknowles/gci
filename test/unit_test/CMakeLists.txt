@@ -26,4 +26,5 @@ target_link_libraries(test-gci-parallel PUBLIC gci gmock_main)
 add_test(NAME test-gci-parallel
         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIOPTIONS} ${MPIEXEC_NUMPROC_FLAG} 2 ${MPIEXEC_PREFLAGS}
         ${CMAKE_CURRENT_BINARY_DIR}/test-gci-parallel ${MPIEXEC_POSTFLAGS}
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         )
