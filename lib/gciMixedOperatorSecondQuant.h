@@ -63,11 +63,11 @@ protected:
     /*!
      * @brief From FCIdump file generates antisymmetric electronic operator
      */
-    static SymmetryMatrix::Operator constructOperatorAntisymm1el(const FCIdump &dump);
+    static SymmetryMatrix::Operator constructOperatorAntisymm1el(const FCIdump &dump, bool collective=true);
 
-    static SymmetryMatrix::Operator constructK(const FCIdump &dump);
+    static SymmetryMatrix::Operator constructK(const FCIdump &dump, bool collective=true);
 
-    static SymmetryMatrix::Operator constructD(const FCIdump &dump);
+    static SymmetryMatrix::Operator constructD(const FCIdump &dump, bool collective=true);
 
     void initializeHel(const FCIdump &fcidump);
 
