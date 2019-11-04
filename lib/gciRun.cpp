@@ -1666,8 +1666,8 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump, bool collec
     if (collective) {
         portableByteStream = result.bytestream().data();
         lPortableByteStream = portableByteStream.size();
-    }
-    return result;
+    } else
+      return result;
   }
   if (collective) {
 #ifdef HAVE_MPI_H

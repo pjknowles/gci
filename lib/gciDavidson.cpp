@@ -155,7 +155,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
         modOptions.addParameter("BACKUP_FILE", "");
         modOptions.addParameter("RESTART_FILE", "");
         // Modify options to choose the correct number of electronic states
-        SymmetryMatrix::Operator *h = ham->elHam["Hel[0]"].get().get();
+        auto h = ham->elHam["Hel[0]"].get();
         Davidson<Wavefunction, SymmetryMatrix::Operator> elecSolver(std::move(w),
                                                                     SymmetryMatrix::Operator{*h},
                                                                     modOptions);
