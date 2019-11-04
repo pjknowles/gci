@@ -82,7 +82,8 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             res.zero();
             for (const auto &hel : ham.elHam) {
                 auto p = profiler->push(hel.first);
-                res.operatorOnWavefunction(*hel.second.get(), ketWfn, parallel_stringset);
+                auto op = hel.second.get();
+                res.operatorOnWavefunction(*op, ketWfn, parallel_stringset);
             }
             accumulate(iBra, res);
         }
@@ -113,12 +114,13 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             for (const auto &mixedTerm : ham.mixedHam) {
                 const auto &vibTensor = mixedTerm.second;
                 for (const auto &vibEl : vibTensor.tensor) {
-                    auto &op = vibEl.second.oper;
+                    auto &p_op = vibEl.second.oper;
                     auto vibExc = VibExcitation{vibEl.second.exc};
                     vibExc.conjugate();
                     auto connected_ket = bra.excite(vibExc);
                     if (connected_ket != ket) continue;
-                    res.operatorOnWavefunction(*op.get(), ketWfn, parallel_stringset);
+                    auto op = p_op.get();
+                    res.operatorOnWavefunction(*op, ketWfn, parallel_stringset);
                 }
             }
             accumulate(iBra, res);
@@ -141,7 +143,8 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
         if (NextTask(m_communicator)) {
             res.zero();
             for (const auto &hel : ham.elHam) {
-                res.diagonalOperator(*hel.second.get());
+                auto op = hel.second.get();
+                res.diagonalOperator(*op);
             }
             accumulate(iBra, res);
         }
@@ -160,13 +163,14 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
         // all mixed vibrational - electronic operators
         for (const auto &mixedTerm : ham.mixedHam) {
             for (const auto &vibEl : mixedTerm.second.tensor) {
-                auto op = vibEl.second.oper;
+                auto p_op = vibEl.second.oper;
                 auto &vibExc = vibEl.second.exc;
                 auto ket = bra.excite(vibExc);
                 if (ket != bra) continue;
                 if (!NextTask(m_communicator)) continue;
                 res.zero();
-                res.diagonalOperator(*op.get());
+                auto op = p_op.get();
+                res.diagonalOperator(*op);
                 accumulate(iBra, res);
             }
         }
