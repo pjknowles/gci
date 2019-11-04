@@ -61,16 +61,16 @@ public:
      * @param options Global options defining the state of the whole calculation. Options relevant to the calculation
      *        are extracted into DavidsonOptions member.
      */
-    explicit Davidson(t_Wavefunction &&prototype, t_Operator &&ham, Options &options);
+    explicit Davidson(const t_Wavefunction &prototype, const t_Operator &_ham, Options options);
 
     /*!
      * @brief Runs the calculation.
      */
     void run();
 
-    std::shared_ptr<t_Wavefunction> prototype; //!< Prototype wavefunction
-    std::shared_ptr<t_Operator> ham; //!< Hamiltonian operator that is being diagonalized
-    Options &options;//!< Options governing the type of calculation
+    t_Wavefunction prototype; //!< Prototype wavefunction
+    const t_Operator &ham; //!< Hamiltonian operator that is being diagonalized
+    Options options;//!< Options governing the type of calculation
     std::shared_ptr<t_Wavefunction> diagonalH; //!< Stored diagonal values of the hamiltonian operator
 //    std::vector<value_type> eigVal; //!< Solution eigenvalues
 //    std::vector<t_Wavefunction> eigVec; //!< Solution eigenvectors
