@@ -25,7 +25,7 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const Options &options) :
         m_fcidump_f(_fcidump_f(options)),
         hdf5_fname(_hdf5_fname(options)),
         restart(!options.parameter("HAM_HDF5_RESTART", "").empty()),
-        hid_file(utils::open_hdf5_file(hdf5_fname, gci::mpi_comm_compute, true)),
+        hid_file(utils::open_hdf5_file(hdf5_fname, gci::mpi_comm_compute, !restart)),
         includeHel(options.parameter("INCLUDE_HEL", 0)),
         includeLambda(options.parameter("INCLUDE_LAMBDA", 0)),
         includeK(options.parameter("INCLUDE_K", 0)),
@@ -42,6 +42,20 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const Options &options) :
 
 MixedOperatorSecondQuant::~MixedOperatorSecondQuant() {H5Fclose(hid_file);}
 
+template<class Op>
+inline PersistentOperator create_persistentoperator(const std::string &fcidump, bool restart, std::string description,
+                                                    hid_t hid_file, int root,
+                                                    Op(*construct_op)(const FCIdump &, bool)) {
+    if (restart) return PersistentOperator(hid_file, description);
+    std::shared_ptr<Op> op;
+    if (gci::parallel_rank == root) {
+        op = std::make_shared<Op>(construct_op(FCIdump(fcidump), false));
+        op->m_description = description;
+        op->ensure_dirac();
+    }
+    auto p_op = PersistentOperator(op, description, root, hid_file);
+    return p_op;
+}
 
 void MixedOperatorSecondQuant::initializeHel(const FCIdump &fcidump) {
     int i_operator = 0;
@@ -50,13 +64,7 @@ void MixedOperatorSecondQuant::initializeHel(const FCIdump &fcidump) {
         auto description = std::string("Hel[0]");
         int root = i_operator % gci::parallel_size;
         ++i_operator;
-        std::shared_ptr<SymmetryMatrix::Operator> op;
-        if (gci::parallel_rank == root) {
-            op = std::make_shared<SymmetryMatrix::Operator>(constructOperator(FCIdump(f), false));
-            op->m_description = description;
-            op->ensure_dirac();
-        }
-        auto p_op = PersistentOperator(op, description, root, hid_file);
+        auto p_op = create_persistentoperator(f, restart, description, hid_file, root, constructOperator);
         elHam.insert({description, std::move(p_op)});
     }
     std::string name = "Hel[1]";
@@ -75,13 +83,7 @@ void MixedOperatorSecondQuant::initializeHel(const FCIdump &fcidump) {
                                           + std::to_string(jModal + 1) + ")";
                 int root = i_operator % gci::parallel_size;
                 ++i_operator;
-                std::shared_ptr<SymmetryMatrix::Operator> op;
-                if (gci::parallel_rank == root) {
-                    op = std::make_shared<SymmetryMatrix::Operator>(constructOperator(FCIdump(f), false));
-                    op->m_description = description;
-                    op->ensure_dirac();
-                }
-                auto p_op = PersistentOperator(op, description, root, hid_file);
+                auto p_op = create_persistentoperator(f, restart, description, hid_file, root, constructOperator);
                 vibOp.append(p_op, vibExc);
                 if (iModal != jModal)
                     vibOp.append(p_op, VibExcitation({{iMode, jModal, iModal}}));
@@ -170,13 +172,7 @@ void MixedOperatorSecondQuant::initializeD(const FCIdump &fcidump) {
         auto description = std::string("D[0]");
         int root = i_operator % gci::parallel_size;
         ++i_operator;
-        std::shared_ptr<SymmetryMatrix::Operator> op;
-        if (gci::parallel_rank == root) {
-            op = std::make_shared<SymmetryMatrix::Operator>(constructD(FCIdump(f), false));
-            op->m_description = description;
-            op->ensure_dirac();
-        }
-        auto p_op = PersistentOperator(op, description, root, hid_file);
+        auto p_op = create_persistentoperator(f, restart, description, hid_file, root, constructD);
         elHam.insert({description, std::move(p_op)});
     }
     std::string name = "D[1]";
@@ -195,13 +191,7 @@ void MixedOperatorSecondQuant::initializeD(const FCIdump &fcidump) {
                                           + std::to_string(jModal + 1) + ")";
                 int root = i_operator % gci::parallel_size;
                 ++i_operator;
-                std::shared_ptr<SymmetryMatrix::Operator> op;
-                if (gci::parallel_rank == root) {
-                    op = std::make_shared<SymmetryMatrix::Operator>(constructD(FCIdump(f), false));
-                    op->m_description = description;
-                    op->ensure_dirac();
-                }
-                auto p_op = PersistentOperator(op, description, root, hid_file);
+                auto p_op = create_persistentoperator(f, restart, description, hid_file, root, constructD);
                 vibOp.append(p_op, vibExc);
                 if (iModal != jModal)
                     vibOp.append(p_op, VibExcitation({{iMode, jModal, iModal}}));
