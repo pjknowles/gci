@@ -28,6 +28,7 @@ class MixedOperatorSecondQuant {
 protected:
     std::string m_fcidump_f; //!< base name for dump files storing electronic operators of the mixed Tensor
     std::string hdf5_fname; //!< file name for hdf5 where large eletronic operators are stored
+    bool restart; //!< operator is already stored on the hdf5, no overwriting is done
     hid_t hid_file; //!< id of the hdf5 file
     bool includeHel;
     bool includeLambda;
