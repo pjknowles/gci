@@ -105,7 +105,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
         // Mixed operators
         for (const auto &ket : m_vibBasis) {
             auto p = profiler->push("Hmixed");
-            auto iKet = m_vibBasis.index(bra);
+            auto iKet = m_vibBasis.index(ket);
             if (!ham.connected(bra, ket)) continue;
             if (!NextTask(m_communicator)) continue;
             copy_to_local(w.m_ga_handle, iKet, ketWfn);
