@@ -14,15 +14,17 @@ inline auto _nMode(const Options &options) {return options.parameter("NMODE", 0)
 inline auto _nModal(const Options &options) {return options.parameter("NMODAL", 0);}
 
 inline auto _hdf5_fname(const Options &options) {
-    auto fname = options.parameter("HAM_HDF5", "");
-    if (fname.empty())
+    auto fname_save = options.parameter("HAM_HDF5", "");
+    auto fname_restart = options.parameter("HAM_HDF5_RESTART", "");
+    if (fname_save.empty() && fname_restart.empty())
         throw std::runtime_error("MixedOperatorSecondQuant::MixedOperatorSecondQuant() hdf5_fname is empty");
-    return fname;
+    return fname_restart.empty() ? fname_save : fname_restart;
 }
 
 MixedOperatorSecondQuant::MixedOperatorSecondQuant(const Options &options) :
         m_fcidump_f(_fcidump_f(options)),
         hdf5_fname(_hdf5_fname(options)),
+        restart(!options.parameter("HAM_HDF5_RESTART", "").empty()),
         hid_file(utils::open_hdf5_file(hdf5_fname, gci::mpi_comm_compute, true)),
         includeHel(options.parameter("INCLUDE_HEL", 0)),
         includeLambda(options.parameter("INCLUDE_LAMBDA", 0)),
@@ -468,7 +470,7 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructD(const FCIdump &dum
             portableByteStream = result.bytestream().data();
             lPortableByteStream = portableByteStream.size();
         } else
-          return result;        
+            return result;
     }
     if (collective) {
 #ifdef HAVE_MPI_H
