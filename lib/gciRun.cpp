@@ -405,8 +405,7 @@ std::vector<double> Run::run() {
             if (options.parameter("SECOND_QUANT", 0)) {
                 auto ham = MixedOperatorSecondQuant(options);
                 auto wfn = MixedWavefunction(options, prototype);
-                auto solver = run::Davidson<MixedWavefunction, MixedOperatorSecondQuant>{std::move(wfn),
-                                                                                          std::move(ham), options};
+                auto solver = run::Davidson<MixedWavefunction, MixedOperatorSecondQuant>{wfn, ham, options};
                 solver.run();
             } else {
                 throw std::runtime_error("Polynomial Hamiltonian is not supported in the new version");
@@ -414,8 +413,7 @@ std::vector<double> Run::run() {
         } else {
             auto ham = m_hamiltonian;
             auto wfn = Wavefunction{prototype, mpi_comm_compute};
-            auto solver = run::Davidson<Wavefunction, SymmetryMatrix::Operator>(std::move(wfn), std::move(ham),
-                                                                                options);
+            auto solver = run::Davidson<Wavefunction, SymmetryMatrix::Operator>(wfn, ham, options);
             solver.run();
 //        energies = Davidson(m_hamiltonian, prototype);
         }

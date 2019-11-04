@@ -11,11 +11,10 @@ namespace run {
 
 
 template<class t_Wavefunction, class t_Operator>
-Davidson<t_Wavefunction, t_Operator>::Davidson(t_Wavefunction &&prototype,
-                                               t_Operator &&ham, Options &opt)
-        : prototype(std::make_shared<t_Wavefunction>(std::move(prototype))),
-          ham(std::make_shared<t_Operator>(std::move(ham))),
-          options(opt),
+Davidson<t_Wavefunction, t_Operator>::Davidson(const t_Wavefunction &prototype, const t_Operator &_ham, Options opt)
+        : prototype(prototype),
+          ham(_ham),
+          options(std::move(opt)),
           energyThreshold(options.parameter("TOL", 1e-13)),
           nState(options.parameter("NSTATE", 1)),
           maxIterations(options.parameter("MAXIT", 1000)),
@@ -35,7 +34,7 @@ void Davidson<t_Wavefunction, t_Operator>::message() {
         std::cout << "Davidson eigensolver, maximum iterations=" << maxIterations;
         std::cout << "; number of states=" << nState;
         std::cout << "; energy threshold=" << std::scientific << std::setprecision(1) << energyThreshold << std::endl;
-        std::cout << "size of Fock space=" << prototype->size() << std::endl;
+        std::cout << "size of Fock space=" << prototype.size() << std::endl;
         xout << std::fixed << std::setprecision(12);
     }
 }
@@ -58,7 +57,7 @@ void Davidson<t_Wavefunction, t_Operator>::printMatrix() {
         w.zero();
         w.set(i, 1.0);
         action.zero();
-        action.operatorOnWavefunction(*ham, w);
+        action.operatorOnWavefunction(ham, w);
         if (GA_Nodeid() == 0)
             std::cout << "{";
         for (size_t j = 0; j < n; ++j) {
@@ -144,7 +143,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
     if (id == 0) {
         std::cout << "Entered Davidson::prepareGuess()" << std::endl;
         auto nS = nState;
-        Wavefunction w = prototype->wavefunctionAt(0, ww[0].m_child_communicator);
+        Wavefunction w = prototype.wavefunctionAt(0, ww[0].m_child_communicator);
         auto nM = options.parameter("NMODAL", int(0));
         auto n = nS / nM;
         n += (n * nM == nS) ? 0 : 1;
@@ -155,10 +154,8 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
         modOptions.addParameter("BACKUP_FILE", "");
         modOptions.addParameter("RESTART_FILE", "");
         // Modify options to choose the correct number of electronic states
-        auto h = ham->elHam["Hel[0]"].get();
-        Davidson<Wavefunction, SymmetryMatrix::Operator> elecSolver(std::move(w),
-                                                                    SymmetryMatrix::Operator{*h},
-                                                                    modOptions);
+        auto h = ham.elHam.at("Hel[0]").get();
+        Davidson<Wavefunction, SymmetryMatrix::Operator> elecSolver(w, *h, modOptions);
         elecSolver.run();
         // Loop over electronic states, loop over modals, set each element of the electronic wavefunction
         for (unsigned int root = 0; root < nState; root++) {
@@ -191,19 +188,20 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
         for (unsigned int i = 0; i < nState; ++i) xout << solver.eigenvalues()[i] << ", ";
         xout << std::endl;
     }
+    std::cout << "Exit Davidson::run()" << std::endl;
 }
 
 template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::initialize() {
-    if (!diagonalH) diagonalH = std::make_shared<t_Wavefunction>(*prototype, 0);
+    if (!diagonalH) diagonalH = std::make_shared<t_Wavefunction>(prototype, 0);
     diagonalH->allocate_buffer();
-    diagonalH->diagonalOperator(*ham);
+    diagonalH->diagonalOperator(ham);
     diag_minlocN = diagonalH->minlocN(nState);
     for (auto i = 0ul; i < nState; ++i)
         diag_val_at_minlocN.push_back(diagonalH->at(diag_minlocN[i]));
     std::vector<int> roots(nState, 0);
     for (unsigned int root = 0; root < nState; root++) {
-        ww.emplace_back(*prototype, 0);
+        ww.emplace_back(prototype, 0);
         ww.back().allocate_buffer();
         ww.back().zero();
         auto n = diag_minlocN[root];
@@ -212,7 +210,7 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
                 throw std::logic_error("Davidson::initialize duplicate guess vector, n =" + std::to_string(n));
         roots[root] = n;
         ww.back().set(n, 1.0);
-        gg.emplace_back(*prototype, 0);
+        gg.emplace_back(prototype, 0);
         gg.back().allocate_buffer();
         gg.back().settilesize(
                 options.parameter("TILESIZE", std::vector<int>(1, -1)).at(0),
@@ -229,7 +227,7 @@ void Davidson<t_Wavefunction, t_Operator>::action() {
         g.zero();
         if (solver.active().at(k)) {
             auto prof = profiler->push("Hc");
-            g.operatorOnWavefunction(*ham, x, false);
+            g.operatorOnWavefunction(ham, x, false);
         }
     }
 }
@@ -243,7 +241,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::action() {
         auto &g = gg[k];
         if (solver.active().at(k)) {
             auto prof = profiler->push("Hc");
-            g.operatorOnWavefunction(*ham, x, false, false);
+            g.operatorOnWavefunction(ham, x, false, false);
         }
     }
     for (const auto &g: gg) g.sync();
