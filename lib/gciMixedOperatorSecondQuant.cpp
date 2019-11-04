@@ -13,9 +13,16 @@ inline auto _nMode(const Options &options) {return options.parameter("NMODE", 0)
 
 inline auto _nModal(const Options &options) {return options.parameter("NMODAL", 0);}
 
+inline auto _hdf5_fname(const Options &options) {
+    auto fname = options.parameter("HAM_HDF5", "");
+    if (fname.empty())
+        throw std::runtime_error("MixedOperatorSecondQuant::MixedOperatorSecondQuant() hdf5_fname is empty");
+    return fname;
+}
+
 MixedOperatorSecondQuant::MixedOperatorSecondQuant(const Options &options) :
         m_fcidump_f(_fcidump_f(options)),
-        hdf5_fname(options.parameter("MIXED_OP_HDF5", "")),
+        hdf5_fname(_hdf5_fname(options)),
         hid_file(utils::open_hdf5_file(hdf5_fname, gci::mpi_comm_compute, true)),
         includeHel(options.parameter("INCLUDE_HEL", 0)),
         includeLambda(options.parameter("INCLUDE_LAMBDA", 0)),
@@ -43,7 +50,7 @@ void MixedOperatorSecondQuant::initializeHel(const FCIdump &fcidump) {
         ++i_operator;
         std::shared_ptr<SymmetryMatrix::Operator> op;
         if (gci::parallel_rank == root) {
-            op = std::make_shared<SymmetryMatrix::Operator>(constructOperator(FCIdump(f)));
+            op = std::make_shared<SymmetryMatrix::Operator>(constructOperator(FCIdump(f), false));
             op->m_description = description;
             op->ensure_dirac();
         }
@@ -68,7 +75,7 @@ void MixedOperatorSecondQuant::initializeHel(const FCIdump &fcidump) {
                 ++i_operator;
                 std::shared_ptr<SymmetryMatrix::Operator> op;
                 if (gci::parallel_rank == root) {
-                    op = std::make_shared<SymmetryMatrix::Operator>(constructOperator(FCIdump(f)));
+                    op = std::make_shared<SymmetryMatrix::Operator>(constructOperator(FCIdump(f), false));
                     op->m_description = description;
                     op->ensure_dirac();
                 }
@@ -98,14 +105,14 @@ void MixedOperatorSecondQuant::initializeLambda(const FCIdump &fcidump) {
                                           + std::to_string(iModal + 1) + ","
                                           + std::to_string(jModal + 1) + ")";
                 auto op = std::make_shared<SymmetryMatrix::Operator>(
-                        constructOperatorAntisymm1el(FCIdump(f)));
+                        constructOperatorAntisymm1el(FCIdump(f), true));
                 op->m_description = description;
                 op->ensure_dirac();
                 auto p_op = PersistentOperator(op, description, 0, hid_file, true);
                 vibOp.append(p_op, vibExc);
                 if (iModal != jModal) {
                     op = std::make_shared<SymmetryMatrix::Operator>(
-                            constructOperatorAntisymm1el(FCIdump(f)) * (-1.));
+                            constructOperatorAntisymm1el(FCIdump(f), true) * (-1.));
                     op->ensure_dirac();
                     p_op = PersistentOperator(op, description, 0, hid_file, true);
                     vibOp.append(p_op, VibExcitation({{iMode, jModal, iModal}}));
@@ -121,7 +128,7 @@ void MixedOperatorSecondQuant::initializeK(const FCIdump &fcidump) {
     std::string f = fcidump.fileName() + "_K";
     if (utils::file_exists(f, "MixedOperatorSecondQuant::initializeK(): fcidump not found, " + f)) {
         auto description = std::string("K[0]");
-        auto op = std::make_shared<SymmetryMatrix::Operator>(constructK(FCIdump(f)));
+        auto op = std::make_shared<SymmetryMatrix::Operator>(constructK(FCIdump(f), true));
         op->m_description = description;
         op->ensure_dirac();
         auto p_op = PersistentOperator(op, description, 0, hid_file, true);
@@ -141,7 +148,7 @@ void MixedOperatorSecondQuant::initializeK(const FCIdump &fcidump) {
                 std::string description = name + "(" + std::to_string(iMode + 1) + ","
                                           + std::to_string(iModal + 1) + ","
                                           + std::to_string(jModal + 1) + ")";
-                auto op = std::make_shared<SymmetryMatrix::Operator>(constructK(FCIdump(f)));
+                auto op = std::make_shared<SymmetryMatrix::Operator>(constructK(FCIdump(f), true));
                 op->m_description = description;
                 op->ensure_dirac();
                 auto p_op = PersistentOperator(op, description, 0, hid_file, true);
@@ -163,7 +170,7 @@ void MixedOperatorSecondQuant::initializeD(const FCIdump &fcidump) {
         ++i_operator;
         std::shared_ptr<SymmetryMatrix::Operator> op;
         if (gci::parallel_rank == root) {
-            op = std::make_shared<SymmetryMatrix::Operator>(constructD(FCIdump(f)));
+            op = std::make_shared<SymmetryMatrix::Operator>(constructD(FCIdump(f), false));
             op->m_description = description;
             op->ensure_dirac();
         }
@@ -188,7 +195,7 @@ void MixedOperatorSecondQuant::initializeD(const FCIdump &fcidump) {
                 ++i_operator;
                 std::shared_ptr<SymmetryMatrix::Operator> op;
                 if (gci::parallel_rank == root) {
-                    op = std::make_shared<SymmetryMatrix::Operator>(constructD(FCIdump(f)));
+                    op = std::make_shared<SymmetryMatrix::Operator>(constructD(FCIdump(f), false));
                     op->m_description = description;
                     op->ensure_dirac();
                 }
@@ -224,14 +231,11 @@ VibOperator<double> MixedOperatorSecondQuant::constructHvib(const std::string &f
     return vibOp;
 }
 
-SymmetryMatrix::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(const FCIdump &dump) {
+SymmetryMatrix::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(const FCIdump &dump, bool collective) {
     std::vector<char> portableByteStream;
     int lPortableByteStream;
-    int rank = 0;
-#ifdef HAVE_MPI_H
-    MPI_Comm_rank(mpi_comm_compute, &rank);
-#endif
-    if (rank == 0) {
+    auto rank = gci::parallel_rank;
+    if (rank == 0 || !collective) {
         int verbosity = 0;
         std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
         SymmetryMatrix::dim_t dim(8);
@@ -281,30 +285,32 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(
                 result.m_O0 = value;
         }
         if (verbosity > 0) xout << result << std::endl;
-        portableByteStream = result.bytestream().data();
-        lPortableByteStream = portableByteStream.size();
+        if (collective) {
+            portableByteStream = result.bytestream().data();
+            lPortableByteStream = portableByteStream.size();
+        } else
+            return result;
     }
+    if (collective) {
 #ifdef HAVE_MPI_H
-    MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, mpi_comm_compute);
+        MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, mpi_comm_compute);
 #endif
-    char *buf = (rank == 0) ? portableByteStream.data() : (char *) malloc(lPortableByteStream);
+        char *buf = (rank == 0) ? portableByteStream.data() : (char *) malloc(lPortableByteStream);
 #ifdef HAVE_MPI_H
-    MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, mpi_comm_compute);
+        MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, mpi_comm_compute);
 #endif
-    class memory::bytestream bs(buf);
-    auto result = SymmetryMatrix::Operator::construct(bs);
-    if (rank != 0) free(buf);
-    return result;
+        class memory::bytestream bs(buf);
+        auto result = SymmetryMatrix::Operator::construct(bs);
+        if (rank != 0) free(buf);
+        return result;
+    }
 }
 
-SymmetryMatrix::Operator MixedOperatorSecondQuant::constructK(const FCIdump &dump) {
+SymmetryMatrix::Operator MixedOperatorSecondQuant::constructK(const FCIdump &dump, bool collective) {
     std::vector<char> portableByteStream;
     int lPortableByteStream;
-    int rank = 0;
-#ifdef HAVE_MPI_H
-    MPI_Comm_rank(mpi_comm_compute, &rank);
-#endif
-    if (rank == 0) {
+    int rank = gci::parallel_rank;
+    if (rank == 0 || !collective) {
         int verbosity = 0;
         std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
         SymmetryMatrix::dim_t dim(8);
@@ -357,30 +363,32 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructK(const FCIdump &dum
         if (verbosity > 1) xout << "int1:\n" << int1(result, 1) << std::endl;
         if (verbosity > 1) xout << "intJ:\n" << intJ(result, 1, 1) << std::endl;
         if (verbosity > 1) xout << "intK:\n" << intK(result, 1) << std::endl;
-        portableByteStream = result.bytestream().data();
-        lPortableByteStream = portableByteStream.size();
+        if (collective) {
+            portableByteStream = result.bytestream().data();
+            lPortableByteStream = portableByteStream.size();
+        } else
+            return result;
     }
+    if (collective) {
 #ifdef HAVE_MPI_H
-    MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, mpi_comm_compute);
+        MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, mpi_comm_compute);
 #endif
-    char *buf = (rank == 0) ? portableByteStream.data() : (char *) malloc(lPortableByteStream);
+        char *buf = (rank == 0) ? portableByteStream.data() : (char *) malloc(lPortableByteStream);
 #ifdef HAVE_MPI_H
-    MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, mpi_comm_compute);
+        MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, mpi_comm_compute);
 #endif
-    class memory::bytestream bs(buf);
-    auto result = SymmetryMatrix::Operator::construct(bs);
-    if (rank != 0) free(buf);
-    return result;
+        class memory::bytestream bs(buf);
+        auto result = SymmetryMatrix::Operator::construct(bs);
+        if (rank != 0) free(buf);
+        return result;
+    }
 }
 
-SymmetryMatrix::Operator MixedOperatorSecondQuant::constructD(const FCIdump &dump) {
+SymmetryMatrix::Operator MixedOperatorSecondQuant::constructD(const FCIdump &dump, bool collective) {
     std::vector<char> portableByteStream;
     int lPortableByteStream;
-    int rank = 0;
-#ifdef HAVE_MPI_H
-    MPI_Comm_rank(mpi_comm_compute, &rank);
-#endif
-    if (rank == 0) {
+    int rank = gci::parallel_rank;
+    if (rank == 0 || !collective) {
         int verbosity = 0;
         std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
         SymmetryMatrix::dim_t dim(8);
@@ -456,21 +464,25 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructD(const FCIdump &dum
         if (verbosity > 1) xout << "int1:\n" << int1(result, 1) << std::endl;
         if (verbosity > 1) xout << "intJ:\n" << intJ(result, 1, 1) << std::endl;
         if (verbosity > 1) xout << "intK:\n" << intK(result, 1) << std::endl;
-        portableByteStream = result.bytestream().data();
-        lPortableByteStream = portableByteStream.size();
+        if (collective) {
+            portableByteStream = result.bytestream().data();
+            lPortableByteStream = portableByteStream.size();
+            return result;
+        }
     }
+    if (collective) {
 #ifdef HAVE_MPI_H
-    MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, mpi_comm_compute);
+        MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, mpi_comm_compute);
 #endif
-    char *buf = (rank == 0) ? portableByteStream.data() : (char *) malloc(lPortableByteStream);
+        char *buf = (rank == 0) ? portableByteStream.data() : (char *) malloc(lPortableByteStream);
 #ifdef HAVE_MPI_H
-    MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, mpi_comm_compute);
+        MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, mpi_comm_compute);
 #endif
-    class memory::bytestream bs(buf);
-    auto result = SymmetryMatrix::Operator::construct(bs);
-    if (rank != 0) free(buf);
-//    std::cout << result.str() << std::endl;
-    return result;
+        class memory::bytestream bs(buf);
+        auto result = SymmetryMatrix::Operator::construct(bs);
+        if (rank != 0) free(buf);
+        return result;
+    }
 }
 
 bool MixedOperatorSecondQuant::connected(const HProduct &bra, const HProduct &ket) const {

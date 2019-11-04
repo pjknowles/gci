@@ -121,10 +121,10 @@ Eigen::MatrixXd intK(const SymmetryMatrix::Operator& hamiltonian, int spin);
    * and only the dimensions and parameters are loaded.
    * \param dump The raw buffer of a FCIdump.
    */
-  SymmetryMatrix::Operator constructOperator(const FCIdump &dump);
-  inline SymmetryMatrix::Operator constructOperator(FCIdump &&dump) {
-    return constructOperator(dump);
-  }
+  SymmetryMatrix::Operator constructOperator(const FCIdump &dump, bool collective=true);
+//  inline SymmetryMatrix::Operator constructOperator(FCIdump &&dump) {
+//    return constructOperator(dump);
+//  }
 
 /*!
  * \brief Build a Fock operator from the density arising from a single Slater determinant

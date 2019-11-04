@@ -1584,14 +1584,14 @@ Eigen::MatrixXd gci::intK(const SymmetryMatrix::Operator &hamiltonian, int spin)
     return result;
 }
 
-SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
+SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump, bool collective) {
   std::vector<char> portableByteStream;
   int lPortableByteStream;
   int rank = 0;
 #ifdef HAVE_MPI_H
   MPI_Comm_rank(mpi_comm_compute, &rank);
 #endif
-  if (rank == 0) {
+  if (rank == 0 || !collective) {
     int verbosity = 0;
     std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
     SymmetryMatrix::dim_t dim(8);
@@ -1663,20 +1663,25 @@ SymmetryMatrix::Operator gci::constructOperator(const FCIdump &dump) {
     if (verbosity > 1) xout << "int1:\n" << int1(result,1) << std::endl;
     if (verbosity > 1) xout << "intJ:\n" << intJ(result,1, 1) << std::endl;
     if (verbosity > 1) xout << "intK:\n" << intK(result,1) << std::endl;
-    portableByteStream = result.bytestream().data();
-    lPortableByteStream = portableByteStream.size();
+    if (collective) {
+        portableByteStream = result.bytestream().data();
+        lPortableByteStream = portableByteStream.size();
+    }
+    return result;
   }
+  if (collective) {
 #ifdef HAVE_MPI_H
-  MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, mpi_comm_compute);
+        MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, mpi_comm_compute);
 #endif
-  char *buf = (rank == 0) ? portableByteStream.data() : (char *) malloc(lPortableByteStream);
+        char *buf = (rank == 0) ? portableByteStream.data() : (char *) malloc(lPortableByteStream);
 #ifdef HAVE_MPI_H
-  MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, mpi_comm_compute);
+        MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, mpi_comm_compute);
 #endif
-  class memory::bytestream bs(buf);
-  auto result = SymmetryMatrix::Operator::construct(bs);
-  if (rank != 0) free(buf);
-  return result;
+        class memory::bytestream bs(buf);
+        auto result = SymmetryMatrix::Operator::construct(bs);
+        if (rank != 0) free(buf);
+        return result;
+  }
 }
 
 void gci::FCIDump(const SymmetryMatrix::Operator& op, const std::string filename, std::vector<int> orbital_symmetries) {
