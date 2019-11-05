@@ -66,7 +66,7 @@ void MixedWavefunction::accumulate(int iVib, Wavefunction &wfn, double scaling_c
 
 void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &ham, const MixedWavefunction &w,
                                                bool parallel_stringset, bool with_sync) {
-    if (with_sync) 
+    if (with_sync)
         DivideTasks(1000000000, 1, 1, m_communicator);
     auto prof = profiler->push("MixedWavefunction::operatorOnWavefunction");
     auto res = Wavefunction{m_prototype, 0, m_child_communicator};
@@ -93,9 +93,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             res.zero();
             for (const auto &vibEl : ham.Hvib.tensor) {
                 auto val = vibEl.second.oper;
-                auto vibExc = VibExcitation{vibEl.second.exc};
-                vibExc.conjugate();
-                auto ket = bra.excite(vibExc);
+                auto ket = bra.excite(vibEl.second.exc);
                 if (!ket.withinSpace(m_vibSpace)) continue;
                 auto iKet = m_vibBasis.index(ket);
                 copy_to_local(w.m_ga_handle, iKet, ketWfn);
@@ -115,9 +113,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
                 const auto &vibTensor = mixedTerm.second;
                 for (const auto &vibEl : vibTensor.tensor) {
                     auto &p_op = vibEl.second.oper;
-                    auto vibExc = VibExcitation{vibEl.second.exc};
-                    vibExc.conjugate();
-                    auto connected_ket = bra.excite(vibExc);
+                    auto connected_ket = bra.excite(vibEl.second.exc);
                     if (connected_ket != ket) continue;
                     auto op = p_op.get();
                     res.operatorOnWavefunction(*op, ketWfn, parallel_stringset);
