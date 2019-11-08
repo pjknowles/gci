@@ -17,6 +17,8 @@ hid_t open_hdf5_file(const std::string &fname, MPI_Comm communicator, bool creat
 //! checks if hdf5 file is open using its id
 bool hdf5_file_open(hid_t file_id);
 
+bool hdf5_dataset_exists(hid_t location, const std::string &dataset_name);
+
 //! opens or creates a dataset in hdf5 file
 hid_t open_or_create_hdf5_dataset(const hid_t &location, const std::string &dataset_name, const hid_t &dtype_id,
                                   const size_t &length);

@@ -30,12 +30,18 @@ hid_t open_hdf5_file(const std::string &fname, MPI_Comm communicator, bool creat
     return id;
 }
 
-bool hdf5_file_open(hid_t file_id) {return H5Fget_obj_count(file_id, H5F_OBJ_FILE) > 0;}
+bool hdf5_file_open(hid_t file_id) {
+    return H5Fget_obj_count(file_id, H5F_OBJ_FILE) > 0;
+}
+
+bool hdf5_dataset_exists(hid_t location, const std::string &dataset_name) {
+    return H5Lexists(location, dataset_name.c_str(), H5P_DEFAULT) > 0;
+}
 
 hid_t open_or_create_hdf5_dataset(const hid_t &location, const std::string &dataset_name, const hid_t &dtype_id,
                                   const size_t &length) {
     hid_t dataset;
-    if (H5Lexists(location, dataset_name.c_str(), H5P_DEFAULT) > 0)
+    if (hdf5_dataset_exists(location, dataset_name))
         dataset = H5Dopen(location, dataset_name.c_str(), H5P_DEFAULT);
     else {
         hsize_t dimensions[1] = {length};
