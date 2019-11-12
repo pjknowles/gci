@@ -4,6 +4,7 @@
 #include "gciUtils.h"
 
 #include <iomanip>
+#include <fstream>
 #include <ga.h>
 
 namespace gci {
@@ -142,26 +143,54 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
     auto id = GA_Nodeid();
     if (id == 0) {
         std::cout << "Entered Davidson::prepareGuess()" << std::endl;
-        auto nS = nState;
         Wavefunction w = prototype.wavefunctionAt(0, ww[0].m_child_communicator);
+        // get number of electronic states from options
         auto nM = options.parameter("NMODAL", int(0));
-        auto n = nS / nM;
-        n += (n * nM == nS) ? 0 : 1;
-        n += (n == 1 && nS > 3 && w.size() > 3) ? 2 : 0;
+        int nElSt = nState / nM + nState % nM ? 1 : 0;
+        nElSt = options.parameter("NELSTATE_INIT", nElSt); // number of electronic states to search for
         auto modOptions = Options(options);
-        modOptions.addParameter("NSTATE", (int) n);
+        modOptions.addParameter("NSTATE", nElSt);
         modOptions.addParameter("MAXIT", (int) 100);
+        modOptions.addParameter("TOL", options.parameter("TOLGUESS", energyThreshold));
         modOptions.addParameter("BACKUP_FILE", "");
         modOptions.addParameter("RESTART_FILE", "");
-        // Modify options to choose the correct number of electronic states
         auto h = ham.elHam.at("Hel[0]").get();
         Davidson<Wavefunction, SymmetryMatrix::Operator> elecSolver(w, *h, modOptions);
         elecSolver.run();
-        // Loop over electronic states, loop over modals, set each element of the electronic wavefunction
-        for (unsigned int root = 0; root < nState; root++) {
-            auto ind_elec_state = root / nM;
-            auto iVib = root - ind_elec_state * nM;
-            ww[root].put(iVib, elecSolver.ww[ind_elec_state]);
+        // get initial guess vectors from options
+        auto nElStG = options.parameter("NELSTATE_GUESS",
+                                        nElSt); // number of lowest energy electronic states to construct the guess from
+        int guess_size = nState * nM * nElStG;
+        std::vector<double> init_guess;
+        auto guess_file = options.parameter("INIT_GUESS", std::string(""));
+        if (guess_file.empty()) {
+            init_guess.resize(guess_size, 0.);
+            for (auto i = 0ul; i < nState; ++i) {
+                auto iVibSt = i % nM;
+                auto iElSt = i / nM;
+                init_guess[i * nM * nElStG + iVibSt * nElStG + iElSt] = 1.0;
+            }
+        } else {
+            xout << "Read guess from file, " << guess_file << std::endl;
+            auto input = std::ifstream(guess_file);
+            std::string val;
+            while (std::getline(input, val))
+                if (!val.empty()) {
+                    init_guess.push_back(std::stod(val));
+                }
+            if (init_guess.size() != guess_size) GA_Error((char *) "initial guess vector is of the wrong size", 0);
+        }
+        for (auto i = 0ul; i < nState; ++i) {
+            for (int iVibSt = 0; iVibSt < nM; ++iVibSt) {
+                auto ind = i * nM * nElStG + iVibSt * nElStG;
+                auto weight = init_guess.at(ind);
+                auto wfn = weight * elecSolver.ww[0];
+                for (auto j = 1ul; j < nElStG; ++j) {
+                    weight = init_guess.at(ind + j);
+                    wfn += weight * elecSolver.ww[0];
+                }
+                ww[i].put(iVibSt, wfn);
+            }
         }
         std::cout << "Exit Davidson::prepareGuess()" << std::endl;
     }
