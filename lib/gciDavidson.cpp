@@ -187,7 +187,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
                 auto wfn = weight * elecSolver.ww[0];
                 for (auto j = 1ul; j < nElStG; ++j) {
                     weight = init_guess.at(ind + j);
-                    wfn += weight * elecSolver.ww[0];
+                    wfn += weight * elecSolver.ww[j];
                 }
                 ww[i].put(iVibSt, wfn);
             }
