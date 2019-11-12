@@ -47,7 +47,7 @@ namespace gci {
  *
  *
  */
-class MixedWavefunction : virtual public Array {
+class MixedWavefunction : virtual public Array, public Printable {
 public:
     MPI_Comm m_child_communicator; //!< Communicator for children Wavefunction objects
 protected:
@@ -118,6 +118,9 @@ public:
 //    bool compatible(const Array &other) const override;
 
     void settilesize(int a, int b, int c) { };
+
+    std::string str(int v = 0, unsigned int c = 0) const override {return "";}
+
 };  // class MixedWavefunction
 
 }  // namespace gci
