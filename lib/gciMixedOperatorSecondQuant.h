@@ -30,17 +30,13 @@ protected:
     std::string hdf5_fname; //!< file name for hdf5 where large eletronic operators are stored
     bool restart; //!< operator is already stored on the hdf5, no overwriting is done
     hid_t hid_file; //!< id of the hdf5 file
-    bool includeHel;
-    bool includeLambda;
-    bool includeK;
-    bool includeD;
+    std::string m_description; //!< desctiption of the Hamiltonian
 public:
     using hel_t = PersistentOperator;
     int nMode; //!< Number of vibrational modes
     int nModal; //!< Number of modals per mode (for now assumed the same for each mode)
-//    hel_t Hel; //!< Purely electronic terms
     VibOperator<double> Hvib;//!< Purely vibrational term
-    std::map<std::string, hel_t> elHam; //!< Purely electronic terms from kinetic energy coupling
+    std::map<std::string, hel_t> elHam; //!< Purely electronic terms
     std::map<std::string, VibOperator<hel_t >> mixedHam;//!< Mixed electronic-vibrational terms
 
     explicit MixedOperatorSecondQuant(const Options &options);
@@ -49,6 +45,8 @@ public:
      * @brief Checks if bra and ket vibrational basis are connected by the mixed Hamiltonian
      */
     bool connected(const HProduct &bra, const HProduct &ket) const;
+
+    std::string description() {return m_description;}
 
 protected:
 
@@ -64,11 +62,11 @@ protected:
     /*!
      * @brief From FCIdump file generates antisymmetric electronic operator
      */
-    static SymmetryMatrix::Operator constructOperatorAntisymm1el(const FCIdump &dump, bool collective=true);
+    static SymmetryMatrix::Operator constructOperatorAntisymm1el(const FCIdump &dump, bool collective = true);
 
-    static SymmetryMatrix::Operator constructK(const FCIdump &dump, bool collective=true);
+    static SymmetryMatrix::Operator constructK(const FCIdump &dump, bool collective = true);
 
-    static SymmetryMatrix::Operator constructD(const FCIdump &dump, bool collective=true);
+    static SymmetryMatrix::Operator constructD(const FCIdump &dump, bool collective = true);
 
     void initializeHel(const FCIdump &fcidump);
 

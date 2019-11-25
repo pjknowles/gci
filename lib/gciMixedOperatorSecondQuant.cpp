@@ -26,18 +26,17 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const Options &options) :
         hdf5_fname(_hdf5_fname(options)),
         restart(!options.parameter("HAM_HDF5_RESTART", "").empty()),
         hid_file(utils::open_hdf5_file(hdf5_fname, gci::mpi_comm_compute, !restart)),
-        includeHel(options.parameter("INCLUDE_HEL", 0)),
-        includeLambda(options.parameter("INCLUDE_LAMBDA", 0)),
-        includeK(options.parameter("INCLUDE_K", 0)),
-        includeD(options.parameter("INCLUDE_D", 0)),
         nMode(_nMode(options)),
         nModal(_nModal(options)),
-        Hvib(constructHvib(_fcidump_f(options), _nMode(options), _nModal(options))) {
+        Hvib(constructHvib(m_fcidump_f, nMode, nModal)) {
     FCIdump fcidump(m_fcidump_f);
-    if (includeHel) initializeHel(fcidump);
-    if (includeLambda) initializeLambda(fcidump);
-    if (includeK) initializeK(fcidump);
-    if (includeD) initializeD(fcidump);
+    if (options.parameter("INCLUDE_HEL", 0)) initializeHel(fcidump);
+    if (options.parameter("INCLUDE_LAMBDA", 0)) initializeLambda(fcidump);
+    if (options.parameter("INCLUDE_K", 0)) initializeK(fcidump);
+    if (options.parameter("INCLUDE_D", 0)) initializeD(fcidump);
+    if (options.parameter("POLARITONIC", 0)) {
+        m_description = "Polaritonic"
+    }
 }
 
 MixedOperatorSecondQuant::~MixedOperatorSecondQuant() {H5Fclose(hid_file);}
