@@ -7,6 +7,8 @@
 
 namespace gci {
 
+using ns_VibOperator::parity_t;
+
 inline auto _fcidump_f(const Options &options) {return options.parameter("FCIDUMP", "");}
 
 inline auto _nMode(const Options &options) {return options.parameter("NMODE", 0);}
@@ -28,14 +30,26 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const Options &options) :
         hid_file(utils::open_hdf5_file(hdf5_fname, gci::mpi_comm_compute, !restart)),
         nMode(_nMode(options)),
         nModal(_nModal(options)),
-        Hvib(constructHvib(m_fcidump_f, nMode, nModal)) {
+        Hvib(nMode, nModal, parity_t::none, parity_t::even, "Hvib") {
     FCIdump fcidump(m_fcidump_f);
-    if (options.parameter("INCLUDE_HEL", 0)) initializeHel(fcidump);
-    if (options.parameter("INCLUDE_LAMBDA", 0)) initializeLambda(fcidump);
-    if (options.parameter("INCLUDE_K", 0)) initializeK(fcidump);
-    if (options.parameter("INCLUDE_D", 0)) initializeD(fcidump);
     if (options.parameter("POLARITONIC", 0)) {
-        m_description = "Polaritonic"
+        m_description = "Polaritonic Hamiltonian";
+        auto freq = options.parameter("FREQ", std::vector<double>{});
+        if (freq.empty()) throw std::runtime_error("HO frequency not specified for polaritonic calculation");
+        if (freq.size() > 1)
+            throw std::runtime_error("More than 1 frequency is specified. Only 1 cavity mode is currently supported.");
+        constructHvib(Hvib, nMode, nModal, freq);
+        auto gamma = options.parameter("GAMMA", std::vector<double>{});
+        if (gamma.empty()) throw std::runtime_error("HO frequency not specified for polaritonic calculation");
+        if (gamma.size() != 3) throw std::runtime_error("Polaritonic coupling must be a 3D vector");
+        constructDMcoupling(elHam2, mixedHam, m_fcidump_f, gamma, freq, nMode, nModal);
+    } else {
+        m_description = "Non-adiabatic molecular Hamiltonian";
+        constructHvib(Hvib, m_fcidump_f, nMode, nModal);
+        if (options.parameter("INCLUDE_HEL", 0)) initializeHel(fcidump);
+        if (options.parameter("INCLUDE_LAMBDA", 0)) initializeLambda(fcidump);
+        if (options.parameter("INCLUDE_K", 0)) initializeK(fcidump);
+        if (options.parameter("INCLUDE_D", 0)) initializeD(fcidump);
     }
 }
 
@@ -67,8 +81,8 @@ void MixedOperatorSecondQuant::initializeHel(const FCIdump &fcidump) {
         elHam.insert({description, std::move(p_op)});
     }
     std::string name = "Hel[1]";
-    auto vibOp = VibOperator<hel_t>(nMode, nModal, ns_VibOperator::parity_t::none,
-                                    ns_VibOperator::parity_t::even, name);
+    auto vibOp = VibOperator<hel_t>(nMode, nModal, parity_t::none,
+                                    parity_t::even, name);
     for (int iMode = 0; iMode < nMode; ++iMode) {
         for (int iModal = 0; iModal < nModal; ++iModal) {
             for (int jModal = 0; jModal <= iModal; ++jModal) {
@@ -94,8 +108,8 @@ void MixedOperatorSecondQuant::initializeHel(const FCIdump &fcidump) {
 
 void MixedOperatorSecondQuant::initializeLambda(const FCIdump &fcidump) {
     std::string f, name = "Lambda[1]";
-    auto vibOp = VibOperator<hel_t>(nMode, nModal, ns_VibOperator::parity_t::none,
-                                    ns_VibOperator::parity_t::even, name);
+    auto vibOp = VibOperator<hel_t>(nMode, nModal, parity_t::none,
+                                    parity_t::even, name);
     for (int iMode = 0; iMode < nMode; ++iMode) {
         for (int iModal = 0; iModal < nModal; ++iModal) {
             for (int jModal = 0; jModal < iModal; ++jModal) {
@@ -138,8 +152,8 @@ void MixedOperatorSecondQuant::initializeK(const FCIdump &fcidump) {
         elHam.insert({"K[0]", p_op});
     }
     std::string name = "K[1]";
-    auto vibOp = VibOperator<hel_t>(nMode, nModal, ns_VibOperator::parity_t::none,
-                                    ns_VibOperator::parity_t::even, name);
+    auto vibOp = VibOperator<hel_t>(nMode, nModal, parity_t::none,
+                                    parity_t::even, name);
     for (int iMode = 0; iMode < nMode; ++iMode) {
         for (int iModal = 0; iModal < nModal; ++iModal) {
             for (int jModal = 0; jModal <= iModal; ++jModal) {
@@ -175,8 +189,8 @@ void MixedOperatorSecondQuant::initializeD(const FCIdump &fcidump) {
         elHam.insert({description, std::move(p_op)});
     }
     std::string name = "D[1]";
-    auto vibOp = VibOperator<hel_t>(nMode, nModal, ns_VibOperator::parity_t::none,
-                                    ns_VibOperator::parity_t::even, name);
+    auto vibOp = VibOperator<hel_t>(nMode, nModal, parity_t::none,
+                                    parity_t::even, name);
     for (int iMode = 0; iMode < nMode; ++iMode) {
         for (int iModal = 0; iModal < nModal; ++iModal) {
             for (int jModal = 0; jModal <= iModal; ++jModal) {
@@ -201,8 +215,7 @@ void MixedOperatorSecondQuant::initializeD(const FCIdump &fcidump) {
     mixedHam.insert({name, vibOp});
 }
 
-VibOperator<double> MixedOperatorSecondQuant::constructHvib(const std::string &fcidump_name, int nmode, int nmodal) {
-    VibOperator<double> vibOp(nmode, nmodal, ns_VibOperator::parity_t::none, ns_VibOperator::parity_t::even, "Hvib");
+void constructHvib(VibOperator<double> &Hvib, const std::string &fcidump_name, int nmode, int nmodal) {
     FCIdump dump(fcidump_name + "_Hvib");
     dump.rewind();
     double value;
@@ -213,13 +226,62 @@ VibOperator<double> MixedOperatorSecondQuant::constructHvib(const std::string &f
             throw std::logic_error("Hvib file in the wrong format");
         if (jModal > nmodal || kModal > nmodal) continue;
         VibExcitation vibExc({{iMode - 1, jModal - 1, kModal - 1}});
-        vibOp.append(value, vibExc);
+        Hvib.append(value, vibExc);
         if (jModal != kModal) {
             vibExc.conjugate();
-            vibOp.append(value, vibExc);
+            Hvib.append(value, vibExc);
         }
     }
-    return vibOp;
+}
+
+void constructHvib(VibOperator<double> &Hvib, int nmode, int nmodal, std::vector<double> freq) {
+    for (int iMode = 0; iMode < nmode; ++iMode) {
+        auto w = freq[iMode];
+        for (int iModal = 0; iModal < nmodal; ++iModal) {
+            auto v = w * (iModal + 0.5);
+            Hvib.append(v, VibExcitation({{iMode, iModal, iModal}}));
+        }
+    }
+}
+
+void constructDMcoupling(std::map<std::string, MixedOperatorSecondQuant::hel_t> &elHam2,
+                         std::map<std::string, VibOperator<MixedOperatorSecondQuant::hel_t >> &mixedHam,
+                         const std::string &fcidump_f, const std::vector<double> &gamma,
+                         const std::vector<double> &freq, int nmode, int nmodal) {
+    assert(freq.size() == 1);
+    assert(gamma.size() == 3);
+    assert(nmode == 1);
+    std::shared_ptr<SymmetryMatrix::Operator> D;
+    auto xyz = std::vector<std::string>{"X", "Y", "Z"};
+    for (size_t i = 0; i < 3; ++i) {
+        auto f = fcidump_f + "_DM_" + xyz[i];
+        auto dg = MixedOperatorSecondQuant::constructK(FCIdump(f), true);
+        dg *= gamma[i];
+        if (i == 0)
+            D = std::make_shared<SymmetryMatrix::Operator>(dg);
+        else
+            *D.get() += dg;
+    }
+    // elHam2 = (g.D)^2 / w
+    auto D2 = std::make_shared<SymmetryMatrix::Operator>(*D.get());
+    *D2.get() *= std::sqrt(freq[0]);
+    std::string description = "DM self-energy";
+    elHam2.insert({description, PersistentOperator(D2, description, 0, -1, true)});
+    // mixedHam = (g.D) (a_dg + a)
+    // <n| a_dg + a |m> = sqrt(m+1) delta(n,m+1) + sqrt(n+1) delta(n+1,m)
+    std::string name = "DM-photon coupling";
+    auto vibOp = VibOperator<MixedOperatorSecondQuant::hel_t>(nmode, nmodal, parity_t::none, parity_t::even, name);
+    for (int i = 1; i < nmodal; ++i) {
+        auto v = std::sqrt(i);
+        auto Dnm = std::make_shared<SymmetryMatrix::Operator>(*D.get());
+        *Dnm.get() *= v;
+        description = "DM(" + std::to_string(1) + "," + std::to_string(i) + "," + std::to_string(i + 1) + ")";
+        vibOp.append(PersistentOperator(Dnm, description, 0, -1, true), VibExcitation({{0, i - 1, i}}));
+        description = "DM(" + std::to_string(1) + "," + std::to_string(i + 1) + "," + std::to_string(i) + ")";
+        vibOp.append(PersistentOperator(Dnm, description, 0, -1, true), VibExcitation({{0, i, i - 1}}));
+    }
+    mixedHam.insert({name, vibOp});
+
 }
 
 SymmetryMatrix::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(const FCIdump &dump, bool collective) {
