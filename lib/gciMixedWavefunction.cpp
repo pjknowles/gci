@@ -87,6 +87,19 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             }
             accumulate(iBra, res);
         }
+        // Purely electronic operators applied twice
+        if (NextTask(m_communicator)) {
+            auto p = profiler->push("Hel2");
+            copy_to_local(w.m_ga_handle, iBra, ketWfn);
+            res.zero();
+            for (const auto &hel : ham.elHam2) {
+                auto p = profiler->push(hel.first);
+                auto op = hel.second.get();
+                res.operatorOnWavefunction(*op, ketWfn, parallel_stringset);
+                res.operatorOnWavefunction(*op, ketWfn, parallel_stringset);
+            }
+            accumulate(iBra, res);
+        }
         // Purely vibrational operators
         if (NextTask(m_communicator)) {
             auto p = profiler->push("Hvib");
