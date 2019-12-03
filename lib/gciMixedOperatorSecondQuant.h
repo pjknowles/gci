@@ -66,7 +66,7 @@ public:
 
     static SymmetryMatrix::Operator constructD(const FCIdump &dump, bool collective = true);
 
-    void initializeHel(const FCIdump &fcidump);
+    void initializeHel(const FCIdump &fcidump, bool h0_only=false);
 
     void initializeLambda(const FCIdump &fcidump);
 

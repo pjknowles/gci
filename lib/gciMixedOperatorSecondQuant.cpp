@@ -34,6 +34,7 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const Options &options) :
     FCIdump fcidump(m_fcidump_f);
     if (options.parameter("POLARITONIC", 0)) {
         m_description = "Polaritonic Hamiltonian";
+        initializeHel(fcidump,true);
         auto freq = options.parameter("FREQ", std::vector<double>{});
         if (freq.empty()) throw std::runtime_error("HO frequency not specified for polaritonic calculation");
         if (freq.size() > 1)
@@ -70,7 +71,7 @@ inline PersistentOperator create_persistentoperator(const std::string &fcidump, 
     return p_op;
 }
 
-void MixedOperatorSecondQuant::initializeHel(const FCIdump &fcidump) {
+void MixedOperatorSecondQuant::initializeHel(const FCIdump &fcidump, bool h0_only) {
     int i_operator = 0;
     std::string f = fcidump.fileName();
     if (utils::file_exists(f, "MixedOperatorSecondQuant::initializeHel(): fcidump not found, " + f)) {
@@ -80,6 +81,7 @@ void MixedOperatorSecondQuant::initializeHel(const FCIdump &fcidump) {
         auto p_op = create_persistentoperator(f, restart, description, hid_file, root, constructOperator);
         elHam.insert({description, std::move(p_op)});
     }
+    if (h0_only) return;
     std::string name = "Hel[1]";
     auto vibOp = VibOperator<hel_t>(nMode, nModal, parity_t::none,
                                     parity_t::even, name);
@@ -238,7 +240,7 @@ void constructHvib(VibOperator<double> &Hvib, int nmode, int nmodal, std::vector
     for (int iMode = 0; iMode < nmode; ++iMode) {
         auto w = freq[iMode];
         for (int iModal = 0; iModal < nmodal; ++iModal) {
-            auto v = w * (iModal + 0.5);
+            auto v = w * (iModal);
             Hvib.append(v, VibExcitation({{iMode, iModal, iModal}}));
         }
     }
