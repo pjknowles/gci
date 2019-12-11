@@ -70,8 +70,13 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
         DivideTasks(1000000000, 1, 1, m_communicator);
     auto prof = profiler->push("MixedWavefunction::operatorOnWavefunction");
     auto res = Wavefunction{m_prototype, 0, m_child_communicator};
+    std::unique_ptr<Wavefunction> res2;
     auto ketWfn = Wavefunction{m_prototype, 0, m_child_communicator};
     res.allocate_buffer();
+    if (!ham.elHam2.empty()){
+        res2 = std::make_unique<Wavefunction>(m_prototype, 0, m_child_communicator);
+        res2->allocate_buffer();
+    }
     ketWfn.allocate_buffer();
     for (const auto &bra : m_vibBasis) {
         auto iBra = m_vibBasis.index(bra);
@@ -95,8 +100,9 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             for (const auto &hel : ham.elHam2) {
                 auto p = profiler->push(hel.first);
                 auto op = hel.second.get();
-                res.operatorOnWavefunction(*op, ketWfn, parallel_stringset);
-                res.operatorOnWavefunction(*op, ketWfn, parallel_stringset);
+                res2->zero();
+                res2->operatorOnWavefunction(*op, ketWfn, parallel_stringset);
+                res.operatorOnWavefunction(*op, *res2, parallel_stringset);
             }
             accumulate(iBra, res);
         }

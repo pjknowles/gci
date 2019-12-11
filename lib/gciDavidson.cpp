@@ -136,6 +136,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
         return;
     }
     // Currently assumes only 1 mode
+    if (options.parameter("NOGUESS", int(0))) return;
     auto prof = profiler->push("prepareGuess");
     auto nMode = options.parameter("NMODE", int(0));
     if (nMode != 1) return;
