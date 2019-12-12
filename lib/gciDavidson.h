@@ -7,6 +7,7 @@
 #include <hdf5.h>
 
 #include "gci.h"
+#include "gciWavefunction.h"
 #include "gciOptions.h"
 
 /*
@@ -77,12 +78,17 @@ public:
     ParameterVectorSet ww; //!< Set of current solutions
     ParameterVectorSet gg; //!< Set of residual vectors
 protected:
+    std::shared_ptr<std::vector<Wavefunction>> ref_elec_states; //!< Set of reference electronic states
     void printMatrix();
     void message();
-    //!@brief Initializes containers necessary for running the calculation
+    //! Initializes containers necessary for running the calculation
     void initialize();
-    //! @brief Prepares an initial guess. For Mixed wavefunction it entails solving the electronic CI problem
+    //! Prepares an initial guess. For Mixed wavefunction it entails solving the electronic CI problem
     void prepareGuess();
+    //! Prepares reference electronic states
+    void reference_electronic_states();
+    //! Run analysis of solutions
+    void analysis();
     //! Apply the Hamiltonian on the current solution
     void action();
     //! Get the new vector, $r = A u - \lambda u$
