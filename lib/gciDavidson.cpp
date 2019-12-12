@@ -74,21 +74,6 @@ void Davidson<t_Wavefunction, t_Operator>::printMatrix() {
 }
 
 template<class t_Wavefunction>
-void write_vec(const t_Wavefunction &w, const std::string &message) {
-    size_t n = w.size();
-
-    if (GA_Nodeid() == 0)
-        std::cout << message << "  {";
-    for (size_t i = 0; i < n; ++i) {
-        auto v = w.at(i);
-        if (GA_Nodeid() == 0)
-            std::cout << v << ", ";
-    }
-    if (GA_Nodeid() == 0)
-        std::cout << "}" << std::endl;
-}
-
-template<class t_Wavefunction>
 typename std::enable_if<!std::is_base_of<Array, t_Wavefunction>::value>::type
 davidson_read_write_array(t_Wavefunction &w, const std::string &fname, unsigned int i, hid_t id, bool save) { }
 
@@ -127,6 +112,34 @@ void davidson_read_write_wfn(std::vector<t_Wavefunction> &ww, const std::string 
 }
 
 template<class t_Wavefunction, class t_Operator>
+void Davidson<t_Wavefunction, t_Operator>::reference_electronic_states() { }
+
+template<>
+void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::reference_electronic_states() {
+    if (ref_elec_states) return;
+    Wavefunction w = prototype.wavefunctionAt(0, ww[0].m_child_communicator);
+    // get number of electronic states from options
+    auto nM = options.parameter("NMODAL", int(0));
+    int nElSt = nState / nM + nState % nM ? 1 : 0;
+    nElSt = options.parameter("NELSTATE_INIT", nElSt); // number of electronic states to search for
+    auto modOptions = Options(options);
+    modOptions.addParameter("NSTATE", nElSt);
+    modOptions.addParameter("MAXIT", (int) 100);
+    modOptions.addParameter("TOL", options.parameter("TOLGUESS", energyThreshold));
+    modOptions.addParameter("BACKUP_FILE", "");
+    modOptions.addParameter("RESTART_FILE", "");
+    auto h = ham.elHam.at("Hel[0]").get();
+    Davidson<Wavefunction, SymmetryMatrix::Operator> elecSolver(w, *h, modOptions);
+    elecSolver.run();
+    ref_elec_states = std::make_shared<std::vector<Wavefunction>>(elecSolver.ww);
+    // normalise
+    for (auto &w_ref : *ref_elec_states) {
+        auto ov = w_ref.dot(w_ref);
+        w_ref *= 1. / std::sqrt(ov);
+    }
+}
+
+template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::prepareGuess() { }
 
 template<>
@@ -144,20 +157,11 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
     auto id = GA_Nodeid();
     if (id == 0) {
         std::cout << "Entered Davidson::prepareGuess()" << std::endl;
-        Wavefunction w = prototype.wavefunctionAt(0, ww[0].m_child_communicator);
         // get number of electronic states from options
         auto nM = options.parameter("NMODAL", int(0));
         int nElSt = nState / nM + nState % nM ? 1 : 0;
         nElSt = options.parameter("NELSTATE_INIT", nElSt); // number of electronic states to search for
-        auto modOptions = Options(options);
-        modOptions.addParameter("NSTATE", nElSt);
-        modOptions.addParameter("MAXIT", (int) 100);
-        modOptions.addParameter("TOL", options.parameter("TOLGUESS", energyThreshold));
-        modOptions.addParameter("BACKUP_FILE", "");
-        modOptions.addParameter("RESTART_FILE", "");
-        auto h = ham.elHam.at("Hel[0]").get();
-        Davidson<Wavefunction, SymmetryMatrix::Operator> elecSolver(w, *h, modOptions);
-        elecSolver.run();
+        reference_electronic_states();
         // get initial guess vectors from options
         auto nElStG = options.parameter("NELSTATE_GUESS",
                                         nElSt); // number of lowest energy electronic states to construct the guess from
@@ -185,10 +189,10 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
             for (int iVibSt = 0; iVibSt < nM; ++iVibSt) {
                 auto ind = i * nM * nElStG + iVibSt * nElStG;
                 auto weight = init_guess.at(ind);
-                auto wfn = weight * elecSolver.ww[0];
+                auto wfn = weight * ref_elec_states->at(0);
                 for (auto j = 1ul; j < nElStG; ++j) {
                     weight = init_guess.at(ind + j);
-                    wfn += weight * elecSolver.ww[j];
+                    wfn += weight * ref_elec_states->at(j);
                 }
                 ww[i].put(iVibSt, wfn);
             }
@@ -199,11 +203,78 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
 }
 
 template<class t_Wavefunction, class t_Operator>
+void Davidson<t_Wavefunction, t_Operator>::analysis() { }
+
+template<>
+void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::analysis() {
+    if (!ref_elec_states) return;
+    auto nM = options.parameter("NMODAL", int(0));
+    auto nRefState = ref_elec_states->size();
+    // normalise solutions
+    for (auto &w : ww) {
+        auto ov = w.dot(w);
+        w *= 1. / std::sqrt(ov);
+    }
+    if (GA_Nodeid() == 0) {
+        std::cout << "Analysis:" << std::endl;
+        // transform to basis of BO electronic states
+        auto ww_bo = std::vector<std::vector<double>>(nState);
+        for (size_t i = 0; i < nState; ++i) {
+            for (size_t j_vib = 0; j_vib < nM; ++j_vib) {
+                auto w = ww[i].wavefunctionAt(j_vib, ww[i].m_communicator);
+                for (const auto &w_ref : *ref_elec_states) {
+                    auto ov = w.dot(w_ref);
+                    ww_bo[i].push_back(ov);
+                }
+            }
+        }
+        // Assignment of electronic states and bosonic states
+        // diagonal elements of electronic density matrix
+        auto electronic_assignment = std::vector<std::vector<double>>(nState);
+        for (size_t i = 0; i < nState; ++i) {
+            for (size_t n = 0; n < nRefState; ++n) {
+                double rho = 0;
+                for (size_t j_vib = 0; j_vib < nM; ++j_vib) {
+                    rho += std::pow(ww_bo[i][j_vib * nRefState + n], 2.);
+                }
+                electronic_assignment[i].push_back(rho);
+            }
+        }
+        // Assignment of bosonic state
+        // diagonal elements of bosonic density matrix
+        auto bosonic_assignment = std::vector<std::vector<double>>(nState);
+        for (size_t i = 0; i < nState; ++i) {
+            for (size_t j_vib = 0; j_vib < nM; ++j_vib) {
+                auto w = ww[i].wavefunctionAt(j_vib, ww[i].m_communicator);
+                auto ov = w.dot(w);
+                bosonic_assignment[i].push_back(ov);
+            }
+        }
+        // Print out
+        std::cout << "electronic assignment" << std::endl;
+        for (size_t i = 0; i < nState; ++i) {
+            for (auto ov : electronic_assignment[i])
+                std::cout << ov << ",";
+            std::cout << std::endl;
+        }
+        std::cout << "bosonic assignment" << std::endl;
+        for (size_t i = 0; i < nState; ++i) {
+            for (auto ov : bosonic_assignment[i])
+                std::cout << ov << ",";
+            std::cout << std::endl;
+        }
+    }
+    for (auto &root : ww) root.sync();
+}
+
+template<class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::run() {
     auto prof = profiler->push("Davidson");
     message();
     initialize();
     prepareGuess();
+    if (options.parameter("ASSIGN", int(0)))
+        reference_electronic_states();
     backup(ww);
 //    printMatrix();
     for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
@@ -217,6 +288,7 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
         xout << "energies: ";
         for (unsigned int i = 0; i < nState; ++i) xout << solver.eigenvalues()[i] << ", ";
         xout << std::endl;
+        analysis();
     }
     std::cout << "Exit Davidson::run()" << std::endl;
 }
