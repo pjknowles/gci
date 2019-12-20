@@ -208,6 +208,7 @@ void Davidson<t_Wavefunction, t_Operator>::analysis() { }
 template<>
 void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::analysis() {
     if (!ref_elec_states) return;
+    if (!options.parameter("ASSIGN", int(0))) return;
     auto nM = options.parameter("NMODAL", int(0));
     auto nRefState = ref_elec_states->size();
     // normalise solutions
