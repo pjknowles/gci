@@ -93,7 +93,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             accumulate(iBra, res);
         }
         // Purely electronic operators applied twice
-        if (NextTask(m_communicator)) {
+        if (NextTask(m_communicator) && !ham.elHam2.empty()) {
             auto p = profiler->push("Hel2");
             copy_to_local(w.m_ga_handle, iBra, ketWfn);
             res.zero();
