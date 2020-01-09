@@ -317,11 +317,6 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(
                 std::swap(si, sj);
                 phase *= -1;
             }
-            if (sk < sl || (sk == sl && ok < ol)) {
-                std::swap(ok, ol);
-                std::swap(sk, sl);
-                phase *= -1;
-            }
             value *= phase;
 
             if (type == FCIdump::I1a) {
@@ -396,10 +391,6 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructK(const FCIdump &dum
             if (si < sj || (si == sj && oi < oj)) {
                 std::swap(oi, oj);
                 std::swap(si, sj);
-            }
-            if (sk < sl || (sk == sl && ok < ol)) {
-                std::swap(ok, ol);
-                std::swap(sk, sl);
             }
             if (type == FCIdump::I1a) {
                 if (si != sj) continue;
