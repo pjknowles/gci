@@ -126,13 +126,11 @@ void MixedOperatorSecondQuant::initializeLambda(const FCIdump &fcidump) {
                 auto op = std::make_shared<SymmetryMatrix::Operator>(
                         constructOperatorAntisymm1el(FCIdump(f), true));
                 op->m_description = description;
-                op->ensure_dirac();
                 auto p_op = PersistentOperator(op, description, 0, hid_file, true);
                 vibOp.append(p_op, vibExc);
                 if (iModal != jModal) {
                     op = std::make_shared<SymmetryMatrix::Operator>(
                             constructOperatorAntisymm1el(FCIdump(f), true) * (-1.));
-                    op->ensure_dirac();
                     p_op = PersistentOperator(op, description, 0, hid_file, true);
                     vibOp.append(p_op, VibExcitation({{iMode, jModal, iModal}}));
                 }
@@ -149,7 +147,6 @@ void MixedOperatorSecondQuant::initializeK(const FCIdump &fcidump) {
         auto description = std::string("K[0]");
         auto op = std::make_shared<SymmetryMatrix::Operator>(constructK(FCIdump(f), true));
         op->m_description = description;
-        op->ensure_dirac();
         auto p_op = PersistentOperator(op, description, 0, hid_file, true);
         elHam.insert({"K[0]", p_op});
     }
@@ -169,7 +166,6 @@ void MixedOperatorSecondQuant::initializeK(const FCIdump &fcidump) {
                                           + std::to_string(jModal + 1) + ")";
                 auto op = std::make_shared<SymmetryMatrix::Operator>(constructK(FCIdump(f), true));
                 op->m_description = description;
-                op->ensure_dirac();
                 auto p_op = PersistentOperator(op, description, 0, hid_file, true);
                 vibOp.append(p_op, vibExc);
                 if (iModal != jModal)
