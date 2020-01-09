@@ -309,7 +309,9 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(
             xout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
         }
         unsigned int si, sj, sk, sl;
+        si = sj = sk = sl = 8;
         size_t oi, oj, ok, ol;
+        oi = oj = ok = ol = 0;
         while ((type = dump.nextIntegral(si, oi, sj, oj, sk, ok, sl, ol, value)) != FCIdump::endOfFile) {
             int phase = 1;
             if (si < sj || (si == sj && oi < oj)) {
@@ -386,7 +388,9 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructK(const FCIdump &dum
                  << std::endl;
         }
         unsigned int si, sj, sk, sl;
+        si = sj = sk = sl = 8;
         size_t oi, oj, ok, ol;
+        oi = oj = ok = ol = 0;
         while ((type = dump.nextIntegral(si, oi, sj, oj, sk, ok, sl, ol, value)) != FCIdump::endOfFile) {
             if (si < sj || (si == sj && oi < oj)) {
                 std::swap(oi, oj);
@@ -460,7 +464,9 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructD(const FCIdump &dum
                  << std::endl;
         }
         unsigned int si, sj, sk, sl;
+        si = sj = sk = sl = 8;
         size_t oi, oj, ok, ol;
+        oi = oj = ok = ol = 0;
         while ((type = dump.nextIntegral(si, oi, sj, oj, sk, ok, sl, ol, value)) != FCIdump::endOfFile) {
             int phase = 1;
             if (si < sj || (si == sj && oi < oj)) {

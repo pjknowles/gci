@@ -39,7 +39,9 @@ SymmetryMatrix::Operator constructOperatorT1(const FCIdump &dump) {
                  << std::endl;
         }
         unsigned int si, sj, sk, sl;
+        si = sj = sk = sl = 8;
         size_t oi, oj, ok, ol;
+        oi = oj = ok = ol = 0;
         while ((type = dump.nextIntegral(si, oi, sj, oj, sk, ok, sl, ol, value)) != FCIdump::endOfFile) {
             if (si < sj || (si == sj && oi < oj)) {
                 std::swap(oi, oj);
