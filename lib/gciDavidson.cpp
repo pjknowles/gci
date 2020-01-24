@@ -200,6 +200,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
         std::cout << "Exit Davidson::prepareGuess()" << std::endl;
     }
     for (auto &root : ww) root.sync();
+    backup(ww);
 }
 
 template<class t_Wavefunction, class t_Operator>
@@ -276,7 +277,6 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     prepareGuess();
     if (options.parameter("ASSIGN", int(0)))
         reference_electronic_states();
-    backup(ww);
 //    printMatrix();
     for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
         action();
