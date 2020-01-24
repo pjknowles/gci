@@ -403,6 +403,7 @@ std::vector<double> Run::run() {
     } else if (method == "DAVIDSON") {
         if (options.parameter("VIBRONIC", 0)) {
             if (options.parameter("SECOND_QUANT", 0)) {
+                std::cout << "Davidson CI with Vibronic second quantized Hamiltonian" << std::endl;
                 auto ham = MixedOperatorSecondQuant(options);
                 auto wfn = MixedWavefunction(options, prototype);
                 auto solver = run::Davidson<MixedWavefunction, MixedOperatorSecondQuant>{wfn, ham, options};
