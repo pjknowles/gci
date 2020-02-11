@@ -273,7 +273,7 @@ Run::Run(std::string fcidump)
   parallel_rank=0; parallel_size=1;
   options = Options(FCIdump(fcidump).data());
 #endif
-//  xout << "gci::Run::options="<<options.data()<<std::endl;
+  xout << "gci::Run::options="<<options.data()<<std::endl;
 //  xout << "IUHF "<< options.parameter("IUHF",std::vector<int>{0})[0]<<std::endl;
 //  xout << "NELEC "<< options.parameter("NELEC",std::vector<int>{0})[0]<<std::endl;
 //  xout << "FUNKY "<< options.parameter("FUNKY",std::vector<int>{999})[0]<<std::endl;
@@ -441,6 +441,8 @@ std::vector<double> Run::run() {
     for (const auto &w: m_wavefunctions)
       energies.push_back(w->m_properties["ENERGY"]);
   }
+
+  std::cout << "hello"<<std::endl;
 
   {
     auto reference_energies = options.parameter("ENERGY", std::vector<double>(0));
