@@ -25,5 +25,5 @@
 {class=INPUT,type=i,name='PSPACE',default_value=100,set='GCI', short_description='Number of P-space configurations desired'}
 {class=INPUT,type=i,name='PSPACE_INITIAL',default_value=0,set='GCI', short_description='Number of initial P-space configurations desired'}
 {class=INPUT,type=i,name='PSPACE_REBUILD',default_value=0,set='GCI', short_description='Whether to rebuild the P-space each iteration'}
-{class=INPUT,type=i,name='PROFACTIVE',default_value=0,set='GCI', short_description=''}
-{class=INPUT,type=i,name='VIBRONIC',default_value=0,set='GCI', short_description=''}
+{class=INPUT,type=i,name='PROFACTIVE',default_value=0,set='GCI', short_description='short description'}
+{class=INPUT,type=i,name='VIBRONIC',default_value=0,set='GCI', short_description='short description'}
