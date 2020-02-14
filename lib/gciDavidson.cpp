@@ -277,7 +277,8 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     prepareGuess();
     if (options.parameter("ASSIGN", int(0)))
         reference_electronic_states();
-//    printMatrix();
+    if (options.parameter("PRINTMATRIX", 0))
+        printMatrix();
     for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
         action();
         solver.addVector(ww, gg);
