@@ -346,6 +346,7 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(
                 std::swap(si, sj);
                 phase *= -1;
             }
+            if (si == sj && oi == oj) continue;
             value *= phase;
 
             if (type == FCIdump::I1a) {
