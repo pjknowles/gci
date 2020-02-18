@@ -212,7 +212,6 @@ void MixedOperatorSecondQuant::initializeD(const FCIdump &fcidump) {
                 vibOp.append(p_op, vibExc);
                 if (iModal != jModal)
                     vibOp.append(p_op, VibExcitation({{iMode, jModal, iModal}}));
-
             }
         }
     }
@@ -507,6 +506,7 @@ SymmetryMatrix::Operator MixedOperatorSecondQuant::constructD(const FCIdump &dum
                 std::swap(sk, sl);
                 phase *= -1;
             }
+            if ((si == sj && oi == oj) || (sk == sl && ok == ol))continue;
             unsigned int sij = si ^sj;
             unsigned int skl = sk ^sl;
             value *= phase;
