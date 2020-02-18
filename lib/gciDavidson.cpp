@@ -46,8 +46,7 @@ void Davidson<t_Wavefunction, t_Operator>::printMatrix(const std::string &fname)
     auto file = std::ofstream(fname);
     if (!file.is_open())
         throw std::runtime_error("Couldn't open file " + fname);
-    file.setf(std::ios::fixed);
-    file.precision(16);
+    file << std::setprecision(15) << std::fixed;
     t_Wavefunction w(ww[0]);
     t_Wavefunction action(gg[0]);
     w.allocate_buffer();
