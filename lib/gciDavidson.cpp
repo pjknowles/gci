@@ -30,7 +30,7 @@ Davidson<t_Wavefunction, t_Operator>::Davidson(const t_Wavefunction &prototype, 
 }
 
 template<class t_Wavefunction, class t_Operator>
-void Davidson<t_Wavefunction, t_Operator>::message() {
+void Davidson<t_Wavefunction, t_Operator>::message() const {
     if (GA_Nodeid() == 0) {
         std::cout << "Davidson eigensolver, maximum iterations=" << maxIterations;
         std::cout << "; number of states=" << nState;
@@ -41,35 +41,40 @@ void Davidson<t_Wavefunction, t_Operator>::message() {
 }
 
 template<class t_Wavefunction, class t_Operator>
-void Davidson<t_Wavefunction, t_Operator>::printMatrix() {
+void Davidson<t_Wavefunction, t_Operator>::printMatrix(const std::string &fname) const {
     if (GA_Nodeid() != 0) return;
+    auto file = std::ofstream(fname);
+    if (!file.is_open())
+        throw std::runtime_error("Couldn't open file " + fname);
+    file.setf(std::ios::fixed);
+    file.precision(16);
     t_Wavefunction w(ww[0]);
     t_Wavefunction action(gg[0]);
     w.allocate_buffer();
     action.allocate_buffer();
     auto n = w.size();
     std::vector<std::vector<double>> H(n, std::vector<double>(n, 0));
-    if (GA_Nodeid() == 0) {
-        std::cout << "Hamiltonian matrix (nxn):" << std::endl;
-        std::cout << "n = " << n << std::endl;
-        std::cout << " H = {";
-    }
     for (size_t i = 0; i < n; ++i) {
         w.zero();
         w.set(i, 1.0);
         action.zero();
         action.operatorOnWavefunction(ham, w);
-        if (GA_Nodeid() == 0)
-            std::cout << "{";
-        for (size_t j = 0; j < n; ++j) {
+        for (size_t j = 0; j < n; ++j)
             H[i][j] = action.at(j);
-            if (GA_Nodeid() == 0) {
-                if (j == n - 1) std::cout << H[i][j] << "";
-                else std::cout << H[i][j] << ",";
+    }
+    if (GA_Nodeid() == 0) {
+        file << "(* Hamiltonian matrix (nxn) *)" << std::endl;
+        file << "n = " << n << std::endl;
+        file << " H = {";
+        for (size_t i = 0; i < n; ++i) {
+            file << "{";
+            for (size_t j = 0; j < n; ++j) {
+                if (j == n - 1) file << H[i][j] << "";
+                else file << H[i][j] << ",";
             }
+            if (i == n - 1) file << "}};" << std::endl;
+            else file << "}," << std::endl;
         }
-        if (i == n - 1) std::cout << "}};" << std::endl;
-        else std::cout << "}," << std::endl;
     }
 }
 
@@ -277,8 +282,8 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     prepareGuess();
     if (options.parameter("ASSIGN", int(0)))
         reference_electronic_states();
-    if (options.parameter("PRINTMATRIX", 0))
-        printMatrix();
+    if (!options.parameter("PRINTMATRIX", "").empty())
+        printMatrix(options.parameter("PRINTMATRIX", ""));
     for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
         action();
         solver.addVector(ww, gg);
