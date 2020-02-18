@@ -79,8 +79,8 @@ public:
     ParameterVectorSet gg; //!< Set of residual vectors
 protected:
     std::shared_ptr<std::vector<Wavefunction>> ref_elec_states; //!< Set of reference electronic states
-    void printMatrix();
-    void message();
+    void printMatrix(const std::string &fname) const;
+    void message() const;
     //! Initializes containers necessary for running the calculation
     void initialize();
     //! Prepares an initial guess. For Mixed wavefunction it entails solving the electronic CI problem
