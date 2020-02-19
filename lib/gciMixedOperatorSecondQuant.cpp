@@ -53,7 +53,7 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const Options &options) :
     } else {
         m_description = "Non-adiabatic molecular Hamiltonian";
         constructHvib(Hvib, m_fcidump_f, nMode, nModal);
-        initializeHel(fcidump, options.parameter("INCLUDE_HEL", 0));
+        initializeHel(fcidump, !options.parameter("INCLUDE_HEL", 0));
         if (options.parameter("INCLUDE_LAMBDA", 0)) initializeLambda(fcidump);
         if (options.parameter("INCLUDE_K", 0)) initializeK(fcidump);
         if (options.parameter("INCLUDE_D", 0)) initializeD(fcidump);
