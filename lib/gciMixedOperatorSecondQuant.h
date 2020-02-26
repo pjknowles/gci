@@ -6,6 +6,7 @@
 #include "gciVibOperator.h"
 #include "gciOptions.h"
 #include "gciPersistentOperator.h"
+#include <hdf5.h>
 
 
 namespace gci {
