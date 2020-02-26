@@ -34,6 +34,7 @@ protected:
     std::string hdf5_fname; //!< file name for hdf5 where large eletronic operators are stored
     bool restart; //!< operator is already stored on the hdf5, no overwriting is done
     hid_t hid_file; //!< id of the hdf5 file
+    bool hdf5_file_owner; //!< whether it owns the hdf5 file
     std::string m_description; //!< desctiption of the Hamiltonian
 public:
     using hel_t = PersistentOperator;
@@ -47,6 +48,7 @@ public:
     std::map<std::string, VibOperator<hel_t >> mixedHam;//!< Mixed electronic-vibrational terms
 
     explicit MixedOperatorSecondQuant(const Options &options);
+    MixedOperatorSecondQuant(const MixedOperatorSecondQuant &other, const std::string &include_ham);
     ~MixedOperatorSecondQuant();
     /*!
      * @brief Checks if bra and ket vibrational basis are connected by the mixed Hamiltonian
@@ -66,7 +68,7 @@ public:
 
     static SymmetryMatrix::Operator constructD(const FCIdump &dump, bool collective = true);
 
-    void initializeHel(const FCIdump &fcidump, bool h0_only=false);
+    void initializeHel(const FCIdump &fcidump, bool h0_only = false);
 
     void initializeLambda(const FCIdump &fcidump);
 
