@@ -504,7 +504,8 @@ std::vector<double> Run::run() {
 
 Run::~Run() {
   std::cout << *profiler << std::endl;
-//  _nextval_counter.release();
+  profiler.reset();
+  _nextval_counter.clear();
 }
 
 namespace gci {
