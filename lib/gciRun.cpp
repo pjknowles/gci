@@ -295,7 +295,8 @@ Run::Run(std::string fcidump)
 
 std::unique_ptr<Profiler> gci::profiler = nullptr;
 std::vector<double> Run::run() {
-  if (profiler == nullptr) profiler.reset(new Profiler("GCI"));
+    if (profiler == nullptr)
+        profiler = std::make_unique<Profiler>("GCI", Profiler::sortMethod::wall, INT_MAX, gci::mpi_comm_compute);
   create_new_counter(mpi_comm_compute);
   _sub_communicator = create_new_comm();
   profiler->reset("GCI");
@@ -502,8 +503,7 @@ std::vector<double> Run::run() {
 }
 
 Run::~Run() {
-  std::cout << *profiler.get() << std::endl;
-  profiler.release();
+  std::cout << *profiler << std::endl;
 //  _nextval_counter.release();
 }
 

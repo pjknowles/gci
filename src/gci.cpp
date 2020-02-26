@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
             ga_memory = static_cast<size_t>(std::stol(s.substr(equals + 1)));
     }
     memory_initialize(memory);
-    MA_init(C_CHAR, ga_memory/2, ga_memory/2);
+    MA_init(C_CHAR, 10000000, ga_memory);
     if (gci::parallel_rank == 0)
         std::cout << "memory initialised to " << memory_remaining() << std::endl;
     size_t memory_allocated = memory_remaining();
