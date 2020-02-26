@@ -149,6 +149,7 @@ void Davidson<t_Wavefunction, t_Operator>::prepareGuess() { }
 template<>
 void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
     if (!restart_file.empty()) {
+        std::cout << "Restarting from wfn backup, file = " << restart_file << std::endl;
         davidson_read_write_wfn<MixedWavefunction>(ww, restart_file, false);
         return;
     }
@@ -205,6 +206,39 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
     }
     for (auto &root : ww) root.sync();
     backup(ww);
+}
+
+template<class t_Wavefunction, class t_Operator>
+void Davidson<t_Wavefunction, t_Operator>::energy_decomposition() { }
+
+template<>
+void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::energy_decomposition() {
+    // split Hamiltonian into different parts
+    std::map<std::string, MixedOperatorSecondQuant> hams;
+    auto names = std::vector<std::string>{"Hvib", "Hel[0]", "Hel[1]", "Lambda[1]", "K[0]", "K[1]", "D[0]", "D[1]"};
+    for (const auto &name : names)
+        hams.insert({name, MixedOperatorSecondQuant(ham, name)});
+    std::cout << "Energetic contributions from different terms of the Hamiltonian" << std::endl;
+    auto format_string = std::string{"{:8} "};
+    std::cout << "State  ";
+    for (const auto &name : names)
+        std::cout << name << "    ";
+    std::cout << std::endl;
+    for (size_t i = 0; i < ww.size(); ++i) {
+        auto &w = ww[i];
+        auto &g = gg[i];
+        auto ov = w.dot(w);
+        auto norm = 1. / std::sqrt(ov);
+        std::cout << "{" << i;
+        for (const auto &name : names) {
+            g.zero();
+            g.operatorOnWavefunction(hams.at(name), w);
+            ov = g.dot(w);
+            auto e = ov / norm;
+            std::cout << ",   " << e;
+        }
+        std::cout << "}" << std::endl;
+    }
 }
 
 template<class t_Wavefunction, class t_Operator>
@@ -296,6 +330,8 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
         xout << std::endl;
         analysis();
     }
+    if (options.parameter("ENERGY_DECOMPOSITION", 0))
+        energy_decomposition();
     std::cout << "Exit Davidson::run()" << std::endl;
 }
 
