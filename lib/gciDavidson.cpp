@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <fstream>
 #include <ga.h>
+#include <hdf5.h>
 
 namespace gci {
 namespace run {

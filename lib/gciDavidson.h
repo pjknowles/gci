@@ -4,7 +4,6 @@
 #include <vector>
 #include <IterativeSolver.h>
 #include <Operator.h>
-#include <hdf5.h>
 
 #include "gci.h"
 #include "gciWavefunction.h"
