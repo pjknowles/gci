@@ -60,7 +60,31 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const Options &options) :
     }
 }
 
-MixedOperatorSecondQuant::~MixedOperatorSecondQuant() {H5Fclose(hid_file);}
+MixedOperatorSecondQuant::MixedOperatorSecondQuant(const MixedOperatorSecondQuant &other,
+                                                   const std::string &include_ham) :
+        m_fcidump_f(other.m_fcidump_f), hdf5_fname(other.hdf5_fname), restart(false), hid_file(other.hid_file),
+        hdf5_file_owner(false), m_description(other.m_description), nMode(other.nMode), nModal(other.nModal),
+        Hvib(other.Hvib) {
+    if (include_ham == "Hvib") return;
+    Hvib.tensor.clear();
+    if (include_ham == "Hel[0]")
+        elHam.insert({"Hel[0]", other.elHam.at("Hel[0]")});
+    else if (include_ham == "Hel[1]")
+        mixedHam.insert({"Hel[1]", other.mixedHam.at("Hel[1]")});
+    else if (include_ham == "Lambda[1]")
+        mixedHam.insert({"Lambda[1]", other.mixedHam.at("Lambda[1]")});
+    else if (include_ham == "K[0]")
+        elHam.insert({"K[0]", other.elHam.at("K[0]")});
+    else if (include_ham == "K[1]")
+        mixedHam.insert({"K[1]", other.mixedHam.at("K[1]")});
+    else if (include_ham == "D[0]")
+        elHam.insert({"D[0]", other.elHam.at("D[0]")});
+    else if (include_ham == "D[1]")
+        mixedHam.insert({"D[1]", other.mixedHam.at("D[1]")});
+}
+
+
+MixedOperatorSecondQuant::~MixedOperatorSecondQuant() {if (hdf5_file_owner)H5Fclose(hid_file);}
 
 template<class Op>
 inline PersistentOperator create_persistentoperator(const std::string &fcidump, bool restart, std::string description,
