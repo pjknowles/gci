@@ -73,7 +73,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
     std::unique_ptr<Wavefunction> res2;
     auto ketWfn = Wavefunction{m_prototype, 0, m_child_communicator};
     res.allocate_buffer();
-    if (!ham.elHam2.empty()){
+    if (!ham.elHam2.empty()) {
         res2 = std::make_unique<Wavefunction>(m_prototype, 0, m_child_communicator);
         res2->allocate_buffer();
     }
@@ -81,7 +81,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
     for (const auto &bra : m_vibBasis) {
         auto iBra = m_vibBasis.index(bra);
         // Purely electronic operators
-        if (NextTask(m_communicator)) {
+        if (NextTask(m_communicator) && !ham.elHam.empty()) {
             auto p = profiler->push("Hel");
             copy_to_local(w.m_ga_handle, iBra, ketWfn);
             res.zero();
