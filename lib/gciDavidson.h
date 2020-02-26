@@ -89,6 +89,8 @@ protected:
     void reference_electronic_states();
     //! Run analysis of solutions
     void analysis();
+    //! Seperate energetic contributions from different parts of the Hamiltonian
+    void energy_decomposition();
     //! Apply the Hamiltonian on the current solution
     void action();
     //! Get the new vector, $r = A u - \lambda u$
