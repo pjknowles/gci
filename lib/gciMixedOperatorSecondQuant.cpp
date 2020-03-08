@@ -74,11 +74,11 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const MixedOperatorSecondQuan
         mixedHam.insert({"Hel[1]", other.mixedHam.at("Hel[1]")});
     else if (include_ham == "Lambda[1]" && other.mixedHam.count("Lambda[1]"))
         mixedHam.insert({"Lambda[1]", other.mixedHam.at("Lambda[1]")});
-    else if (include_ham == "K[0]" && other.mixedHam.count("K[0]"))
+    else if (include_ham == "K[0]" && other.elHam.count("K[0]"))
         elHam.insert({"K[0]", other.elHam.at("K[0]")});
     else if (include_ham == "K[1]" && other.mixedHam.count("K[1]"))
         mixedHam.insert({"K[1]", other.mixedHam.at("K[1]")});
-    else if (include_ham == "D[0]" && other.mixedHam.count("D[0]"))
+    else if (include_ham == "D[0]" && other.elHam.count("D[0]"))
         elHam.insert({"D[0]", other.elHam.at("D[0]")});
     else if (include_ham == "D[1]" && other.mixedHam.count("D[1]"))
         mixedHam.insert({"D[1]", other.mixedHam.at("D[1]")});
