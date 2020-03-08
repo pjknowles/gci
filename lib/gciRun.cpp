@@ -437,6 +437,8 @@ std::vector<double> Run::run() {
         xout << "Unknown method in GCI, " << method << std::endl;
     }
 
+    GA_Sync();
+
   {
     auto profile = options.parameter("PROFILER", std::vector<int>(1, -1)).at(0);
     if (profile > 1) xout << profiler->str(profile, false) << std::endl;
