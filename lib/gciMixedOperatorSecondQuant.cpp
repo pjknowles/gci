@@ -30,6 +30,7 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const Options &options) :
         hdf5_fname(_hdf5_fname(options)),
         restart(!options.parameter("HAM_HDF5_RESTART", "").empty()),
         hid_file(utils::open_hdf5_file(hdf5_fname, gci::mpi_comm_compute, !restart)),
+        hdf5_file_owner(true),
         nMode(_nMode(options)),
         nModal(_nModal(options)),
         Hvib(nMode, nModal, parity_t::none, parity_t::even, "Hvib") {
@@ -84,7 +85,14 @@ MixedOperatorSecondQuant::MixedOperatorSecondQuant(const MixedOperatorSecondQuan
 }
 
 
-MixedOperatorSecondQuant::~MixedOperatorSecondQuant() {if (hdf5_file_owner)H5Fclose(hid_file);}
+MixedOperatorSecondQuant::~MixedOperatorSecondQuant() {
+    elHam.clear();
+    elHam2.clear();
+    mixedHam.clear();
+    if (hdf5_file_owner) {
+        H5Fclose(hid_file);
+    }
+}
 
 template<class Op>
 inline PersistentOperator create_persistentoperator(const std::string &fcidump, bool restart, std::string description,
