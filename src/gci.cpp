@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     if (gci::parallel_rank == 0)
         std::cout << "MPI_Comm_size = " << gci::parallel_size << std::endl;
     if (gci::parallel_rank > 0) freopen("/dev/null", "w", stdout);
-    PluginGuest plugin("MOLPRO");
+    PluginGuest plugin("MOLPRO", gci::mpi_comm_compute);
     if (plugin.active()) {
         if (!plugin.send("GIVE OPERATOR HAMILTONIAN FCIDUMP GCI")) throw std::logic_error("Unexpected plugin failure");
         strcpy(fcidumpname, plugin.receive().c_str());
