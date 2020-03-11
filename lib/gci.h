@@ -91,6 +91,7 @@ inline void DivideTasks(std::size_t ntasks, std::size_t nMinBatch, std::size_t n
         int parallel_rank, parallel_size;
         MPI_Comm_size(communicator, &parallel_size);
         MPI_Comm_rank(communicator, &parallel_rank);
+        if(parallel_size==1) return;
         // simple static LB
         size_t task_gran = ((ntasks - 1) / parallel_size + 1);
         task_gran = task_gran > 0 ? task_gran : 1;
@@ -106,12 +107,13 @@ inline void DivideTasks(std::size_t ntasks, std::size_t nMinBatch, std::size_t n
 }
 
 inline bool NextTask(MPI_Comm communicator) {
-    {
-        if (__my_first_task[communicator] + __task_granularity[communicator] <= __task[communicator])
-            __my_first_task[communicator] = nextval(communicator) * __task_granularity[communicator];
-        return (__task[communicator]++ >= __my_first_task[communicator] &&
-                __task[communicator] <= __my_first_task[communicator] + __task_granularity[communicator]);
-    }
+    int parallel_size;
+    MPI_Comm_size(communicator, &parallel_size);
+    if(parallel_size==1) return true;
+    if (__my_first_task[communicator] + __task_granularity[communicator] <= __task[communicator])
+        __my_first_task[communicator] = nextval(communicator) * __task_granularity[communicator];
+    return (__task[communicator]++ >= __my_first_task[communicator] &&
+            __task[communicator] <= __my_first_task[communicator] + __task_granularity[communicator]);
 }
 
 inline void EndTasks(MPI_Comm communicator) {
