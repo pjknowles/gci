@@ -72,6 +72,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
     auto res = Wavefunction{m_prototype, 0, m_child_communicator};
     std::unique_ptr<Wavefunction> res2;
     auto ketWfn = Wavefunction{m_prototype, 0, m_child_communicator};
+    bool zeroed = false;
     res.allocate_buffer();
     if (!ham.elHam2.empty()) {
         res2 = std::make_unique<Wavefunction>(m_prototype, 0, m_child_communicator);
@@ -84,19 +85,24 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
         if (NextTask(m_communicator) && !ham.elHam.empty()) {
             auto p = profiler->push("Hel");
             copy_to_local(w.m_ga_handle, iBra, ketWfn);
-            res.zero();
+            if (!zeroed) {
+                res.zero();
+                zeroed = true;
+            }
             for (const auto &hel : ham.elHam) {
                 auto p = profiler->push(hel.first);
                 auto op = hel.second.get();
                 res.operatorOnWavefunction(*op, ketWfn, parallel_stringset);
             }
-            accumulate(iBra, res);
         }
         // Purely electronic operators applied twice
         if (NextTask(m_communicator) && !ham.elHam2.empty()) {
             auto p = profiler->push("Hel2");
             copy_to_local(w.m_ga_handle, iBra, ketWfn);
-            res.zero();
+            if (!zeroed) {
+                res.zero();
+                zeroed = true;
+            }
             for (const auto &hel : ham.elHam2) {
                 auto p = profiler->push(hel.first);
                 auto op = hel.second.get();
@@ -104,12 +110,14 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
                 res2->operatorOnWavefunction(*op, ketWfn, parallel_stringset);
                 res.operatorOnWavefunction(*op, *res2, parallel_stringset);
             }
-            accumulate(iBra, res);
         }
         // Purely vibrational operators
         if (NextTask(m_communicator)) {
             auto p = profiler->push("Hvib");
-            res.zero();
+            if (!zeroed) {
+                res.zero();
+                zeroed = true;
+            }
             for (const auto &vibEl : ham.Hvib.tensor) {
                 auto val = vibEl.second.oper;
                 auto ket = bra.excite(vibEl.second.exc);
@@ -118,7 +126,6 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
                 copy_to_local(w.m_ga_handle, iKet, ketWfn);
                 res.axpy(val, ketWfn);
             }
-            accumulate(iBra, res);
         }
         // Mixed operators
         for (const auto &ket : m_vibBasis) {
@@ -127,7 +134,10 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
             if (!ham.connected(bra, ket)) continue;
             if (!NextTask(m_communicator)) continue;
             copy_to_local(w.m_ga_handle, iKet, ketWfn);
-            res.zero();
+            if (!zeroed) {
+                res.zero();
+                zeroed = true;
+            }
             for (const auto &mixedTerm : ham.mixedHam) {
                 const auto &vibTensor = mixedTerm.second;
                 for (const auto &vibEl : vibTensor.tensor) {
@@ -138,7 +148,10 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
                     res.operatorOnWavefunction(*op, ketWfn, parallel_stringset);
                 }
             }
+        }
+        if (zeroed) {
             accumulate(iBra, res);
+            zeroed = false;
         }
     }
     if (with_sync) sync();
