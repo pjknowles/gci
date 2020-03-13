@@ -2,11 +2,6 @@ cmake_minimum_required(VERSION 3.11)
 set(CMAKE_CXX_STANDARD 14)
 
 project(gci VERSION 1.0)
-option(FORTRAN "Whether to build with Fortran support" ON)
-if (FORTRAN OR Molpro_SOURCE_DIR)
-	set(FORTRAN ON)
-	enable_language(Fortran)
-endif()
 message("Build ${CMAKE_PROJECT_NAME} with CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
