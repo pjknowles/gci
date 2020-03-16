@@ -468,7 +468,7 @@ TEST_F(ArrayCollectiveOpF, divide_append_negative) {
     auto from_ga_buffer_c = c.vec();
     auto ref_a = std::vector<double>(dim, alpha);
     auto ref_b = std::vector<double>(dim, beta);
-    auto ref_c = std::vector<double>(dim, alpha + alpha / (beta - shift));
+    auto ref_c = std::vector<double>(dim, alpha - alpha / (beta + shift));
     {
         auto l = Lock();
         ASSERT_THAT(from_ga_buffer_a, Pointwise(DoubleEq(), ref_a));
