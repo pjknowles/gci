@@ -6,7 +6,7 @@
 #include <memory.h>
 #include <unistd.h>
 #include <cstring>
-#include <ma.h>
+#include <macdecls.h>
 
 #ifndef MOLPRO
 
