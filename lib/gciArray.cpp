@@ -440,19 +440,21 @@ void Array::divide(const Array *a, const Array *b, double shift, bool append, bo
     auto b_vec = Array::LocalBuffer(*b);
     if (!y_vec.compatible(a_vec) || !y_vec.compatible(b_vec))
         GA_Error((char *) "Array::divide() incompatible local buffers", 1);
-    if (append)
+    if (append) {
         if (negative)
             for (size_t i = 0; i < y_vec.size(); ++i)
                 y_vec[i] -= a_vec[i] / (b_vec[i] + shift);
         else
             for (size_t i = 0; i < y_vec.size(); ++i)
                 y_vec[i] += a_vec[i] / (b_vec[i] + shift);
-    else if (negative)
-        for (size_t i = 0; i < y_vec.size(); ++i)
-            y_vec[i] = -a_vec[i] / (b_vec[i] + shift);
-    else
-        for (size_t i = 0; i < y_vec.size(); ++i)
-            y_vec[i] = a_vec[i] / (b_vec[i] + shift);
+    } else {
+        if (negative)
+            for (size_t i = 0; i < y_vec.size(); ++i)
+                y_vec[i] = -a_vec[i] / (b_vec[i] + shift);
+        else
+            for (size_t i = 0; i < y_vec.size(); ++i)
+                y_vec[i] = a_vec[i] / (b_vec[i] + shift);
+    }
     if (with_sync_after) sync();
 }
 
