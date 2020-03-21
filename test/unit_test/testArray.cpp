@@ -456,7 +456,7 @@ TEST_F(ArrayCollectiveOpF, times) {
     sync();
 }
 
-// c[i] += a[i]/(b[i]-shift)
+// c[i] -= a[i]/(b[i]+shift)
 TEST_F(ArrayCollectiveOpF, divide_append_negative) {
     double shift = 0.5;
     a.set(alpha, true, false);
