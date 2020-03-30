@@ -117,56 +117,120 @@ double *Array::LocalBuffer::end() {return buffer + size();}
 double &Array::LocalBuffer::operator[](size_t i) {return buffer[i];}
 
 
-/*
- * Each process searches for lowest n numbers in it's local GA buffer, if it has one.
- * Then, sends them to root who does the final sort
- */
-std::vector<size_t> Array::minlocN(size_t n) const {
+template<class Compare>
+std::list<std::pair<size_t, double>> Array::extrema(size_t n) const {
     if (empty()) return {};
-    // Search local buffer first
     auto buffer = Array::LocalBuffer(*this);
     auto length = buffer.size();
     auto nmin = length > n ? n : length;
-    std::vector<size_t> minInd(n, 0);
-    std::vector<double> minVal(n, DBL_MAX);
-    double *ptr_to_min;
-    double prev_min;
-    for (auto i = 0ul; i < nmin; ++i) {
-        if (i == 0)
-            ptr_to_min = std::min_element(buffer.begin(), buffer.end());
-        else
-            ptr_to_min = std::min_element(buffer.begin(), buffer.end(),
-                                          [prev_min](double el, double smallest) {
-                                              return (el < smallest && el > prev_min) ||
-                                                     (smallest <= prev_min && el > prev_min);
-                                          });
-        auto min_ind = std::distance(buffer.begin(), ptr_to_min);
-        prev_min = ptr_to_min[0];
-        minInd[i] = buffer.lo + min_ind;
-        minVal[i] = prev_min;
+    auto loc_extrema = std::list<std::pair<size_t, double>>();
+    for (size_t i = 0; i < nmin; ++i)
+        loc_extrema.emplace_back(buffer.lo + i, buffer[i]);
+    auto compare = Compare();
+    auto compare_pair = [&compare](const auto &p1, const auto &p2) {return compare(p1.second, p2.second);};
+    for (size_t i = nmin; i < length; ++i) {
+        loc_extrema.emplace_back(buffer.lo + i, buffer[i]);
+        loc_extrema.sort(compare_pair);
+        loc_extrema.pop_back();
     }
+    auto indices_loc = std::vector<size_t>(n, size() + 1);
+    auto indices_glob = std::vector<size_t>(n);
+    auto values_loc = std::vector<double>(n);
+    auto values_glob = std::vector<double>(n);
+    size_t ind = 0;
+    for (const auto &p : loc_extrema) {
+        indices_loc[ind] = p.first;
+        values_loc[ind] = p.second;
+        ++ind;
+    }
+    MPI_Request requests[3];
     // root collects values, does the final sort and sends the result back
     if (m_comm_rank == 0) {
-        minInd.resize(n * m_comm_size);
-        minVal.resize(n * m_comm_size);
-    }
-    MPI_Barrier(m_communicator);
-    if (m_comm_rank == 0) {
-        MPI_Gather(MPI_IN_PLACE, n, MPI_SIZE_T, minInd.data(), n, MPI_SIZE_T, 0, m_communicator);
-        MPI_Gather(MPI_IN_PLACE, n, MPI_DOUBLE, minVal.data(), n, MPI_DOUBLE, 0, m_communicator);
-        std::vector<double> sort_permutation(minVal.size());
+        auto ntot = n * m_comm_size;
+        indices_loc.resize(ntot);
+        values_loc.resize(ntot);
+        auto ndummy = std::vector<int>(m_comm_size);
+        auto d = int(n - nmin);
+        MPI_Igather(&d, 1, MPI_INT, ndummy.data(), 1, MPI_INT, 0, m_communicator, &requests[0]);
+        MPI_Igather(MPI_IN_PLACE, n, MPI_SIZE_T, indices_loc.data(), n, MPI_SIZE_T, 0, m_communicator,
+                    &requests[1]);
+        MPI_Igather(MPI_IN_PLACE, n, MPI_DOUBLE, values_loc.data(), n, MPI_SIZE_T, 0, m_communicator, &requests[2]);
+        MPI_Waitall(3, requests, MPI_STATUSES_IGNORE);
+        auto tot_dummy = std::accumulate(ndummy.cbegin(), ndummy.cend(), 0);
+        if (tot_dummy != 0) {
+            size_t shift = 0;
+            for (size_t i = 0, ind = 0; i < m_comm_size; ++i) {
+                for (size_t j = 0; j < n - ndummy[i]; ++j, ++ind) {
+                    indices_loc[ind] = indices_loc[ind + shift];
+                    values_loc[ind] = values_loc[ind + shift];
+                }
+                shift += ndummy[i];
+            }
+            indices_loc.resize(ntot - tot_dummy);
+            values_loc.resize(ntot - tot_dummy);
+        }
+        std::vector<double> sort_permutation(indices_loc.size());
         std::iota(sort_permutation.begin(), sort_permutation.end(), 0);
         std::sort(sort_permutation.begin(), sort_permutation.end(),
-                  [minVal](const auto &i1, const auto &i2) {return minVal[i1] < minVal[i2];});
-        std::transform(sort_permutation.begin(), sort_permutation.begin() + n, minInd.begin(),
-                       [minInd](auto i) {return minInd[i];});
-        minInd.resize(n);
+                  [&values_loc, &compare](const auto &i1, const auto &i2) {
+                      return compare(values_loc[i1], values_loc[i2]);
+                  });
+        for (size_t i = 0; i < n; ++i) {
+            auto j = sort_permutation[i];
+            indices_glob[i] = indices_loc[j];
+            values_glob[i] = values_loc[j];
+        }
     } else {
-        MPI_Gather(minInd.data(), n, MPI_SIZE_T, minInd.data(), n, MPI_SIZE_T, 0, m_communicator);
-        MPI_Gather(minVal.data(), n, MPI_DOUBLE, minVal.data(), n, MPI_DOUBLE, 0, m_communicator);
+        auto d = int(n - nmin);
+        MPI_Igather(&d, 1, MPI_INT, nullptr, 1, MPI_INT, 0, m_communicator, &requests[0]);
+        MPI_Igather(indices_loc.data(), n, MPI_SIZE_T, nullptr, n, MPI_SIZE_T, 0, m_communicator, &requests[1]);
+        MPI_Igather(values_loc.data(), n, MPI_DOUBLE, nullptr, n, MPI_DOUBLE, 0, m_communicator, &requests[2]);
+        MPI_Waitall(3, requests, MPI_STATUSES_IGNORE);
     }
-    MPI_Bcast(minInd.data(), n, MPI_SIZE_T, 0, m_communicator);
-    return minInd;
+    MPI_Ibcast(indices_glob.data(), n, MPI_SIZE_T, 0, m_communicator, &requests[0]);
+    MPI_Ibcast(values_glob.data(), n, MPI_DOUBLE, 0, m_communicator, &requests[1]);
+    MPI_Waitall(2, requests, MPI_STATUSES_IGNORE);
+    auto map_extrema = std::list<std::pair<size_t, double>>();
+    for (size_t i = 0; i < n; ++i)
+        map_extrema.emplace_back(indices_glob[i], values_glob[i]);
+    return map_extrema;
+}
+
+std::list<std::pair<size_t, double>> Array::min_n(size_t n) const {
+    return extrema<std::less<double>>(n);
+}
+
+std::list<std::pair<size_t, double>> Array::max_n(size_t n) const {
+    return extrema<std::greater<double>>(n);
+}
+
+namespace {
+template<typename T, class Compare>
+struct CompareAbs {
+    constexpr bool operator()(const T &lhs, const T &rhs) const {
+        return Compare()(std::abs(lhs), std::abs(rhs));
+    }
+
+};
+}
+
+std::list<std::pair<size_t, double>>
+Array::max_abs_n(size_t n) const {
+    return extrema<CompareAbs<double, std::greater<>>>(n);
+
+}
+
+std::list<std::pair<size_t, double>>
+Array::min_abs_n(size_t n) const {
+    return extrema<CompareAbs<double, std::less<>>>(n);
+
+}
+
+std::vector<size_t> Array::minlocN(size_t n) const {
+    auto min_list = min_abs_n(n);
+    auto min_vec = std::vector<size_t>(n);
+    std::transform(min_list.cbegin(), min_list.cend(), min_vec.begin(), [](const auto &p) {return p.first;});
+    return min_vec;
 }
 
 
