@@ -2,6 +2,7 @@
 #define GCI_TENSOR_H
 
 #include <vector>
+#include <list>
 #include <string>
 #include <memory>
 #include <map>
@@ -114,6 +115,44 @@ public:
      * Atomic, blocking, with on-sided communication
      */
     void scatter_acc(std::vector<int> &indices, std::vector<double> &vals, double alpha);
+
+protected:
+    template<class Compare>
+    [[nodiscard]] std::list<std::pair<size_t, double>>
+    extrema(size_t n) const;
+public:
+
+    /*!
+   * \brief returns n smallest elements
+   * Collective operation, must be called by all processes in the group.
+   * \param n number of smallest values to be found
+   */
+    [[nodiscard]] std::list<std::pair<size_t, double>>
+    min_n(size_t n = 1) const;
+
+    /*!
+   * \brief returns n largest elements
+   * Collective operation, must be called by all processes in the group.
+   * \param n number of smallest values to be found
+   */
+    [[nodiscard]] std::list<std::pair<size_t, double>>
+    max_n(size_t n = 1) const;
+
+    /*!
+   * \brief returns n elements that are largest by absolute value
+   * Collective operation, must be called by all processes in the group.
+   * \param n number of smallest values to be found
+   */
+    [[nodiscard]] std::list<std::pair<size_t, double>>
+    min_abs_n(size_t n = 1) const;
+
+    /*!
+   * \brief returns n elements that are largest by absolute value
+   * Collective operation, must be called by all processes in the group.
+   * \param n number of smallest values to be found
+   */
+    [[nodiscard]] std::list<std::pair<size_t, double>>
+    max_abs_n(size_t n = 1) const;
 
     /*!
        * \brief find the index of n smallest components
