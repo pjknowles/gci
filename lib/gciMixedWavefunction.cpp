@@ -214,6 +214,38 @@ bool MixedWavefunction::compatible(const MixedWavefunction &other) const {
     return sameSize && sameElectronicWfn && sameVibBasis;
 }
 
+std::vector<double> MixedWavefunction::vibDensity() {
+    auto nM = m_vibSpace.nModal;
+    auto size = nM * nM;
+    auto dm = std::vector<double>(size, 0.);
+    auto bra = Wavefunction{m_prototype, 0, m_child_communicator};
+    auto ket = Wavefunction{m_prototype, 0, m_child_communicator};
+    bra.allocate_buffer();
+    ket.allocate_buffer();
+    int local_i = -1;
+    int local_j = -1;
+    auto norm = dot(this);
+    if (std::abs(norm) < 1.0e-8)
+        throw std::runtime_error("Norm of wavefunction is too small, " + std::to_string(norm));
+    DivideTasks(size, 1, 1, m_communicator);
+    for (size_t i = 0; i < nM; ++i) {
+        for (size_t j = 0; j <= i; ++j) {
+            if (NextTask(m_communicator)) {
+                if (local_i != i)
+                    copy_to_local(m_ga_handle, i, bra);
+                local_i = i;
+                if (local_j != i)
+                    copy_to_local(m_ga_handle, j, ket);
+                local_j = j;
+                dm[i * nM + j] = dm[j * nM + i] = bra.dot(ket) / norm;
+            }
+        }
+    }
+// reduce the whole array together
+    MPI_Allreduce(MPI_IN_PLACE, dm.data(), size, MPI_DOUBLE, MPI_SUM, m_communicator);
+    return dm;
+}
+
 //bool MixedWavefunction::compatible(const Array &other) const {
 //    auto other_wfn = dynamic_cast<const MixedWavefunction *>(&other);
 //    if (other_wfn == nullptr) return Array::compatible(other);
