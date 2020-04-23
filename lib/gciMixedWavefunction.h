@@ -111,6 +111,12 @@ public:
     void diagonalOperator(const MixedOperatorSecondQuant &ham, bool parallel_stringset = false);
 
     /*!
+     * @brief Calculates vibrational density matrix
+     * @return
+     */
+    std::vector<double> vibDensity();
+
+    /*!
      * @brief Checks that the two wavefunctions are of the same electronic State and of the same dimension.
      */
     bool compatible(const MixedWavefunction &other) const;

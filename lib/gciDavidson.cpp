@@ -240,6 +240,21 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::energy_decomposition
         }
         std::cout << "}" << std::endl;
     }
+    std::cout << "Vibrational Density matrix " << std::endl;
+    std::cout << "dm" << " = {";
+    for (size_t i = 0; i < ww.size(); ++i) {
+        std::cout << "{";
+        auto dm = ww[i].vibDensity();
+        for (size_t j = 0; j < dm.size(); ++j) {
+            std::cout << dm[j];
+            if (j != dm.size() - 1)
+                std::cout << ", ";
+        }
+        std::cout << "}";
+        if (i != ww.size() - 1)
+            std::cout << "," << std::endl;
+    }
+    std::cout << "};" << std::endl;
 }
 
 template<class t_Wavefunction, class t_Operator>
