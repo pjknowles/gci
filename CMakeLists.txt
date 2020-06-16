@@ -1,52 +1,43 @@
-cmake_minimum_required(VERSION 3.11)
-set(CMAKE_CXX_STANDARD 14)
+cmake_minimum_required(VERSION 3.15)
+project(gci CXX)
 
-project(gci VERSION 1.0)
-message("Build ${CMAKE_PROJECT_NAME} with CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-include(libconfig)
+include(FetchContent)
+FetchContent_Declare(
+        LibraryManager
+        GIT_REPOSITORY https://gitlab+deploy-token-178345:RQZa2rmdwnV7Hdwg8XEq@gitlab.com/molpro/LibraryManager.git
+        GIT_TAG master
+)
+FetchContent_MakeAvailable(LibraryManager)
+LibraryManager_Project(MPI_OPTION FORTRAN_OPTION)
+set(MPI ON CACHE BOOL "" FORCE)
 
 ########## Options ##########
-
-# Allow messages from scripts to be shown
-#set(FETCHCONTENT_QUIET OFF)
-
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+endif ()
 
 ########## Dependencies ##########
 
 add_subdirectory(dependencies)
 
-find_package(MPI REQUIRED CXX )
-#TODO Consider reflecting this mandatory provision of MPI in the code, ie remove #ifdef HAVE_MPI_H
-add_definitions(-DHAVE_MPI_H)
-
 ########## Targets ##########
 
-add_subdirectory(lib)
-
-if (NOT Molpro_SOURCE_DIR)
 add_subdirectory(src)
-enable_testing()
-add_subdirectory(test)
 
-
+if (${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
+    enable_testing()
+    add_subdirectory(test)
+endif ()
 ########## Documentation ##########
 
-find_package(Doxygen)
-if (DOXYGEN_FOUND)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-    add_custom_target(${PROJECT_NAME}-doc ALL
-            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/html/index.xhtml
-            )
-    file(GLOB headers src/*.h lib/*.h)
-    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/html/index.xhtml
-            COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-            DEPENDS ${SRC_LIST} ${headers} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            COMMENT "Generating API documentation with Doxygen" VERBATIM
-            )
-endif (DOXYGEN_FOUND)
-endif()
+# Documentation has to come last to make sure all dependencies have been added
+include(DependencyManagerDocs)
+DependencyManagerDocs_Add(${PROJECT_NAME}
+        # FILES README.md
+        DOC_URL "https://molpro.gitlab.io/gci/${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}"
+        # projects whose documentation has to be built before the current project.
+        DEPENDS FCIdump LinearAlgebra memory molpro-plugin Profiler symmetry_matrix utilities
+        )
 
