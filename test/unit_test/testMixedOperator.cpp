@@ -6,7 +6,7 @@
 #include <molpro/gci/gciMixedOperator.h>
 #include <numeric>
 
-namespace gci {
+using molpro::gci::MixedOperator;
 
 //
 class TestMixedOperator : public ::testing::Test, public MixedOperator {
@@ -70,4 +70,3 @@ TEST_F(TestMixedOperator, O_Qsq) {
     ASSERT_DOUBLE_EQ(el, ref) << "< n | Qsq | m > == 1 / 2 / w * sqrt(m * (m - 1))";
   }
 }
-} // namespace gci

@@ -11,7 +11,8 @@ using ::testing::DoubleEq;
 using ::testing::Each;
 using ::testing::Pointwise;
 
-namespace gci {
+using molpro::gci::Array;
+
 
 //!@todo there should be a temporary directory for test files
 class DavidsonReadWriteF : public ::testing::Test {
@@ -21,11 +22,11 @@ public:
     for (auto i = 0ul; i < nS; ++i) {
       for (auto j = 0ul; j < dim; ++j)
         ref_values[i].push_back(i + j);
-      aa_write.emplace_back(dim, mpi_comm_compute);
+      aa_write.emplace_back(dim, molpro::gci::mpi_comm_compute);
       aa_write.back().zero();
       if (p_rank == 0)
         aa_write.back().put(0, dim - 1, &ref_values[i][0]);
-      aa_read.emplace_back(dim, mpi_comm_compute);
+      aa_read.emplace_back(dim, molpro::gci::mpi_comm_compute);
       aa_read.back().zero();
     }
     aa_write[0].sync();
@@ -41,8 +42,8 @@ public:
 };
 
 TEST_F(DavidsonReadWriteF, read_write_wfn) {
-  run::davidson_read_write_wfn<Array>(aa_write, fname, true);
-  run::davidson_read_write_wfn<Array>(aa_read, fname, false);
+  molpro::gci::run::davidson_read_write_wfn<Array>(aa_write, fname, true);
+  molpro::gci::run::davidson_read_write_wfn<Array>(aa_read, fname, false);
   {
     auto l = Lock();
     for (auto i = 0ul; i < nS; ++i) {
@@ -52,4 +53,3 @@ TEST_F(DavidsonReadWriteF, read_write_wfn) {
   }
 }
 
-} // namespace gci

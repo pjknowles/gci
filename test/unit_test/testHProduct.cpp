@@ -4,7 +4,8 @@
 
 #include <molpro/gci/gciHProduct.h>
 
-using namespace gci;
+using molpro::gci::HProduct;
+using molpro::gci::VibSpace;
 
 class HProductF : public ::testing::Test {
 public:

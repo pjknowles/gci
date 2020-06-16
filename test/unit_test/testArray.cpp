@@ -14,7 +14,7 @@ using ::testing::DoubleEq;
 using ::testing::Each;
 using ::testing::Pointwise;
 
-namespace gci {
+using molpro::gci::Array;
 
 TEST(Array, constructor_empty) {
   auto l = Lock();
@@ -23,25 +23,25 @@ TEST(Array, constructor_empty) {
 
 TEST(Array, constructor_with_commun) {
   auto l = Lock();
-  auto a = Array(mpi_comm_compute);
+  auto a = Array(molpro::gci::mpi_comm_compute);
 }
 
 TEST(Array, constructor_with_dimension) {
   auto l = Lock();
   int dim = 100;
-  auto a = Array(dim, mpi_comm_compute);
+  auto a = Array(dim, molpro::gci::mpi_comm_compute);
 }
 
 TEST(Array, constructor_copy) {
   auto l = Lock();
   int dim = 100;
-  auto a = Array(dim, mpi_comm_compute);
+  auto a = Array(dim, molpro::gci::mpi_comm_compute);
   auto b = Array(a);
 }
 
 class ArrayInitializationF : public ::testing::Test, public Array {
 public:
-  ArrayInitializationF() : Array(dim, mpi_comm_compute){};
+  ArrayInitializationF() : Array(dim, molpro::gci::mpi_comm_compute){};
   static const int dim = 100;
 };
 
@@ -141,7 +141,7 @@ TEST_F(ArrayInitializationF, set) {
 class ArrayRangeF : public ::testing::Test, public Array {
 public:
   //! Stores a range in the buffer {1, 2, 3, 4, 5, .., dim}
-  ArrayRangeF() : Array((size_t)dim, mpi_comm_compute), p_rank(GA_Nodeid()), p_size(GA_Nnodes()) {
+  ArrayRangeF() : Array((size_t)dim, molpro::gci::mpi_comm_compute), p_rank(GA_Nodeid()), p_size(GA_Nnodes()) {
     allocate_buffer();
     values.resize(dim);
     std::iota(values.begin(), values.end(), 1.);
@@ -298,8 +298,8 @@ TEST_F(ArrayRangeF, recip) {
 class ArrayCollectiveOpF : public ::testing::Test {
 public:
   ArrayCollectiveOpF()
-      : alpha(1.0), beta(2.0), p_rank(GA_Nodeid()), p_size(GA_Nnodes()), a(dim, mpi_comm_compute),
-        b(dim, mpi_comm_compute) {
+      : alpha(1.0), beta(2.0), p_rank(GA_Nodeid()), p_size(GA_Nnodes()), a(dim, molpro::gci::mpi_comm_compute),
+        b(dim, molpro::gci::mpi_comm_compute) {
     a.allocate_buffer();
     b.allocate_buffer();
     range_alpha.resize(dim);
@@ -519,4 +519,3 @@ TEST_F(ArrayCollectiveOpF, divide_overwrite_positive) {
   sync();
 }
 
-} // namespace gci

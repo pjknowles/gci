@@ -3,7 +3,7 @@
 
 #include <molpro/gci/gciVibSpace.h>
 
-using namespace gci;
+using molpro::gci::VibSpace;
 
 TEST(TestVibSpace, constructor_and_equality_operator) {
   int nMode = 1, nModal = 1, modeCoupling = 1;
