@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <stdexcept>
 
-#include <gciHProduct.h>
+#include <molpro/gci/gciHProduct.h>
 
 using namespace gci;
 

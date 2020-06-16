@@ -1,9 +1,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <gciRun.h>
-#include <gciPersistentOperator.h>
-#include <gciUtils.h>
+#include <molpro/gci/gciRun.h>
+#include <molpro/gci/gciPersistentOperator.h>
+#include <molpro/gci/gciUtils.h>
 
 #include "parallel_utils.h"
 
@@ -21,11 +21,11 @@ public:
               file_id(utils::open_hdf5_file(fname_hdf5, gci::mpi_comm_compute, true)) {
         if (!utils::file_exists(fname_op_rank2))
             throw std::runtime_error("PersistentOperatorDataF::PersistentOperatorDataF() test file not found");
-        FCIdump dump1(fname_op_rank1);
-        op_rank1 = std::make_shared<SymmetryMatrix::Operator>(constructOperator(dump1));
+        molpro::FCIdump dump1(fname_op_rank1);
+        op_rank1 = std::make_shared<molpro::Operator>(constructOperator(dump1));
         op_rank1->m_description = "Rank 1 operator";
-        FCIdump dump2(fname_op_rank2);
-        op_rank2 = std::make_shared<SymmetryMatrix::Operator>(constructOperator(dump2));
+        molpro::FCIdump dump2(fname_op_rank2);
+        op_rank2 = std::make_shared<molpro::Operator>(constructOperator(dump2));
         op_rank2->m_description = "Rank 2 operator";
     }
 
@@ -38,8 +38,8 @@ public:
     std::string fname_op_rank2;
     std::string fname_hdf5;
     hid_t file_id;
-    std::shared_ptr<SymmetryMatrix::Operator> op_rank1;
-    std::shared_ptr<SymmetryMatrix::Operator> op_rank2;
+    std::shared_ptr<molpro::Operator> op_rank1;
+    std::shared_ptr<molpro::Operator> op_rank2;
 };
 
 TEST_F(PersistentOperatorDataF, construct_from_op_rank1) {

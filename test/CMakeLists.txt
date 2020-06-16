@@ -1,4 +1,4 @@
-configure_file(${PROJECT_SOURCE_DIR}/gci.fcidump ${PROJECT_BINARY_DIR}/gci.fcidump COPYONLY)
+configure_file(gci.fcidump ${PROJECT_BINARY_DIR}/gci.fcidump COPYONLY)
 set(TESTS he2.fcidump he2n.fcidump hedz.fcidump hevdz.fcidump nevdz.fcidump)
 foreach (fil ${TESTS})
     get_filename_component(nam ${fil} NAME_WE)
