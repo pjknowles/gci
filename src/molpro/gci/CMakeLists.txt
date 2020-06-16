@@ -11,6 +11,7 @@ LibraryManager_Append(${PROJECT_NAME}
         gciWavefunction.h SharedCounter.h gciHProduct.h gciHProductSet.h gciMixedOperator.h gciMixedWavefunction.h
         gciVibSpace.h gciDavidson.h gciPersistentOperator.h gciMixedOperatorSecondQuant.h gciVibOperator.h
         gciVibExcitation.h gciArray.h gciUtils.h)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_14)
 
 LibraryManager_BLAS(${PROJECT_NAME} PUBLIC Intel10_64lp_seq Intel10_64lp)
 target_compile_definitions(${PROJECT_NAME} PRIVATE -DBLAS)
