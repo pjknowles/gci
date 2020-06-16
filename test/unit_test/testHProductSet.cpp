@@ -6,7 +6,11 @@
 #include <molpro/gci/gciHProductSet.h>
 #include <numeric>
 
-using namespace gci;
+using molpro::gci::HProduct;
+using molpro::gci::HProductSet;
+using molpro::gci::VibOp;
+using molpro::gci::VibOpType;
+using molpro::gci::VibSpace;
 
 class HProductSetF : public ::testing::Test {
 public:

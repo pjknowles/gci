@@ -10,27 +10,27 @@
 using ::testing::ContainerEq;
 using ::testing::Pointwise;
 
-namespace gci {
+using molpro::gci::PersistentOperator;
 
 class PersistentOperatorDataF : public ::testing::Test {
 public:
   PersistentOperatorDataF()
       : fname_op_rank1("test/unit_test/data/he2_1el.fcidump"), fname_op_rank2("test/unit_test/data/he2.fcidump"),
         fname_hdf5("test_PersistentOperatorDataF.h5"),
-        file_id(utils::open_hdf5_file(fname_hdf5, gci::mpi_comm_compute, true)) {
-    if (!utils::file_exists(fname_op_rank2))
+        file_id(molpro::gci::utils::open_hdf5_file(fname_hdf5, molpro::gci::mpi_comm_compute, true)) {
+    if (!molpro::gci::utils::file_exists(fname_op_rank2))
       throw std::runtime_error("PersistentOperatorDataF::PersistentOperatorDataF() test file not found");
     molpro::FCIdump dump1(fname_op_rank1);
-    op_rank1 = std::make_shared<molpro::Operator>(constructOperator(dump1));
+    op_rank1 = std::make_shared<molpro::Operator>(molpro::gci::constructOperator(dump1));
     op_rank1->m_description = "Rank 1 operator";
     molpro::FCIdump dump2(fname_op_rank2);
-    op_rank2 = std::make_shared<molpro::Operator>(constructOperator(dump2));
+    op_rank2 = std::make_shared<molpro::Operator>(molpro::gci::constructOperator(dump2));
     op_rank2->m_description = "Rank 2 operator";
   }
 
   ~PersistentOperatorDataF() {
     H5Fclose(file_id);
-    if (gci::parallel_rank == 0)
+    if (molpro::gci::parallel_rank == 0)
       std::remove(fname_hdf5.c_str());
   }
 
@@ -54,14 +54,14 @@ TEST_F(PersistentOperatorDataF, construct_from_op_rank1) {
 
 TEST_F(PersistentOperatorDataF, construct_from_op_rank2) {
   PersistentOperator p_op;
-  if (gci::parallel_rank == 0)
+  if (molpro::gci::parallel_rank == 0)
     p_op = PersistentOperator(op_rank2, op_rank2->m_description, 0, file_id);
   else
     p_op = PersistentOperator(nullptr, op_rank2->m_description, 0, file_id);
   {
     auto l = Lock();
     EXPECT_EQ(p_op.description(), op_rank2->m_description);
-    EXPECT_TRUE(utils::file_exists(fname_hdf5)) << "operator should be stored on hdf5";
+    EXPECT_TRUE(molpro::gci::utils::file_exists(fname_hdf5)) << "operator should be stored on hdf5";
     auto op = p_op.get();
     EXPECT_NE(op, op_rank2) << "get() creates a new object";
     // TODO check for equality of buffers
@@ -70,13 +70,13 @@ TEST_F(PersistentOperatorDataF, construct_from_op_rank2) {
 }
 
 TEST_F(PersistentOperatorDataF, construct_from_hdf5) {
-  if (gci::parallel_rank == 0)
+  if (molpro::gci::parallel_rank == 0)
     auto p_op = PersistentOperator(op_rank2, op_rank2->m_description, 0, file_id);
   else
     auto p_op = PersistentOperator(nullptr, op_rank2->m_description, 0, file_id);
   {
     auto l = Lock();
-    EXPECT_TRUE(utils::file_exists(fname_hdf5)) << "operator should be stored on hdf5";
+    EXPECT_TRUE(molpro::gci::utils::file_exists(fname_hdf5)) << "operator should be stored on hdf5";
     auto p_op = PersistentOperator(file_id, op_rank2->m_description);
     auto op = p_op.get();
     EXPECT_NE(op, op_rank2) << "get() creates a new object";
@@ -84,5 +84,3 @@ TEST_F(PersistentOperatorDataF, construct_from_hdf5) {
   }
   GA_Sync();
 }
-
-} // namespace gci
