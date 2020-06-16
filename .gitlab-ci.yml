@@ -4,6 +4,7 @@ cache:
     - public
     - build
     - src
+    - dependencies
     - test
     - CMakeLists.txt
     - Doxyfile
