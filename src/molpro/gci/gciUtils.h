@@ -5,6 +5,7 @@
 #include <mpi.h>
 #include <string>
 
+namespace molpro {
 namespace gci {
 namespace utils {
 
@@ -24,4 +25,5 @@ hid_t open_or_create_hdf5_dataset(const hid_t &location, const std::string &data
                                   const size_t &length);
 } // namespace utils
 } // namespace gci
+} // namespace molpro
 #endif // GCI_GCIUTILS_H

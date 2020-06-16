@@ -1,5 +1,6 @@
 #include "gciVibOperator.h"
 
+namespace molpro {
 namespace gci {
 
 namespace ns_VibOperator {
@@ -42,3 +43,4 @@ size_t hash_mc1_nosym_old(const VibExcitation &exc, int nModal) {
 }
 } //  namespace ns_VibOperator
 } // namespace gci
+} // namespace molpro

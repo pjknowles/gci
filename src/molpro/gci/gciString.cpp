@@ -6,6 +6,7 @@
 #include <string.h>
 
 // using String = gci::String;
+namespace molpro {
 namespace gci {
 
 size_t String::StringNotFound = (size_t)-1; ///< conventional null value for index
@@ -79,7 +80,7 @@ std::vector<char> String::serialise() const {
 //      nelec++;
 //      symmetry^=orbitalSpace->orbital_symmetries[orbital-1];
 ////                  xout <<"create orbital="<<*i <<" with symmetry="<<orbitalSpace->orbital_symmetries[*i-1]<<",
-///giving total symmetry"<<symmetry<<std::endl;
+/// giving total symmetry"<<symmetry<<std::endl;
 //      m_orbitals.insert(i,orbital);
 ////                  xout << "String::create inserts, after="<<str()<<", phase="<<phase<<std::endl;
 //      return phase;
@@ -224,3 +225,4 @@ size_t String::index(const StringSet &set) const {
 
 bool String::operator==(const String &other) const { return m_key == other.m_key; }
 } // namespace gci
+} // namespace molpro

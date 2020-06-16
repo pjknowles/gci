@@ -4,6 +4,7 @@
 #include <molpro/SMat.h>
 #include <vector>
 
+namespace molpro {
 namespace gci {
 /*!
  * \brief Holds a set of excitations from a single String.
@@ -85,5 +86,6 @@ public:
 std::ostream &operator<<(std::ostream &os, ExcitationSet const &obj);
 
 } // namespace gci
+} // namespace molpro
 
 #endif // GCIEXCITATIONSET_H

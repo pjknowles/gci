@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+namespace molpro {
 namespace gci {
 
 VibSpace::VibSpace(int mode, int modal, int excLevel) : nMode(mode), nModal(modal), excLvl(excLevel) {
@@ -14,3 +15,4 @@ bool VibSpace::operator==(const VibSpace &other) const {
 }
 
 } // namespace gci
+} // namespace molpro

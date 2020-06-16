@@ -4,6 +4,7 @@
 #include <sstream>
 
 // using ExcitationSet = gci::ExcitationSet;
+namespace molpro {
 namespace gci {
 
 ExcitationSet::ExcitationSet(const String &from, const StringSet &to, int annihilations, int creations,
@@ -108,3 +109,4 @@ std::string ExcitationSet::str(int verbosity) const {
 
 std::ostream &operator<<(std::ostream &os, ExcitationSet const &obj) { return os << obj.str(); }
 } // namespace gci
+} // namespace molpro

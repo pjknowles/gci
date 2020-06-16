@@ -3,6 +3,7 @@
 #include <fstream>
 #include <vector>
 
+namespace molpro {
 namespace gci {
 
 /*!
@@ -51,5 +52,6 @@ private:
 };
 
 } // namespace gci
+} // namespace molpro
 
 #endif // GCIFILE_H

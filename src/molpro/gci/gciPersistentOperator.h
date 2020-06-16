@@ -5,6 +5,7 @@
 #include <memory>
 #include <molpro/Operator.h>
 
+namespace molpro {
 namespace gci {
 
 /*!
@@ -46,4 +47,5 @@ protected:
 };
 
 } // namespace gci
+} // namespace molpro
 #endif // GCI_GCIPERSISTENTOPERATOR_H

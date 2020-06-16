@@ -18,6 +18,7 @@
  * The `main` will initiate the calculation by reading in options and calling run::drive function.
  */
 
+namespace molpro {
 namespace gci {
 namespace run {
 
@@ -112,5 +113,6 @@ void davidson_read_write_wfn(std::vector<t_Wavefunction> &ww, const std::string 
 
 } // namespace run
 } // namespace gci
+} // namespace molpro
 
 #endif // GCI_GCIDAVIDSON_H

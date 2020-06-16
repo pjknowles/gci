@@ -5,6 +5,7 @@
 #include <ostream>
 #include <string>
 
+namespace molpro {
 namespace gci {
 /**
  * @brief
@@ -29,5 +30,6 @@ public:
 */
 inline std::ostream &operator<<(std::ostream &os, Printable const &obj) { return os << obj.str(); }
 } // namespace gci
+} // namespace molpro
 
 #endif // GCIPRINTABLE_H

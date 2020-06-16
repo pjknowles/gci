@@ -1,6 +1,7 @@
 #include "gciDeterminant.h"
 #include <memory>
 
+namespace molpro {
 namespace gci {
 
 Determinant::Determinant(const State *State, const String *alpha, const String *beta) {
@@ -71,3 +72,4 @@ std::string Determinant::str(int verbosity, unsigned int columns) const {
   return verbosity >= 0 ? stringAlpha.str() + "|" + stringBeta.str() : std::string("");
 }
 } //  namespace gci
+} // namespace molpro

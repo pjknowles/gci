@@ -16,6 +16,7 @@
 #include <molpro/SMat.h>
 #include <molpro/memory.h>
 
+namespace molpro {
 namespace gci {
 
 /*!
@@ -285,4 +286,5 @@ Wavefunction operator/(const Wavefunction &w1,
 Wavefunction operator*(const Wavefunction &w1, const double &value); ///< multiply by a scalar
 Wavefunction operator*(const double &value, const Wavefunction &w1); ///< multiply by a scalar
 } // namespace gci
+} // namespace molpro
 #endif // GCIWAVEFUNCTION_H

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 
+namespace molpro {
 namespace gci {
 namespace utils {
 
@@ -53,3 +54,4 @@ hid_t open_or_create_hdf5_dataset(const hid_t &location, const std::string &data
 
 } // namespace utils
 } // namespace gci
+} // namespace molpro

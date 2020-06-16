@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <stdexcept>
 
+namespace molpro {
 namespace gci {
 HProduct::HProduct(product_t phi) : m_prod(std::move(phi)) {
   // Catch empty initialization with HProduct({ {} }) or HProduct({ })
@@ -110,3 +111,4 @@ std::ostream &operator<<(std::ostream &os, HProduct const &obj) {
 }
 
 } // namespace gci
+} // namespace molpro

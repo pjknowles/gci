@@ -10,6 +10,7 @@
 #include "molpro/gci/gciMixedOperatorSecondQuant.h"
 #include "molpro/gci/gciWavefunction.h"
 
+namespace molpro {
 namespace gci {
 
 /*!
@@ -129,4 +130,5 @@ public:
 }; // class MixedWavefunction
 
 } // namespace gci
+} // namespace molpro
 #endif // GCI_GCIMIXEDWAVEFUNCTION_H

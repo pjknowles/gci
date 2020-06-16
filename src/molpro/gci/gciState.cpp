@@ -4,6 +4,7 @@
 #include <sstream>
 
 // using State = gci::State;
+namespace molpro {
 namespace gci {
 State::State(const Options &dump) { load(dump); }
 
@@ -37,3 +38,4 @@ std::string State::str(int verbosity, unsigned int columns) const {
   return s.str();
 }
 } // namespace  gci
+} // namespace molpro

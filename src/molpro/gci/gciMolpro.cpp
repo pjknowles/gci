@@ -3,6 +3,8 @@
 #include <cassert>
 #ifndef MOLPRO
 
+namespace molpro {
+namespace gci {
 #ifdef EIGEN_USE_MKL_ALL
 constexpr bool blas = true;
 #include <mkl.h>
@@ -352,4 +354,6 @@ void Diagonalize(double *x, double *d, unsigned int m, unsigned int nColStride) 
   }
 }
 
+} // namespace gci
+} // namespace molpro
 #endif

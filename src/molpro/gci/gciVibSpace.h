@@ -1,6 +1,7 @@
 #ifndef GCI_GCIVIBSPACE_H
 #define GCI_GCIVIBSPACE_H
 
+namespace molpro {
 namespace gci {
 /*!
  * @brief Parameters defining the vibrational space
@@ -20,4 +21,5 @@ struct VibSpace {
 };
 
 } // namespace gci
+} // namespace molpro
 #endif // GCI_GCIVIBSPACE_H

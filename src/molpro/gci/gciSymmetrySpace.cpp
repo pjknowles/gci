@@ -5,6 +5,7 @@
 #include <utility>
 
 // using SymmetrySpace = gci::SymmetrySpace;
+namespace molpro {
 namespace gci {
 
 SymmetrySpace::SymmetrySpace(std::string title, int maxrank_)
@@ -102,3 +103,4 @@ size_t SymmetrySpace::total() const { return offset(8); }
 
 size_t SymmetrySpace::total(int sym1, int parity) const { return offset(sym1, 8, parity); }
 } // namespace  gci
+} // namespace molpro

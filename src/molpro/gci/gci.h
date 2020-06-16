@@ -48,6 +48,7 @@
 
 #include <iostream>
 
+namespace molpro {
 namespace gci {
 
 extern std::unique_ptr<molpro::Profiler> profiler; // global profiler
@@ -197,5 +198,6 @@ void inline gsum(molpro::vector<double> v, MPI_Comm communicator) { gsum(&v[0], 
 void inline gsum(std::vector<double> v, MPI_Comm communicator) { gsum(&v[0], v.size(), communicator); }
 
 } // namespace gci
+} // namespace molpro
 
 #endif // GCI_H

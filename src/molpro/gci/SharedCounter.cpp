@@ -2,6 +2,7 @@
 
 #include "gci.h"
 
+namespace molpro {
 namespace gci {
 SharedCounter::SharedCounter(const MPI_Comm &communicator)
     : m_communicator(communicator), m_hostrank(0), m_myval(0), m_ga_handle(0), m_rank(0), m_size(1) {
@@ -53,3 +54,4 @@ int SharedCounter::increment(int amount) {
   return glob_val;
 }
 } // namespace gci
+} // namespace molpro

@@ -7,9 +7,11 @@
 #include <molpro/SMat.h>
 #include <numeric>
 
-class Orbitals : public gci::Printable {
+namespace molpro {
+namespace gci {
+class Orbitals : public Printable {
 public:
-  Orbitals(const gci::OrbitalSpace &orbitalSpace)
+  Orbitals(const OrbitalSpace &orbitalSpace)
       : m_orbitals(molpro::dims_t{orbitalSpace, orbitalSpace}, molpro::parityNone, 0, "orbitals"),
         m_energies(molpro::dims_t{orbitalSpace}, molpro::parityNone, -1, "energies"),
         m_occupations(molpro::dims_t{orbitalSpace}, molpro::parityNone, -1, "occupations") {}
@@ -32,5 +34,7 @@ public:
   molpro::SMat m_energies;
   molpro::SMat m_occupations;
 };
+} // namespace gci
+} // namespace molpro
 
 #endif // GCIORBITALS_H

@@ -16,17 +16,17 @@ int main(int argc, char *argv[])
 // int main()
 {
   char fcidumpname[1024] = "gci.fcidump";
-  gci::molpro_plugin = false;
+  molpro::gci::molpro_plugin = false;
   MPI_Init(&argc, &argv);
   GA_Initialize();
-  gci::mpi_comm_compute = GA_MPI_Comm();
-  MPI_Comm_size(gci::mpi_comm_compute, &gci::parallel_size);
-  MPI_Comm_rank(gci::mpi_comm_compute, &gci::parallel_rank);
-  if (gci::parallel_rank == 0)
-    std::cout << "MPI_Comm_size = " << gci::parallel_size << std::endl;
-  if (gci::parallel_rank > 0)
+  molpro::gci::mpi_comm_compute = GA_MPI_Comm();
+  MPI_Comm_size(molpro::gci::mpi_comm_compute, &molpro::gci::parallel_size);
+  MPI_Comm_rank(molpro::gci::mpi_comm_compute, &molpro::gci::parallel_rank);
+  if (molpro::gci::parallel_rank == 0)
+    std::cout << "MPI_Comm_size = " << molpro::gci::parallel_size << std::endl;
+  if (molpro::gci::parallel_rank > 0)
     freopen("/dev/null", "w", stdout);
-  molpro::PluginGuest plugin("MOLPRO", gci::mpi_comm_compute);
+  molpro::PluginGuest plugin("MOLPRO", molpro::gci::mpi_comm_compute);
   if (plugin.active()) {
     if (!plugin.send("GIVE OPERATOR HAMILTONIAN FCIDUMP GCI"))
       throw std::logic_error("Unexpected plugin failure");
@@ -47,12 +47,12 @@ int main(int argc, char *argv[])
   }
   memory_initialize(memory);
   MA_init(C_CHAR, 10000000, ga_memory);
-  if (gci::parallel_rank == 0)
+  if (molpro::gci::parallel_rank == 0)
     std::cout << "memory initialised to " << memory_remaining() << std::endl;
   size_t memory_allocated = memory_remaining();
 
   {
-    gci::Run run(fcidumpname);
+    molpro::gci::Run run(fcidumpname);
     if (argc < 3 || plugin.active()) {
       run.options.addParameter("METHOD", "DAVIDSON");
       // run.options.addParameter("PROFILER","0");
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
       size_t pos = std::min(densityname.rfind('.'), densityname.size());
       densityname.replace(pos, densityname.size() - pos, ".density.");
       densityname += std::to_string(state + 1) + ".fcidump";
-      gci::FCIDump(run.m_densityMatrices[state], densityname);
+      molpro::gci::FCIDump(run.m_densityMatrices[state], densityname);
       if (plugin.active()) { // send the density back
         if (plugin.send("TAKE DENSITY FCIDUMP"))
           plugin.send(densityname);

@@ -4,6 +4,7 @@
 #include <ga.h>
 #include <mpi.h>
 
+namespace molpro {
 namespace gci {
 
 MixedWavefunction::MixedWavefunction(const Options &options, const State &prototype, MPI_Comm head_commun)
@@ -258,3 +259,4 @@ std::vector<double> MixedWavefunction::vibDensity() {
 //}
 
 } // namespace gci
+} // namespace molpro

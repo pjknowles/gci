@@ -3,10 +3,10 @@
 #include "gci.h"
 
 #include <algorithm>
-#include <cfloat>
 #include <ga.h>
 #include <numeric>
 
+namespace molpro {
 namespace gci {
 
 int get_communicator_size(MPI_Comm comm) {
@@ -571,3 +571,4 @@ Array operator*(const double &value, const Array &w1) {
 }
 
 } // namespace gci
+} // namespace molpro

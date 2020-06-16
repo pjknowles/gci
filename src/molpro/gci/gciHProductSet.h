@@ -7,6 +7,7 @@
 #include "molpro/gci/gciMixedOperator.h"
 #include "molpro/gci/gciVibSpace.h"
 
+namespace molpro {
 namespace gci {
 
 /*!
@@ -112,5 +113,6 @@ protected:
 };
 
 } //  namespace gci
+} // namespace molpro
 
 #endif // GCI_GCIHPRODUCTSET_H

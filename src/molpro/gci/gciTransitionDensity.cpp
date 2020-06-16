@@ -5,6 +5,7 @@
 #include <sstream>
 
 // using TransitionDensity = gci::TransitionDensity;
+namespace molpro {
 namespace gci {
 
 TransitionDensity::TransitionDensity(const TransitionDensity &source, bool copy)
@@ -578,3 +579,4 @@ std::string TransitionDensity::str(int verbosity, unsigned int columns) const {
   return s.str();
 }
 } // namespace gci
+} // namespace molpro
