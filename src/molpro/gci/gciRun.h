@@ -10,6 +10,7 @@
 #include "molpro/gci/gciState.h"
 #include "molpro/gci/gciWavefunction.h"
 
+namespace molpro {
 namespace gci {
 /*!
  * \brief The Run class encapsulates a complete calculation using gci
@@ -74,7 +75,7 @@ public:
   std::vector<molpro::Operator> m_densityMatrices; // the individual state density matrices
 
   std::vector<std::shared_ptr<Wavefunction>> m_wavefunctions;
-  gci::Options options;
+  Options options;
 };
 
 /*!
@@ -141,5 +142,6 @@ void FCIDump(const molpro::Operator &op, const std::string filename,
              std::vector<int> orbital_symmetries = std::vector<int>(0));
 
 } // namespace gci
+} // namespace molpro
 
 #endif // GCIRUN_H

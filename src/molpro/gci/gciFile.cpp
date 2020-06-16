@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 // using File = gci::File;
+namespace molpro {
 namespace gci {
 
 File::File() {
@@ -32,3 +33,4 @@ void File::write(double *buf, size_t length, size_t address) {
   f.write((char *)&buf[0], length * 8);
 }
 } // namespace gci
+} // namespace molpro

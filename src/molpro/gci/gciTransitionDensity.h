@@ -10,6 +10,7 @@
 #include "molpro/gci/gciStringSet.h"
 #include "molpro/gci/gciWavefunction.h"
 
+namespace molpro {
 namespace gci {
 
 /*!
@@ -32,7 +33,6 @@ public:
     a_t::construct(static_cast<A &>(*this), ptr, std::forward<Args>(args)...);
   }
 };
-// class TransitionDensity : public memory::vector<double, memory::allocator<double> >, public Printable {
 class TransitionDensity : public molpro::array<double>, public Printable {
 public:
   /*!
@@ -86,5 +86,6 @@ private:
   bool m_hasBeta;
 };
 } // namespace gci
+} // namespace molpro
 
 #endif // GCITRANSITIONDENSITY_H

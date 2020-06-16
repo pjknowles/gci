@@ -8,6 +8,7 @@
 #include "molpro/gci/gciPrintable.h"
 #include "molpro/gci/gciString.h"
 
+namespace molpro {
 namespace gci {
 
 /*!
@@ -132,4 +133,5 @@ private:
 };
 
 } // namespace gci
+} // namespace molpro
 #endif // GCISTRINGSET_H

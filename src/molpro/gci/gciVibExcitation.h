@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 
+namespace molpro {
 namespace gci {
 
 /*!
@@ -30,5 +31,6 @@ public:
 };
 
 } //  namespace gci
+} // namespace molpro
 
 #endif // GCI_GCIVIBEXCITATION_H

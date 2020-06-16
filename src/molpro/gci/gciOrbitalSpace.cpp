@@ -1,6 +1,7 @@
 #include "gciOrbitalSpace.h"
 
 // using OrbitalSpace = gci::OrbitalSpace;
+namespace molpro {
 namespace gci {
 
 void OrbitalSpace::load(const Options &dump, int verbosity) {
@@ -86,3 +87,4 @@ std::string OrbitalSpace::str(int verbosity, unsigned int columns) const {
   return o.str();
 }
 } // namespace gci
+} // namespace molpro

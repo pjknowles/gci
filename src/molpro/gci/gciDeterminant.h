@@ -4,6 +4,8 @@
 #include "molpro/gci/gciState.h"
 #include "molpro/gci/gciString.h"
 #include <vector>
+
+namespace molpro {
 namespace gci {
 /*!
  \brief
@@ -61,5 +63,6 @@ private:
   friend class Operator;
 };
 } // namespace gci
+} // namespace molpro
 
 #endif // GCIDETERMINANT_H

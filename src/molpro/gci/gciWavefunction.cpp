@@ -17,6 +17,7 @@
 #include <set>
 #include <vector>
 
+namespace molpro {
 namespace gci {
 
 int _mpi_rank(MPI_Comm comm) {
@@ -1213,3 +1214,4 @@ std::vector<StringSet> Wavefunction::activeStrings(bool spinUp) const {
   return results;
 }
 } // namespace gci
+} // namespace molpro

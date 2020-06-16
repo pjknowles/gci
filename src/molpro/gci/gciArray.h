@@ -11,6 +11,7 @@
 
 // typedef struct _gci_mpi_comm_dummy *MPI_Comm;
 
+namespace molpro {
 namespace gci {
 // TODO  1) store the wavefunction on file (hdf5)
 //      2) backup current solutions during Davidson
@@ -236,4 +237,5 @@ Array operator*(const Array &w1, const double &value); ///< multiply by a scalar
 Array operator*(const double &value, const Array &w1); ///< multiply by a scalar. Collective communication
 
 } // namespace gci
+} // namespace molpro
 #endif // GCI_TENSOR_H

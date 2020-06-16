@@ -6,6 +6,7 @@
 #include "molpro/gci/gciVibExcitation.h"
 #include "molpro/gci/gciVibSpace.h"
 
+namespace molpro {
 namespace gci {
 
 /*!
@@ -116,5 +117,6 @@ protected:
 std::ostream &operator<<(std::ostream &os, HProduct const &obj);
 
 } //  namespace gci
+} // namespace molpro
 
 #endif // GCI_GCIHPRODUCT_H

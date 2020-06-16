@@ -6,6 +6,7 @@
 #include "molpro/gci/gciHProduct.h"
 #include "molpro/gci/gciVibExcitation.h"
 
+namespace molpro {
 namespace gci {
 namespace ns_VibOperator {
 enum class parity_t : int {
@@ -165,5 +166,6 @@ protected:
 };
 
 } // namespace gci
+} // namespace molpro
 
 #endif // GCI_GCIVIBOPERATOR_H

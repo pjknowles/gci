@@ -5,6 +5,7 @@
 #include <sstream>
 
 // using StringSet = gci::StringSet;
+namespace molpro {
 namespace gci {
 
 StringSet::StringSet() : molpro::vector<String>() {
@@ -333,12 +334,12 @@ void StringSet::complete(int sym) {
 ////  xout << "s.key="<<s.key<<", s.orbitals().size()="<<s.orbitals().size()<<std::endl;
 //  if (addressMap.count(s.key())) {
 ////        std::cout <<parallel_rank<<" "<<size()<<" "<<addressMap.count(s.key)<< "StringSet::insert found
-///existing"<<std::endl;std::cout.flush();
+/// existing"<<std::endl;std::cout.flush();
 //    if (addressMap[s.key()] >= size()) throw std::logic_error("something wrong in StringSet reset");
 //    at(addressMap[s.key()]) = s;
 //  } else {
 ////        if (s.orbitals().size()==0) std::cout <<parallel_rank<< "StringSet::insert found
-///new"<<std::endl;std::cout.flush();
+/// new"<<std::endl;std::cout.flush();
 //    addressMap[s.key()]=size();
 //    memory::vector<String>::push_back(s);
 ////      if (s.orbitals().size()==0) std::cout <<parallel_rank<<"StringSet::push_back " <<s <<" size()="
@@ -392,3 +393,4 @@ std::vector<size_t> StringSet::index(const StringSet &set) const {
   return result;
 }
 } // namespace gci
+} // namespace molpro

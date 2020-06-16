@@ -8,7 +8,11 @@
 #include "gciMixedWavefunction.h"
 #include "gciMolpro.h"
 #include "gciRun.h"
+#ifdef MOLPRO
+#include "gciMolpro.h"
+#endif
 
+namespace molpro {
 namespace gci {
 
 MPI_Comm create_new_comm() {
@@ -30,9 +34,7 @@ MPI_Comm mpi_comm_compute;
 std::map<MPI_Comm, long int> __my_first_task{{mpi_comm_compute, 0}};
 std::map<MPI_Comm, long int> __task{{mpi_comm_compute, 0}};
 std::map<MPI_Comm, long int> __task_granularity{{mpi_comm_compute, 1}};
-} // namespace gci
 
-using namespace gci;
 using ParameterVectorSet = std::vector<Wavefunction>;
 using scalar = double;
 
@@ -156,7 +158,7 @@ public:
       g.operatorOnWavefunction(_IPT_Fock[0], x, parallel_stringset);
       //        xout << "_meanfield_residual: g after fock"<<g->values()<<std::endl;
       g.axpy(-_IPT_Epsilon[0], x);
-      gci::Wavefunction Qc(g);
+      Wavefunction Qc(g);
       Qc.set(0);
       Qc.operatorOnWavefunction(*_IPT_Q, x);
       //        xout << "_meanfield_residual: Qc "<<Qc.values()<<std::endl;
@@ -291,7 +293,7 @@ Run::Run(std::string fcidump) : m_hamiltonian(constructOperator(molpro::FCIdump(
   //  xout << "FUNKY "<< options.parameter("FUNKY",std::vector<int>{999})[0]<<std::endl;
 }
 
-std::unique_ptr<molpro::Profiler> gci::profiler = nullptr;
+std::unique_ptr<molpro::Profiler> profiler = nullptr;
 std::vector<double> Run::run() {
   if (profiler == nullptr)
     profiler =
@@ -516,7 +518,6 @@ Run::~Run() {
   _nextval_counter.clear();
 }
 
-namespace gci {
 /*!
  * \brief Construct an operator templated on source, but with a special specification
  * \param special
@@ -525,12 +526,6 @@ namespace gci {
  * \param forceSpinUnrestricted whether to force conversion to a UHF object
  */
 static molpro::Operator *projector(const molpro::Operator &source, std::string special, bool forceSpinUnrestricted);
-} // namespace gci
-
-#ifdef MOLPRO
-#include "gciMolpro.h"
-using namespace itf;
-#endif
 
 std::vector<double> Run::DIIS(const molpro::Operator &ham, const State &prototype, double energyThreshold,
                               int maxIterations) {
@@ -732,12 +727,12 @@ std::vector<double> Run::CSDavidson(const molpro::Operator &ham, const State &pr
   g -= (e0 - (double)1e-10);
   std::vector<double> e;
   //  xout << "Denominators: " << g.str(2) << std::endl;
-  gci::File h0file;
+  File h0file;
   h0file.name = "H0";
   g.putw(h0file);
-  gci::File wfile;
+  File wfile;
   wfile.name = "Wavefunction vectors";
-  gci::File gfile;
+  File gfile;
   gfile.name = "Action vectors";
   w.set((double)0);
   w.set(reference, (double)1);
@@ -983,15 +978,15 @@ std::vector<double> Run::RSPT(const std::vector<molpro::Operator *> &hams, const
   g -= e[0];
   g.set(reference, (double)1);
   //  xout << "Møller-Plesset denominators: " << g.str(2) << std::endl;
-  gci::File h0file;
+  File h0file;
   h0file.name = "H0";
   g.putw(h0file);
   w.set((double)0);
   w.set(reference, (double)1);
-  gci::File wfile;
+  File wfile;
   wfile.name = "Wavefunction vectors";
   w.putw(wfile, 0);
-  gci::File gfile;
+  File gfile;
   gfile.name = "Action vectors";
   for (int k = 0; k < (int)hams.size(); k++) {
     g.set((double)0);
@@ -1148,7 +1143,7 @@ continuumFound:
       xout << "b0m after epsilon: " << _IPT_b0m->values() << std::endl;
     }
     for (int k = 1; k < m - 1; k++) {
-      gci::Wavefunction Qc(prototype);
+      Wavefunction Qc(prototype);
       Qc.set(0);
       Qc.operatorOnWavefunction(*_IPT_Q, _IPT_c[m - k]);
       xout << "eta " << k << " " << _IPT_eta[k] << std::endl;
@@ -1218,7 +1213,7 @@ continuumFound:
     {
       double refc1m = 0;
       for (int k = 1; k < m + 1; k++) {
-        gci::Wavefunction Qc(_IPT_c[k]);
+        Wavefunction Qc(_IPT_c[k]);
         Qc.set(0);
         Qc.operatorOnWavefunction(*_IPT_Q, _IPT_c[m + 1 - k]);
         refc1m -= 0.5 * Qc.dot(_IPT_c[k]);
@@ -1306,7 +1301,7 @@ continuumFound:
         gcheck.operatorOnWavefunction(_IPT_Fock[k], _IPT_c[m - k]);
         gcheck.axpy(-_IPT_Epsilon[k], _IPT_c[m - k]);
         if (k < m) {
-          gci::Wavefunction Qc(_IPT_c[0]);
+          Wavefunction Qc(_IPT_c[0]);
           Qc.set(0);
           Qc.operatorOnWavefunction(*_IPT_Q, _IPT_c[m - k]);
           gcheck.axpy(-_IPT_eta[k], Qc);
@@ -1351,7 +1346,7 @@ continuumFound:
       {
         double norm = 0;
         for (int k = 0; k <= m; k++) {
-          gci::Wavefunction Qc(_IPT_c[k]);
+          Wavefunction Qc(_IPT_c[k]);
           Qc.set(0);
           Qc.operatorOnWavefunction(*_IPT_Q, _IPT_c[m - k]);
           norm += _IPT_c[k] * Qc;
@@ -1454,8 +1449,8 @@ void Run::HamiltonianMatrixPrint(molpro::Operator &hamiltonian, const State &pro
   }
 }
 
-molpro::Operator *gci::projector(const molpro::Operator &source, const std::string special,
-                                 const bool forceSpinUnrestricted) {
+molpro::Operator *projector(const molpro::Operator &source, const std::string special,
+                            const bool forceSpinUnrestricted) {
   molpro::dim_t dims;
   for (auto s = 0; s < 8; s++)
     dims.push_back(source.dimension(s, 0, 0));
@@ -1494,7 +1489,7 @@ molpro::Operator *gci::projector(const molpro::Operator &source, const std::stri
   return result;
 }
 
-Eigen::VectorXd gci::int1(const molpro::Operator &hamiltonian, int spin) {
+Eigen::VectorXd int1(const molpro::Operator &hamiltonian, int spin) {
   size_t basisSize = 0;
   for (auto si = 0; si < 8; si++)
     basisSize += hamiltonian.O1(spin > 0).dimension(si);
@@ -1506,7 +1501,7 @@ Eigen::VectorXd gci::int1(const molpro::Operator &hamiltonian, int spin) {
   return result;
 }
 
-Eigen::MatrixXd gci::intJ(const molpro::Operator &hamiltonian, int spini, int spinj) {
+Eigen::MatrixXd intJ(const molpro::Operator &hamiltonian, int spini, int spinj) {
   if (spinj > spini)
     return intJ(hamiltonian, spinj, spini).transpose();
   size_t basisSize = 0;
@@ -1532,7 +1527,7 @@ Eigen::MatrixXd gci::intJ(const molpro::Operator &hamiltonian, int spini, int sp
   return result;
 }
 
-Eigen::MatrixXd gci::intK(const molpro::Operator &hamiltonian, int spin) {
+Eigen::MatrixXd intK(const molpro::Operator &hamiltonian, int spin) {
   size_t basisSize = 0;
   for (auto si = 0; si < 8; si++) {
     basisSize += hamiltonian.O1().dimension(si);
@@ -1584,7 +1579,7 @@ Eigen::MatrixXd gci::intK(const molpro::Operator &hamiltonian, int spin) {
   return result;
 }
 
-molpro::Operator gci::constructOperator(const molpro::FCIdump &dump, bool collective) {
+molpro::Operator constructOperator(const molpro::FCIdump &dump, bool collective) {
   std::vector<char> portableByteStream;
   int lPortableByteStream;
   int rank = 0;
@@ -1694,7 +1689,7 @@ molpro::Operator gci::constructOperator(const molpro::FCIdump &dump, bool collec
   }
 }
 
-void gci::FCIDump(const molpro::Operator &op, const std::string filename, std::vector<int> orbital_symmetries) {
+void FCIDump(const molpro::Operator &op, const std::string filename, std::vector<int> orbital_symmetries) {
   molpro::FCIdump dump;
   int verbosity = 0;
   if (orbital_symmetries.empty())
@@ -1787,8 +1782,8 @@ void gci::FCIDump(const molpro::Operator &op, const std::string filename, std::v
   dump.writeIntegral(0, 0, 0, 0, op.m_O0);
 }
 
-molpro::Operator gci::fockOperator(const molpro::Operator &hamiltonian, const Determinant &reference,
-                                   const std::string description) {
+molpro::Operator fockOperator(const molpro::Operator &hamiltonian, const Determinant &reference,
+                              const std::string description) {
   molpro::dim_t dims;
   for (auto s = 0; s < 8; s++)
     dims.push_back(hamiltonian.dimension(s, 0, 0));
@@ -1888,8 +1883,8 @@ molpro::Operator gci::fockOperator(const molpro::Operator &hamiltonian, const De
   return f;
 }
 
-molpro::Operator gci::sameSpinOperator(const molpro::Operator &hamiltonian, const Determinant &reference,
-                                       const std::string description) {
+molpro::Operator sameSpinOperator(const molpro::Operator &hamiltonian, const Determinant &reference,
+                                  const std::string description) {
   molpro::dim_t dims;
   for (auto s = 0; s < 8; s++)
     dims.push_back(hamiltonian.dimension(s, 0, 0));
@@ -1916,24 +1911,26 @@ molpro::Operator gci::sameSpinOperator(const molpro::Operator &hamiltonian, cons
   return result;
 }
 
-void gci::gsum(molpro::Operator &op) {
+void gsum(molpro::Operator &op) {
   std::vector<double> O0;
   O0.push_back(op.m_O0);
-  ::gci::gsum(O0, mpi_comm_compute);
+  gsum(O0, mpi_comm_compute);
   op.m_O0 = O0[0];
   if (op.m_rank > 0) {
-    ::gci::gsum(*op.O1(true).data(), mpi_comm_compute);
+    gsum(*op.O1(true).data(), mpi_comm_compute);
     if (op.m_uhf)
-      ::gci::gsum(*op.O1(false).data(), mpi_comm_compute);
+      gsum(*op.O1(false).data(), mpi_comm_compute);
   }
   if (op.m_rank > 1) {
-    ::gci::gsum(*op.O2(true, true).data(), mpi_comm_compute);
+    gsum(*op.O2(true, true).data(), mpi_comm_compute);
     if (op.m_uhf) {
-      ::gci::gsum(*op.O2(true, false).data(), mpi_comm_compute);
-      ::gci::gsum(*op.O2(false, false).data(), mpi_comm_compute);
+      gsum(*op.O2(true, false).data(), mpi_comm_compute);
+      gsum(*op.O2(false, false).data(), mpi_comm_compute);
     }
   }
 }
+} // namespace gci
+} // namespace molpro
 #ifdef MOLPRO
 #ifdef __cplusplus
 extern "C" {

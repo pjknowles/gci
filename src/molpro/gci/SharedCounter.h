@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <vector>
 
+namespace molpro {
 namespace gci {
 class SharedCounter {
 public:
@@ -43,4 +44,5 @@ private:
 };
 
 } // namespace gci
+} // namespace molpro
 #endif // SHAREDCOUNTER_H

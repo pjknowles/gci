@@ -8,6 +8,7 @@
 #include "gciHProduct.h"
 #include "gciRun.h"
 
+namespace molpro {
 namespace gci {
 
 /*!
@@ -185,5 +186,6 @@ protected:
 };
 
 } // namespace gci
+} // namespace molpro
 
 #endif // GCI_GCIMIXEDOPERATOR_H

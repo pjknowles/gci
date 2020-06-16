@@ -8,6 +8,7 @@
 #include "molpro/gci/gciVibOperator.h"
 #include <hdf5.h>
 
+namespace molpro {
 namespace gci {
 
 /*!
@@ -111,5 +112,6 @@ void constructDMcoupling(std::map<std::string, MixedOperatorSecondQuant::hel_t> 
                          const std::vector<double> &freq, int nmode, int nmodal);
 
 } // namespace gci
+} // namespace molpro
 
 #endif // GCI_GCIMIXEDOPERATORSECONDQUANT_H

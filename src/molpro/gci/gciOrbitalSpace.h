@@ -5,6 +5,7 @@
 #include <map>
 #include <molpro/Operator.h>
 
+namespace molpro {
 namespace gci {
 /*!
  * \brief The OrbitalSpace class: a container for an orbital space as specified via symmetries (1..8) of orbitals
@@ -79,5 +80,6 @@ public:
                    int parity2 = 0) const;
 };
 } // namespace gci
+} // namespace molpro
 
 #endif // GCIORBITALSPACE_H

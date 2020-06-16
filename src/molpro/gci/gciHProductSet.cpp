@@ -3,6 +3,7 @@
 #include <numeric>
 #include <stdexcept>
 
+namespace molpro {
 namespace gci {
 
 HProductSet::HProductSet(const HProduct &bra, const VibSpace &vibSpace, const VibOp &vibOp)
@@ -172,3 +173,4 @@ void HProductSet::generateQsqCoupledSpace(const HProduct &bra, const VibOp &vibO
 }
 
 } // namespace gci
+} // namespace molpro

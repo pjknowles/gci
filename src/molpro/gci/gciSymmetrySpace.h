@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+namespace molpro {
 namespace gci {
 
 /*!
@@ -63,5 +64,6 @@ private:
   std::vector<size_t> buffer;
 };
 } // namespace gci
+} // namespace molpro
 
 #endif // GCISYMMETRYSPACE_H

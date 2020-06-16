@@ -8,6 +8,7 @@
 #include "molpro/gci/gciOrbitalSpace.h"
 #include "molpro/gci/gciPrintable.h"
 
+namespace molpro {
 namespace gci {
 /**
  * @brief
@@ -60,5 +61,6 @@ public:
   std::string str(int verbosity = 0, unsigned int columns = UINT_MAX) const override;
 };
 } // namespace gci
+} // namespace molpro
 
 #endif // GCIState_H

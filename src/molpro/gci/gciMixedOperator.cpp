@@ -6,6 +6,7 @@
 #include <utility>
 #include <valarray>
 
+namespace molpro {
 namespace gci {
 molpro::Operator constructOperatorT1(const molpro::FCIdump &dump) {
   std::vector<char> portableByteStream;
@@ -239,3 +240,4 @@ double MixedOperator::QtypeOperator(const HProduct &bra, const HProduct &ket,
 }
 
 } // namespace gci
+} // namespace molpro

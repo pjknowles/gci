@@ -12,7 +12,8 @@
 
 #define xout std::cout
 
-using namespace gci;
+namespace molpro {
+namespace gci {
 
 Options::Options(const std::string input) {
   std::istringstream s(input);
@@ -137,3 +138,6 @@ void Options::addParameter(const std::string &key, const int &value, bool echo) 
 void Options::addParameter(const std::string &key, const double &value, bool echo) {
   addParameter(key, std::vector<double>(1, value), echo);
 }
+
+} // namespace gci
+} // namespace molpro

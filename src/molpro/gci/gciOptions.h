@@ -6,6 +6,7 @@
 /*!
  * \brief C++ class that manages input options
  */
+namespace molpro {
 namespace gci {
 class Options {
 public:
@@ -96,5 +97,6 @@ private:
   std::string namelistData;
 };
 } // namespace gci
+} // namespace molpro
 
 #endif // GCIOPTIONS_H

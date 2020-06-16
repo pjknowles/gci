@@ -8,6 +8,7 @@
 #include <hdf5.h>
 #include <iomanip>
 
+namespace molpro {
 namespace gci {
 namespace run {
 
@@ -427,10 +428,11 @@ void Davidson<t_Wavefunction, t_Operator>::backup(std::vector<t_Wavefunction> &w
   davidson_read_write_wfn<t_Wavefunction>(ww, backup_file, true);
 }
 
-template class Davidson<gci::MixedWavefunction, gci::MixedOperatorSecondQuant>;
+template class Davidson<MixedWavefunction, MixedOperatorSecondQuant>;
 
-template class Davidson<gci::Wavefunction, molpro::Operator>;
+template class Davidson<Wavefunction, molpro::Operator>;
 
-template void davidson_read_write_wfn<gci::Array>(std::vector<Array> &ww, const std::string &fname, bool save);
+template void davidson_read_write_wfn<Array>(std::vector<Array> &ww, const std::string &fname, bool save);
 } // namespace run
 } // namespace gci
+} // namespace molpro

@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <vector>
 
+namespace molpro {
 namespace gci {
 class StringSet;
 /*!
@@ -190,5 +191,6 @@ private:
   int_least8_t m_spin;                  ///< \brief spin 1=alpha, -1=beta
 };
 } // namespace gci
+} // namespace molpro
 
 #endif // GCISTRING_H

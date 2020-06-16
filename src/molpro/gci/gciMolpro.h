@@ -8,6 +8,8 @@
 #include <mpp/CxMpp.h>
 using namespace itf;
 #else
+namespace molpro {
+namespace gci {
 typedef unsigned int uint;
 // matrix multiplication routines. All of them call mxma/mxmb as appropriate
 //
@@ -39,5 +41,7 @@ void MxvDrvGen(const double *A, uint nRowStA, uint nColStA, const double *V, uin
 // diagonalize a symmetric matrix in-place, storing nDim eigenvalues at pEigValues.
 void Diagonalize(double *pMatrix, double *pEigValues, uint nDim, uint nColStride);
 
+} // namespace gci
+} // namespace molpro
 #endif
 #endif // GCIMOLPRO_H

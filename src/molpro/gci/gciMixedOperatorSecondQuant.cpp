@@ -5,6 +5,7 @@
 
 #include <utility>
 
+namespace molpro {
 namespace gci {
 
 using ns_VibOperator::parity_t;
@@ -606,3 +607,4 @@ bool MixedOperatorSecondQuant::connected(const HProduct &bra, const HProduct &ke
 }
 
 } // namespace gci
+} // namespace molpro

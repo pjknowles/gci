@@ -2,6 +2,7 @@
 #include "gci.h"
 #include "gciUtils.h"
 
+namespace molpro {
 namespace gci {
 PersistentOperator::PersistentOperator() : m_file_id(-1), m_on_disk(false) {}
 
@@ -26,12 +27,12 @@ PersistentOperator::PersistentOperator(hid_t id, std::string _description)
 
 void PersistentOperator::store_bytestream(const std::shared_ptr<molpro::Operator> &op, int root) {
   hid_t dataset;
-  if (gci::parallel_rank == root) {
+  if (parallel_rank == root) {
     if (op == nullptr)
       throw std::runtime_error("PersistentOperator::store_bytestream() *operator is nullptr");
     auto bs = op->bytestream();
     unsigned long size = bs.size();
-    MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG, root, gci::mpi_comm_compute);
+    MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG, root, mpi_comm_compute);
     dataset = utils::open_or_create_hdf5_dataset(m_file_id, m_description, H5T_NATIVE_CHAR, bs.size());
     auto plist = H5Pcreate(H5P_DATASET_XFER);
     H5Pset_dxpl_mpio(plist, H5FD_MPIO_INDEPENDENT);
@@ -41,7 +42,7 @@ void PersistentOperator::store_bytestream(const std::shared_ptr<molpro::Operator
     H5Pclose(plist);
   } else {
     unsigned long size;
-    MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG, root, gci::mpi_comm_compute);
+    MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG, root, mpi_comm_compute);
     dataset = utils::open_or_create_hdf5_dataset(m_file_id, m_description, H5T_NATIVE_CHAR, size);
   }
   H5Dclose(dataset);
@@ -73,3 +74,4 @@ std::shared_ptr<molpro::Operator> PersistentOperator::get() const {
 }
 
 } // namespace gci
+} // namespace molpro
