@@ -1,14 +1,14 @@
 #ifndef GCIORBITALS_H
 #define GCIORBITALS_H
-#include <molpro/SMat.h>
 #include "molpro/gci/gciOrbitalSpace.h"
 #include "molpro/gci/gciPrintable.h"
-#include <memory>
 #include <iostream>
+#include <memory>
+#include <molpro/SMat.h>
 #include <numeric>
 
 class Orbitals : public gci::Printable {
- public:
+public:
   Orbitals(const gci::OrbitalSpace &orbitalSpace)
       : m_orbitals(molpro::dims_t{orbitalSpace, orbitalSpace}, molpro::parityNone, 0, "orbitals"),
         m_energies(molpro::dims_t{orbitalSpace}, molpro::parityNone, -1, "energies"),
@@ -23,9 +23,11 @@ class Orbitals : public gci::Printable {
       s << m_occupations.str(m_occupations.m_description, verbosity) << std::endl;
     return s.str();
   }
- private:
+
+private:
   Orbitals();
- public:
+
+public:
   molpro::SMat m_orbitals;
   molpro::SMat m_energies;
   molpro::SMat m_occupations;

@@ -3,14 +3,12 @@
 
 #include <molpro/FCIdump.h>
 
-#include "molpro/gci/gciVibOperator.h"
 #include "molpro/gci/gciOptions.h"
 #include "molpro/gci/gciPersistentOperator.h"
+#include "molpro/gci/gciVibOperator.h"
 #include <hdf5.h>
 
-
 namespace gci {
-
 
 /*!
  * @brief Mixed electron-vibration operator in a fully second quantized form.
@@ -31,51 +29,50 @@ namespace gci {
  */
 class MixedOperatorSecondQuant {
 protected:
-    std::string m_fcidump_f; //!< base name for dump files storing electronic operators of the mixed Tensor
-    std::string hdf5_fname; //!< file name for hdf5 where large eletronic operators are stored
-    bool restart; //!< operator is already stored on the hdf5, no overwriting is done
-    hid_t hid_file; //!< id of the hdf5 file
-    bool hdf5_file_owner; //!< whether it owns the hdf5 file
-    std::string m_description; //!< desctiption of the Hamiltonian
+  std::string m_fcidump_f;   //!< base name for dump files storing electronic operators of the mixed Tensor
+  std::string hdf5_fname;    //!< file name for hdf5 where large eletronic operators are stored
+  bool restart;              //!< operator is already stored on the hdf5, no overwriting is done
+  hid_t hid_file;            //!< id of the hdf5 file
+  bool hdf5_file_owner;      //!< whether it owns the hdf5 file
+  std::string m_description; //!< desctiption of the Hamiltonian
 public:
-    using hel_t = PersistentOperator;
-    const int nMode; //!< Number of vibrational modes
-    const int nModal; //!< Number of modals per mode (for now assumed the same for each mode)
-    VibOperator<double> Hvib;//!< Purely vibrational term
-    std::map<std::string, hel_t> elHam; //!< Purely electronic terms
-    //! Purely electronic Hamiltonian that has to be applied twice
-    //! e.g. dipole moment operator
-    std::map<std::string, hel_t> elHam2;
-    std::map<std::string, VibOperator<hel_t >> mixedHam;//!< Mixed electronic-vibrational terms
+  using hel_t = PersistentOperator;
+  const int nMode;                    //!< Number of vibrational modes
+  const int nModal;                   //!< Number of modals per mode (for now assumed the same for each mode)
+  VibOperator<double> Hvib;           //!< Purely vibrational term
+  std::map<std::string, hel_t> elHam; //!< Purely electronic terms
+  //! Purely electronic Hamiltonian that has to be applied twice
+  //! e.g. dipole moment operator
+  std::map<std::string, hel_t> elHam2;
+  std::map<std::string, VibOperator<hel_t>> mixedHam; //!< Mixed electronic-vibrational terms
 
-    explicit MixedOperatorSecondQuant(const Options &options);
-    MixedOperatorSecondQuant(const MixedOperatorSecondQuant &other, const std::string &include_ham);
-    ~MixedOperatorSecondQuant();
-    /*!
-     * @brief Checks if bra and ket vibrational basis are connected by the mixed Hamiltonian
-     */
-    bool connected(const HProduct &bra, const HProduct &ket) const;
+  explicit MixedOperatorSecondQuant(const Options &options);
+  MixedOperatorSecondQuant(const MixedOperatorSecondQuant &other, const std::string &include_ham);
+  ~MixedOperatorSecondQuant();
+  /*!
+   * @brief Checks if bra and ket vibrational basis are connected by the mixed Hamiltonian
+   */
+  bool connected(const HProduct &bra, const HProduct &ket) const;
 
-    std::string description() {return m_description;}
+  std::string description() { return m_description; }
 
 public:
+  /*!
+   * @brief From FCIdump file generates antisymmetric electronic operator
+   */
+  static molpro::Operator constructOperatorAntisymm1el(const molpro::FCIdump &dump, bool collective = true);
 
-    /*!
-     * @brief From FCIdump file generates antisymmetric electronic operator
-     */
-    static molpro::Operator constructOperatorAntisymm1el(const molpro::FCIdump &dump, bool collective = true);
+  static molpro::Operator constructK(const molpro::FCIdump &dump, bool collective = true);
 
-    static molpro::Operator constructK(const molpro::FCIdump &dump, bool collective = true);
+  static molpro::Operator constructD(const molpro::FCIdump &dump, bool collective = true);
 
-    static molpro::Operator constructD(const molpro::FCIdump &dump, bool collective = true);
+  void initializeHel(const molpro::FCIdump &fcidump, bool h0_only = false);
 
-    void initializeHel(const molpro::FCIdump &fcidump, bool h0_only = false);
+  void initializeLambda(const molpro::FCIdump &fcidump);
 
-    void initializeLambda(const molpro::FCIdump &fcidump);
+  void initializeK(const molpro::FCIdump &fcidump);
 
-    void initializeK(const molpro::FCIdump &fcidump);
-
-    void initializeD(const molpro::FCIdump &fcidump);
+  void initializeD(const molpro::FCIdump &fcidump);
 };
 
 /*!
@@ -87,7 +84,6 @@ public:
  * @param nmodal  number of modals
  */
 void constructHvib(VibOperator<double> &Hvib, const std::string &fcidump_name, int nmode, int nmodal);
-
 
 /*!
  * @brief Constructs harmonic oscillator operator
@@ -110,10 +106,10 @@ void constructHvib(VibOperator<double> &Hvib, int nmode, int nmodal, std::vector
  * @param freq
  */
 void constructDMcoupling(std::map<std::string, MixedOperatorSecondQuant::hel_t> &elHam2,
-                         std::map<std::string, VibOperator<MixedOperatorSecondQuant::hel_t >> &mixedHam,
+                         std::map<std::string, VibOperator<MixedOperatorSecondQuant::hel_t>> &mixedHam,
                          const std::string &fcidump_f, const std::vector<double> &gamma,
                          const std::vector<double> &freq, int nmode, int nmodal);
 
 } // namespace gci
 
-#endif //GCI_GCIMIXEDOPERATORSECONDQUANT_H
+#endif // GCI_GCIMIXEDOPERATORSECONDQUANT_H

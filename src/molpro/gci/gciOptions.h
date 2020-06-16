@@ -1,44 +1,44 @@
 #ifndef GCIOPTIONS_H
 #define GCIOPTIONS_H
+#include <fstream>
 #include <string>
 #include <vector>
-#include <fstream>
 /*!
  * \brief C++ class that manages input options
  */
 namespace gci {
 class Options {
- public:
+public:
   /*!
-     * \brief Construct Options object
-     * \param input Namelist format option specifier
-     */
+   * \brief Construct Options object
+   * \param input Namelist format option specifier
+   */
   explicit Options(std::string input = "");
 
   /*!
-     * \brief Obtain an integer parameter.
-     * \param key The name of the parameter
-     * \param def Default value if the parameter is not found.
-     * \return  The result as a vector of integers.
-     */
+   * \brief Obtain an integer parameter.
+   * \param key The name of the parameter
+   * \param def Default value if the parameter is not found.
+   * \return  The result as a vector of integers.
+   */
   std::vector<int> parameter(const std::string &key, const std::vector<int> &def) const;
   int parameter(const std::string &key, int def = 0) const;
 
   /*!
-     * \brief Obtain a real parameter.
-     * \param key The name of the parameter
-     * \param def Default value if the parameter is not found.
-     * \return  The result as a vector of integers.
-     */
+   * \brief Obtain a real parameter.
+   * \param key The name of the parameter
+   * \param def Default value if the parameter is not found.
+   * \return  The result as a vector of integers.
+   */
   std::vector<double> parameter(const std::string &key, const std::vector<double> &def) const;
   double parameter(const std::string &key, double def) const;
 
   /*!
-     * \brief Obtain a string parameter.
-     * \param key The name of the parameter
-     * \param def Default value if the parameter is not found.
-     * \return  The result as a vector of integers.
-     */
+   * \brief Obtain a string parameter.
+   * \param key The name of the parameter
+   * \param def Default value if the parameter is not found.
+   * \return  The result as a vector of integers.
+   */
   std::vector<std::string> parameter(const std::string &key, const std::vector<std::string> &def) const;
   std::string parameter(const std::string &key, const std::string &def) const;
 
@@ -92,9 +92,9 @@ class Options {
 
   std::string data() { return namelistData; }
 
- private:
+private:
   std::string namelistData;
 };
-}
+} // namespace gci
 
 #endif // GCIOPTIONS_H

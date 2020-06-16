@@ -1,8 +1,8 @@
 #ifndef GCIEXCITATIONSET_H
 #define GCIEXCITATIONSET_H
-#include <vector>
-#include <molpro/SMat.h>
 #include "molpro/gci/gciString.h"
+#include <molpro/SMat.h>
+#include <vector>
 
 namespace gci {
 /*!
@@ -14,27 +14,27 @@ namespace gci {
  * points (via stringIndex).
  */
 class Excitation {
- public:
+public:
   Excitation() = delete;
   /*!
-     * \brief Constructor
-     * \param StringIndex points to the destination of the excitation in a StringSet
-     * \param Phase plus or minus one, giving the parity of the line-up permutation
-     * \param OrbitalAddress An address representing the orbital(s) involved.
-     */
+   * \brief Constructor
+   * \param StringIndex points to the destination of the excitation in a StringSet
+   * \param Phase plus or minus one, giving the parity of the line-up permutation
+   * \param OrbitalAddress An address representing the orbital(s) involved.
+   */
   Excitation(size_t StringIndex, int Phase, size_t OrbitalAddress)
       : stringIndex(StringIndex), phase(Phase), orbitalAddress(OrbitalAddress) {}
   /*!
-     * \brief stringIndex points to the destination of the excitation in a StringSet
-     */
+   * \brief stringIndex points to the destination of the excitation in a StringSet
+   */
   size_t stringIndex;
   /*!
-     * \brief phase plus or minus one, giving the parity of the line-up permutation
-     */
+   * \brief phase plus or minus one, giving the parity of the line-up permutation
+   */
   int phase;
   /*!
-     * \brief orbitalAddress An address representing the orbital(s) involved.
-     */
+   * \brief orbitalAddress An address representing the orbital(s) involved.
+   */
   size_t orbitalAddress;
 };
 
@@ -44,45 +44,46 @@ using ExcitationSetContainer = std::vector<Excitation>;
  * \brief Container for a number of Excitation objects all arising from the same base String
  */
 class ExcitationSet {
- public:
+public:
   ExcitationSet() = delete;
   /*!
-     * \brief Construct the ExcitationSet containing all excitations
-     * from a given String
-     * with a specified number of annihilations and creations.
-     * \param from The String to be excited.
-     * \param to StringSet against which results will be indexed.
-     * \param annihilations How many annihilations.
-     * \param creations How many creations.
-     * \param parity Parity of stored excitations
-     */
-  ExcitationSet(const String &from, const StringSet &to, int annihilations,
-                int creations, molpro::parity_t parity = molpro::parityNone);
- private:
+   * \brief Construct the ExcitationSet containing all excitations
+   * from a given String
+   * with a specified number of annihilations and creations.
+   * \param from The String to be excited.
+   * \param to StringSet against which results will be indexed.
+   * \param annihilations How many annihilations.
+   * \param creations How many creations.
+   * \param parity Parity of stored excitations
+   */
+  ExcitationSet(const String &from, const StringSet &to, int annihilations, int creations,
+                molpro::parity_t parity = molpro::parityNone);
+
+private:
   /*!
-     * \brief The String to which this set relates
-     */
+   * \brief The String to which this set relates
+   */
   const String &From;
   /*!
-     * \brief The StringSet containing the excited String objects
-     */
+   * \brief The StringSet containing the excited String objects
+   */
   const StringSet &To;
   ExcitationSetContainer buffer;
- public:
+
+public:
   /*!
-     * \brief Generate printable representation of the object
-     * \return Printable representation of the object
-     */
+   * \brief Generate printable representation of the object
+   * \return Printable representation of the object
+   */
   std::string str(int verbosity = 0) const;
   size_t size() const { return buffer.size(); }
-  using const_iterator=ExcitationSetContainer::const_iterator;
+  using const_iterator = ExcitationSetContainer::const_iterator;
   ExcitationSetContainer::const_iterator begin() const { return buffer.begin(); }
   ExcitationSetContainer::const_iterator end() const { return buffer.end(); }
-
 };
 
 std::ostream &operator<<(std::ostream &os, ExcitationSet const &obj);
 
-}
+} // namespace gci
 
 #endif // GCIEXCITATIONSET_H

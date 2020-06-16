@@ -15,29 +15,28 @@ namespace gci {
  *
  */
 class State : public Printable {
- public:
-
+public:
   /**
- * @brief
- *
- */
-  State() : nelec(0), ms2(0), symmetry(0) {};
+   * @brief
+   *
+   */
+  State() : nelec(0), ms2(0), symmetry(0){};
   /**
-     * @brief
-     *
-     * @param dump points to an Options object. If present, load is called.
-     */
+   * @brief
+   *
+   * @param dump points to an Options object. If present, load is called.
+   */
   explicit State(const Options &dump);
   /*!
-     * \brief Construct a State object linked to a OrbitalSpace
-     * \param os The orbital space
-     * \param nelec Number of electrons
-     * \param symmetry Spatial symmetry
-     * \param ms2 Sz quantum number times 2
-     */
+   * \brief Construct a State object linked to a OrbitalSpace
+   * \param os The orbital space
+   * \param nelec Number of electrons
+   * \param symmetry Spatial symmetry
+   * \param ms2 Sz quantum number times 2
+   */
   explicit State(OrbitalSpace *os, int nelec = 0, int symmetry = 1, int ms2 = 0);
   explicit State(OrbitalSpace &os, int nelec = 0, int symmetry = 1, int ms2 = 0);
-  explicit State(const molpro::Operator& o, int n, int s, int m2)
+  explicit State(const molpro::Operator &o, int n, int s, int m2)
       : orbitalSpace(new OrbitalSpace(o)), nelec(n), ms2(m2), symmetry(s) {}
 
   virtual ~State() = default;
@@ -59,8 +58,7 @@ class State : public Printable {
   /*! \brief Spatial symmetry of state */
   unsigned int symmetry;
   std::string str(int verbosity = 0, unsigned int columns = UINT_MAX) const override;
-
 };
-}
+} // namespace gci
 
 #endif // GCIState_H
