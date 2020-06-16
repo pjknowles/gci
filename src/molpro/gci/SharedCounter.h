@@ -26,19 +26,20 @@
 namespace gci {
 class SharedCounter {
 public:
-    explicit SharedCounter(const MPI_Comm &communicator);
-    SharedCounter(const SharedCounter &) = delete;
-    ~SharedCounter();
-    int increment(int amount = 1);
-    void reset();
+  explicit SharedCounter(const MPI_Comm &communicator);
+  SharedCounter(const SharedCounter &) = delete;
+  ~SharedCounter();
+  int increment(int amount = 1);
+  void reset();
+
 private:
-    MPI_Comm m_communicator;
-    int m_hostrank;
-    long int m_myval;
-    int m_ga_handle;
-    int m_ga_pgroup;
-    int m_rank;
-    int m_size;
+  MPI_Comm m_communicator;
+  int m_hostrank;
+  long int m_myval;
+  int m_ga_handle;
+  int m_ga_pgroup;
+  int m_rank;
+  int m_size;
 };
 
 } // namespace gci

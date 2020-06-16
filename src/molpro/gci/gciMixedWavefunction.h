@@ -1,17 +1,16 @@
 #ifndef GCI_GCIMIXEDWAVEFUNCTION_H
 #define GCI_GCIMIXEDWAVEFUNCTION_H
 
-#include <vector>
 #include <mpi.h>
+#include <vector>
 
-#include "molpro/gci/gciWavefunction.h"
+#include "molpro/gci/gciArray.h"
 #include "molpro/gci/gciHProductSet.h"
 #include "molpro/gci/gciMixedOperator.h"
 #include "molpro/gci/gciMixedOperatorSecondQuant.h"
-#include "molpro/gci/gciArray.h"
+#include "molpro/gci/gciWavefunction.h"
 
 namespace gci {
-
 
 /*!
  * @brief Mixed bosonic and fermionic wavefunction represented as configuration expansion in the direct product
@@ -49,85 +48,85 @@ namespace gci {
  */
 class MixedWavefunction : virtual public Array, public Printable {
 public:
-    MPI_Comm m_child_communicator; //!< Communicator for children Wavefunction objects
+  MPI_Comm m_child_communicator; //!< Communicator for children Wavefunction objects
 protected:
-    VibSpace m_vibSpace; //!< Parameters defining the vibrational space of current wavefunction
-    HProductSet m_vibBasis; //!< Vibrational basis for the full space of current wavefunction
-    size_t m_elDim; //!< Dimension of the electronic (slater determinant) space
+  VibSpace m_vibSpace;    //!< Parameters defining the vibrational space of current wavefunction
+  HProductSet m_vibBasis; //!< Vibrational basis for the full space of current wavefunction
+  size_t m_elDim;         //!< Dimension of the electronic (slater determinant) space
 
-    /*!
-     * @brief Prototype electronic wavefunction
-     *
-     * It's buffer is populated with relevant section from GA before computation
-     */
-    Wavefunction m_prototype;
+  /*!
+   * @brief Prototype electronic wavefunction
+   *
+   * It's buffer is populated with relevant section from GA before computation
+   */
+  Wavefunction m_prototype;
+
 public:
-    explicit MixedWavefunction(const Options &options, const State &prototype,
-                               MPI_Comm head_commun = mpi_comm_compute);
+  explicit MixedWavefunction(const Options &options, const State &prototype, MPI_Comm head_commun = mpi_comm_compute);
 
-    MixedWavefunction(const MixedWavefunction &source, int option = 0);
+  MixedWavefunction(const MixedWavefunction &source, int option = 0);
 
-    ~MixedWavefunction() = default;
+  ~MixedWavefunction() = default;
 
-    /*!
-     * @brief Returns a wavefunction corresponding to vibrational product under offset
-     * @param iVib Index to the vibrational product
-     * @return Reference to a wavefunction under offset
-     */
-    Wavefunction wavefunctionAt(size_t iVib, MPI_Comm commun) const;
+  /*!
+   * @brief Returns a wavefunction corresponding to vibrational product under offset
+   * @param iVib Index to the vibrational product
+   * @return Reference to a wavefunction under offset
+   */
+  Wavefunction wavefunctionAt(size_t iVib, MPI_Comm commun) const;
 
-    VibSpace vibSpace() const {return m_vibSpace;}///< copy of the vibrational space
-    size_t elDim() const {return m_elDim;} ///< size of electronic Fock space
-    size_t vibDim() const {return m_vibBasis.vibDim();}///< size of vibrational Fock space
+  VibSpace vibSpace() const { return m_vibSpace; }      ///< copy of the vibrational space
+  size_t elDim() const { return m_elDim; }              ///< size of electronic Fock space
+  size_t vibDim() const { return m_vibBasis.vibDim(); } ///< size of vibrational Fock space
 
-    /*!
-     * @brief Gets boundaries in GA for a block corresponding to electronic wavefunction under vibrational
-     * index ``indKet``
-     * @param iVib vibrational index of the electronic Wavefunction
-     * @param lo index of the start of the block
-     * @param hi index of the end of the block (inclusive)
-     */
-    static void ga_wfn_block_bound(int iVib, int *lo, int *hi, int dimension);
-    void copy_to_local(int ga_handle, int iVib, Wavefunction &wfn) const;
-    void put(int iVib, Wavefunction &wfn);
-    void accumulate(int iVib, Wavefunction &wfn, double scaling_constant = 1.0);
+  /*!
+   * @brief Gets boundaries in GA for a block corresponding to electronic wavefunction under vibrational
+   * index ``indKet``
+   * @param iVib vibrational index of the electronic Wavefunction
+   * @param lo index of the start of the block
+   * @param hi index of the end of the block (inclusive)
+   */
+  static void ga_wfn_block_bound(int iVib, int *lo, int *hi, int dimension);
+  void copy_to_local(int ga_handle, int iVib, Wavefunction &wfn) const;
+  void put(int iVib, Wavefunction &wfn);
+  void accumulate(int iVib, Wavefunction &wfn, double scaling_constant = 1.0);
 
-    /*!
-     * \brief Add to this object the action of an operator on another wavefunction
-     * \param ham Fully second quantized mixed Hamiltonian operator
-     * \param w Other mixed Wavefunction
-     * \param parallel_stringset whether to use parallel algorithm in StringSet construction
-     * \param with_sync whether to syncronise the processes at the end of operation.
-     *                  Calculations without a sync have to DivideTasks beforhand, 
-     *                  since it requires a sync.
-     */
-    void operatorOnWavefunction(const MixedOperatorSecondQuant &ham, const MixedWavefunction &w,
-                                bool parallel_stringset = false, bool with_sync = true);
+  /*!
+   * \brief Add to this object the action of an operator on another wavefunction
+   * \param ham Fully second quantized mixed Hamiltonian operator
+   * \param w Other mixed Wavefunction
+   * \param parallel_stringset whether to use parallel algorithm in StringSet construction
+   * \param with_sync whether to syncronise the processes at the end of operation.
+   *                  Calculations without a sync have to DivideTasks beforhand,
+   *                  since it requires a sync.
+   */
+  void operatorOnWavefunction(const MixedOperatorSecondQuant &ham, const MixedWavefunction &w,
+                              bool parallel_stringset = false, bool with_sync = true);
 
-    /*!
-     * @brief Set this object to the diagonal elements of the hamiltonian
-     * \param ham Fully second quantized mixed Hamiltonian operator
-     */
-    void diagonalOperator(const MixedOperatorSecondQuant &ham, bool parallel_stringset = false);
+  /*!
+   * @brief Set this object to the diagonal elements of the hamiltonian
+   * \param ham Fully second quantized mixed Hamiltonian operator
+   */
+  void diagonalOperator(const MixedOperatorSecondQuant &ham, bool parallel_stringset = false);
 
-    /*!
-     * @brief Calculates vibrational density matrix
-     * @return
-     */
-    std::vector<double> vibDensity();
+  /*!
+   * @brief Calculates vibrational density matrix
+   * @return
+   */
+  std::vector<double> vibDensity();
 
-    /*!
-     * @brief Checks that the two wavefunctions are of the same electronic State and of the same dimension.
-     */
-    bool compatible(const MixedWavefunction &other) const;
-    //! Checks that wavefunctions are compatible during Array operations
-//    bool compatible(const Array &other) const override;
+  /*!
+   * @brief Checks that the two wavefunctions are of the same electronic State and of the same dimension.
+   */
+  bool compatible(const MixedWavefunction &other) const;
+  //! Checks that wavefunctions are compatible during Array operations
+  //    bool compatible(const Array &other) const override;
 
-    void settilesize(int a, int b, int c) { };
+  void settilesize(int a, int b, int c){};
 
-    std::string str(int v = 0, unsigned int c = 0) const override {return "";}
+  std::string str(int v = 0, unsigned int c = 0) const override { return ""; }
 
-};  // class MixedWavefunction
+}; // class MixedWavefunction
 
-}  // namespace gci
-#endif //GCI_GCIMIXEDWAVEFUNCTION_H
+} // namespace gci
+#endif // GCI_GCIMIXEDWAVEFUNCTION_H

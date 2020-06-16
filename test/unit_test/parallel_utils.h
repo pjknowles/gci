@@ -4,14 +4,12 @@
 namespace gci {
 class Lock {
 public:
-    explicit Lock(int mutex = 0) : mutex(mutex) {
-        GA_Lock(mutex);
-    }
+  explicit Lock(int mutex = 0) : mutex(mutex) { GA_Lock(mutex); }
 
-    ~Lock() {GA_Unlock(mutex);}
+  ~Lock() { GA_Unlock(mutex); }
 
-    int mutex;
+  int mutex;
 };
 
 } // namespace gci
-#endif //GCI_PARALLEL_UTILS_H
+#endif // GCI_PARALLEL_UTILS_H

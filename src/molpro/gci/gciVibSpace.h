@@ -6,18 +6,18 @@ namespace gci {
  * @brief Parameters defining the vibrational space
  */
 struct VibSpace {
-    int nMode; //!< Number of vibrational modes
-    int nModal; //!< Total number of modals per mode (i.e. including the ground state)
-    int excLvl; //!< Maximum number of modes simultaneously excited
-//    int excQuanta; //!< Total quanta of siumultaneous excitations among all modes
+  int nMode;  //!< Number of vibrational modes
+  int nModal; //!< Total number of modals per mode (i.e. including the ground state)
+  int excLvl; //!< Maximum number of modes simultaneously excited
+              //    int excQuanta; //!< Total quanta of siumultaneous excitations among all modes
 
-    VibSpace(int mode, int modal, int excLevel);
+  VibSpace(int mode, int modal, int excLevel);
 
-    /*!
-     * @brief Returns true if the two spaces are the same
-     */
-    bool operator==(const VibSpace &other) const;
+  /*!
+   * @brief Returns true if the two spaces are the same
+   */
+  bool operator==(const VibSpace &other) const;
 };
 
-}  // namespace gci
-#endif //GCI_GCIVIBSPACE_H
+} // namespace gci
+#endif // GCI_GCIVIBSPACE_H

@@ -1,9 +1,9 @@
 #ifndef GCI_GCIVIBEXCITATION_H
 #define GCI_GCIVIBEXCITATION_H
 
-#include <vector>
 #include <array>
 #include <utility>
+#include <vector>
 
 namespace gci {
 
@@ -13,22 +13,22 @@ namespace gci {
  */
 class VibExcitation {
 public:
-    using exc_t = std::array<int, 3>;
-    std::vector<exc_t> excitations; //!< mode indices
-    int mc_lvl; //!< number of modes involved in the excitation
+  using exc_t = std::array<int, 3>;
+  std::vector<exc_t> excitations; //!< mode indices
+  int mc_lvl;                     //!< number of modes involved in the excitation
 
-    explicit VibExcitation(std::vector<exc_t> excs) : excitations(std::move(excs)), mc_lvl(excitations.size()) { }
+  explicit VibExcitation(std::vector<exc_t> excs) : excitations(std::move(excs)), mc_lvl(excitations.size()) {}
 
-    /*!
-     * @brief Applies complex conjugation to the excitation operator.
-     * Swaps modal labels.
-     */
-    void conjugate() {
-        for (auto &exc : excitations) std::swap(exc[1], exc[2]);
-    }
-
+  /*!
+   * @brief Applies complex conjugation to the excitation operator.
+   * Swaps modal labels.
+   */
+  void conjugate() {
+    for (auto &exc : excitations)
+      std::swap(exc[1], exc[2]);
+  }
 };
 
 } //  namespace gci
 
-#endif //GCI_GCIVIBEXCITATION_H
+#endif // GCI_GCIVIBEXCITATION_H
