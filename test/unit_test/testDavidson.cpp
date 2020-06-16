@@ -1,8 +1,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <gciDavidson.h>
-#include <gciMixedWavefunction.h>
+#include <molpro/gci/gciDavidson.h>
+#include <molpro/gci/gciMixedWavefunction.h>
 
 #include "parallel_utils.h"
 

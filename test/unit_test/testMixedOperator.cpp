@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <algorithm>
 
-#include <gciMixedOperator.h>
+#include <molpro/gci/gciMixedOperator.h>
 #include <numeric>
 
 namespace gci {

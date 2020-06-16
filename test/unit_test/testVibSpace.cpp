@@ -1,8 +1,7 @@
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
 
-#include <gciVibSpace.h>
+#include <molpro/gci/gciVibSpace.h>
 
 using namespace gci;
 

@@ -1,16 +1,16 @@
 //TODO a cleaner separation of library-internal headers
-#include "gci.h"
-#include "gciRun.h"
+#include "molpro/gci/gci.h"
+#include "molpro/gci/gciRun.h"
 #include <iostream>
 #include <iomanip>
-#include <memory.h>
+#include <molpro/memory.h>
 #include <unistd.h>
 #include <cstring>
 #include <macdecls.h>
 
 #ifndef MOLPRO
 
-#include "PluginGuest.h"
+#include <molpro/PluginGuest.h>
 
 
 int main(int argc, char *argv[])
@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     if (gci::parallel_rank == 0)
         std::cout << "MPI_Comm_size = " << gci::parallel_size << std::endl;
     if (gci::parallel_rank > 0) freopen("/dev/null", "w", stdout);
-    PluginGuest plugin("MOLPRO", gci::mpi_comm_compute);
+    molpro::PluginGuest plugin("MOLPRO", gci::mpi_comm_compute);
     if (plugin.active()) {
         if (!plugin.send("GIVE OPERATOR HAMILTONIAN FCIDUMP GCI")) throw std::logic_error("Unexpected plugin failure");
         strcpy(fcidumpname, plugin.receive().c_str());

@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <algorithm>
 
-#include <gciHProductSet.h>
+#include <molpro/gci/gciHProductSet.h>
 #include <numeric>
 
 using namespace gci;

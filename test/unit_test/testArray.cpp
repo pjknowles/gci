@@ -2,8 +2,8 @@
 #include <gtest/gtest.h>
 #include <algorithm>
 
-#include <gci.h>
-#include <gciArray.h>
+#include <molpro/gci/gci.h>
+#include <molpro/gci/gciArray.h>
 #include <numeric>
 #include <ga.h>
 

@@ -1,4 +1,5 @@
-get_dependency(googletest)
+include(FetchContent)
+FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 
 
@@ -13,7 +14,7 @@ add_executable(test-gci
         testHProduct.cpp
         testHProductSet.cpp
         )
-target_link_libraries(test-gci PUBLIC gci gmock_main)
+target_link_libraries(test-gci PUBLIC molpro::gci gmock_main)
 gtest_discover_tests(test-gci)
 
 add_executable(test-gci-parallel
@@ -22,7 +23,7 @@ add_executable(test-gci-parallel
         testDavidson.cpp
         testPersistentOperator.cpp
         )
-target_link_libraries(test-gci-parallel PUBLIC gci gmock_main)
+target_link_libraries(test-gci-parallel PUBLIC molpro::gci gmock_main)
 add_test(NAME test-gci-parallel
         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIOPTIONS} ${MPIEXEC_NUMPROC_FLAG} 2 ${MPIEXEC_PREFLAGS}
         ${CMAKE_CURRENT_BINARY_DIR}/test-gci-parallel ${MPIEXEC_POSTFLAGS}

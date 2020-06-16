@@ -19,6 +19,7 @@ find_program(ga-config ga-config)
 set(GA_RUNTIME "MPI_RMA" CACHE STRING "overwriting default for GA runtime protocol")
 find_program(ga-config ga-config)
 if (ga-config)
+    message("Local GA found")
     foreach (f cflags cppflags ldflags libs)
         execute_process(COMMAND ${ga-config} --${f} OUTPUT_VARIABLE ga-${f})
         string(STRIP "${ga-${f}}" ga-${f})
@@ -28,6 +29,7 @@ if (ga-config)
     target_link_options(ga::ga INTERFACE ${ga-ldflags})
     target_compile_options(ga::ga INTERFACE ${ga-cflags} ${ga-cppflags})
 else (ga-config)
+    message("Local GA not found, attempting to fetch")
     include(FetchContent)
     FetchContent_Declare(
             ga
@@ -35,6 +37,18 @@ else (ga-config)
             GIT_TAG 2518e23433385bfa3726d507b8cd0d7ed038021b
     )
     FetchContent_MakeAvailable(ga)
+    foreach (t ga ga_src dra eaf elio sf linalg)
+        install(TARGETS ${t} EXPORT gaTargets
+                LIBRARY DESTINATION lib
+                ARCHIVE DESTINATION lib
+                INCLUDES DESTINATION include
+                PUBLIC_HEADER DESTINATION include
+                )
+    endforeach ()
+    install(EXPORT gaTargets
+            FILE gaTargets.cmake
+            NAMESPACE ga::
+            DESTINATION lib/cmake/ga)
 endif (ga-config)
 
 set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
