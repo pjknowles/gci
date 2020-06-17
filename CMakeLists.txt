@@ -8,8 +8,9 @@ FetchContent_Declare(
         GIT_TAG master
 )
 FetchContent_MakeAvailable(LibraryManager)
-LibraryManager_Project(MPI_OPTION FORTRAN_OPTION)
-set(MPI ON CACHE BOOL "" FORCE)
+set(MPI ON CACHE BOOL "Whether to build with MPI" FORCE)
+option(FORTRAN "Whether to build fortran sources" OFF)
+LibraryManager_Project(MPI_OPTION)
 
 ########## Options ##########
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
