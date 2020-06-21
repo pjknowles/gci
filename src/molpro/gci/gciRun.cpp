@@ -1687,6 +1687,7 @@ molpro::Operator constructOperator(const molpro::FCIdump &dump, bool collective)
       free(buf);
     return result;
   }
+  throw std::runtime_error("No valid operator construction case");
 }
 
 void FCIDump(const molpro::Operator &op, const std::string filename, std::vector<int> orbital_symmetries) {
@@ -1931,12 +1932,11 @@ void gsum(molpro::Operator &op) {
 }
 } // namespace gci
 } // namespace molpro
-#ifdef MOLPRO
 #ifdef __cplusplus
 extern "C" {
 #endif
 void gcirun(double *energies, int nenergies, char *fcidump) {
-  Run run(fcidump);
+  molpro::gci::Run run(fcidump);
   try {
     std::vector<double> e = run.run();
     for (int i = 0; i < (nenergies > (int)e.size() ? (int)e.size() : nenergies); i++)
@@ -1948,5 +1948,4 @@ void gcirun(double *energies, int nenergies, char *fcidump) {
 }
 #ifdef __cplusplus
 }
-#endif
 #endif
