@@ -107,8 +107,7 @@ inline PersistentOperator create_persistentoperator(const std::string &fcidump, 
   if (gci::parallel_rank == root) {
     op = std::make_shared<Op>(construct_op(molpro::FCIdump(fcidump), false));
     op->m_description = description;
-    // TODO make ensure_dirac public
-    //        op->ensure_dirac();
+    op->ensure_dirac();
   }
   auto p_op = PersistentOperator(op, description, root, hid_file);
   return p_op;
