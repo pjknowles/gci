@@ -13,6 +13,7 @@ option(FORTRAN "Whether to build fortran sources" OFF)
 LibraryManager_Project(MPI_OPTION)
 
 ########## Options ##########
+option(GCI_TEST "Whether to force tests to be built" OFF)
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(CMAKE_CXX_STANDARD 14)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -27,7 +28,7 @@ add_subdirectory(dependencies)
 
 add_subdirectory(src)
 
-if (${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
+if (${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME} OR GCI_TEST)
     enable_testing()
     add_subdirectory(test)
 endif ()
