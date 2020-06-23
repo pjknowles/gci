@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <ga.h>
 #include <numeric>
+#include <molpro/Profiler.h>
 
 namespace molpro {
 namespace gci {
@@ -25,20 +26,22 @@ Array::Array(MPI_Comm comm)
     : m_communicator(comm), m_comm_rank(get_communicator_rank(comm)), m_comm_size(get_communicator_size(comm)),
       m_dimension(0), m_ga_handle(0), m_ga_pgroup(0), m_ga_chunk(1), m_ga_allocated(false) {}
 
-Array::Array(size_t dimension, MPI_Comm comm)
-    : m_communicator(comm), m_comm_rank(get_communicator_rank(comm)), m_comm_size(get_communicator_size(comm)),
-      m_dimension(dimension), m_ga_handle(0), m_ga_chunk(1), m_ga_pgroup(0), m_ga_allocated(false) {}
+Array::Array(size_t dimension, MPI_Comm comm, std::shared_ptr<molpro::Profiler> prof)
+    : m_communicator(comm), m_prof(std::move(prof)), m_comm_rank(get_communicator_rank(comm)),
+      m_comm_size(get_communicator_size(comm)), m_dimension(dimension), m_ga_handle(0), m_ga_chunk(1), m_ga_pgroup(0),
+      m_ga_allocated(false) {}
 
 Array::Array(const Array &source)
-    : m_communicator(source.m_communicator), m_comm_rank(source.m_comm_rank), m_comm_size(source.m_comm_size),
-      m_dimension(source.m_dimension), m_ga_handle(0), m_ga_chunk(source.m_ga_chunk), m_ga_pgroup(0),
-      m_ga_allocated(false) {
+    : m_communicator(source.m_communicator), m_prof(source.m_prof), m_comm_rank(source.m_comm_rank),
+      m_comm_size(source.m_comm_size), m_dimension(source.m_dimension), m_ga_handle(0), m_ga_chunk(source.m_ga_chunk),
+      m_ga_pgroup(0), m_ga_allocated(false) {
   *this = source;
 }
 
 Array &Array::operator=(const Array &source) noexcept {
   m_dimension = source.m_dimension;
   m_communicator = source.m_communicator;
+  m_prof = source.m_prof;
   copy_buffer(source);
   return *this;
 }
@@ -53,6 +56,8 @@ bool Array::empty() const { return !m_ga_allocated; }
 void Array::allocate_buffer() {
   if (!empty())
     return;
+  if (m_prof)
+    m_prof->start("Array::allocate_buffer");
   if (_ga_pgroups.find(m_communicator) == _ga_pgroups.end()) {
     //  global processor ranks
     int loc_size, glob_size, glob_rank;
@@ -76,13 +81,23 @@ void Array::allocate_buffer() {
   if (!succ)
     GA_Error((char *)"Failed to allocate", 1);
   m_ga_allocated = true;
+  if (m_prof)
+    m_prof->stop("Array::allocate_buffer");
 }
 
-void Array::sync() const { GA_Pgroup_sync(m_ga_pgroup); }
+void Array::sync() const {
+  if (m_prof)
+    m_prof->start("Array::sync");
+  GA_Pgroup_sync(m_ga_pgroup);
+  if (m_prof)
+    m_prof->stop("Array::sync");
+}
 
 void Array::copy_buffer(const Array &source) {
   if (source.empty())
     return;
+  if (m_prof)
+    m_prof->start("Array::copy_buffer");
   if (m_communicator != source.m_communicator)
     GA_Error((char *)"trying to copy arrays with different communicators", 1);
   if (size() != source.size())
@@ -94,6 +109,8 @@ void Array::copy_buffer(const Array &source) {
     m_ga_pgroup = source.m_ga_pgroup;
   }
   GA_Copy(source.m_ga_handle, m_ga_handle);
+  if (m_prof)
+    m_prof->stop("Array::copy_buffer");
 }
 
 Array::LocalBuffer::LocalBuffer(const Array &source)
@@ -118,9 +135,13 @@ double *Array::LocalBuffer::end() { return buffer + size(); }
 
 double &Array::LocalBuffer::operator[](size_t i) { return buffer[i]; }
 
+Array::LocalBuffer Array::local_buffer() { return LocalBuffer(*this); }
+
 template <class Compare> std::list<std::pair<size_t, double>> Array::extrema(size_t n) const {
   if (empty())
     return {};
+  if (m_prof)
+    m_prof->start("Array::extrema");
   auto buffer = Array::LocalBuffer(*this);
   auto length = buffer.size();
   auto nmin = length > n ? n : length;
@@ -192,6 +213,8 @@ template <class Compare> std::list<std::pair<size_t, double>> Array::extrema(siz
   auto map_extrema = std::list<std::pair<size_t, double>>();
   for (size_t i = 0; i < n; ++i)
     map_extrema.emplace_back(indices_glob[i], values_glob[i]);
+  if (m_prof)
+    m_prof->stop("Array::extrema");
   return map_extrema;
 }
 
@@ -225,19 +248,29 @@ double Array::at(size_t ind) const {
     GA_Error((char *)"Out of bounds", 1);
   if (empty())
     GA_Error((char *)"GA was not allocated", 1);
+  if (m_prof)
+    m_prof->start("Array::at");
   double buffer;
   int lo = ind, high = ind, ld = 1;
   NGA_Get(m_ga_handle, &lo, &high, &buffer, &ld);
+  if (m_prof)
+    m_prof->stop("Array::at");
   return buffer;
 }
 
 void Array::zero(bool with_sync_before, bool with_sync_after) {
+  if (m_prof)
+    m_prof->start("Array::zero");
   if (empty())
     allocate_buffer();
   set(0., with_sync_before, with_sync_after);
+  if (m_prof)
+    m_prof->stop("Array::zero");
 }
 
 void Array::set(double val, bool with_sync_before, bool with_sync_after) {
+  if (m_prof)
+    m_prof->start("Array::set");
   if (empty())
     GA_Error((char *)"Array::set() GA not allocated", 1);
   if (with_sync_before)
@@ -248,24 +281,34 @@ void Array::set(double val, bool with_sync_before, bool with_sync_after) {
   }
   if (with_sync_after)
     sync();
+  if (m_prof)
+    m_prof->stop("Array::set");
 }
 
 void Array::set(size_t ind, double val, bool with_sync_before, bool with_sync_after) {
+  if (m_prof)
+    m_prof->start("Array::set");
   auto data = std::vector<double>{val};
   if (with_sync_before)
     sync();
   put(ind, ind, data.data());
   if (with_sync_after)
     sync();
+  if (m_prof)
+    m_prof->stop("Array::set");
 }
 
 std::vector<double> Array::vec() const {
   if (empty())
     return {};
+  if (m_prof)
+    m_prof->start("Array::vec");
   std::vector<double> vec(m_dimension);
   double *buffer = vec.data();
   int lo = 0, hi = m_dimension - 1, ld = m_dimension;
   NGA_Get(m_ga_handle, &lo, &hi, buffer, &ld);
+  if (m_prof)
+    m_prof->stop("Array::vec");
   return vec;
 }
 
@@ -277,7 +320,11 @@ void Array::get(int lo, int hi, std::vector<double> &buf) const {
     auto message = "buffer is too small, buf.size=" + std::to_string(buf.size()) + ", n = " + std::to_string(n);
     GA_Error(const_cast<char *>(message.c_str()), 1);
   }
+  if (m_prof)
+    m_prof->start("Array::get");
   NGA_Get(m_ga_handle, &lo, &hi, buf.data(), &ld);
+  if (m_prof)
+    m_prof->stop("Array::get");
 }
 
 std::vector<double> Array::get(int lo, int hi) const {
@@ -292,15 +339,30 @@ std::vector<double> Array::get(int lo, int hi) const {
 void Array::put(int lo, int hi, double *data, bool with_fence) {
   if (empty())
     GA_Error((char *)"Attempting to put data into an empty GA", 1);
+  if (m_prof)
+    m_prof->start("Array::put");
   int ld;
   if (with_fence)
     GA_Init_fence();
   NGA_Put(m_ga_handle, &lo, &hi, data, &ld);
   if (with_fence)
     GA_Fence();
+  if (m_prof)
+    m_prof->stop("Array::put");
+}
+
+void Array::acc(int lo, int hi, double *buffer, double scaling_constant) {
+  int ld;
+  if (m_prof)
+    m_prof->start("Array::acc");
+  NGA_Acc(m_ga_handle, &lo, &hi, buffer, &ld, &scaling_constant);
+  if (m_prof)
+    m_prof->stop("Array::acc");
 }
 
 std::vector<double> Array::gather(std::vector<int> &indices) const {
+  if (m_prof)
+    m_prof->start("Array::gather");
   int n = indices.size();
   std::vector<double> data(n, 0.);
   int **subsarray = new int *[n];
@@ -309,10 +371,14 @@ std::vector<double> Array::gather(std::vector<int> &indices) const {
   }
   NGA_Gather(m_ga_handle, data.data(), subsarray, n);
   delete[] subsarray;
+  if (m_prof)
+    m_prof->stop("Array::gather");
   return data;
 }
 
 void Array::scatter(std::vector<int> &indices, std::vector<double> &vals) {
+  if (m_prof)
+    m_prof->start("Array::scatter");
   int n = indices.size();
   int **subsarray = new int *[n];
   for (int i = 0; i < n; ++i) {
@@ -320,9 +386,13 @@ void Array::scatter(std::vector<int> &indices, std::vector<double> &vals) {
   }
   NGA_Scatter(m_ga_handle, vals.data(), subsarray, n);
   delete[] subsarray;
+  if (m_prof)
+    m_prof->stop("Array::scatter");
 }
 
 void Array::scatter_acc(std::vector<int> &indices, std::vector<double> &vals, double alpha) {
+  if (m_prof)
+    m_prof->start("Array::scatter_acc");
   int n = indices.size();
   int **subsarray = new int *[n];
   for (int i = 0; i < n; ++i) {
@@ -330,6 +400,8 @@ void Array::scatter_acc(std::vector<int> &indices, std::vector<double> &vals, do
   }
   NGA_Scatter_acc(m_ga_handle, vals.data(), subsarray, n, &alpha);
   delete[] subsarray;
+  if (m_prof)
+    m_prof->stop("Array::scatter_acc");
 }
 
 bool Array::compatible(const Array &other) const { return m_dimension == other.m_dimension; }
@@ -339,6 +411,8 @@ void Array::axpy(double a, const Array &x, bool with_sync_before, bool with_sync
     GA_Error((char *)"Array::axpy() Attempting to add incompatible Array objects", 1);
   if (empty() || x.empty())
     GA_Error((char *)"Array::axpy() GA not allocated", 1);
+  if (m_prof)
+    m_prof->start("Array::axpy");
   if (with_sync_before)
     sync();
   auto y_vec = Array::LocalBuffer(*this);
@@ -350,6 +424,8 @@ void Array::axpy(double a, const Array &x, bool with_sync_before, bool with_sync
   }
   if (with_sync_after)
     sync();
+  if (m_prof)
+    m_prof->stop("Array::axpy");
 }
 
 void Array::axpy(double a, const Array *other, bool with_sync_before, bool with_sync_after) {
@@ -357,6 +433,8 @@ void Array::axpy(double a, const Array *other, bool with_sync_before, bool with_
 }
 
 void Array::axpy(double a, const std::map<size_t, double> &x, bool with_sync_before, bool with_sync_after) {
+  if (m_prof)
+    m_prof->start("Array::axpy");
   int n = x.size();
   std::vector<int> indices;
   std::vector<double> vals;
@@ -367,11 +445,15 @@ void Array::axpy(double a, const std::map<size_t, double> &x, bool with_sync_bef
     vals.push_back(xx.second);
   }
   scatter_acc(indices, vals, a);
+  if (m_prof)
+    m_prof->stop("Array::axpy");
 }
 
 void Array::scal(double a, bool with_sync_before, bool with_sync_after) {
   if (empty())
     GA_Error((char *)"Array::scal() GA not allocated", 1);
+  if (m_prof)
+    m_prof->start("Array::scal");
   if (with_sync_before)
     sync();
   auto y_vec = Array::LocalBuffer(*this);
@@ -380,15 +462,23 @@ void Array::scal(double a, bool with_sync_before, bool with_sync_after) {
   }
   if (with_sync_after)
     sync();
+  if (m_prof)
+    m_prof->stop("Array::scal");
 }
 
 void Array::add(const Array &other, bool with_sync_before, bool with_sync_after) {
+  if (m_prof)
+    m_prof->start("Array::add");
   axpy(1.0, other, with_sync_before, with_sync_after);
+  if (m_prof)
+    m_prof->stop("Array::add");
 }
 
 void Array::add(double a, bool with_sync_before, bool with_sync_after) {
   if (empty())
     GA_Error((char *)"Array::add() GA not allocated", 1);
+  if (m_prof)
+    m_prof->start("Array::add");
   if (with_sync_before)
     sync();
   auto y_vec = Array::LocalBuffer(*this);
@@ -397,17 +487,31 @@ void Array::add(double a, bool with_sync_before, bool with_sync_after) {
   }
   if (with_sync_after)
     sync();
+  if (m_prof)
+    m_prof->stop("Array::add");
 }
 
 void Array::sub(const Array &other, bool with_sync_before, bool with_sync_after) {
+  if (m_prof)
+    m_prof->start("Array::sub");
   axpy(-1.0, other, with_sync_before, with_sync_after);
+  if (m_prof)
+    m_prof->stop("Array::sub");
 }
 
-void Array::sub(double a, bool with_sync_before, bool with_sync_after) { add(-a, with_sync_before, with_sync_after); }
+void Array::sub(double a, bool with_sync_before, bool with_sync_after) {
+  if (m_prof)
+    m_prof->start("Array::sub");
+  add(-a, with_sync_before, with_sync_after);
+  if (m_prof)
+    m_prof->stop("Array::sub");
+}
 
 void Array::recip(bool with_sync_before, bool with_sync_after) {
   if (empty())
     GA_Error((char *)"Array::recip() GA not allocated", 1);
+  if (m_prof)
+    m_prof->start("Array::recip");
   if (with_sync_before)
     sync();
   auto y_vec = Array::LocalBuffer(*this);
@@ -416,6 +520,8 @@ void Array::recip(bool with_sync_before, bool with_sync_after) {
   }
   if (with_sync_after)
     sync();
+  if (m_prof)
+    m_prof->stop("Array::recip");
 }
 
 double Array::dot(const Array &other, bool with_sync_before) const {
@@ -423,6 +529,8 @@ double Array::dot(const Array &other, bool with_sync_before) const {
     GA_Error((char *)"Array::dot() Attempt to form scalar product between incompatible Array objects", 1);
   if (empty())
     GA_Error((char *)"Array::dot() GA not allocated", 1);
+  if (m_prof)
+    m_prof->start("Array::dot");
   if (with_sync_before)
     sync();
   auto y_vec = Array::LocalBuffer(*this);
@@ -431,6 +539,8 @@ double Array::dot(const Array &other, bool with_sync_before) const {
     GA_Error((char *)"Array::axpy() GA not allocated", 1);
   auto a = std::inner_product(y_vec.begin(), y_vec.end(), x_vec.begin(), 0.);
   MPI_Allreduce(MPI_IN_PLACE, &a, 1, MPI_DOUBLE, MPI_SUM, m_communicator);
+  if (m_prof)
+    m_prof->stop("Array::dot");
   return a;
 }
 
@@ -439,6 +549,8 @@ double Array::dot(const Array *other, bool with_sync_before) const { return dot(
 double Array::dot(const std::map<size_t, double> &other, bool with_sync_before) const {
   if (empty())
     GA_Error((char *)"Array::dot() GA not allocated", 1);
+  if (m_prof)
+    m_prof->start("Array::dot");
   if (with_sync_before)
     sync();
   double result = 0;
@@ -456,6 +568,8 @@ double Array::dot(const std::map<size_t, double> &other, bool with_sync_before) 
     result = std::inner_product(this_vals.begin(), this_vals.end(), other_vals.begin(), 0.);
   }
   MPI_Bcast(&result, 1, MPI_DOUBLE, 0, m_communicator);
+  if (m_prof)
+    m_prof->stop("Array::dot");
   return result;
 }
 
@@ -494,7 +608,11 @@ Array &Array::operator/=(const Array &other) {
     GA_Error((char *)"Attempting to divide incompatible Array objects", 1);
   if (empty() || other.empty())
     GA_Error((char *)"GA not allocated", 1);
+  if (m_prof)
+    m_prof->start("Array::operator/=");
   GA_Elem_divide(m_ga_handle, other.m_ga_handle, m_ga_handle);
+  if (m_prof)
+    m_prof->stop("Array::operator/=");
   return *this;
 }
 
@@ -505,6 +623,8 @@ void Array::times(const Array *a, const Array *b, bool with_sync_before, bool wi
     GA_Error((char *)"Array::times() Attempting to divide incompatible Array objects", 1);
   if (empty() || a->empty() || b->empty())
     GA_Error((char *)"Array::times() GA not allocated", 1);
+  if (m_prof)
+    m_prof->start("Array::times");
   if (with_sync_before)
     sync();
   auto y_vec = Array::LocalBuffer(*this);
@@ -517,6 +637,8 @@ void Array::times(const Array *a, const Array *b, bool with_sync_before, bool wi
   }
   if (with_sync_after)
     sync();
+  if (m_prof)
+    m_prof->stop("Array::times");
 }
 
 // this[i] = a[i]/(b[i]+shift)
@@ -528,6 +650,8 @@ void Array::divide(const Array *a, const Array *b, double shift, bool append, bo
     GA_Error((char *)"Attempting to divide incompatible Array objects", 1);
   if (empty() || a->empty() || b->empty())
     GA_Error((char *)"GA not allocated", 1);
+  if (m_prof)
+    m_prof->start("Array::divide");
   if (with_sync_before)
     sync();
   auto y_vec = Array::LocalBuffer(*this);
@@ -552,6 +676,8 @@ void Array::divide(const Array *a, const Array *b, double shift, bool append, bo
   }
   if (with_sync_after)
     sync();
+  if (m_prof)
+    m_prof->stop("Array::divide");
 }
 
 double operator*(const Array &w1, const Array &w2) { return w1.dot(w2); }
