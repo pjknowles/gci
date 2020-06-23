@@ -12,10 +12,13 @@ using ::testing::Pointwise;
 
 using molpro::gci::PersistentOperator;
 
+namespace {
+auto data_path = std::string(DATA_PATH);
+}
 class PersistentOperatorDataF : public ::testing::Test {
 public:
   PersistentOperatorDataF()
-      : fname_op_rank1("test/unit_test/data/he2_1el.fcidump"), fname_op_rank2("test/unit_test/data/he2.fcidump"),
+      : fname_op_rank1(data_path + "/he2_1el.fcidump"), fname_op_rank2(data_path + "/he2.fcidump"),
         fname_hdf5("test_PersistentOperatorDataF.h5"),
         file_id(molpro::gci::utils::open_hdf5_file(fname_hdf5, molpro::gci::mpi_comm_compute, true)) {
     if (!molpro::gci::utils::file_exists(fname_op_rank2))
