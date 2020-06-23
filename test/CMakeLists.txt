@@ -9,4 +9,5 @@ foreach (fil ${TESTS})
             )
 endforeach ()
 
+add_subdirectory(integration_test)
 add_subdirectory(unit_test)
