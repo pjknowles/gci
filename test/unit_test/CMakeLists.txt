@@ -24,6 +24,7 @@ add_executable(test-gci-parallel
         testPersistentOperator.cpp
         )
 target_link_libraries(test-gci-parallel PUBLIC molpro::gci gmock_main)
+target_compile_definitions(test-gci-parallel PRIVATE "DATA_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/data\"")
 add_test(NAME test-gci-parallel
         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIOPTIONS} ${MPIEXEC_NUMPROC_FLAG} 2 ${MPIEXEC_PREFLAGS}
         ${CMAKE_CURRENT_BINARY_DIR}/test-gci-parallel ${MPIEXEC_POSTFLAGS}
