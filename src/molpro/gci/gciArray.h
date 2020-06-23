@@ -10,6 +10,9 @@
 #include <vector>
 
 // typedef struct _gci_mpi_comm_dummy *MPI_Comm;
+namespace molpro {
+class Profiler;
+}
 
 namespace molpro {
 namespace gci {
@@ -26,6 +29,7 @@ class Array {
 public:
   using value_type = double;
   MPI_Comm m_communicator; //!< Outer communicator
+  std::shared_ptr<molpro::Profiler> m_prof; //!< optional profiler
   int m_comm_rank;         //!< rank in process group
   int m_comm_size;         //!< size of process group
 protected:
@@ -41,7 +45,7 @@ public:
 
   explicit Array(MPI_Comm comm);
 
-  Array(size_t dimension, MPI_Comm commun);
+  Array(size_t dimension, MPI_Comm commun, std::shared_ptr<molpro::Profiler> prof = nullptr);
 
   Array(const Array &source);
 
@@ -74,6 +78,9 @@ public:
     double *buffer;
   };
 
+  //! Access the buffer local to this process
+  LocalBuffer local_buffer();
+
   void sync() const;              //!< synchronises all processes in this group and ensures GA operations completed
   double at(size_t offset) const; //!< get element at the offset. Blocking with one-sided communication.
   void zero(bool with_sync_before = false,
@@ -96,6 +103,12 @@ public:
    * Blocking with one-sided communication
    */
   void put(int lo, int hi, double *data, bool with_fence = false);
+
+  /*!
+   * @brief  accumulate data into GA's buffer[lo:hi] (hi inclusive, i.e. not pythonic)
+   * Blocking with one-sided communication
+   */
+  void acc(int lo, int hi, double *buffer, double scaling_constant = 1.);
 
   /*!
    * @brief gets elements with discontinuos indices from GA

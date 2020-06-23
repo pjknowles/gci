@@ -243,6 +243,59 @@ TEST_F(ArrayRangeF, minlocN_reverse) {
   sync();
 }
 
+
+TEST_F(ArrayRangeF, max_n) {
+    int n = 10;
+    auto ref_minloc_ind = std::vector<size_t>(n);
+    std::iota(ref_minloc_ind.rbegin(), ref_minloc_ind.rend(), size() - n);
+    auto maxloc = max_n(n);
+    auto maxloc_ind = std::vector<size_t>(n);
+    std::transform(maxloc.cbegin(), maxloc.cend(), maxloc_ind.begin(), [](const auto &p) {return p.first;});
+    {
+        auto l = Lock();
+        ASSERT_THAT(maxloc_ind, ContainerEq(ref_minloc_ind));
+    }
+    sync();
+}
+
+TEST_F(ArrayRangeF, min_abs_n) {
+    auto loc_buffer = local_buffer();
+    for (size_t i = 0; i < loc_buffer.size(); ++i)
+        if ((i + loc_buffer.lo) % 2 == 1)
+            loc_buffer[i] *= -1;
+    int n = 10;
+    auto ref_minloc_ind = std::vector<size_t>(n);
+    std::iota(ref_minloc_ind.begin(), ref_minloc_ind.end(), 0);
+    sync();
+    auto minloc = min_abs_n(n);
+    auto minloc_ind = std::vector<size_t>(n);
+    std::transform(minloc.cbegin(), minloc.cend(), minloc_ind.begin(), [](const auto &p) {return p.first;});
+    {
+        auto l = Lock();
+        ASSERT_THAT(minloc_ind, ContainerEq(ref_minloc_ind));
+    }
+    sync();
+}
+
+TEST_F(ArrayRangeF, max_abs_n) {
+    auto loc_buffer = local_buffer();
+    for (size_t i = 0; i < loc_buffer.size(); ++i)
+        if ((i + loc_buffer.lo) % 2 == 1)
+            loc_buffer[i] *= -1;
+    int n = 10;
+    auto ref_minloc_ind = std::vector<size_t>(n);
+    std::iota(ref_minloc_ind.rbegin(), ref_minloc_ind.rend(), size() - n);
+    sync();
+    auto maxloc = max_abs_n(n);
+    auto maxloc_ind = std::vector<size_t>(n);
+    std::transform(maxloc.cbegin(), maxloc.cend(), maxloc_ind.begin(), [](const auto &p) {return p.first;});
+    {
+        auto l = Lock();
+        ASSERT_THAT(maxloc_ind, ContainerEq(ref_minloc_ind));
+    }
+    sync();
+}
+
 TEST_F(ArrayRangeF, scal_double) {
   double alpha = 1.5;
   scal(alpha, true, true);
