@@ -88,7 +88,8 @@ public:
    * @brief gets buffer[lo:hi] from global array (hi inclusive, i.e. not pythonic)
    * Blocking with one-sided communication.
    */
-  std::vector<double> get(int lo, int hi);
+  void get(int lo, int hi, std::vector<double> &buf) const;
+  std::vector<double> get(int lo, int hi) const;
 
   /*!
    * @brief  puts data array into GA's buffer[lo:hi] (hi inclusive, i.e. not pythonic)

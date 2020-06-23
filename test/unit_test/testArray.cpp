@@ -100,6 +100,9 @@ TEST_F(ArrayInitializationF, get) {
     auto data = get(0, 10);
     auto ref_vec = std::vector<double>(data.size(), 0.);
     ASSERT_THAT(ref_vec, Pointwise(DoubleEq(), data));
+    data.assign(data.size(),0);
+    get(0,10,data);
+    ASSERT_THAT(ref_vec, Pointwise(DoubleEq(), data));
     data = get(0, dim - 1);
     auto same_as_vec = vec();
     ASSERT_THAT(data, Pointwise(DoubleEq(), same_as_vec));

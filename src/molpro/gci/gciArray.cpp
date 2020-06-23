@@ -269,12 +269,23 @@ std::vector<double> Array::vec() const {
   return vec;
 }
 
-std::vector<double> Array::get(int lo, int hi) {
+void Array::get(int lo, int hi, std::vector<double> &buf) const {
+  if (empty())
+    return;
+  int ld, n = hi - lo + 1;
+  if (buf.size() < n) {
+    auto message = "buffer is too small, buf.size=" + std::to_string(buf.size()) + ", n = " + std::to_string(n);
+    GA_Error(const_cast<char *>(message.c_str()), 1);
+  }
+  NGA_Get(m_ga_handle, &lo, &hi, buf.data(), &ld);
+}
+
+std::vector<double> Array::get(int lo, int hi) const {
   if (empty())
     return {};
   int ld, n = hi - lo + 1;
   auto data = std::vector<double>(n);
-  NGA_Get(m_ga_handle, &lo, &hi, data.data(), &ld);
+  get(lo, hi, data);
   return data;
 }
 
