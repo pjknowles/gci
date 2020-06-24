@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "molpro/gci/SharedCounter.h"
+#include "molpro/gci/schedule/SharedCounter.h"
 
 #include <ga-mpi.h>
 #include <ga.h>

@@ -1,6 +1,6 @@
 #include "SharedCounter.h"
 
-#include "gci.h"
+#include "molpro/gci/gci.h"
 
 namespace molpro {
 namespace gci {
