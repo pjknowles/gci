@@ -1,5 +1,5 @@
-#ifndef SHAREDCOUNTER_MPI3_H
-#define SHAREDCOUNTER_MPI3_H
+#ifndef GCI_SRC_MOLPRO_GCI_SCHEDULE_SHAREDCOUNTERMPI3_H
+#define GCI_SRC_MOLPRO_GCI_SCHEDULE_SHAREDCOUNTERMPI3_H
 
 #include <map>
 #include <memory>
@@ -8,9 +8,9 @@
 namespace molpro {
 namespace gci {
 /*!
- * @brief Globally accessible counter that can be incremented by all prcesses
+ * @brief Shared counter using MPI3 remote memory access.
  *
- * It keeps track of incremented counter local to the processor
+ * The counter is stored on a single target processor.
  *
  */
 class SharedCounterMPI3 {
@@ -39,4 +39,4 @@ protected:
 
 } // namespace gci
 } // namespace molpro
-#endif // SHAREDCOUNTER_MPI3_H
+#endif // GCI_SRC_MOLPRO_GCI_SCHEDULE_SHAREDCOUNTERMPI3_H
