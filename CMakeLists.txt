@@ -14,11 +14,6 @@ LibraryManager_Project(MPI_OPTION FORTRAN_OPTION)
 
 ########## Options ##########
 option(GCI_TEST "Whether to force tests to be built" OFF)
-if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    set(CMAKE_CXX_STANDARD 14)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    set(CMAKE_CXX_EXTENSIONS OFF)
-endif ()
 
 ########## Dependencies ##########
 
