@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "molpro/gci/schedule/SharedCounterGA.h"
+#include "molpro/gci/schedule/SharedCounter.h"
 
 #include <ga-mpi.h>
 #include <ga.h>
@@ -60,13 +60,13 @@ extern MPI_Comm mpi_comm_compute;
 extern bool molpro_plugin;
 
 // shared counter
-extern std::map<MPI_Comm, std::unique_ptr<schedule::SharedCounterGA>> _nextval_counter;
+extern std::map<MPI_Comm, std::unique_ptr<schedule::SharedCounter>> _nextval_counter;
 extern MPI_Comm _sub_communicator;
 extern std::map<MPI_Comm, int> _ga_pgroups;
 
 inline void create_new_counter(MPI_Comm communicator) {
   if (_nextval_counter.find(communicator) == _nextval_counter.end()) {
-    _nextval_counter[communicator] = std::make_unique<schedule::SharedCounterGA>(communicator);
+    _nextval_counter[communicator] = std::make_unique<schedule::SharedCounter>(communicator);
     _nextval_counter[communicator]->reset();
   }
 }
@@ -74,7 +74,7 @@ inline void create_new_counter(MPI_Comm communicator) {
 inline long nextval(MPI_Comm communicator, int64_t option = parallel_size) {
   if (option < 0) {
     if (_nextval_counter[communicator] == nullptr)
-      _nextval_counter[communicator] = std::make_unique<schedule::SharedCounterGA>(communicator);
+      _nextval_counter[communicator] = std::make_unique<schedule::SharedCounter>(communicator);
     _nextval_counter[communicator]->reset();
     return 0;
   }
