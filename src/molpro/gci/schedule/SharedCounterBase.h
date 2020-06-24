@@ -16,7 +16,7 @@ public:
    * @param amount how much to increment by
    * @return current value of the counter
    */
-  virtual int increment(int amount = 1) = 0;
+  virtual unsigned long int increment(int amount = 1) = 0;
 
   /*!
    * @brief Return current value from last call of increment
