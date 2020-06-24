@@ -1,5 +1,5 @@
-#ifndef SHAREDCOUNTER_H
-#define SHAREDCOUNTER_H
+#ifndef GCI_SRC_MOLPRO_GCI_SCHEDULE_SHAREDCOUNTERGA_H
+#define GCI_SRC_MOLPRO_GCI_SCHEDULE_SHAREDCOUNTERGA_H
 #ifdef MOLPRO
 #include "molpro_config.h"
 #endif
@@ -29,6 +29,9 @@
 namespace molpro {
 namespace gci {
 namespace schedule {
+/*!
+ * @brief Shared counter using Global Arrays
+ */
 class SharedCounterGA {
 public:
   explicit SharedCounterGA(const MPI_Comm &communicator);
@@ -53,4 +56,4 @@ protected:
 } // namespace schedule
 } // namespace gci
 } // namespace molpro
-#endif // SHAREDCOUNTER_H
+#endif // GCI_SRC_MOLPRO_GCI_SCHEDULE_SHAREDCOUNTERGA_H
