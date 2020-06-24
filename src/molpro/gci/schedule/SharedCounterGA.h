@@ -35,7 +35,7 @@ class SharedCounterGA : public SharedCounterBase {
 public:
   explicit SharedCounterGA(const MPI_Comm &communicator);
   virtual ~SharedCounterGA();
-  virtual int increment(int amount = 1);
+  virtual unsigned long int increment(int amount = 1);
   virtual void reset();
 
 protected:

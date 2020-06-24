@@ -41,7 +41,7 @@ void SharedCounterGA::reset() {
   }
 }
 
-int SharedCounterGA::increment(int amount) {
+unsigned long int SharedCounterGA::increment(int amount) {
   m_curr_val += amount;
   if (m_size > 1) {
     int subscript = 0;
