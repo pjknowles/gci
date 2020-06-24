@@ -23,24 +23,20 @@
 //#define MPI_COMM_COMPUTE 0
 #endif
 
+#include "molpro/gci/schedule/SharedCounterBase.h"
 #include <map>
 #include <memory>
 
-namespace molpro {
-namespace gci {
-namespace schedule {
+namespace molpro::gci::schedule {
 /*!
  * @brief Shared counter using Global Arrays
  */
-class SharedCounterGA {
+class SharedCounterGA : public SharedCounterBase {
 public:
   explicit SharedCounterGA(const MPI_Comm &communicator);
-  SharedCounterGA(const SharedCounterGA &) = delete;
-  ~SharedCounterGA();
-  static std::shared_ptr<SharedCounterGA> instance(const MPI_Comm &communicator);
-  static void clear() { m_counters.clear(); }
-  int increment(int amount = 1);
-  void reset();
+  virtual ~SharedCounterGA();
+  virtual int increment(int amount = 1);
+  virtual void reset();
 
 protected:
   MPI_Comm m_communicator;
@@ -50,10 +46,7 @@ protected:
   int m_ga_pgroup;
   int m_rank;
   int m_size;
-  static std::map<MPI_Comm, std::shared_ptr<SharedCounterGA>> m_counters;
 };
 
-} // namespace schedule
-} // namespace gci
-} // namespace molpro
+} // namespace molpro::gci::schedule
 #endif // GCI_SRC_MOLPRO_GCI_SCHEDULE_SHAREDCOUNTERGA_H
