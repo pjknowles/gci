@@ -32,6 +32,14 @@ SharedCounter::SharedCounter(const MPI_Comm& communicator)
 #endif
 }
 
+std::map<MPI_Comm, std::shared_ptr<SharedCounter>> SharedCounter::m_counters{};
+
+std::shared_ptr<SharedCounter> SharedCounter::instance(const MPI_Comm &communicator) {
+  if (!m_counters.count(communicator))
+    m_counters.insert({communicator, std::make_shared<SharedCounter>(communicator)});
+  return m_counters[communicator];
+}
+
 SharedCounter::~SharedCounter() {
 #ifndef SHAREDCOUNTER_DUMMY
   if (m_size > 1)
