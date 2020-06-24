@@ -28,10 +28,10 @@ namespace gci {
 class Array {
 public:
   using value_type = double;
-  MPI_Comm m_communicator; //!< Outer communicator
+  MPI_Comm m_communicator;                  //!< Outer communicator
   std::shared_ptr<molpro::Profiler> m_prof; //!< optional profiler
-  int m_comm_rank;         //!< rank in process group
-  int m_comm_size;         //!< size of process group
+  int m_comm_rank;                          //!< rank in process group
+  int m_comm_size;                          //!< size of process group
 protected:
   size_t m_dimension;  //!< Overall dimension of the direct product Fock space
   int m_ga_handle;     //!< Global Array handle, needed by GA libary
@@ -48,6 +48,7 @@ public:
   Array(size_t dimension, MPI_Comm commun, std::shared_ptr<molpro::Profiler> prof = nullptr);
 
   Array(const Array &source);
+  Array(const Array &source, int);
 
   ~Array();
 
