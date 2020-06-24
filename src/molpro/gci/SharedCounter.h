@@ -7,6 +7,9 @@
 
 #include <mpi.h>
 
+#include <ga-mpi.h>
+#include <ga.h>
+
 #ifdef MOLPRO
 #include "ppidd.h"
 //#define MPI_COMM_COMPUTE MPI_Comm_f2c(PPIDD_Worker_comm())
@@ -20,8 +23,8 @@
 //#define MPI_COMM_COMPUTE 0
 #endif
 
-#include <cstddef>
-#include <vector>
+#include <map>
+#include <memory>
 
 namespace molpro {
 namespace gci {
@@ -30,10 +33,12 @@ public:
   explicit SharedCounter(const MPI_Comm &communicator);
   SharedCounter(const SharedCounter &) = delete;
   ~SharedCounter();
+  static std::shared_ptr<SharedCounter> instance(const MPI_Comm &communicator);
+  static void clear() { m_counters.clear(); }
   int increment(int amount = 1);
   void reset();
 
-private:
+protected:
   MPI_Comm m_communicator;
   int m_hostrank;
   long int m_myval;
@@ -41,6 +46,7 @@ private:
   int m_ga_pgroup;
   int m_rank;
   int m_size;
+  static std::map<MPI_Comm, std::shared_ptr<SharedCounter>> m_counters;
 };
 
 } // namespace gci
