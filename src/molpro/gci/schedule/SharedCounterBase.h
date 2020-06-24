@@ -19,9 +19,17 @@ public:
   virtual int increment(int amount = 1) = 0;
 
   /*!
+   * @brief Return current value from last call of increment
+   */
+  virtual unsigned long int current_value() { return m_curr_val; };
+
+  /*!
    * @brief reset counter value to 0
    */
   virtual void reset() = 0;
+
+protected:
+  unsigned long int m_curr_val = 0; //! current value from last call of increment
 };
 
 }; // namespace molpro::gci::schedule
