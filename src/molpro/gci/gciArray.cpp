@@ -4,8 +4,8 @@
 
 #include <algorithm>
 #include <ga.h>
-#include <numeric>
 #include <molpro/Profiler.h>
+#include <numeric>
 
 namespace molpro {
 namespace gci {
@@ -37,6 +37,8 @@ Array::Array(const Array &source)
       m_ga_pgroup(0), m_ga_allocated(false) {
   *this = source;
 }
+
+Array::Array(const Array &source, int) : Array(source) {}
 
 Array &Array::operator=(const Array &source) noexcept {
   m_dimension = source.m_dimension;
