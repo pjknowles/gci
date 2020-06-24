@@ -1,5 +1,5 @@
 LibraryManager_Append(${PROJECT_NAME}
-        SOURCES SharedCounterBase.cpp SharedCounterGA.cpp SharedCounterMPI3.cpp SharedCounterSerial.cpp
+        SOURCES SharedCounterGA.cpp SharedCounterMPI3.cpp SharedCounterSerial.cpp
         PUBLIC_HEADER SharedCounterBase.h SharedCounterGA.h SharedCounterMPI3.h SharedCounterSerial.h
         )
 
