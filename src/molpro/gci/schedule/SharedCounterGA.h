@@ -39,13 +39,12 @@ public:
   virtual void reset();
 
 protected:
-  MPI_Comm m_communicator;
+  MPI_Comm m_communicator; //! MPI communicator whose processes share this counter
   int m_hostrank;
-  long int m_myval;
   int m_ga_handle;
   int m_ga_pgroup;
-  int m_rank;
-  int m_size;
+  int m_rank; //! rank of process in communicator
+  int m_size; //! size of communicator
 };
 
 } // namespace molpro::gci::schedule
