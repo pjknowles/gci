@@ -1935,7 +1935,8 @@ void gsum(molpro::Operator &op) {
 #ifdef __cplusplus
 extern "C" {
 #endif
-void gcirun(double *energies, int nenergies, char *fcidump) {
+void gcirun(double *energies, int nenergies, char *fcidump, int64_t communicator) {
+  molpro::gci::mpi_comm_compute = MPI_Comm_f2c(communicator);
   molpro::gci::Run run(fcidump);
   try {
     std::vector<double> e = run.run();
