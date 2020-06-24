@@ -1,8 +1,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <macdecls.h>
-#include <molpro/gci/SharedCounter.h>
 #include <molpro/gci/gci.h>
+#include <molpro/gci/schedule/SharedCounter.h>
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
