@@ -1,10 +1,11 @@
-#include "SharedCounter.h"
+#include "SharedCounterGA.h"
 
 #include "molpro/gci/gci.h"
 
 namespace molpro {
 namespace gci {
-SharedCounter::SharedCounter(const MPI_Comm& communicator)
+namespace schedule {
+SharedCounterGA::SharedCounterGA(const MPI_Comm& communicator)
     : m_communicator(communicator), m_hostrank(0), m_myval(0), m_ga_handle(0), m_rank(0), m_size(1) {
 #ifndef SHAREDCOUNTER_DUMMY
   int glob_size, glob_rank;
@@ -21,52 +22,53 @@ SharedCounter::SharedCounter(const MPI_Comm& communicator)
     NGA_Set_pgroup(m_ga_handle, m_ga_pgroup);
     int dims = 1, chunk = 1;
     NGA_Set_data(m_ga_handle, 1, &dims, C_LONG);
-    NGA_Set_array_name(m_ga_handle, (char*) "SharedCounter");
+    NGA_Set_array_name(m_ga_handle, (char*)"SharedCounter");
     NGA_Set_chunk(m_ga_handle, &chunk);
     auto succ = GA_Allocate(m_ga_handle);
     if (!succ)
-      GA_Error((char*) "Failed to allocate", 0);
-    GA_Check_handle(m_ga_handle, (char*) "Failed in SharedCounter constructor");
+      GA_Error((char*)"Failed to allocate", 0);
+    GA_Check_handle(m_ga_handle, (char*)"Failed in SharedCounter constructor");
   }
   reset();
 #endif
 }
 
-std::map<MPI_Comm, std::shared_ptr<SharedCounter>> SharedCounter::m_counters{};
+std::map<MPI_Comm, std::shared_ptr<SharedCounterGA>> SharedCounterGA::m_counters{};
 
-std::shared_ptr<SharedCounter> SharedCounter::instance(const MPI_Comm &communicator) {
+std::shared_ptr<SharedCounterGA> SharedCounterGA::instance(const MPI_Comm& communicator) {
   if (!m_counters.count(communicator))
-    m_counters.insert({communicator, std::make_shared<SharedCounter>(communicator)});
+    m_counters.insert({communicator, std::make_shared<SharedCounterGA>(communicator)});
   return m_counters[communicator];
 }
 
-SharedCounter::~SharedCounter() {
+SharedCounterGA::~SharedCounterGA() {
 #ifndef SHAREDCOUNTER_DUMMY
   if (m_size > 1)
     GA_Destroy(m_ga_handle);
 #endif
 }
 
-void SharedCounter::reset() {
+void SharedCounterGA::reset() {
   m_myval = 0;
 #ifndef SHAREDCOUNTER_DUMMY
   if (m_size > 1) {
-    GA_Check_handle(m_ga_handle, (char*) "Failed in SharedCounter::reset()");
+    GA_Check_handle(m_ga_handle, (char*)"Failed in SharedCounter::reset()");
     GA_Zero(m_ga_handle);
   }
 #endif
 }
 
-int SharedCounter::increment(int amount) {
+int SharedCounterGA::increment(int amount) {
   auto glob_val = m_myval;
   m_myval += amount;
 #ifndef SHAREDCOUNTER_DUMMY
   if (m_size > 1) {
     int subscript = 0;
-    glob_val = NGA_Read_inc(m_ga_handle, &subscript, (long int) amount);
+    glob_val = NGA_Read_inc(m_ga_handle, &subscript, (long int)amount);
   }
 #endif
   return glob_val;
 }
+} // namespace schedule
 } // namespace gci
 } // namespace molpro

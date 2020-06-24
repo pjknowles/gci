@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <macdecls.h>
 #include <molpro/gci/gci.h>
-#include <molpro/gci/schedule/SharedCounter.h>
+#include <molpro/gci/schedule/SharedCounterGA.h>
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

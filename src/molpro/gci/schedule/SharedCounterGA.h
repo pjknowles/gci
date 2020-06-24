@@ -28,12 +28,13 @@
 
 namespace molpro {
 namespace gci {
-class SharedCounter {
+namespace schedule {
+class SharedCounterGA {
 public:
-  explicit SharedCounter(const MPI_Comm &communicator);
-  SharedCounter(const SharedCounter &) = delete;
-  ~SharedCounter();
-  static std::shared_ptr<SharedCounter> instance(const MPI_Comm &communicator);
+  explicit SharedCounterGA(const MPI_Comm &communicator);
+  SharedCounterGA(const SharedCounterGA &) = delete;
+  ~SharedCounterGA();
+  static std::shared_ptr<SharedCounterGA> instance(const MPI_Comm &communicator);
   static void clear() { m_counters.clear(); }
   int increment(int amount = 1);
   void reset();
@@ -46,9 +47,10 @@ protected:
   int m_ga_pgroup;
   int m_rank;
   int m_size;
-  static std::map<MPI_Comm, std::shared_ptr<SharedCounter>> m_counters;
+  static std::map<MPI_Comm, std::shared_ptr<SharedCounterGA>> m_counters;
 };
 
+} // namespace schedule
 } // namespace gci
 } // namespace molpro
 #endif // SHAREDCOUNTER_H

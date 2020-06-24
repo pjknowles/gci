@@ -27,7 +27,7 @@ int parallel_size = 1;
 int parallel_rank = 0;
 bool molpro_plugin = false;
 MPI_Comm molpro_plugin_intercomm = MPI_COMM_NULL;
-std::map<MPI_Comm, std::unique_ptr<SharedCounter>> _nextval_counter;
+std::map<MPI_Comm, std::unique_ptr<schedule::SharedCounterGA>> _nextval_counter;
 std::map<MPI_Comm, int> _ga_pgroups;
 MPI_Comm _sub_communicator;
 MPI_Comm mpi_comm_compute;
