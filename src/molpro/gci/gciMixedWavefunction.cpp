@@ -8,7 +8,7 @@ namespace molpro {
 namespace gci {
 
 MixedWavefunction::MixedWavefunction(const Options &options, const State &prototype, MPI_Comm head_commun)
-    : Array(head_commun), m_child_communicator(_sub_communicator),
+    : ArrayGA(head_commun), m_child_communicator(_sub_communicator),
       m_vibSpace(options.parameter("NMODE", 0), options.parameter("NMODAL", 1), options.parameter("VIB_EXC_LVL", 1)),
       m_vibBasis(m_vibSpace), m_elDim(0), m_prototype(prototype, m_child_communicator) {
   m_elDim = m_prototype.size();
@@ -18,7 +18,7 @@ MixedWavefunction::MixedWavefunction(const Options &options, const State &protot
 }
 
 MixedWavefunction::MixedWavefunction(const MixedWavefunction &source, int option)
-    : Array(source), m_child_communicator(source.m_child_communicator), m_vibSpace(source.m_vibSpace),
+    : ArrayGA(source), m_child_communicator(source.m_child_communicator), m_vibSpace(source.m_vibSpace),
       m_vibBasis(source.m_vibBasis), m_elDim(source.m_elDim), m_prototype(source.m_prototype) {}
 
 Wavefunction MixedWavefunction::wavefunctionAt(size_t iVib, MPI_Comm commun) const {
@@ -49,7 +49,7 @@ void MixedWavefunction::put(int iVib, Wavefunction &wfn) {
   auto dimension = wfn.dimension;
   int lo, hi, ld = dimension;
   ga_wfn_block_bound(iVib, &lo, &hi, dimension);
-  Array::put(lo, hi, buffer);
+  ArrayGA::put(lo, hi, buffer);
 }
 
 void MixedWavefunction::accumulate(int iVib, Wavefunction &wfn, double scaling_constant) {
@@ -213,7 +213,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
 
 bool MixedWavefunction::compatible(const MixedWavefunction &other) const {
   bool sameSize = (m_vibBasis.vibDim() == other.m_vibBasis.vibDim());
-  if (!Array::compatible(other))
+  if (!ArrayGA::compatible(other))
     return false;
   bool sameVibBasis = (m_vibSpace == other.m_vibSpace);
   bool sameElectronicWfn = m_prototype.compatible(other.m_prototype);
