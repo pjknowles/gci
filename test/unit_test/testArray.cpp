@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <ga.h>
-#include <molpro/gci/array/gciArray.h>
+#include <molpro/gci/array/Array.h>
 #include <molpro/gci/gci.h>
 #include <numeric>
 
