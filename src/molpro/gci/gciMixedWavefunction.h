@@ -4,7 +4,7 @@
 #include <mpi.h>
 #include <vector>
 
-#include "molpro/gci/array/ArrayGA.h"
+#include "molpro/gci/array/Array.h"
 #include "molpro/gci/gciHProductSet.h"
 #include "molpro/gci/gciMixedOperator.h"
 #include "molpro/gci/gciMixedOperatorSecondQuant.h"
@@ -47,7 +47,7 @@ namespace gci {
  *
  *
  */
-class MixedWavefunction : virtual public array::ArrayGA, public Printable {
+class MixedWavefunction : virtual public array::Array, public Printable {
 public:
   MPI_Comm m_child_communicator; //!< Communicator for children Wavefunction objects
 protected:
