@@ -11,7 +11,7 @@ using ::testing::DoubleEq;
 using ::testing::Each;
 using ::testing::Pointwise;
 
-using molpro::gci::Array;
+using molpro::gci::array::Array;
 
 
 //!@todo there should be a temporary directory for test files

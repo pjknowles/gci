@@ -4,19 +4,20 @@ LibraryManager_Append(${PROJECT_NAME}
         gciState.cpp gciString.cpp gciStringSet.cpp gciSymmetrySpace.cpp gciTransitionDensity.cpp gciWavefunction.cpp
         gciHProduct.cpp gciHProductSet.cpp gciMixedOperator.cpp gciMixedWavefunction.cpp
         gciVibSpace.cpp gciDavidson.cpp gciPersistentOperator.cpp gciMixedOperatorSecondQuant.cpp gciVibOperator.cpp
-        gciArray.cpp gciUtils.cpp
+        gciUtils.cpp
         PUBLIC_HEADER
         gci.h gciDeterminant.h gciExcitationSet.h gciFile.h gciMolpro.h gciOptions.h gciOrbitals.h gciOrbitalSpace.h
         gciPrintable.h gciRun.h gciState.h gciString.h gciStringSet.h gciSymmetrySpace.h gciTransitionDensity.h
         gciWavefunction.h gciHProduct.h gciHProductSet.h gciMixedOperator.h gciMixedWavefunction.h
         gciVibSpace.h gciDavidson.h gciPersistentOperator.h gciMixedOperatorSecondQuant.h gciVibOperator.h
-        gciVibExcitation.h gciArray.h gciUtils.h)
+        gciVibExcitation.h gciUtils.h)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_14)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)
 
 add_subdirectory(schedule)
+add_subdirectory(array)
 
 LibraryManager_BLAS(${PROJECT_NAME} PUBLIC Intel10_64lp_seq Intel10_64lp)
 target_compile_definitions(${PROJECT_NAME} PRIVATE -DBLAS)

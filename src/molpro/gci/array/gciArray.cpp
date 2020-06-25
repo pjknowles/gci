@@ -1,14 +1,13 @@
 #include "gciArray.h"
 
-#include "gci.h"
+#include "molpro/gci/gci.h"
 
 #include <algorithm>
 #include <ga.h>
 #include <molpro/Profiler.h>
 #include <numeric>
 
-namespace molpro {
-namespace gci {
+namespace molpro::gci::array {
 
 int get_communicator_size(MPI_Comm comm) {
   int size;
@@ -709,5 +708,4 @@ Array operator*(const double &value, const Array &w1) {
   return result *= value;
 }
 
-} // namespace gci
-} // namespace molpro
+} // namespace molpro::gci::array
