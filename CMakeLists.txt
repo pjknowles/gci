@@ -14,6 +14,8 @@ LibraryManager_Project(MPI_OPTION FORTRAN_OPTION)
 
 ########## Options ##########
 option(GCI_TEST "Whether to force tests to be built" OFF)
+option(GCI_SHAREDCOUNTER_MPI3 "Use MPI3 RMA implementation of SharedCounter" ON)
+option(GCI_SHAREDCOUNTER_GA "Use Global Arrays implementation of SharedCounter" OFF)
 
 ########## Dependencies ##########
 
