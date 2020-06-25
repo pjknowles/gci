@@ -11,7 +11,7 @@ using ::testing::DoubleEq;
 using ::testing::Each;
 using ::testing::Pointwise;
 
-using molpro::gci::array::Array;
+using molpro::gci::array::ArrayGA;
 
 
 //!@todo there should be a temporary directory for test files
@@ -36,14 +36,14 @@ public:
   const unsigned int nS;
   int p_rank;
   std::string fname;
-  std::vector<Array> aa_write;
-  std::vector<Array> aa_read;
+  std::vector<ArrayGA> aa_write;
+  std::vector<ArrayGA> aa_read;
   std::vector<std::vector<double>> ref_values;
 };
 
 TEST_F(DavidsonReadWriteF, read_write_wfn) {
-  molpro::gci::run::davidson_read_write_wfn<Array>(aa_write, fname, true);
-  molpro::gci::run::davidson_read_write_wfn<Array>(aa_read, fname, false);
+  molpro::gci::run::davidson_read_write_wfn<ArrayGA>(aa_write, fname, true);
+  molpro::gci::run::davidson_read_write_wfn<ArrayGA>(aa_read, fname, false);
   {
     auto l = Lock();
     for (auto i = 0ul; i < nS; ++i) {

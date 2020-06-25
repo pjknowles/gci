@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <ga.h>
-#include <molpro/gci/array/Array.h>
+#include <molpro/gci/array/ArrayGA.h>
 #include <molpro/gci/gci.h>
 #include <numeric>
 
@@ -14,34 +14,34 @@ using ::testing::DoubleEq;
 using ::testing::Each;
 using ::testing::Pointwise;
 
-using molpro::gci::array::Array;
+using molpro::gci::array::ArrayGA;
 
 TEST(Array, constructor_empty) {
   auto l = Lock();
-  auto a = Array();
+  auto a = ArrayGA();
 }
 
 TEST(Array, constructor_with_commun) {
   auto l = Lock();
-  auto a = Array(molpro::gci::mpi_comm_compute);
+  auto a = ArrayGA(molpro::gci::mpi_comm_compute);
 }
 
 TEST(Array, constructor_with_dimension) {
   auto l = Lock();
   int dim = 100;
-  auto a = Array(dim, molpro::gci::mpi_comm_compute);
+  auto a = ArrayGA(dim, molpro::gci::mpi_comm_compute);
 }
 
 TEST(Array, constructor_copy) {
   auto l = Lock();
   int dim = 100;
-  auto a = Array(dim, molpro::gci::mpi_comm_compute);
-  auto b = Array(a);
+  auto a = ArrayGA(dim, molpro::gci::mpi_comm_compute);
+  auto b = ArrayGA(a);
 }
 
-class ArrayInitializationF : public ::testing::Test, public Array {
+class ArrayInitializationF : public ::testing::Test, public ArrayGA {
 public:
-  ArrayInitializationF() : Array(dim, molpro::gci::mpi_comm_compute){};
+  ArrayInitializationF() : ArrayGA(dim, molpro::gci::mpi_comm_compute){};
   static const int dim = 100;
 };
 
@@ -141,10 +141,10 @@ TEST_F(ArrayInitializationF, set) {
   sync();
 }
 
-class ArrayRangeF : public ::testing::Test, public Array {
+class ArrayRangeF : public ::testing::Test, public ArrayGA {
 public:
   //! Stores a range in the buffer {1, 2, 3, 4, 5, .., dim}
-  ArrayRangeF() : Array((size_t)dim, molpro::gci::mpi_comm_compute), p_rank(GA_Nodeid()), p_size(GA_Nnodes()) {
+  ArrayRangeF() : ArrayGA((size_t)dim, molpro::gci::mpi_comm_compute), p_rank(GA_Nodeid()), p_size(GA_Nnodes()) {
     allocate_buffer();
     values.resize(dim);
     std::iota(values.begin(), values.end(), 1.);
@@ -380,8 +380,8 @@ public:
   std::vector<double> range_alpha;
   std::vector<double> range_beta;
   int p_rank, p_size;
-  Array a;
-  Array b;
+  ArrayGA a;
+  ArrayGA b;
   static const int every_nth_element = 5; // period for selection of sparse array elements
   std::map<size_t, double> sparse_array;  // sparse selection of range_beta elements
 };
@@ -492,7 +492,7 @@ TEST_F(ArrayCollectiveOpF, dot_map) {
 TEST_F(ArrayCollectiveOpF, times) {
   a.set(alpha, true, false);
   b.set(beta);
-  auto c = Array{a};
+  auto c = ArrayGA{a};
   c.times(&a, &b, false, true);
   auto from_ga_buffer_a = a.vec();
   auto from_ga_buffer_b = b.vec();
@@ -514,7 +514,7 @@ TEST_F(ArrayCollectiveOpF, divide_append_negative) {
   double shift = 0.5;
   a.set(alpha, true, false);
   b.set(beta);
-  auto c = Array{a};
+  auto c = ArrayGA{a};
   c.divide(&a, &b, shift, true, true, false, true);
   auto from_ga_buffer_a = a.vec();
   auto from_ga_buffer_b = b.vec();
@@ -536,7 +536,7 @@ TEST_F(ArrayCollectiveOpF, divide_append_positive) {
   double shift = 0.5;
   a.set(alpha, true, false);
   b.set(beta);
-  auto c = Array{a};
+  auto c = ArrayGA{a};
   c.divide(&a, &b, shift, true, false, false, true);
   auto from_ga_buffer_a = a.vec();
   auto from_ga_buffer_b = b.vec();
@@ -558,7 +558,7 @@ TEST_F(ArrayCollectiveOpF, divide_overwrite_positive) {
   double shift = 0.5;
   a.set(alpha, true, false);
   b.set(beta);
-  auto c = Array{a};
+  auto c = ArrayGA{a};
   c.divide(&a, &b, shift, false, false, false, true);
   auto from_ga_buffer_a = a.vec();
   auto from_ga_buffer_b = b.vec();
