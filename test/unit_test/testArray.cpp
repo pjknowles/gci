@@ -3,8 +3,8 @@
 #include <gtest/gtest.h>
 
 #include <ga.h>
+#include <molpro/gci/array/gciArray.h>
 #include <molpro/gci/gci.h>
-#include <molpro/gci/gciArray.h>
 #include <numeric>
 
 #include "parallel_utils.h"
@@ -14,7 +14,7 @@ using ::testing::DoubleEq;
 using ::testing::Each;
 using ::testing::Pointwise;
 
-using molpro::gci::Array;
+using molpro::gci::array::Array;
 
 TEST(Array, constructor_empty) {
   auto l = Lock();

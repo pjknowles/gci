@@ -14,8 +14,7 @@ namespace molpro {
 class Profiler;
 }
 
-namespace molpro {
-namespace gci {
+namespace molpro::gci::array {
 // TODO  1) store the wavefunction on file (hdf5)
 //      2) backup current solutions during Davidson
 //      3) restart Davidson from previous backup
@@ -251,6 +250,5 @@ Array operator/(const Array &w1, const Array &w2);     ///< element-by-element d
 Array operator*(const Array &w1, const double &value); ///< multiply by a scalar. Collective communication
 Array operator*(const double &value, const Array &w1); ///< multiply by a scalar. Collective communication
 
-} // namespace gci
-} // namespace molpro
+} // namespace molpro::gci::array
 #endif // GCI_TENSOR_H
