@@ -78,12 +78,12 @@ void Davidson<t_Wavefunction, t_Operator>::printMatrix(const std::string &fname)
 }
 
 template <class t_Wavefunction>
-typename std::enable_if<!std::is_base_of<array::ArrayGA, t_Wavefunction>::value>::type
+typename std::enable_if<!std::is_base_of<array::Array, t_Wavefunction>::value>::type
 davidson_read_write_array(t_Wavefunction &w, const std::string &fname, unsigned int i, hid_t id, bool save) {}
 
-void davidson_read_write_array(array::ArrayGA &w, const std::string &fname, unsigned int i, hid_t id, bool save) {
+void davidson_read_write_array(array::Array &w, const std::string &fname, unsigned int i, hid_t id, bool save) {
   auto dataset = utils::open_or_create_hdf5_dataset(id, "result_" + std::to_string(i), H5T_NATIVE_DOUBLE, w.size());
-  auto buffer = array::ArrayGA::LocalBuffer(w);
+  auto buffer = array::Array::LocalBuffer(w);
   hsize_t count[1] = {(hsize_t)buffer.size()};
   hsize_t offset[1] = {(hsize_t)buffer.lo};
   auto memspace = H5Screate_simple(1, count, nullptr);
@@ -432,7 +432,7 @@ template class Davidson<MixedWavefunction, MixedOperatorSecondQuant>;
 
 template class Davidson<Wavefunction, molpro::Operator>;
 
-template void davidson_read_write_wfn<::molpro::gci::array::ArrayGA>(std::vector<::molpro::gci::array::ArrayGA> &ww,
+template void davidson_read_write_wfn<array::Array>(std::vector<array::Array> &ww,
                                                                    const std::string &fname, bool save);
 } // namespace run
 } // namespace gci
