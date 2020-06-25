@@ -4,7 +4,7 @@
 #include <mpi.h>
 #include <vector>
 
-#include "molpro/gci/array/gciArray.h"
+#include "molpro/gci/array/Array.h"
 #include "molpro/gci/gciHProductSet.h"
 #include "molpro/gci/gciMixedOperator.h"
 #include "molpro/gci/gciMixedOperatorSecondQuant.h"
