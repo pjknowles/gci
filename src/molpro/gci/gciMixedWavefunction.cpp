@@ -1,5 +1,6 @@
 #include "gciMixedWavefunction.h"
 #include "gciHProductSet.h"
+#include "molpro/gci/array/Array.h"
 
 #include <ga.h>
 #include <mpi.h>
@@ -8,24 +9,31 @@ namespace molpro {
 namespace gci {
 
 MixedWavefunction::MixedWavefunction(const Options &options, const State &prototype, MPI_Comm head_commun)
-    : ArrayGA(head_commun), m_child_communicator(_sub_communicator),
+    : m_child_communicator(_sub_communicator),
       m_vibSpace(options.parameter("NMODE", 0), options.parameter("NMODAL", 1), options.parameter("VIB_EXC_LVL", 1)),
       m_vibBasis(m_vibSpace), m_elDim(0), m_prototype(prototype, m_child_communicator) {
   m_elDim = m_prototype.size();
   m_vibBasis.generateFullSpace();
-  m_dimension = m_vibBasis.vibDim() * m_elDim;
+  m_array = std::make_unique<array::Array>(m_vibBasis.vibDim() * m_elDim, head_commun);
   allocate_buffer();
 }
 
-MixedWavefunction::MixedWavefunction(const MixedWavefunction &source, int option)
-    : ArrayGA(source), m_child_communicator(source.m_child_communicator), m_vibSpace(source.m_vibSpace),
-      m_vibBasis(source.m_vibBasis), m_elDim(source.m_elDim), m_prototype(source.m_prototype) {}
+MixedWavefunction::~MixedWavefunction() = default;
+
+void MixedWavefunction::allocate_buffer() { m_array->allocate_buffer(); }
+
+MixedWavefunction::MixedWavefunction(const MixedWavefunction &source)
+    : m_child_communicator(source.m_child_communicator), m_vibSpace(source.m_vibSpace), m_vibBasis(source.m_vibBasis),
+      m_elDim(source.m_elDim), m_prototype(source.m_prototype),
+      m_array(std::make_unique<array::Array>(*(source.m_array))) {}
+
+MixedWavefunction::MixedWavefunction(const MixedWavefunction &source, int option) : MixedWavefunction(source) {}
 
 Wavefunction MixedWavefunction::wavefunctionAt(size_t iVib, MPI_Comm commun) const {
   auto wfn = Wavefunction{m_prototype, 0, commun};
   wfn.allocate_buffer();
-  if (!empty())
-    copy_to_local(m_ga_handle, iVib, wfn);
+  if (!m_array->empty())
+    copy_to_local(*this, iVib, wfn);
   return wfn;
 }
 
@@ -34,13 +42,13 @@ void MixedWavefunction::ga_wfn_block_bound(int iVib, int *lo, int *hi, int dimen
   hi[0] = lo[0] + dimension - 1;
 }
 
-void MixedWavefunction::copy_to_local(int ga_handle, int iVib, Wavefunction &wfn) const {
+void MixedWavefunction::copy_to_local(const MixedWavefunction &w, int iVib, Wavefunction &wfn) {
   auto p = profiler->push("copy_to_local");
   double *buffer = wfn.buffer.data();
   auto dimension = wfn.dimension;
   int lo, hi, ld = dimension;
-  ga_wfn_block_bound(iVib, &lo, &hi, dimension);
-  NGA_Get(ga_handle, &lo, &hi, buffer, &ld);
+  w.ga_wfn_block_bound(iVib, &lo, &hi, dimension);
+  w.m_array->get(lo, hi, buffer);
 }
 
 void MixedWavefunction::put(int iVib, Wavefunction &wfn) {
@@ -49,7 +57,7 @@ void MixedWavefunction::put(int iVib, Wavefunction &wfn) {
   auto dimension = wfn.dimension;
   int lo, hi, ld = dimension;
   ga_wfn_block_bound(iVib, &lo, &hi, dimension);
-  ArrayGA::put(lo, hi, buffer);
+  m_array->put(lo, hi, buffer);
 }
 
 void MixedWavefunction::accumulate(int iVib, Wavefunction &wfn, double scaling_constant) {
@@ -58,13 +66,13 @@ void MixedWavefunction::accumulate(int iVib, Wavefunction &wfn, double scaling_c
   auto dimension = wfn.dimension;
   int lo, hi, ld = dimension;
   ga_wfn_block_bound(iVib, &lo, &hi, dimension);
-  NGA_Acc(m_ga_handle, &lo, &hi, buffer, &ld, &scaling_constant);
+  m_array->acc(lo, hi, buffer, scaling_constant);
 }
 
 void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &ham, const MixedWavefunction &w,
                                                bool parallel_stringset, bool with_sync) {
   if (with_sync)
-    DivideTasks(1000000000, 1, 1, m_communicator);
+    DivideTasks(1000000000, 1, 1, m_array->communicator());
   auto prof = profiler->push("MixedWavefunction::operatorOnWavefunction");
   auto res = Wavefunction{m_prototype, 0, m_child_communicator};
   std::unique_ptr<Wavefunction> res2;
@@ -79,9 +87,9 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
   for (const auto &bra : m_vibBasis) {
     auto iBra = m_vibBasis.index(bra);
     // Purely electronic operators
-    if (NextTask(m_communicator) && !ham.elHam.empty()) {
+    if (NextTask(m_array->communicator()) && !ham.elHam.empty()) {
       auto p = profiler->push("Hel");
-      copy_to_local(w.m_ga_handle, iBra, ketWfn);
+      copy_to_local(w, iBra, ketWfn);
       if (!zeroed) {
         res.zero();
         zeroed = true;
@@ -93,9 +101,9 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
       }
     }
     // Purely electronic operators applied twice
-    if (NextTask(m_communicator) && !ham.elHam2.empty()) {
+    if (NextTask(m_array->communicator()) && !ham.elHam2.empty()) {
       auto p = profiler->push("Hel2");
-      copy_to_local(w.m_ga_handle, iBra, ketWfn);
+      copy_to_local(w, iBra, ketWfn);
       if (!zeroed) {
         res.zero();
         zeroed = true;
@@ -109,7 +117,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
       }
     }
     // Purely vibrational operators
-    if (NextTask(m_communicator)) {
+    if (NextTask(m_array->communicator())) {
       auto p = profiler->push("Hvib");
       if (!zeroed) {
         res.zero();
@@ -121,7 +129,7 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
         if (!ket.withinSpace(m_vibSpace))
           continue;
         auto iKet = m_vibBasis.index(ket);
-        copy_to_local(w.m_ga_handle, iKet, ketWfn);
+        copy_to_local(w, iKet, ketWfn);
         res.axpy(val, ketWfn);
       }
     }
@@ -131,9 +139,9 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
       auto iKet = m_vibBasis.index(ket);
       if (!ham.connected(bra, ket))
         continue;
-      if (!NextTask(m_communicator))
+      if (!NextTask(m_array->communicator()))
         continue;
-      copy_to_local(w.m_ga_handle, iKet, ketWfn);
+      copy_to_local(w, iKet, ketWfn);
       if (!zeroed) {
         res.zero();
         zeroed = true;
@@ -156,13 +164,13 @@ void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &h
     }
   }
   if (with_sync)
-    sync();
+    m_array->sync();
 }
 
 void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bool parallel_stringset) {
   auto p = profiler->push("MixedWavefunction::diagonalOperator");
-  zero();
-  DivideTasks(1000000000, 1, 1, m_communicator);
+  m_array->zero();
+  DivideTasks(1000000000, 1, 1, m_array->communicator());
   auto res = Wavefunction{m_prototype, 0, m_child_communicator};
   auto wfn = Wavefunction{m_prototype, 0, m_child_communicator};
   res.allocate_buffer();
@@ -170,7 +178,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
   for (const auto &bra : m_vibBasis) {
     auto iBra = m_vibBasis.index(bra);
     // Purely electronic operators
-    if (NextTask(m_communicator)) {
+    if (NextTask(m_array->communicator())) {
       res.zero();
       for (const auto &hel : ham.elHam) {
         auto op = hel.second.get();
@@ -179,7 +187,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
       accumulate(iBra, res);
     }
     // Pure vibrational operator
-    if (NextTask(m_communicator)) {
+    if (NextTask(m_array->communicator())) {
       res.zero();
       for (const auto &vibEl : ham.Hvib.tensor) {
         auto val = vibEl.second.oper;
@@ -199,7 +207,7 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
         auto ket = bra.excite(vibExc);
         if (ket != bra)
           continue;
-        if (!NextTask(m_communicator))
+        if (!NextTask(m_array->communicator()))
           continue;
         res.zero();
         auto op = p_op.get();
@@ -208,12 +216,12 @@ void MixedWavefunction::diagonalOperator(const MixedOperatorSecondQuant &ham, bo
       }
     }
   }
-  sync();
+  m_array->sync();
 }
 
 bool MixedWavefunction::compatible(const MixedWavefunction &other) const {
   bool sameSize = (m_vibBasis.vibDim() == other.m_vibBasis.vibDim());
-  if (!ArrayGA::compatible(other))
+  if (!m_array->compatible(*other.m_array))
     return false;
   bool sameVibBasis = (m_vibSpace == other.m_vibSpace);
   bool sameElectronicWfn = m_prototype.compatible(other.m_prototype);
@@ -230,26 +238,51 @@ std::vector<double> MixedWavefunction::vibDensity() {
   ket.allocate_buffer();
   int local_i = -1;
   int local_j = -1;
-  auto norm = dot(this);
+  auto norm = dot(*this);
   if (std::abs(norm) < 1.0e-8)
     throw std::runtime_error("Norm of wavefunction is too small, " + std::to_string(norm));
-  DivideTasks(size, 1, 1, m_communicator);
+  DivideTasks(size, 1, 1, m_array->communicator());
   for (size_t i = 0; i < nM; ++i) {
     for (size_t j = 0; j <= i; ++j) {
-      if (NextTask(m_communicator)) {
+      if (NextTask(m_array->communicator())) {
         if (local_i != i)
-          copy_to_local(m_ga_handle, i, bra);
+          copy_to_local(*this, i, bra);
         local_i = i;
         if (local_j != i)
-          copy_to_local(m_ga_handle, j, ket);
+          copy_to_local(*this, j, ket);
         local_j = j;
         dm[i * nM + j] = dm[j * nM + i] = bra.dot(ket) / norm;
       }
     }
   }
   // reduce the whole array together
-  MPI_Allreduce(MPI_IN_PLACE, dm.data(), size, MPI_DOUBLE, MPI_SUM, m_communicator);
+  MPI_Allreduce(MPI_IN_PLACE, dm.data(), size, MPI_DOUBLE, MPI_SUM, m_array->communicator());
   return dm;
+}
+double MixedWavefunction::dot(const MixedWavefunction &w) const { return array::dot(*m_array, *w.m_array); }
+void MixedWavefunction::axpy(double a, const MixedWavefunction &w) { return array::axpy(*m_array, a, *w.m_array); }
+void MixedWavefunction::sync() const { m_array->sync(); }
+void MixedWavefunction::zero() { m_array->zero(); }
+size_t MixedWavefunction::size() const { return m_array->size(); }
+double MixedWavefunction::at(unsigned long i) const { return m_array->at(i); }
+void MixedWavefunction::set(unsigned long i, double v) { m_array->set(i, v); }
+void MixedWavefunction::divide(const MixedWavefunction *y, const MixedWavefunction *z, double shift, bool append,
+                               bool negative) {
+  array::divide(*m_array, *y->m_array, *z->m_array, shift, append, negative);
+}
+std::vector<size_t> MixedWavefunction::minlocN(int n) const { return array::min_loc_n(*m_array, n); }
+double MixedWavefunction::dot(const std::map<unsigned long, double> &w) const { return array::dot(*m_array, w); }
+void MixedWavefunction::axpy(double a, const std::map<unsigned long, double> &w) const { array::axpy(*m_array, a, w); }
+void MixedWavefunction::scal(double a) { array::scal(*m_array, a); }
+
+MixedWavefunction &MixedWavefunction::operator=(const MixedWavefunction &source) {
+  m_vibSpace = source.m_vibSpace;
+  m_child_communicator = source.m_child_communicator;
+  m_elDim = source.m_elDim;
+  m_prototype = source.m_prototype;
+  m_vibBasis = source.m_vibBasis;
+  *m_array = *source.m_array;
+  return *this;
 }
 
 // bool MixedWavefunction::compatible(const Array &other) const {
