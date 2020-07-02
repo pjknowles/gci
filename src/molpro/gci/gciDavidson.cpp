@@ -3,6 +3,7 @@
 #include "gciUtils.h"
 #include "gciWavefunction.h"
 
+#include "molpro/gci/array/Array.h"
 #include <fstream>
 #include <ga.h>
 #include <hdf5.h>
@@ -77,26 +78,22 @@ void Davidson<t_Wavefunction, t_Operator>::printMatrix(const std::string &fname)
   }
 }
 
-template <class t_Wavefunction>
-typename std::enable_if<!std::is_base_of<array::Array, t_Wavefunction>::value>::type
-davidson_read_write_array(t_Wavefunction &w, const std::string &fname, unsigned int i, hid_t id, bool save) {}
-
-void davidson_read_write_array(array::Array &w, const std::string &fname, unsigned int i, hid_t id, bool save) {
+void davidson_read_write_array(MixedWavefunction &w, const std::string &fname, unsigned int i, hid_t id, bool save) {
   auto dataset = utils::open_or_create_hdf5_dataset(id, "result_" + std::to_string(i), H5T_NATIVE_DOUBLE, w.size());
-  auto buffer = array::Array::LocalBuffer(w);
-  hsize_t count[1] = {(hsize_t)buffer.size()};
-  hsize_t offset[1] = {(hsize_t)buffer.lo};
+  auto buffer = w.m_array->local_buffer(); // array::Array::LocalBuffer(w);
+  hsize_t count[1] = {(hsize_t)buffer->size()};
+  hsize_t offset[1] = {(hsize_t)buffer->lo};
   auto memspace = H5Screate_simple(1, count, nullptr);
   auto fspace = H5Dget_space(dataset);
   H5Sselect_hyperslab(fspace, H5S_SELECT_SET, offset, nullptr, count, nullptr);
   auto plist_id = H5Pcreate(H5P_DATASET_XFER);
   H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_INDEPENDENT);
   if (save) {
-    auto error = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, &buffer[0]);
+    auto error = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, &buffer->at(0));
     if (error < 0)
       throw std::runtime_error("davidson_read_write_array(): write failed");
   } else {
-    auto error = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, &buffer[0]);
+    auto error = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, &buffer->at(0));
     if (error < 0)
       throw std::runtime_error("davidson_read_write_array(): read failed");
   }
@@ -116,6 +113,7 @@ void davidson_read_write_wfn(std::vector<t_Wavefunction> &ww, const std::string 
   }
   H5Fclose(id);
 }
+template <> void davidson_read_write_wfn(std::vector<Wavefunction> &ww, const std::string &fname, bool save) {}
 
 template <class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::reference_electronic_states() {}
@@ -272,7 +270,7 @@ template <> void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::analysis
   // normalise solutions
   for (auto &w : ww) {
     auto ov = w.dot(w);
-    w *= 1. / std::sqrt(ov);
+    scal(*w.m_array, 1. / std::sqrt(ov));
   }
   if (GA_Nodeid() == 0) {
     std::cout << "Analysis:" << std::endl;
@@ -280,7 +278,7 @@ template <> void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::analysis
     auto ww_bo = std::vector<std::vector<double>>(nState);
     for (size_t i = 0; i < nState; ++i) {
       for (size_t j_vib = 0; j_vib < nM; ++j_vib) {
-        auto w = ww[i].wavefunctionAt(j_vib, ww[i].m_communicator);
+        auto w = ww[i].wavefunctionAt(j_vib, ww[i].m_array->communicator());
         for (const auto &w_ref : *ref_elec_states) {
           auto ov = w.dot(w_ref);
           ww_bo[i].push_back(ov);
@@ -304,7 +302,7 @@ template <> void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::analysis
     auto bosonic_assignment = std::vector<std::vector<double>>(nState);
     for (size_t i = 0; i < nState; ++i) {
       for (size_t j_vib = 0; j_vib < nM; ++j_vib) {
-        auto w = ww[i].wavefunctionAt(j_vib, ww[i].m_communicator);
+        auto w = ww[i].wavefunctionAt(j_vib, ww[i].m_array->communicator());
         auto ov = w.dot(w);
         bosonic_assignment[i].push_back(ov);
       }
@@ -398,7 +396,7 @@ template <class t_Wavefunction, class t_Operator> void Davidson<t_Wavefunction, 
 template <> void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::action() {
   for (auto &g : gg)
     g.zero();
-  DivideTasks(10000000000, 1, 1, gg[0].m_communicator);
+  DivideTasks(10000000000, 1, 1, gg[0].m_array->communicator());
   for (size_t k = 0; k < ww.size(); k++) {
     auto &x = ww[k];
     auto &g = gg[k];
@@ -432,8 +430,6 @@ template class Davidson<MixedWavefunction, MixedOperatorSecondQuant>;
 
 template class Davidson<Wavefunction, molpro::Operator>;
 
-template void davidson_read_write_wfn<array::Array>(std::vector<array::Array> &ww,
-                                                                   const std::string &fname, bool save);
 } // namespace run
 } // namespace gci
 } // namespace molpro
