@@ -4,7 +4,6 @@
 #include <mpi.h>
 #include <vector>
 
-#include "molpro/gci/array/Array.h"
 #include "molpro/gci/gciHProductSet.h"
 #include "molpro/gci/gciMixedOperator.h"
 #include "molpro/gci/gciMixedOperatorSecondQuant.h"
@@ -12,6 +11,9 @@
 
 namespace molpro {
 namespace gci {
+namespace array {
+class Array;
+}
 
 /*!
  * @brief Mixed bosonic and fermionic wavefunction represented as configuration expansion in the direct product
@@ -47,9 +49,11 @@ namespace gci {
  *
  *
  */
-class MixedWavefunction : virtual public array::Array, public Printable {
+class MixedWavefunction : virtual public Printable {
 public:
   MPI_Comm m_child_communicator; //!< Communicator for children Wavefunction objects
+  using value_type = double;
+
 protected:
   VibSpace m_vibSpace;    //!< Parameters defining the vibrational space of current wavefunction
   HProductSet m_vibBasis; //!< Vibrational basis for the full space of current wavefunction
@@ -63,11 +67,15 @@ protected:
   Wavefunction m_prototype;
 
 public:
+  std::unique_ptr<array::Array> m_array; //!< array storing the actual buffer and performing linear algebra
+
   explicit MixedWavefunction(const Options &options, const State &prototype, MPI_Comm head_commun = mpi_comm_compute);
 
-  MixedWavefunction(const MixedWavefunction &source, int option = 0);
+  MixedWavefunction(const MixedWavefunction &source);
+  MixedWavefunction(const MixedWavefunction &source, int option);
+  MixedWavefunction &operator=(const MixedWavefunction &source);
 
-  ~MixedWavefunction() = default;
+  ~MixedWavefunction();
 
   /*!
    * @brief Returns a wavefunction corresponding to vibrational product under offset
@@ -88,7 +96,7 @@ public:
    * @param hi index of the end of the block (inclusive)
    */
   static void ga_wfn_block_bound(int iVib, int *lo, int *hi, int dimension);
-  void copy_to_local(int ga_handle, int iVib, Wavefunction &wfn) const;
+  static void copy_to_local(const MixedWavefunction &w, int iVib, Wavefunction &wfn);
   void put(int iVib, Wavefunction &wfn);
   void accumulate(int iVib, Wavefunction &wfn, double scaling_constant = 1.0);
 
@@ -126,6 +134,22 @@ public:
   void settilesize(int a, int b, int c){};
 
   std::string str(int v = 0, unsigned int c = 0) const override { return ""; }
+
+  [[nodiscard]] double dot(const MixedWavefunction &w) const;
+  [[nodiscard]] double dot(const std::map<unsigned long int, double> &w) const;
+  void axpy(double a, const std::map<unsigned long int, double> &w) const;
+  void axpy(double a, const MixedWavefunction &w);
+  //! allocates the array buffer
+  void allocate_buffer();
+  void sync() const;
+  void zero();
+  size_t size() const;
+  double at(unsigned long i) const;
+  void set(unsigned long i, double v);
+  void scal(double a);
+  void divide(const MixedWavefunction *y, const MixedWavefunction *z, double shift = 0, bool append = false,
+              bool negative = false);
+  std::vector<size_t> minlocN(int n) const;
 
 }; // class MixedWavefunction
 
