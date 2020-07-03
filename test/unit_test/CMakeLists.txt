@@ -13,7 +13,7 @@ add_executable(test-gci
         testVibSpace.cpp
         testHProduct.cpp
         testHProductSet.cpp
-        )
+        array/util.cpp)
 target_link_libraries(test-gci PUBLIC molpro::gci gmock_main)
 gtest_discover_tests(test-gci)
 
