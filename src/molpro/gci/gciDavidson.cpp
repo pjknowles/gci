@@ -270,7 +270,7 @@ template <> void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::analysis
   // normalise solutions
   for (auto &w : ww) {
     auto ov = w.dot(w);
-    scal(*w.m_array, 1. / std::sqrt(ov));
+    w.m_array->scal(1. / std::sqrt(ov));
   }
   if (GA_Nodeid() == 0) {
     std::cout << "Analysis:" << std::endl;
