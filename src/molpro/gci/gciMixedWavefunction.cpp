@@ -259,8 +259,8 @@ std::vector<double> MixedWavefunction::vibDensity() {
   MPI_Allreduce(MPI_IN_PLACE, dm.data(), size, MPI_DOUBLE, MPI_SUM, m_array->communicator());
   return dm;
 }
-double MixedWavefunction::dot(const MixedWavefunction &w) const { return array::dot(*m_array, *w.m_array); }
-void MixedWavefunction::axpy(double a, const MixedWavefunction &w) { return array::axpy(*m_array, a, *w.m_array); }
+double MixedWavefunction::dot(const MixedWavefunction &w) const { return m_array->dot(*w.m_array); }
+void MixedWavefunction::axpy(double a, const MixedWavefunction &w) { m_array->axpy(a, *w.m_array); }
 void MixedWavefunction::sync() const { m_array->sync(); }
 void MixedWavefunction::zero() { m_array->zero(); }
 size_t MixedWavefunction::size() const { return m_array->size(); }
@@ -268,12 +268,12 @@ double MixedWavefunction::at(unsigned long i) const { return m_array->at(i); }
 void MixedWavefunction::set(unsigned long i, double v) { m_array->set(i, v); }
 void MixedWavefunction::divide(const MixedWavefunction *y, const MixedWavefunction *z, double shift, bool append,
                                bool negative) {
-  array::divide(*m_array, *y->m_array, *z->m_array, shift, append, negative);
+  m_array->divide(*y->m_array, *z->m_array, shift, append, negative);
 }
-std::vector<size_t> MixedWavefunction::minlocN(int n) const { return array::min_loc_n(*m_array, n); }
-double MixedWavefunction::dot(const std::map<unsigned long, double> &w) const { return array::dot(*m_array, w); }
-void MixedWavefunction::axpy(double a, const std::map<unsigned long, double> &w) const { array::axpy(*m_array, a, w); }
-void MixedWavefunction::scal(double a) { array::scal(*m_array, a); }
+std::vector<size_t> MixedWavefunction::minlocN(int n) const { return m_array->min_loc_n(n); }
+double MixedWavefunction::dot(const std::map<unsigned long, double> &w) const { return m_array->dot(w); }
+void MixedWavefunction::axpy(double a, const std::map<unsigned long, double> &w) const { m_array->axpy(a, w); }
+void MixedWavefunction::scal(double a) { m_array->scal(a); }
 
 MixedWavefunction &MixedWavefunction::operator=(const MixedWavefunction &source) {
   m_vibSpace = source.m_vibSpace;
