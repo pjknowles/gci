@@ -98,7 +98,7 @@ public:
   static void ga_wfn_block_bound(int iVib, int *lo, int *hi, int dimension);
   static void copy_to_local(const MixedWavefunction &w, int iVib, Wavefunction &wfn);
   void put(int iVib, Wavefunction &wfn);
-  void accumulate(int iVib, Wavefunction &wfn, double scaling_constant = 1.0);
+  void accumulate(int iVib, Wavefunction &wfn);
 
   /*!
    * \brief Add to this object the action of an operator on another wavefunction
