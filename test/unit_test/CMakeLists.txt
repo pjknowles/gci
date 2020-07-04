@@ -19,7 +19,8 @@ gtest_discover_tests(test-gci)
 
 add_executable(test-gci-parallel
         main.cpp parallel_utils.h
-        testArray.cpp
+#        testArray.cpp
+        testDistrArray.cpp
 #        testDavidson.cpp
         testPersistentOperator.cpp
         )
