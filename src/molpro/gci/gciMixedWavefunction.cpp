@@ -60,13 +60,13 @@ void MixedWavefunction::put(int iVib, Wavefunction &wfn) {
   m_array->put(lo, hi, buffer);
 }
 
-void MixedWavefunction::accumulate(int iVib, Wavefunction &wfn, double scaling_constant) {
+void MixedWavefunction::accumulate(int iVib, Wavefunction &wfn) {
   auto p = profiler->push("accumulate");
   double *buffer = wfn.buffer.data();
   auto dimension = wfn.dimension;
   int lo, hi, ld = dimension;
   ga_wfn_block_bound(iVib, &lo, &hi, dimension);
-  m_array->acc(lo, hi, buffer, scaling_constant);
+  m_array->acc(lo, hi, buffer);
 }
 
 void MixedWavefunction::operatorOnWavefunction(const MixedOperatorSecondQuant &ham, const MixedWavefunction &w,
