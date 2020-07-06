@@ -50,7 +50,9 @@ TEST(LockMPI3, scope_and_delete) {
   lock.reset();
 }
 
-TEST(LockMPI3, locking_mechanism) {
+// Simulate Fetch_and_op with put and get. If the lock mechanism does not work this is very likely to fail
+// although it is not guranteed
+TEST(LockMPI3, locking_mechanism_simulates_fetch_and_op) {
   auto comm = molpro::gci::mpi_comm_compute;
   auto size = comm_size(comm);
   auto rank = comm_rank(comm);
@@ -65,26 +67,21 @@ TEST(LockMPI3, locking_mechanism) {
   MPI_Put(&zero, 1, MPI_INT, rank, 0, 1, MPI_INT, win);
   MPI_Win_fence(0, win);
   MPI_Barrier(comm);
-  //TODO this mechanism is faulty, because lock does not gurantee order!
-  // There should be another window that we modify
-  //
-  // Even processes get the value of a neighbor
+  int v = -1;
   {
     auto proxy = lock.scope();
-    int check = -1;
-    if (rank % 2 == 0 && (rank + 1 != size)) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      MPI_Get(&check, 1, MPI_INT, rank + 1, 0, 1, MPI_INT, win);
-      EXPECT_EQ(check, 0);
-    }
-  }
-  // Odd processes set local values to 1
-  {
-    auto proxy = lock.scope();
-    if (comm_rank(comm) % 2 == 1)
-      base[0] = 1;
+    MPI_Get(&v, 1, MPI_INT, 0, 0, 1, MPI_INT, win);
+    ++v;
+    MPI_Put(&v, 1, MPI_INT, 0, 0, 1, MPI_INT, win);
   }
   MPI_Win_fence(0, win);
+  if (rank == 0)
+    v = base[0];
+  MPI_Bcast(&v, 1, MPI_INT, 0, comm);
+  {
+    auto proxy = lock.scope();
+    ASSERT_EQ(v, size);
+  }
   MPI_Win_free(&win);
 }
 
@@ -110,7 +107,7 @@ public:
         lock(m_communicator), m_comm_rank{comm_rank(m_communicator)} {};
   LockMPI3 lock;
   const int m_comm_rank;
-  static const size_t dim = 100;
+  static const size_t dim = 30;
 };
 
 TEST_F(ArrayInitializationF, size) {
