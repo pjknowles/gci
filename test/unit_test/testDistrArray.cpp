@@ -218,15 +218,15 @@ public:
     values.resize(dim);
     std::iota(values.begin(), values.end(), 1.);
     auto buffer = DistrArrayMPI3::local_buffer();
-    std::copy(values.begin() + buffer->lo, values.begin() + buffer->hi + 1, buffer->begin());
-    sub_indices = {0, 1, 11, 31, 40, 99};
+    std::copy(values.begin() + buffer->lo, values.begin() + buffer->hi, buffer->begin());
+    sub_indices = {0, 1, 7, 15, 21, 29};
     for (auto el : sub_indices)
       sub_values.push_back(values[el]);
+    DistrArrayMPI3::sync();
   }
 
   LockMPI3 lock;
-  static const int dim = 100;
-  static const int sub_dim = 6;
+  static const int dim = 30;
   int p_rank, p_size;
   std::vector<value_type> values;
   std::vector<index_type> sub_indices;
@@ -245,6 +245,7 @@ TEST_F(ArrayRangeF, gather) {
 
 TEST_F(ArrayRangeF, scatter) {
   zero();
+  sync();
   {
     auto proxy = lock.scope();
     scatter(sub_indices, sub_values);
@@ -260,14 +261,15 @@ TEST_F(ArrayRangeF, scatter_acc) {
   sync();
   {
     auto proxy = lock.scope();
-    scatter_acc(sub_indices, sub_values, 1.0);
+    scatter_acc(sub_indices, sub_values);
     auto from_ga_buffer = gather(sub_indices);
     auto ref_values = sub_values;
-    for (auto &el : ref_values) {
+    for (auto &el : ref_values)
       el *= 2;
-    }
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), ref_values));
-    scatter_acc(sub_indices, sub_values, -1.0);
+    for (auto &el : sub_values)
+      el *= -1;
+    scatter_acc(sub_indices, sub_values);
   }
   sync();
 }
@@ -303,7 +305,7 @@ TEST_F(ArrayRangeF, minlocN_reverse) {
   if (p_rank == 0)
     put(0, dim - 1, values.data());
   sync();
-  auto ref_minloc_ind = std::vector<size_t>(n);
+  auto ref_minloc_ind = std::vector<index_type>(n);
   std::iota(ref_minloc_ind.rbegin(), ref_minloc_ind.rend(), dim - n);
   auto minloc_ind = min_loc_n(n);
   {
@@ -368,9 +370,9 @@ TEST_F(ArrayRangeF, max_abs_n) {
 TEST_F(ArrayRangeF, scal_double) {
   double alpha = 1.5;
   scal(alpha);
-  for (auto &el : values) {
+  sync();
+  for (auto &el : values)
     el *= alpha;
-  }
   auto from_ga_buffer = vec();
   {
     auto proxy = lock.scope();
@@ -382,12 +384,12 @@ TEST_F(ArrayRangeF, scal_double) {
 TEST_F(ArrayRangeF, add_double) {
   double alpha = 100.;
   add(alpha);
-  for (auto &el : values) {
+  sync();
+  for (auto &el : values)
     el += alpha;
-  }
-  auto from_ga_buffer = vec();
   {
     auto proxy = lock.scope();
+    auto from_ga_buffer = vec();
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), values));
   }
   sync();
@@ -396,12 +398,12 @@ TEST_F(ArrayRangeF, add_double) {
 TEST_F(ArrayRangeF, sub_double) {
   double alpha = 100.;
   sub(alpha);
-  for (auto &el : values) {
+  sync();
+  for (auto &el : values)
     el -= alpha;
-  }
-  auto from_ga_buffer = vec();
   {
     auto proxy = lock.scope();
+    auto from_ga_buffer = vec();
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), values));
   }
   sync();
@@ -409,12 +411,12 @@ TEST_F(ArrayRangeF, sub_double) {
 
 TEST_F(ArrayRangeF, recip) {
   recip();
-  for (auto &el : values) {
+  sync();
+  for (auto &el : values)
     el = 1. / el;
-  }
-  auto from_ga_buffer = vec();
   {
     auto proxy = lock.scope();
+    auto from_ga_buffer = vec();
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), values));
   }
   sync();
