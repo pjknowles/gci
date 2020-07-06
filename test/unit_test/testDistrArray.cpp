@@ -8,6 +8,14 @@
 #include <molpro/gci/gci.h>
 #include <numeric>
 
+using ::testing::ContainerEq;
+using ::testing::DoubleEq;
+using ::testing::Each;
+using ::testing::Pointwise;
+
+using molpro::gci::array::DistrArrayMPI3;
+using molpro::gci::array::util::LockMPI3;
+
 class Lock {
 public:
   explicit Lock(int mutex = 0) : mutex(mutex) {}
@@ -30,12 +38,24 @@ int comm_size(MPI_Comm comm) {
 }
 } // namespace
 
-using ::testing::ContainerEq;
-using ::testing::DoubleEq;
-using ::testing::Each;
-using ::testing::Pointwise;
+TEST(LockMPI3, creation) { LockMPI3 l{MPI_COMM_WORLD}; }
 
-using molpro::gci::array::DistrArrayMPI3;
+TEST(LockMPI3, lock_unlock) {
+  LockMPI3 l{MPI_COMM_WORLD};
+  ASSERT_NO_FATAL_FAILURE(l.lock());
+  ASSERT_NO_FATAL_FAILURE(l.unlock());
+}
+
+TEST(LockMPI3, scope) {
+  LockMPI3 l{MPI_COMM_WORLD};
+  auto p = l.scope();
+}
+
+TEST(LockMPI3, scope_and_delete) {
+  auto l = std::make_shared<LockMPI3>(MPI_COMM_WORLD);
+  auto p = l->scope();
+  l.reset();
+}
 
 TEST(Array, constructor) {
   auto l = Lock();
