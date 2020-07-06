@@ -61,8 +61,13 @@ TEST(LockMPI3, locking_mechanism) {
   int *base = nullptr;
   MPI_Win_allocate(1, sizeof(int), MPI_INFO_NULL, comm, &base, &win);
   MPI_Win_fence(0, win);
-  base[0] = 0;
+  int zero = 0;
+  MPI_Put(&zero, 1, MPI_INT, rank, 0, 1, MPI_INT, win);
+  MPI_Win_fence(0, win);
   MPI_Barrier(comm);
+  //TODO this mechanism is faulty, because lock does not gurantee order!
+  // There should be another window that we modify
+  //
   // Even processes get the value of a neighbor
   {
     auto proxy = lock.scope();
@@ -138,6 +143,7 @@ TEST_F(ArrayInitializationF, allocate_buffer) {
 TEST_F(ArrayInitializationF, zero) {
   allocate_buffer();
   zero();
+  sync();
   {
     auto l = lock.scope();
     EXPECT_TRUE(m_allocated);
@@ -149,6 +155,7 @@ TEST_F(ArrayInitializationF, zero) {
 TEST_F(ArrayInitializationF, vec) {
   allocate_buffer();
   zero();
+  sync();
   {
     auto l = lock.scope();
     auto data = vec();
@@ -161,6 +168,7 @@ TEST_F(ArrayInitializationF, vec) {
 TEST_F(ArrayInitializationF, get) {
   allocate_buffer();
   zero();
+  sync();
   {
     auto l = lock.scope();
     auto data = get(0, 10);
@@ -189,9 +197,10 @@ TEST_F(ArrayInitializationF, put) {
   sync();
 }
 
-TEST_F(ArrayInitializationF, set) {
+TEST_F(ArrayInitializationF, fill) {
   allocate_buffer();
   zero();
+  sync();
   auto ref_values = std::vector<double>(dim, 0.);
   auto from_ga_buffer = vec();
   {
@@ -199,6 +208,7 @@ TEST_F(ArrayInitializationF, set) {
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), ref_values));
   }
   fill(42.0);
+  sync();
   from_ga_buffer = vec();
   {
     auto l = lock.scope();
@@ -425,7 +435,7 @@ TEST_F(ArrayRangeF, recip) {
 class ArrayCollectiveOpF : public ::testing::Test {
 public:
   ArrayCollectiveOpF()
-      : lock(molpro::gci::mpi_comm_compute), alpha(1.0), beta(2.0), p_rank(GA_Nodeid()), p_size(GA_Nnodes()),
+      : lock(molpro::gci::mpi_comm_compute), p_rank(GA_Nodeid()), p_size(GA_Nnodes()),
         a(dim, molpro::gci::mpi_comm_compute), b(dim, molpro::gci::mpi_comm_compute) {
     a.allocate_buffer();
     b.allocate_buffer();
@@ -446,9 +456,9 @@ public:
   }
 
   LockMPI3 lock;
-  static const int dim = 100;
-  const double alpha;
-  const double beta;
+  static const int dim = 30;
+  const double alpha = 1;
+  const double beta = 2;
   std::vector<double> range_alpha;
   std::vector<double> range_beta;
   int p_rank, p_size;
@@ -462,6 +472,7 @@ TEST_F(ArrayCollectiveOpF, add) {
   a.fill(alpha);
   b.fill(beta);
   a.add(b);
+  a.sync();
   auto from_ga_buffer_a = a.vec();
   auto from_ga_buffer_b = b.vec();
   {
@@ -469,13 +480,14 @@ TEST_F(ArrayCollectiveOpF, add) {
     ASSERT_THAT(from_ga_buffer_a, Each(DoubleEq(alpha + beta)));
     ASSERT_THAT(from_ga_buffer_b, Each(DoubleEq(beta)));
   }
-  sync();
+  a.sync();
 }
 
 TEST_F(ArrayCollectiveOpF, sub) {
   a.fill(alpha);
   b.fill(beta);
   a.sub(b);
+  a.sync();
   auto from_ga_buffer_a = a.vec();
   auto from_ga_buffer_b = b.vec();
   {
@@ -483,14 +495,15 @@ TEST_F(ArrayCollectiveOpF, sub) {
     ASSERT_THAT(from_ga_buffer_a, Each(DoubleEq(alpha - beta)));
     ASSERT_THAT(from_ga_buffer_b, Each(DoubleEq(beta)));
   }
-  sync();
+  a.sync();
 }
 
-TEST_F(ArrayCollectiveOpF, axpy_Reference) {
+TEST_F(ArrayCollectiveOpF, axpy) {
   double scale = -3.0;
   a.fill(alpha);
   b.fill(beta);
   a.axpy(scale, b);
+  a.sync();
   auto from_ga_buffer_a = a.vec();
   auto from_ga_buffer_b = b.vec();
   {
@@ -498,28 +511,14 @@ TEST_F(ArrayCollectiveOpF, axpy_Reference) {
     ASSERT_THAT(from_ga_buffer_a, Each(DoubleEq(alpha + scale * beta)));
     ASSERT_THAT(from_ga_buffer_b, Each(DoubleEq(beta)));
   }
-  sync();
-}
-
-TEST_F(ArrayCollectiveOpF, axpy_Pointer) {
-  double scale = -3.0;
-  a.fill(alpha);
-  b.fill(beta);
-  a.axpy(scale, b);
-  auto from_ga_buffer_a = a.vec();
-  auto from_ga_buffer_b = b.vec();
-  {
-    auto proxy = lock.scope();
-    ASSERT_THAT(from_ga_buffer_a, Each(DoubleEq(alpha + scale * beta)));
-    ASSERT_THAT(from_ga_buffer_b, Each(DoubleEq(beta)));
-  }
-  sync();
+  a.sync();
 }
 
 TEST_F(ArrayCollectiveOpF, axpy_map) {
   a.fill(alpha);
   double scale = 5.0;
   a.axpy(scale, sparse_array);
+  a.sync();
   auto from_ga_buffer_a = a.vec();
   auto ref_vals = std::vector<double>(dim, alpha);
   for (const auto &item : sparse_array) {
@@ -529,7 +528,7 @@ TEST_F(ArrayCollectiveOpF, axpy_map) {
     auto proxy = lock.scope();
     ASSERT_THAT(from_ga_buffer_a, Pointwise(DoubleEq(), ref_vals));
   }
-  sync();
+  a.sync();
 }
 
 TEST_F(ArrayCollectiveOpF, dot_Array) {
@@ -537,18 +536,20 @@ TEST_F(ArrayCollectiveOpF, dot_Array) {
     a.put(0, dim - 1, range_alpha.data());
     b.put(0, dim - 1, range_beta.data());
   }
+  a.sync();
   auto ga_dot = a.dot(b);
   double ref_dot = std::inner_product(range_alpha.begin(), range_alpha.end(), range_beta.begin(), 0.);
   {
     auto proxy = lock.scope();
     ASSERT_THAT(ga_dot, DoubleEq(ref_dot));
   }
-  sync();
+  a.sync();
 }
 
 TEST_F(ArrayCollectiveOpF, dot_map) {
   if (p_rank == 0)
     a.put(0, dim - 1, range_alpha.data());
+  a.sync();
   auto ga_dot = a.dot(sparse_array);
   double ref_dot = 0.;
   for (const auto &item : sparse_array) {
@@ -558,7 +559,7 @@ TEST_F(ArrayCollectiveOpF, dot_map) {
     auto proxy = lock.scope();
     ASSERT_THAT(ga_dot, DoubleEq(ref_dot));
   }
-  sync();
+  a.sync();
 }
 
 TEST_F(ArrayCollectiveOpF, times) {
@@ -566,6 +567,7 @@ TEST_F(ArrayCollectiveOpF, times) {
   b.fill(beta);
   DistrArrayMPI3 c{a};
   c.times(a, b);
+  a.sync();
   auto from_ga_buffer_a = a.vec();
   auto from_ga_buffer_b = b.vec();
   auto from_ga_buffer_c = c.vec();
@@ -578,7 +580,7 @@ TEST_F(ArrayCollectiveOpF, times) {
     ASSERT_THAT(from_ga_buffer_b, Pointwise(DoubleEq(), ref_b));
     ASSERT_THAT(from_ga_buffer_c, Pointwise(DoubleEq(), ref_c));
   }
-  sync();
+  a.sync();
 }
 
 // c[i] -= a[i]/(b[i]+shift)
@@ -588,6 +590,7 @@ TEST_F(ArrayCollectiveOpF, divide_append_negative) {
   b.fill(beta);
   DistrArrayMPI3 c{a};
   c.divide(a, b, shift, true, true);
+  a.sync();
   auto from_ga_buffer_a = a.vec();
   auto from_ga_buffer_b = b.vec();
   auto from_ga_buffer_c = c.vec();
@@ -600,7 +603,7 @@ TEST_F(ArrayCollectiveOpF, divide_append_negative) {
     ASSERT_THAT(from_ga_buffer_b, Pointwise(DoubleEq(), ref_b));
     ASSERT_THAT(from_ga_buffer_c, Pointwise(DoubleEq(), ref_c));
   }
-  sync();
+  a.sync();
 }
 
 // c[i] += a[i]/(b[i]+shift)
@@ -610,6 +613,7 @@ TEST_F(ArrayCollectiveOpF, divide_append_positive) {
   b.fill(beta);
   DistrArrayMPI3 c{a};
   c.divide(a, b, shift, true, false);
+  a.sync();
   auto from_ga_buffer_a = a.vec();
   auto from_ga_buffer_b = b.vec();
   auto from_ga_buffer_c = c.vec();
@@ -622,7 +626,7 @@ TEST_F(ArrayCollectiveOpF, divide_append_positive) {
     ASSERT_THAT(from_ga_buffer_b, Pointwise(DoubleEq(), ref_b));
     ASSERT_THAT(from_ga_buffer_c, Pointwise(DoubleEq(), ref_c));
   }
-  sync();
+  a.sync();
 }
 
 // c[i] = a[i]/(b[i]+shift)
@@ -632,6 +636,7 @@ TEST_F(ArrayCollectiveOpF, divide_overwrite_positive) {
   b.fill(beta);
   DistrArrayMPI3 c{a};
   c.divide(a, b, shift, false, false);
+  a.sync();
   auto from_ga_buffer_a = a.vec();
   auto from_ga_buffer_b = b.vec();
   auto from_ga_buffer_c = c.vec();
@@ -644,5 +649,5 @@ TEST_F(ArrayCollectiveOpF, divide_overwrite_positive) {
     ASSERT_THAT(from_ga_buffer_b, Pointwise(DoubleEq(), ref_b));
     ASSERT_THAT(from_ga_buffer_c, Pointwise(DoubleEq(), ref_c));
   }
-  sync();
+  a.sync();
 }
