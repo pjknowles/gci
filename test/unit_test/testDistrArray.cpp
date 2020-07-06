@@ -204,6 +204,7 @@ TEST_F(ArrayInitializationF, fill) {
     auto l = lock.scope();
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), ref_values));
   }
+  sync();
   fill(42.0);
   sync();
   from_ga_buffer = vec();
