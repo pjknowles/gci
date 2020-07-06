@@ -18,7 +18,7 @@ job:
     - git reset --hard
     - git clean -f src test
     - procs=$(lscpu -p | egrep -v '^#' | wc -l ) || procs=$(sysctl -n hw.physicalcpu) || procs=1; echo $procs processors available
-    - cd $TOP; BUILD=build; mkdir -p $BUILD && cd $BUILD && pwd && cmake $TOP -DCMAKE_BUILD_TYPE=Release ; cmake --build . -- -j ${procs} ; cd test;  ctest -V -j ${procs}
+    - cd $TOP; BUILD=build; mkdir -p $BUILD && cd $BUILD && pwd && cmake $TOP -DCMAKE_BUILD_TYPE=Release -DFORTRAN=OFF -DGA_RUNTIME=MPI_RMA; cmake --build . -- -j ${procs} ; cd test;  ctest -V -j ${procs}
     - mkdir -p $TOP/public
     - mkdir -p $TOP/$BUILD/docs/$PROJECT_NAME/html/DoxygenTagFiles && cp $TOP/$BUILD/docs/$PROJECT_NAME/$PROJECT_NAME.tag $TOP/$BUILD/docs/$PROJECT_NAME/html/DoxygenTagFiles
     - . $TOP/$BUILD/project_version.sh ; rsync -a --delete $TOP/$BUILD/docs/*/html/ $TOP/public/${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
