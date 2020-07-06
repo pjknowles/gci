@@ -2,11 +2,13 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <ga.h>
 #include <molpro/gci/array/DistrArrayGA.h>
 #include <molpro/gci/array/DistrArrayMPI3.h>
 #include <molpro/gci/gci.h>
 #include <numeric>
+#include <thread>
 
 using ::testing::ContainerEq;
 using ::testing::DoubleEq;
@@ -46,6 +48,39 @@ TEST(LockMPI3, scope_and_delete) {
   auto lock = std::make_shared<LockMPI3>(molpro::gci::mpi_comm_compute);
   auto proxy = lock->scope();
   lock.reset();
+}
+
+TEST(LockMPI3, locking_mechanism) {
+  auto comm = molpro::gci::mpi_comm_compute;
+  auto size = comm_size(comm);
+  auto rank = comm_rank(comm);
+  if (size == 1)
+    return;
+  LockMPI3 lock{comm};
+  MPI_Win win = MPI_WIN_NULL;
+  int *base = nullptr;
+  MPI_Win_allocate(1, sizeof(int), MPI_INFO_NULL, comm, &base, &win);
+  MPI_Win_fence(0, win);
+  base[0] = 0;
+  MPI_Barrier(comm);
+  // Even processes get the value of a neighbor
+  {
+    auto proxy = lock.scope();
+    int check = -1;
+    if (rank % 2 == 0 && (rank + 1 != size)) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      MPI_Get(&check, 1, MPI_INT, rank + 1, 0, 1, MPI_INT, win);
+      EXPECT_EQ(check, 0);
+    }
+  }
+  // Odd processes set local values to 1
+  {
+    auto proxy = lock.scope();
+    if (comm_rank(comm) % 2 == 1)
+      base[0] = 1;
+  }
+  MPI_Win_fence(0, win);
+  MPI_Win_free(&win);
 }
 
 TEST(Array, constructor) {
