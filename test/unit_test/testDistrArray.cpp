@@ -16,15 +16,6 @@ using ::testing::Pointwise;
 using molpro::gci::array::DistrArrayMPI3;
 using molpro::gci::array::util::LockMPI3;
 
-class Lock {
-public:
-  explicit Lock(int mutex = 0) : mutex(mutex) {}
-
-  ~Lock() {}
-
-  int mutex;
-};
-
 namespace {
 int comm_rank(MPI_Comm comm) {
   int res;
@@ -38,33 +29,35 @@ int comm_size(MPI_Comm comm) {
 }
 } // namespace
 
-TEST(LockMPI3, creation) { LockMPI3 l{MPI_COMM_WORLD}; }
+TEST(LockMPI3, creation) { LockMPI3 lock{molpro::gci::mpi_comm_compute}; }
 
 TEST(LockMPI3, lock_unlock) {
-  LockMPI3 l{MPI_COMM_WORLD};
-  ASSERT_NO_FATAL_FAILURE(l.lock());
-  ASSERT_NO_FATAL_FAILURE(l.unlock());
+  LockMPI3 lock{molpro::gci::mpi_comm_compute};
+  ASSERT_NO_FATAL_FAILURE(lock.lock());
+  ASSERT_NO_FATAL_FAILURE(lock.unlock());
 }
 
 TEST(LockMPI3, scope) {
-  LockMPI3 l{MPI_COMM_WORLD};
-  auto p = l.scope();
+  LockMPI3 lock{molpro::gci::mpi_comm_compute};
+  auto proxy = lock.scope();
 }
 
 TEST(LockMPI3, scope_and_delete) {
-  auto l = std::make_shared<LockMPI3>(MPI_COMM_WORLD);
-  auto p = l->scope();
-  l.reset();
+  auto lock = std::make_shared<LockMPI3>(molpro::gci::mpi_comm_compute);
+  auto proxy = lock->scope();
+  lock.reset();
 }
 
 TEST(Array, constructor) {
-  auto l = Lock();
+  LockMPI3 lock{molpro::gci::mpi_comm_compute};
+  auto proxy = lock.scope();
   size_t dim = 100;
   DistrArrayMPI3 a{dim, molpro::gci::mpi_comm_compute};
 }
 
 TEST(Array, constructor_copy) {
-  auto l = Lock();
+  LockMPI3 lock{molpro::gci::mpi_comm_compute};
+  auto proxy = lock.scope();
   size_t dim = 100;
   DistrArrayMPI3 a{dim, molpro::gci::mpi_comm_compute};
   DistrArrayMPI3 b(a);
@@ -73,14 +66,16 @@ TEST(Array, constructor_copy) {
 class ArrayInitializationF : public ::testing::Test, public DistrArrayMPI3 {
 public:
   ArrayInitializationF()
-      : DistrArrayMPI3(dim, molpro::gci::mpi_comm_compute), m_comm_rank{comm_rank(m_communicator)} {};
+      : DistrArrayMPI3(dim, molpro::gci::mpi_comm_compute),
+        lock(m_communicator), m_comm_rank{comm_rank(m_communicator)} {};
+  LockMPI3 lock;
   const int m_comm_rank;
   static const size_t dim = 100;
 };
 
 TEST_F(ArrayInitializationF, size) {
   {
-    auto l = Lock();
+    auto l = lock.scope();
     ASSERT_EQ(m_dimension, size());
   }
   sync();
@@ -88,7 +83,7 @@ TEST_F(ArrayInitializationF, size) {
 
 TEST_F(ArrayInitializationF, empty) {
   {
-    auto l = Lock();
+    auto l = lock.scope();
     EXPECT_FALSE(m_allocated);
     ASSERT_TRUE(empty());
   }
@@ -98,7 +93,7 @@ TEST_F(ArrayInitializationF, empty) {
 TEST_F(ArrayInitializationF, allocate_buffer) {
   allocate_buffer();
   {
-    auto l = Lock();
+    auto l = lock.scope();
     EXPECT_TRUE(m_allocated);
     ASSERT_FALSE(empty());
   }
@@ -109,7 +104,7 @@ TEST_F(ArrayInitializationF, zero) {
   allocate_buffer();
   zero();
   {
-    auto l = Lock();
+    auto l = lock.scope();
     EXPECT_TRUE(m_allocated);
     ASSERT_FALSE(empty());
   }
@@ -120,7 +115,7 @@ TEST_F(ArrayInitializationF, vec) {
   allocate_buffer();
   zero();
   {
-    auto l = Lock();
+    auto l = lock.scope();
     auto data = vec();
     auto empty_vec = std::vector<double>(data.size(), 0.);
     ASSERT_THAT(empty_vec, Pointwise(DoubleEq(), empty_vec));
@@ -132,7 +127,7 @@ TEST_F(ArrayInitializationF, get) {
   allocate_buffer();
   zero();
   {
-    auto l = Lock();
+    auto l = lock.scope();
     auto data = get(0, 10);
     auto ref_vec = std::vector<double>(data.size(), 0.);
     ASSERT_THAT(ref_vec, Pointwise(DoubleEq(), data));
@@ -149,7 +144,7 @@ TEST_F(ArrayInitializationF, get) {
 TEST_F(ArrayInitializationF, put) {
   allocate_buffer();
   {
-    auto l = Lock();
+    auto l = lock.scope();
     auto range = std::vector<double>(dim);
     std::iota(range.begin(), range.end(), m_comm_rank);
     put(0, dim - 1, range.data());
@@ -165,13 +160,13 @@ TEST_F(ArrayInitializationF, set) {
   auto ref_values = std::vector<double>(dim, 0.);
   auto from_ga_buffer = vec();
   {
-    auto l = Lock();
+    auto l = lock.scope();
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), ref_values));
   }
   fill(42.0);
   from_ga_buffer = vec();
   {
-    auto l = Lock();
+    auto l = lock.scope();
     std::fill(ref_values.begin(), ref_values.end(), 42.0);
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), ref_values));
   }
@@ -182,8 +177,8 @@ class ArrayRangeF : public ::testing::Test, public DistrArrayMPI3 {
 public:
   //! Stores a range in the buffer {1, 2, 3, 4, 5, .., dim}
   ArrayRangeF()
-      : DistrArrayMPI3((size_t)dim, molpro::gci::mpi_comm_compute), p_rank(comm_rank(m_communicator)),
-        p_size(comm_size(m_communicator)) {
+      : DistrArrayMPI3((size_t)dim, molpro::gci::mpi_comm_compute), lock(m_communicator),
+        p_rank(comm_rank(m_communicator)), p_size(comm_size(m_communicator)) {
     DistrArrayMPI3::allocate_buffer();
     values.resize(dim);
     std::iota(values.begin(), values.end(), 1.);
@@ -194,6 +189,7 @@ public:
       sub_values.push_back(values[el]);
   }
 
+  LockMPI3 lock;
   static const int dim = 100;
   static const int sub_dim = 6;
   int p_rank, p_size;
@@ -206,7 +202,7 @@ TEST_F(ArrayRangeF, gather) {
   sync();
   auto from_ga_buffer = gather(sub_indices);
   {
-    auto l = Lock();
+    auto l = lock.scope();
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), sub_values));
   }
   sync();
@@ -215,7 +211,7 @@ TEST_F(ArrayRangeF, gather) {
 TEST_F(ArrayRangeF, scatter) {
   zero();
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     scatter(sub_indices, sub_values);
     auto from_ga_buffer = gather(sub_indices);
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), sub_values));
@@ -228,7 +224,7 @@ TEST_F(ArrayRangeF, scatter) {
 TEST_F(ArrayRangeF, scatter_acc) {
   sync();
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     scatter_acc(sub_indices, sub_values, 1.0);
     auto from_ga_buffer = gather(sub_indices);
     auto ref_values = sub_values;
@@ -248,7 +244,7 @@ TEST_F(ArrayRangeF, at) {
     from_ga_buffer.push_back(this->at(i));
   }
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), values));
   }
   sync();
@@ -260,7 +256,7 @@ TEST_F(ArrayRangeF, minlocN) {
   std::iota(ref_minloc_ind.begin(), ref_minloc_ind.end(), 0);
   auto minloc_ind = min_loc_n(n);
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(minloc_ind, ContainerEq(ref_minloc_ind));
   }
   sync();
@@ -276,7 +272,7 @@ TEST_F(ArrayRangeF, minlocN_reverse) {
   std::iota(ref_minloc_ind.rbegin(), ref_minloc_ind.rend(), dim - n);
   auto minloc_ind = min_loc_n(n);
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(minloc_ind, ContainerEq(ref_minloc_ind));
   }
   sync();
@@ -290,7 +286,7 @@ TEST_F(ArrayRangeF, max_n) {
   auto maxloc_ind = std::vector<size_t>(n);
   std::transform(maxloc.cbegin(), maxloc.cend(), maxloc_ind.begin(), [](const auto &p) { return p.first; });
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(maxloc_ind, ContainerEq(ref_minloc_ind));
   }
   sync();
@@ -309,7 +305,7 @@ TEST_F(ArrayRangeF, min_abs_n) {
   auto minloc_ind = std::vector<size_t>(n);
   std::transform(minloc.cbegin(), minloc.cend(), minloc_ind.begin(), [](const auto &p) { return p.first; });
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(minloc_ind, ContainerEq(ref_minloc_ind));
   }
   sync();
@@ -328,7 +324,7 @@ TEST_F(ArrayRangeF, max_abs_n) {
   auto maxloc_ind = std::vector<size_t>(n);
   std::transform(maxloc.cbegin(), maxloc.cend(), maxloc_ind.begin(), [](const auto &p) { return p.first; });
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(maxloc_ind, ContainerEq(ref_minloc_ind));
   }
   sync();
@@ -342,7 +338,7 @@ TEST_F(ArrayRangeF, scal_double) {
   }
   auto from_ga_buffer = vec();
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), values));
   }
   sync();
@@ -356,7 +352,7 @@ TEST_F(ArrayRangeF, add_double) {
   }
   auto from_ga_buffer = vec();
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), values));
   }
   sync();
@@ -370,7 +366,7 @@ TEST_F(ArrayRangeF, sub_double) {
   }
   auto from_ga_buffer = vec();
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), values));
   }
   sync();
@@ -383,7 +379,7 @@ TEST_F(ArrayRangeF, recip) {
   }
   auto from_ga_buffer = vec();
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(from_ga_buffer, Pointwise(DoubleEq(), values));
   }
   sync();
@@ -392,8 +388,8 @@ TEST_F(ArrayRangeF, recip) {
 class ArrayCollectiveOpF : public ::testing::Test {
 public:
   ArrayCollectiveOpF()
-      : alpha(1.0), beta(2.0), p_rank(GA_Nodeid()), p_size(GA_Nnodes()), a(dim, molpro::gci::mpi_comm_compute),
-        b(dim, molpro::gci::mpi_comm_compute) {
+      : lock(molpro::gci::mpi_comm_compute), alpha(1.0), beta(2.0), p_rank(GA_Nodeid()), p_size(GA_Nnodes()),
+        a(dim, molpro::gci::mpi_comm_compute), b(dim, molpro::gci::mpi_comm_compute) {
     a.allocate_buffer();
     b.allocate_buffer();
     range_alpha.resize(dim);
@@ -412,6 +408,7 @@ public:
     }
   }
 
+  LockMPI3 lock;
   static const int dim = 100;
   const double alpha;
   const double beta;
@@ -431,7 +428,7 @@ TEST_F(ArrayCollectiveOpF, add) {
   auto from_ga_buffer_a = a.vec();
   auto from_ga_buffer_b = b.vec();
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(from_ga_buffer_a, Each(DoubleEq(alpha + beta)));
     ASSERT_THAT(from_ga_buffer_b, Each(DoubleEq(beta)));
   }
@@ -445,7 +442,7 @@ TEST_F(ArrayCollectiveOpF, sub) {
   auto from_ga_buffer_a = a.vec();
   auto from_ga_buffer_b = b.vec();
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(from_ga_buffer_a, Each(DoubleEq(alpha - beta)));
     ASSERT_THAT(from_ga_buffer_b, Each(DoubleEq(beta)));
   }
@@ -460,7 +457,7 @@ TEST_F(ArrayCollectiveOpF, axpy_Reference) {
   auto from_ga_buffer_a = a.vec();
   auto from_ga_buffer_b = b.vec();
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(from_ga_buffer_a, Each(DoubleEq(alpha + scale * beta)));
     ASSERT_THAT(from_ga_buffer_b, Each(DoubleEq(beta)));
   }
@@ -475,7 +472,7 @@ TEST_F(ArrayCollectiveOpF, axpy_Pointer) {
   auto from_ga_buffer_a = a.vec();
   auto from_ga_buffer_b = b.vec();
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(from_ga_buffer_a, Each(DoubleEq(alpha + scale * beta)));
     ASSERT_THAT(from_ga_buffer_b, Each(DoubleEq(beta)));
   }
@@ -492,7 +489,7 @@ TEST_F(ArrayCollectiveOpF, axpy_map) {
     ref_vals[item.first] += scale * item.second;
   }
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(from_ga_buffer_a, Pointwise(DoubleEq(), ref_vals));
   }
   sync();
@@ -506,7 +503,7 @@ TEST_F(ArrayCollectiveOpF, dot_Array) {
   auto ga_dot = a.dot(b);
   double ref_dot = std::inner_product(range_alpha.begin(), range_alpha.end(), range_beta.begin(), 0.);
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(ga_dot, DoubleEq(ref_dot));
   }
   sync();
@@ -521,7 +518,7 @@ TEST_F(ArrayCollectiveOpF, dot_map) {
     ref_dot += range_alpha[item.first] * item.second;
   }
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(ga_dot, DoubleEq(ref_dot));
   }
   sync();
@@ -539,7 +536,7 @@ TEST_F(ArrayCollectiveOpF, times) {
   auto ref_b = std::vector<double>(dim, beta);
   auto ref_c = std::vector<double>(dim, alpha * beta);
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(from_ga_buffer_a, Pointwise(DoubleEq(), ref_a));
     ASSERT_THAT(from_ga_buffer_b, Pointwise(DoubleEq(), ref_b));
     ASSERT_THAT(from_ga_buffer_c, Pointwise(DoubleEq(), ref_c));
@@ -561,7 +558,7 @@ TEST_F(ArrayCollectiveOpF, divide_append_negative) {
   auto ref_b = std::vector<double>(dim, beta);
   auto ref_c = std::vector<double>(dim, alpha - alpha / (beta + shift));
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(from_ga_buffer_a, Pointwise(DoubleEq(), ref_a));
     ASSERT_THAT(from_ga_buffer_b, Pointwise(DoubleEq(), ref_b));
     ASSERT_THAT(from_ga_buffer_c, Pointwise(DoubleEq(), ref_c));
@@ -583,7 +580,7 @@ TEST_F(ArrayCollectiveOpF, divide_append_positive) {
   auto ref_b = std::vector<double>(dim, beta);
   auto ref_c = std::vector<double>(dim, alpha + alpha / (beta + shift));
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(from_ga_buffer_a, Pointwise(DoubleEq(), ref_a));
     ASSERT_THAT(from_ga_buffer_b, Pointwise(DoubleEq(), ref_b));
     ASSERT_THAT(from_ga_buffer_c, Pointwise(DoubleEq(), ref_c));
@@ -605,7 +602,7 @@ TEST_F(ArrayCollectiveOpF, divide_overwrite_positive) {
   auto ref_b = std::vector<double>(dim, beta);
   auto ref_c = std::vector<double>(dim, alpha / (beta + shift));
   {
-    auto l = Lock();
+    auto proxy = lock.scope();
     ASSERT_THAT(from_ga_buffer_a, Pointwise(DoubleEq(), ref_a));
     ASSERT_THAT(from_ga_buffer_b, Pointwise(DoubleEq(), ref_b));
     ASSERT_THAT(from_ga_buffer_c, Pointwise(DoubleEq(), ref_c));
