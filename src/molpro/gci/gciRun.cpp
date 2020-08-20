@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <molpro/Operator.h>
 #include <molpro/linalg/IterativeSolver.h>
+#include <molpro/linalg/iterativesolver/ArrayHandlers.h>
 
 #include "gciDavidson.h"
 #include "gciMixedWavefunction.h"
@@ -19,7 +20,7 @@ MPI_Comm create_new_comm() {
   MPI_Comm new_comm = MPI_COMM_NULL;
   MPI_Comm_split(mpi_comm_compute, GA_Nodeid(), GA_Nodeid(), &new_comm);
   if (new_comm == MPI_COMM_NULL)
-    GA_Error((char *)"Failed to create a new communicator", 0);
+    GA_Error((char*) "Failed to create a new communicator", 0);
   return new_comm;
 }
 
@@ -43,19 +44,19 @@ static double _mu;
 static double _residual_q;
 static bool parallel_stringset;
 struct residual {
-protected:
-  const molpro::Operator &m_hamiltonian;
+ protected:
+  const molpro::Operator& m_hamiltonian;
   const bool m_subtract_Energy;
-  const molpro::Operator *m_Q;
+  const molpro::Operator* m_Q;
 
-public:
-  residual(const molpro::Operator &hamiltonian, bool subtract_Energy, molpro::Operator *Q = nullptr)
+ public:
+  residual(const molpro::Operator& hamiltonian, bool subtract_Energy, molpro::Operator* Q = nullptr)
       : m_hamiltonian(hamiltonian), m_subtract_Energy(subtract_Energy), m_Q(Q) {}
-  void operator()(const ParameterVectorSet &psx, ParameterVectorSet &outputs, std::vector<bool> active,
+  void operator()(const ParameterVectorSet& psx, ParameterVectorSet& outputs, size_t nwork,
                   bool append = false) const {
-    for (size_t k = 0; k < psx.size(); k++) {
-      const Wavefunction &x = psx[k];
-      Wavefunction &g = outputs[k];
+    for (size_t k = 0; k < nwork; k++) {
+      const Wavefunction& x = psx[k];
+      Wavefunction& g = outputs[k];
       //        profiler->start("density");
       //        SymmetryMatrix::SMat natorb=x->naturalOrbitals();
       //    activeHamiltonian->rotate(&natorb);
@@ -70,7 +71,7 @@ public:
       //          g->operatorOnWavefunction(*activeHamiltonian, *x, parallel_stringset);
       //        xout << "g "<<g->str(2)<<std::endl;
       //        g->zero();
-      if (active[k]) {
+      {
         auto prof = profiler->push("Hc");
         g.operatorOnWavefunction(m_hamiltonian, x, parallel_stringset);
         //        xout << "g "<<g->str(2)<<std::endl;
@@ -110,16 +111,16 @@ public:
 
 using Pvector = std::map<size_t, double>;
 struct Presidual {
-private:
-  const molpro::Operator &m_hamiltonian;
-  const std::vector<Pvector> &m_P;
+ private:
+  const molpro::Operator& m_hamiltonian;
+  const std::vector<Pvector>& m_P;
 
-public:
-  Presidual(const molpro::Operator &hamiltonian, const std::vector<Pvector> &P) : m_hamiltonian(hamiltonian), m_P(P) {}
-  void operator()(const std::vector<std::vector<double>> &Pcoeff, ParameterVectorSet &outputs) const {
+ public:
+  Presidual(const molpro::Operator& hamiltonian, const std::vector<Pvector>& P) : m_hamiltonian(hamiltonian), m_P(P) {}
+  void operator()(const std::vector<std::vector<double>>& Pcoeff, ParameterVectorSet& outputs) const {
     for (size_t k = 0; k < Pcoeff.size(); k++) {
       assert(m_P.size() == Pcoeff[k].size());
-      Wavefunction &g = outputs[k];
+      Wavefunction& g = outputs[k];
       Wavefunction w(g);
       w.m_sparse = true;
       for (size_t i = 0; i < m_P.size(); i++)
@@ -137,14 +138,14 @@ static std::vector<Wavefunction> _IPT_c;
 static std::unique_ptr<Wavefunction> _IPT_b0m;
 static std::unique_ptr<molpro::Operator> _IPT_Q;
 struct meanfield_residual : residual {
-public:
-  meanfield_residual(const molpro::Operator &hamiltonian, bool subtract_Energy, molpro::Operator *Q = nullptr)
+ public:
+  meanfield_residual(const molpro::Operator& hamiltonian, bool subtract_Energy, molpro::Operator* Q = nullptr)
       : residual(hamiltonian, subtract_Energy, Q) {}
-  void operator()(const ParameterVectorSet &psx, ParameterVectorSet &outputs,
-                  const std::vector<double> &shift = std::vector<double>(), bool append = false) const {
+  void operator()(const ParameterVectorSet& psx, ParameterVectorSet& outputs,
+                  const std::vector<double>& shift = std::vector<double>(), bool append = false) const {
     for (size_t k = 0; k < psx.size(); k++) {
-      const Wavefunction &x = psx[k];
-      Wavefunction &g = outputs[k];
+      const Wavefunction& x = psx[k];
+      Wavefunction& g = outputs[k];
       auto p = profiler->push("Mean field residual");
       //        xout << "_meanfield_residual: append"<<append<<std::endl;
       //        xout << "_meanfield_residual: b0m"<<_IPT_b0m->values()<<std::endl;
@@ -185,28 +186,28 @@ public:
 };
 
 struct updater {
-  updater(const Wavefunction &diagonals, bool subtractDiagonal)
+  updater(const Wavefunction& diagonals, bool subtractDiagonal)
       : m_diagonals(diagonals), m_subtractDiagonal(subtractDiagonal) {}
 
-private:
-  const Wavefunction &m_diagonals;
+ private:
+  const Wavefunction& m_diagonals;
   const bool m_subtractDiagonal;
 
-public:
-  void operator()(ParameterVectorSet &psc, const ParameterVectorSet &psg,
+ public:
+  void operator()(ParameterVectorSet& psc, const ParameterVectorSet& psg,
                   std::vector<double> shift = std::vector<double>(), bool append = false) const {
     std::vector<double> shifts = shift;
     for (size_t state = 0; state < psc.size(); state++) {
       if (m_subtractDiagonal)
         shifts[state] -= m_diagonals.at(m_diagonals.minloc(state + 1));
-      Wavefunction &cw = psc[state];
-      const Wavefunction &gw = psg[state];
+      Wavefunction& cw = psc[state];
+      const Wavefunction& gw = psg[state];
       if (shift[state] == 0) {
         cw.times(&gw, &m_diagonals);
       } else {
         shifts[state] +=
             2 * std::numeric_limits<scalar>::epsilon() *
-            std::fmax(1, std::fabs(m_diagonals.at(m_diagonals.minloc(state + 1)))); // to guard against zero
+                std::fmax(1, std::fabs(m_diagonals.at(m_diagonals.minloc(state + 1)))); // to guard against zero
         //                xout << "initial gw  in preconditioner"<<gw->str(2)<<std::endl;
         //                xout << "initial cw  in preconditioner"<<cw->str(2)<<std::endl;
         //                xout << "diag  in preconditioner"<<diag->str(2)<<std::endl;
@@ -271,15 +272,15 @@ Run::Run(std::string fcidump) : m_hamiltonian(constructOperator(molpro::FCIdump(
   if (parallel_rank == 0) {
     options = Options(molpro::FCIdump(fcidump).data());
     options.addParameter("FCIDUMP", fcidump);
-    lendata = (int)options.data().size();
+    lendata = (int) options.data().size();
   }
-  MPI_Bcast(&lendata, (int)1, MPI_INT, 0, mpi_comm_compute);
-  auto *buf = (char *)malloc(static_cast<size_t>(lendata + 1));
+  MPI_Bcast(&lendata, (int) 1, MPI_INT, 0, mpi_comm_compute);
+  auto* buf = (char*) malloc(static_cast<size_t>(lendata + 1));
   if (parallel_rank == 0)
     for (auto i = 0; i < lendata; i++)
       buf[i] = options.data()[i];
   MPI_Bcast(&buf[0], lendata, MPI_CHAR, 0, mpi_comm_compute);
-  buf[lendata] = (char)0;
+  buf[lendata] = (char) 0;
   options = Options(buf);
   free(buf);
 #else
@@ -338,8 +339,8 @@ std::vector<double> Run::run() {
 
   if (method == "RSPT") {
     xout << "Rayleigh-Schroedinger perturbation theory with the Fock hamiltonian" << std::endl;
-    double scs_opposite = options.parameter("SCS_OPPOSITE", std::vector<double>(1, (double)1)).at(0);
-    double scs_same = options.parameter("SCS_SAME", std::vector<double>(1, (double)1)).at(0);
+    double scs_opposite = options.parameter("SCS_OPPOSITE", std::vector<double>(1, (double) 1)).at(0);
+    double scs_same = options.parameter("SCS_SAME", std::vector<double>(1, (double) 1)).at(0);
     xout << "First-order hamiltonian contains " << scs_opposite << " of opposite-spin and " << scs_same
          << " of same spin" << std::endl;
     xout << "Second-order hamiltonian contains " << 1 - scs_opposite << " of opposite-spin and " << 1 - scs_same
@@ -351,7 +352,7 @@ std::vector<double> Run::run() {
     molpro::Operator osh = m_hamiltonian;
     osh -= ssh;
     osh -= h0; // spinUnrestricted not yet implemented
-               //    xout <<"osh="<<osh<<std::endl;
+    //    xout <<"osh="<<osh<<std::endl;
     molpro::Operator h1 = osh * scs_opposite;
     h1 += ssh * scs_same;
     //    xout <<"h1="<<h1<<std::endl;
@@ -359,10 +360,10 @@ std::vector<double> Run::run() {
     h2 -= h1;
     h2 -= h0;
     //    xout <<"h2="<<h2<<std::endl;
-    std::vector<molpro::Operator *> hams;
+    std::vector<molpro::Operator*> hams;
     hams.push_back(&h0);
     hams.push_back(&h1);
-    if (scs_opposite != (double)1 || scs_same != (double)1)
+    if (scs_opposite != (double) 1 || scs_same != (double) 1)
       hams.push_back(&h2);
     std::vector<double> emp = RSPT(hams, prototype);
     //    std::vector<double> emp = ISRSPT(hh, h0, prototype);
@@ -373,7 +374,7 @@ std::vector<double> Run::run() {
     xout << std::endl;
     xout << "MP total energies";
     double totalEnergy = 0;
-    for (double &i : emp)
+    for (double& i : emp)
       xout << " " << (i = totalEnergy += i);
     xout << std::endl;
     energies.resize(1);
@@ -400,7 +401,7 @@ std::vector<double> Run::run() {
     xout << std::endl;
     xout << "MP total energies";
     double totalEnergy = 0;
-    for (double &i : emp)
+    for (double& i : emp)
       xout << " " << (i = totalEnergy += i);
     xout << std::endl;
     energies.resize(1);
@@ -455,7 +456,7 @@ std::vector<double> Run::run() {
 
   if (false) { // just for a test
     energies.clear();
-    for (const auto &w : m_wavefunctions)
+    for (const auto& w : m_wavefunctions)
       energies.push_back(w->m_properties["ENERGY"]);
   }
 
@@ -494,7 +495,7 @@ std::vector<double> Run::run() {
     //      xout << "metric.inverse(1e-5)\n" << metricInverse<<std::endl;
     //      xout << "metric*metric.inverse(1e-5)\n" << metric*metric.inverse(1e-5)<<std::endl;
 
-    for (const auto &w : m_wavefunctions) {
+    for (const auto& w : m_wavefunctions) {
       //          xout << "wavefunction:"<<w->values()<<std::endl;
       //          auto td0=w->density(1,false,true);
       //          xout << "td0\n"<<td0<<std::endl;
@@ -525,9 +526,9 @@ Run::~Run() {
  * - "P" 1-Q
  * \param forceSpinUnrestricted whether to force conversion to a UHF object
  */
-static molpro::Operator *projector(const molpro::Operator &source, std::string special, bool forceSpinUnrestricted);
+static molpro::Operator* projector(const molpro::Operator& source, std::string special, bool forceSpinUnrestricted);
 
-std::vector<double> Run::DIIS(const molpro::Operator &ham, const State &prototype, double energyThreshold,
+std::vector<double> Run::DIIS(const molpro::Operator& ham, const State& prototype, double energyThreshold,
                               int maxIterations) {
   std::unique_ptr<molpro::Operator> residual_Q;
   profiler->start("DIIS");
@@ -536,7 +537,7 @@ std::vector<double> Run::DIIS(const molpro::Operator &ham, const State &prototyp
   if (maxIterations < 0)
     maxIterations = options.parameter("MAXIT", 1000);
   xout << "MAXIT=" << maxIterations << std::endl;
-  if (energyThreshold <= (double)0)
+  if (energyThreshold <= (double) 0)
     energyThreshold = options.parameter("TOL", 1e-8);
   //  xout << "after options.parameter in Run::DIIS energyThreshold="<<energyThreshold<<std::endl;
   _residual_q = options.parameter("CHARGE", 0.0);
@@ -555,26 +556,31 @@ std::vector<double> Run::DIIS(const molpro::Operator &ham, const State &prototyp
   (gg.back()).allocate_buffer();
   ParameterVectorSet ww;
   ww.emplace_back(prototype);
-  (ww.back()).set((double)0);
-  (ww.back()).set(reference, (double)1);
+  (ww.back()).set((double) 0);
+  (ww.back()).set(reference, (double) 1);
   //  double e0=d.at(reference);
   //  g -= (e0-(double)1e-10);
   //      xout << "Diagonal H: " << d.str(2) << std::endl;
   updater precon(d, true);
   residual resid(ham, true, residual_Q.get());
-  molpro::linalg::DIIS<Wavefunction> solver;
-  solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", 1);
-  solver.m_thresh = energyThreshold;
-  solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
-  for (size_t iteration = 0; iteration < static_cast<size_t>(maxIterations); iteration++) {
-    resid(ww, gg, solver.active());
-    solver.addVector(ww, gg);
-    std::vector<double> shift;
-    shift.push_back(0);
-    precon(ww, gg, shift);
-    if (solver.endIteration(ww, gg))
-      break;
-  }
+
+  // TODO reinstate the following, which doesn't compile until handler implementation for Wavefunction is done
+//  auto handlers =
+//      molpro::linalg::iterativesolver::ArrayHandlers<Wavefunction>{};
+//  molpro::linalg::DIIS<Wavefunction> solver(handlers);
+//  solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", 1);
+//  solver.m_thresh = energyThreshold;
+//  solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
+//  for (size_t iteration = 0; iteration < static_cast<size_t>(maxIterations); iteration++) {
+//    resid(ww, gg, 1);
+//    auto nwork = solver.addVector(ww, gg);
+//    std::vector<double> shift;
+//    shift.push_back(0);
+//    precon(ww, gg, shift);
+//    solver.report();
+//    if (nwork == 0)
+//      break;
+//  }
   //      xout << "Final w: "<<w.str(2)<<std::endl;
   //      xout << "Final g: "<<g.str(2)<<std::endl;
   if (_residual_q > 0) {
@@ -583,7 +589,7 @@ std::vector<double> Run::DIIS(const molpro::Operator &ham, const State &prototyp
   return std::vector<double>{_lastEnergy};
 }
 
-std::vector<double> Run::Davidson(const molpro::Operator &ham, const State &prototype, double energyThreshold,
+std::vector<double> Run::Davidson(const molpro::Operator& ham, const State& prototype, double energyThreshold,
                                   int nState, int maxIterations) {
   auto p = profiler->push("Davidson");
   //  profiler->start("Davidson preamble");
@@ -592,7 +598,7 @@ std::vector<double> Run::Davidson(const molpro::Operator &ham, const State &prot
     maxIterations = options.parameter("MAXIT", 1000);
   if (nState < 0)
     nState = options.parameter("NSTATE", 1);
-  if (energyThreshold <= (double)0)
+  if (energyThreshold <= (double) 0)
     energyThreshold = options.parameter("TOL", 1e-8);
   xout << "Davidson eigensolver, maximum iterations=" << maxIterations;
   if (nState > 1)
@@ -603,103 +609,108 @@ std::vector<double> Run::Davidson(const molpro::Operator &ham, const State &prot
   d.diagonalOperator(ham);
   updater update(d, false);
   residual resid(ham, false);
-  molpro::linalg::LinearEigensystem<Wavefunction> solver;
-  solver.m_thresh = energyThreshold;
-  ParameterVectorSet gg;
-  ParameterVectorSet ww;
-  for (int root = 0; root < nState; root++) {
-    ww.emplace_back(prototype);
-    ww.back().allocate_buffer();
-    gg.emplace_back(prototype);
-    gg.back().allocate_buffer();
-    gg.back().settilesize(options.parameter("TILESIZE", std::vector<int>(1, 128)).at(0),
-                          options.parameter("ALPHATILESIZE", std::vector<int>(1, -1)).at(0),
-                          options.parameter("BETATILESIZE", std::vector<int>(1, -1)).at(0));
-  }
-  solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", 1);
-  solver.m_thresh = energyThreshold;
-  solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
-  solver.m_roots = static_cast<size_t>(nState);
-
-  std::vector<std::vector<double>> Pcoeff(nState);
-  std::vector<Pvector> P;
-  Presidual Presid(ham, P);
-
-  auto initialNP =
-      std::min(std::max(options.parameter("PSPACE_INITIAL", nState), nState), static_cast<int>(ww.front().size()));
-  auto maxNP = std::min(std::max(options.parameter("PSPACE", 100), nState), static_cast<int>(ww.front().size()));
-
-  for (size_t iteration = 1; iteration <= static_cast<size_t>(maxIterations); iteration++) {
-    if (options.parameter("PSPACE_REBUILD", 0)) { // clear out the P space and rebuild it
-      solver.clearP();
-      P.clear();
-      Pcoeff.clear();
-      Pcoeff.resize(nState);
-    }
-    if (static_cast<size_t>(maxNP) > P.size()) { // find some more P space
-      size_t NP = P.size();
-      if (iteration == 1) { // initial
-        for (auto p = 0; p < initialNP; p++) {
-          auto det1 = d.minloc(static_cast<size_t>(p + 1));
-          P.emplace_back(Pvector{{det1, 1}});
-        }
-      } else {              // subsequent
-        Presid(Pcoeff, gg); // augment residual with contributions from P space
-        auto newP = solver.suggestP(ww, gg, (maxNP - NP));
-        for (const auto &pp : P)
-          newP.erase(std::remove(newP.begin(), newP.end(), pp.begin()->first),
-                     newP.end()); // remove anything already in P
-        for (const auto &det1 : newP)
-          P.emplace_back(Pvector{{det1, 1}});
-      }
-      const auto newNP = P.size();
-      if (solver.m_verbosity > 1 && newNP > NP)
-        xout << "Adding " << newNP - NP << " P-space configurations (total " << newNP << ")" << std::endl;
-      std::vector<double> addHPP(newNP * (newNP - NP), (double)0);
-      for (size_t p0 = NP; p0 < newNP; p0++) {
-        Wavefunction wsparse(prototype);
-        wsparse.m_sparse = true;
-        Wavefunction gsparse(prototype);
-        gsparse.m_sparse = true;
-        wsparse.set(P[p0].begin()->first, (double)1);
-        gsparse.operatorOnWavefunction(ham, wsparse);
-        for (size_t p1 = 0; p1 < newNP; p1++) {
-          auto jdet1 = P[p1].begin()->first;
-          if (gsparse.buffer_sparse.count(jdet1))
-            addHPP[p1 + (p0 - NP) * newNP] = gsparse.buffer_sparse.at(jdet1);
-        }
-      }
-      solver.addP(std::vector<Pvector>(P.begin() + NP, P.end()), addHPP.data(), ww, gg, Pcoeff);
-    }
-    Presid(Pcoeff, gg); // augment residual with contributions from P space
-    std::vector<double> shift;
-    for (auto root = 0; root < nState; root++)
-      shift.push_back(-solver.eigenvalues()[root] + 1e-10);
-    update(ww, gg, shift, true);
-    if (solver.endIteration(ww, gg))
-      break;
-    resid(ww, gg, solver.active());
-    solver.addVector(ww, gg, Pcoeff);
-  }
-  if (solver.m_verbosity > 0)
-    xout << "Number of actions of matrix on vector = " << solver.actions() << std::endl;
-  for (auto root = 0; root < nState; root++) {
-    m_wavefunctions.push_back(std::make_shared<Wavefunction>(ww[root]));
-    m_wavefunctions.back()->m_properties["ENERGY"] = solver.eigenvalues()[root];
-    //      if (options.parameter("DENSITY",0)>0)
-    //        m_wavefunctions.back()->density = m_wavefunctions.back()->density(options.parameter("DENSITY",0));
-  }
-  //  std::cout << "Final wavefunction\n"<<dynamic_cast<std::shared_ptr<Wavefunction> >(ww[0])->str(2)<<std::endl;
-  //  std::cout << "get density"<<std::endl;
-  //  auto dens1 = std::static_pointer_cast<Wavefunction>(ww[0])->Wavefunction::density(1);
-  //  xout << "density:\n"<<dens1<<std::endl;
-  //  dens1.FCIDump("density1.fcidump");
-  //  auto natorb = dynamic_cast<std::shared_ptr<Wavefunction> >(ww[0])->Wavefunction::naturalOrbitals();
-  //  xout << "natorb:\n"<<natorb<<std::endl;
-  return solver.eigenvalues();
+  // TODO reinstate the following, which doesn't compile until handler implementation for Wavefunction is done
+//  molpro::linalg::LinearEigensystem<Wavefunction> solver;
+//  solver.m_thresh = energyThreshold;
+//  ParameterVectorSet gg;
+//  ParameterVectorSet ww;
+//  for (int root = 0; root < nState; root++) {
+//    ww.emplace_back(prototype);
+//    ww.back().allocate_buffer();
+//    gg.emplace_back(prototype);
+//    gg.back().allocate_buffer();
+//    gg.back().settilesize(options.parameter("TILESIZE", std::vector<int>(1, 128)).at(0),
+//                          options.parameter("ALPHATILESIZE", std::vector<int>(1, -1)).at(0),
+//                          options.parameter("BETATILESIZE", std::vector<int>(1, -1)).at(0));
+//  }
+//  solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", 1);
+//  solver.m_thresh = energyThreshold;
+//  solver.m_maxIterations = static_cast<unsigned int>(maxIterations);
+//  solver.m_roots = static_cast<size_t>(nState);
+//
+//  std::vector<std::vector<double>> Pcoeff(nState);
+//  std::vector<Pvector> P;
+//  Presidual Presid(ham, P);
+//
+//  auto initialNP =
+//      std::min(std::max(options.parameter("PSPACE_INITIAL", nState), nState), static_cast<int>(ww.front().size()));
+//  auto maxNP = std::min(std::max(options.parameter("PSPACE", 100), nState), static_cast<int>(ww.front().size()));
+//
+//  int nwork = nState;
+//  for (size_t iteration = 1; iteration <= static_cast<size_t>(maxIterations); iteration++) {
+//    if (options.parameter("PSPACE_REBUILD", 0)) { // clear out the P space and rebuild it
+//      solver.clearP();
+//      P.clear();
+//      Pcoeff.clear();
+//      Pcoeff.resize(nState);
+//    }
+//    if (static_cast<size_t>(maxNP) > P.size()) { // find some more P space
+//      size_t NP = P.size();
+//      if (iteration == 1) { // initial
+//        for (auto p = 0; p < initialNP; p++) {
+//          auto det1 = d.minloc(static_cast<size_t>(p + 1));
+//          P.emplace_back(Pvector{{det1, 1}});
+//        }
+//      } else {              // subsequent
+//        Presid(Pcoeff, gg); // augment residual with contributions from P space
+//        auto newP = solver.suggestP(ww, gg, (maxNP - NP));
+//        for (const auto& pp : P)
+//          newP.erase(std::remove(newP.begin(), newP.end(), pp.begin()->first),
+//                     newP.end()); // remove anything already in P
+//        for (const auto& det1 : newP)
+//          P.emplace_back(Pvector{{det1, 1}});
+//      }
+//      const auto newNP = P.size();
+//      if (solver.m_verbosity > 1 && newNP > NP)
+//        xout << "Adding " << newNP - NP << " P-space configurations (total " << newNP << ")" << std::endl;
+//      std::vector<double> addHPP(newNP * (newNP - NP), (double) 0);
+//      for (size_t p0 = NP; p0 < newNP; p0++) {
+//        Wavefunction wsparse(prototype);
+//        wsparse.m_sparse = true;
+//        Wavefunction gsparse(prototype);
+//        gsparse.m_sparse = true;
+//        wsparse.set(P[p0].begin()->first, (double) 1);
+//        gsparse.operatorOnWavefunction(ham, wsparse);
+//        for (size_t p1 = 0; p1 < newNP; p1++) {
+//          auto jdet1 = P[p1].begin()->first;
+//          if (gsparse.buffer_sparse.count(jdet1))
+//            addHPP[p1 + (p0 - NP) * newNP] = gsparse.buffer_sparse.at(jdet1);
+//        }
+//      }
+//      solver.addP(std::vector<Pvector>(P.begin() + NP, P.end()), addHPP.data(), ww, gg, Pcoeff);
+//    }
+//    Presid(Pcoeff, gg); // augment residual with contributions from P space
+//    std::vector<double> shift;
+//    //TODO use working set
+//    for (auto root = 0; root < nState; root++)
+//      shift.push_back(-solver.eigenvalues()[root] + 1e-10);
+//    update(ww, gg, shift, true);
+//    solver.report();
+//    if (nwork == 0)
+//      break;
+//    resid(ww, gg, nwork);
+//    nwork = solver.addVector(ww, gg, Pcoeff);
+//  }
+//  if (solver.m_verbosity > 0)
+////    xout << "Number of actions of matrix on vector = " << solver.actions() << std::endl; // TODO reinstate
+//    // TODO implement calculate solution using solver
+//    for (auto root = 0; root < nState; root++) {
+//      m_wavefunctions.push_back(std::make_shared<Wavefunction>(ww[root]));
+//      m_wavefunctions.back()->m_properties["ENERGY"] = solver.eigenvalues()[root];
+//      //      if (options.parameter("DENSITY",0)>0)
+//      //        m_wavefunctions.back()->density = m_wavefunctions.back()->density(options.parameter("DENSITY",0));
+//    }
+//  //  std::cout << "Final wavefunction\n"<<dynamic_cast<std::shared_ptr<Wavefunction> >(ww[0])->str(2)<<std::endl;
+//  //  std::cout << "get density"<<std::endl;
+//  //  auto dens1 = std::static_pointer_cast<Wavefunction>(ww[0])->Wavefunction::density(1);
+//  //  xout << "density:\n"<<dens1<<std::endl;
+//  //  dens1.FCIDump("density1.fcidump");
+//  //  auto natorb = dynamic_cast<std::shared_ptr<Wavefunction> >(ww[0])->Wavefunction::naturalOrbitals();
+//  //  xout << "natorb:\n"<<natorb<<std::endl;
+//  return solver.eigenvalues();
 }
 
-std::vector<double> Run::CSDavidson(const molpro::Operator &ham, const State &prototype, double energyThreshold,
+std::vector<double> Run::CSDavidson(const molpro::Operator& ham, const State& prototype, double energyThreshold,
                                     int nState, int maxIterations) {
   profiler->start("Davidson");
   profiler->start("Davidson preamble");
@@ -710,7 +721,7 @@ std::vector<double> Run::CSDavidson(const molpro::Operator &ham, const State &pr
   if (maxIterations < 0)
     maxIterations = options.parameter("MAXIT", 1000);
   //  xout << "MAXIT="<<maxIterations<<std::endl;
-  if (energyThreshold <= (double)0)
+  if (energyThreshold <= (double) 0)
     energyThreshold = options.parameter("TOL", 1e-8);
   // xout << "after options.parameter in Run::Davidson energyThreshold="<<energyThreshold<<std::endl;
   double compressionK = options.parameter("COMPRESSIONK", std::vector<double>(1, 2)).at(0);
@@ -724,7 +735,7 @@ std::vector<double> Run::CSDavidson(const molpro::Operator &ham, const State &pr
   g.diagonalOperator(ham);
   size_t reference = g.minloc();
   double e0 = g.at(reference);
-  g -= (e0 - (double)1e-10);
+  g -= (e0 - (double) 1e-10);
   std::vector<double> e;
   //  xout << "Denominators: " << g.str(2) << std::endl;
   File h0file;
@@ -734,19 +745,19 @@ std::vector<double> Run::CSDavidson(const molpro::Operator &ham, const State &pr
   wfile.name = "Wavefunction vectors";
   File gfile;
   gfile.name = "Action vectors";
-  w.set((double)0);
-  w.set(reference, (double)1);
+  w.set((double) 0);
+  w.set(reference, (double) 1);
   std::vector<double> reducedHamiltonian;
   std::vector<double> elast(static_cast<unsigned long>(nState), e0 + 1);
   profiler->stop("Davidson preamble");
   for (int n = 0; n < maxIterations; n++) {
     w.putw(wfile, n);
-    g.set((double)0);
+    g.set((double) 0);
     profiler->start("Davidson Hc");
     g.operatorOnWavefunction(ham, w);
     profiler->stop("Davidson Hc");
     g.putw(gfile, n);
-    reducedHamiltonian.resize((size_t)(n + 1) * (n + 1));
+    reducedHamiltonian.resize((size_t) (n + 1) * (n + 1));
     profiler->start("Davidson build rH");
     {
       for (int i = n - 1; i > -1; i--)
@@ -765,20 +776,20 @@ std::vector<double> Run::CSDavidson(const molpro::Operator &ham, const State &pr
     // "<<reducedHamiltonian[j+(n+1)*i]; xout << std::endl; } }
     std::vector<double> eigenvectors(reducedHamiltonian);
     std::vector<double> eigenvalues(n + 1);
-    Diagonalize(&eigenvectors[0], &eigenvalues[0], (unsigned int)(n + 1), (unsigned int)(n + 1));
+    Diagonalize(&eigenvectors[0], &eigenvalues[0], (unsigned int) (n + 1), (unsigned int) (n + 1));
     e.resize((nState > n + 1 ? n + 1 : nState));
     e.assign(eigenvalues.begin(), eigenvalues.begin() + e.size());
     xout << "Iteration " << n << ", energies:";
     xout << std::fixed;
     xout.precision(8);
-    for (int i = 0; i < (int)e.size(); i++)
+    for (int i = 0; i < (int) e.size(); i++)
       xout << " " << eigenvalues[i];
     xout << "; ";
     // xout << std::endl << "Eigenvectors:"<<std::endl; for (int i=0; i < nState; i++) { for (int j=0; j < n+1; j++)
     // xout <<" "<<eigenvectors[j+(n+1)*i]; xout << std::endl; }
     int track = 0;
     double tracktest = 0;
-    for (int i = 0; i < (int)e.size(); i++) {
+    for (int i = 0; i < (int) e.size(); i++) {
       if (std::fabs(eigenvectors[n + 1 + i * (n + 1)]) > tracktest) {
         track = i;
         tracktest = std::fabs(eigenvectors[n + 1 + i * (n + 1)]);
@@ -801,17 +812,17 @@ std::vector<double> Run::CSDavidson(const molpro::Operator &ham, const State &pr
       }
 
     // determine penalty magnitude, first solving for d.alpha/d.mu
-    w.set((double)0);
+    w.set((double) 0);
     for (int i = 0; i <= n; i++) {
       //      xout << "alpha "<<alpha[i]<<std::endl;
       g.getw(wfile, i);
       w.axpy(alpha[i], g);
     } // w contains current wavefunction
-    double l2norm = w.norm((double)2);
+    double l2norm = w.norm((double) 2);
     double lknorm = w.norm(compressionK);
     //    xout << "l2norm="<<l2norm<<" "<<w*w<<std::endl;
     // xout << "lknorm="<<lknorm<<std::endl;
-    double factor = pow(lknorm, compressionL) * pow(l2norm, -compressionK * compressionL * (double)0.5);
+    double factor = pow(lknorm, compressionL) * pow(l2norm, -compressionK * compressionL * (double) 0.5);
     if (compressionL * (2 - compressionK) < 0)
       factor = -factor;
     xout << "factor=" << factor << std::endl;
@@ -819,46 +830,46 @@ std::vector<double> Run::CSDavidson(const molpro::Operator &ham, const State &pr
     // ((compressionL*(2-compressionK) > 0) ? 1 : -1)) / (compressionK*compressionL);
     // xout << "Pkl from eigenvectors = " <<Pkl<<std::endl;
     // construct dP/dmu in g
-    g.set((double)0);
+    g.set((double) 0);
     g.addAbsPower(w, compressionK - 2, factor / lknorm);
     g.axpy(-factor / l2norm, w);
     // project dP/dmu onto subspace
     std::vector<double> dPdmu(n + 1);
     std::vector<double> dalphadmu(n + 1);
-    for (size_t i = 0; i <= (size_t)n; i++) {
+    for (size_t i = 0; i <= (size_t) n; i++) {
       w.getw(wfile, i);
       dPdmu[i] = g * w;
       //      xout << "dPdmu[] "<<dPdmu[i]<<std::endl;
     }
-    auto d2Edmu2 = (double)0;
-    for (size_t i = 0; i <= (size_t)n; i++) {
-      dalphadmu[i] = (double)0;
-      for (size_t j = 0; j <= (size_t)n; j++) {
+    auto d2Edmu2 = (double) 0;
+    for (size_t i = 0; i <= (size_t) n; i++) {
+      dalphadmu[i] = (double) 0;
+      for (size_t j = 0; j <= (size_t) n; j++) {
         dalphadmu[i] -= hamiltonianInverse[j + i * (n + 1)] * dPdmu[j];
         // if (!i) xout << "dPdmu["<<j<<"]="<<dPdmu[j]<<std::endl;
       }
       d2Edmu2 -= dalphadmu[i] * dPdmu[i];
       // xout << "dalphadmum["<<i<<"]="<<dalphadmu[i]<<std::endl;
     }
-    double mu = d2Edmu2 == (double)0 ? (double)0
-                                     : sqrt(2 * energyThreshold / d2Edmu2) *
-                                           options.parameter("PENALTY_SCALE", std::vector<double>(1, 1)).at(0);
+    double mu = d2Edmu2 == (double) 0 ? (double) 0
+                                      : sqrt(2 * energyThreshold / d2Edmu2) *
+            options.parameter("PENALTY_SCALE", std::vector<double>(1, 1)).at(0);
     // xout << "d2Edmu2="<< d2Edmu2<<", mu="<<mu<<std::endl;
 
     // penalised equation solver here
 
     profiler->start("Davidson residual");
     if (compressive) {
-      g.set((double)0);
+      g.set((double) 0);
       for (int i = 0; i <= n; i++) {
         w.getw(wfile, i);
         g.axpy(alpha[i], w);
       } // g contains the current wavefunction
-      w.set((double)0);
+      w.set((double) 0);
       w.addAbsPower(g, compressionK - 2, mu * factor / (2 * lknorm));
       w.axpy(-mu * factor / (2 * l2norm), g);
     } else // !compressive
-      w.set((double)0);
+      w.set((double) 0);
     for (int i = 0; i <= n; i++) {
       g.getw(wfile, i);
       //      w += energy*alpha[i] * g;
@@ -898,7 +909,7 @@ std::vector<double> Run::CSDavidson(const molpro::Operator &ham, const State &pr
     gsum(&norm2, 1, mpi_comm_compute);
 
     double econv = 0;
-    for (int i = 0; i < (int)e.size(); i++) {
+    for (int i = 0; i < (int) e.size(); i++) {
       // if (i != track)
       econv += std::fabs(e[i] - elast[i]);
       // else {
@@ -910,13 +921,13 @@ std::vector<double> Run::CSDavidson(const molpro::Operator &ham, const State &pr
 
     elast = e;
     // normalise
-    w *= ((double)1 / std::sqrt(norm2));
-    if (norm2 > (double)1e-30 && econv > energyThreshold)
+    w *= ((double) 1 / std::sqrt(norm2));
+    if (norm2 > (double) 1e-30 && econv > energyThreshold)
       continue;
 
     {
       profiler->start("Histogram");
-      w.set((double)0);
+      w.set((double) 0);
       for (int i = 0; i <= n; i++) {
         g.getw(wfile, i);
         w.axpy(alpha[i], g);
@@ -924,7 +935,7 @@ std::vector<double> Run::CSDavidson(const molpro::Operator &ham, const State &pr
       w.replicate();
       double histmin = 1e-14, histmax = 1.1;
       size_t nhist = 25;
-      double ratio = std::pow(histmin / histmax, 1 / ((double)nhist));
+      double ratio = std::pow(histmin / histmax, 1 / ((double) nhist));
       std::vector<double> edges(nhist);
       edges[0] = histmax * ratio;
       for (size_t i = 1; i < nhist; i++)
@@ -934,7 +945,7 @@ std::vector<double> Run::CSDavidson(const molpro::Operator &ham, const State &pr
         cumulative.pop_back();
       std::vector<double> fcumulative(cumulative.size());
       for (size_t i = 0; i < nhist; i++) {
-        fcumulative[i] = ((double)cumulative[i]) / (double)w.size();
+        fcumulative[i] = ((double) cumulative[i]) / (double) w.size();
         if (fcumulative[i] < 1e-8)
           continue;
         xout << "Histogram: " << fcumulative[i] * 100 << "% > " << edges[i] << std::endl;
@@ -954,15 +965,15 @@ std::vector<double> Run::CSDavidson(const molpro::Operator &ham, const State &pr
   return e;
 }
 
-std::vector<double> Run::RSPT(const std::vector<molpro::Operator *> &hams, const State &prototype, int maxOrder,
+std::vector<double> Run::RSPT(const std::vector<molpro::Operator*>& hams, const State& prototype, int maxOrder,
                               double energyThreshold, int maxIterations) {
   if (maxOrder < 0)
     maxOrder = options.parameter("MAXORDER", std::vector<int>(1, 1000)).at(0);
   if (maxIterations < 0)
     maxIterations = options.parameter("MAXIT", std::vector<int>(1, 1000)).at(0);
-  if (energyThreshold < (double)0)
-    energyThreshold = options.parameter("TOL", std::vector<double>(1, (double)1e-8)).at(0);
-  std::vector<double> e(maxOrder + 1, (double)0);
+  if (energyThreshold < (double) 0)
+    energyThreshold = options.parameter("TOL", std::vector<double>(1, (double) 1e-8)).at(0);
+  std::vector<double> e(maxOrder + 1, (double) 0);
   //  for (int k=0; k<(int)hamiltonians.size(); k++)
   //    HamiltonianMatrixPrint(*hamiltonians[k],prototype);
   //  return e;
@@ -976,20 +987,20 @@ std::vector<double> Run::RSPT(const std::vector<molpro::Operator *> &hams, const
   size_t reference = g.minloc();
   e[0] = g.at(reference);
   g -= e[0];
-  g.set(reference, (double)1);
+  g.set(reference, (double) 1);
   //  xout << "Møller-Plesset denominators: " << g.str(2) << std::endl;
   File h0file;
   h0file.name = "H0";
   g.putw(h0file);
-  w.set((double)0);
-  w.set(reference, (double)1);
+  w.set((double) 0);
+  w.set(reference, (double) 1);
   File wfile;
   wfile.name = "Wavefunction vectors";
   w.putw(wfile, 0);
   File gfile;
   gfile.name = "Action vectors";
-  for (int k = 0; k < (int)hams.size(); k++) {
-    g.set((double)0);
+  for (int k = 0; k < (int) hams.size(); k++) {
+    g.set((double) 0);
     //    xout << "hamiltonian about to be applied to reference: "<< *hams[k] <<std::endl;
     g.operatorOnWavefunction(*hams[k], w);
     //    xout << "hamiltonian on reference: " << g.str(2) << std::endl;
@@ -1001,11 +1012,11 @@ std::vector<double> Run::RSPT(const std::vector<molpro::Operator *> &hams, const
     // construct  |n> = -(H0-E0)^{-1} ( -sum_k^{n-1} E_{n-k} |k> + sum_{k=n-h}^{n-1} H|k>) where h is the maximum order
     // of hamiltonian
     //    xout <<std::endl<<std::endl<<"MAIN ITERATION n="<<n<<std::endl;
-    g.set((double)0);
+    g.set((double) 0);
     //            xout <<std::endl<< "g after set 0: " << g.str(2) <<std::endl;
     for (int k = n; k > 0; k--) {
       w.getAll(wfile, n - k);
-      if (k < (int)hams.size()) {
+      if (k < (int) hams.size()) {
         //            xout <<"k="<<k<< " g before H.w: " << g.str(2) <<std::endl;
         g.operatorOnWavefunction(*hams[k], w);
         //            xout << "g after H.w: " << g.str(2) <<std::endl;
@@ -1023,11 +1034,11 @@ std::vector<double> Run::RSPT(const std::vector<molpro::Operator *> &hams, const
       w = -g;
       g.getAll(h0file);
       //    xout <<std::endl<< "Perturbed wavefunction before precondition: " << w.str(2) <<std::endl;
-      w.set(reference, (double)0);
+      w.set(reference, (double) 0);
       w /= g;
       //     xout <<std::endl<< "Perturbed wavefunction, order="<<n<<": " << w.str(2) <<std::endl;
       w.putw(wfile, n);
-      for (int k = 1; k < (int)hams.size(); k++) {
+      for (int k = 1; k < (int) hams.size(); k++) {
         if (n + k > maxOrder)
           break;
         g.getw(gfile, k);
@@ -1035,10 +1046,10 @@ std::vector<double> Run::RSPT(const std::vector<molpro::Operator *> &hams, const
         //      xout <<"contribution from n="<<n<<", k="<<k<<" to E("<<n+k<<")="<<g*w<<std::endl;
         e[n + k] += g * w;
       }
-      gsum(&e[n + 1], (size_t)(hams.size() - 1), mpi_comm_compute);
+      gsum(&e[n + 1], (size_t) (hams.size() - 1), mpi_comm_compute);
     }
     xout << "n=" << n << ", E(n+1)=" << e[n + 1] << std::endl;
-    if ((e[n + 1] < 0 ? -e[n + 1] : e[n + 1]) < energyThreshold && e[n + 1] != (double)0) {
+    if ((e[n + 1] < 0 ? -e[n + 1] : e[n + 1]) < energyThreshold && e[n + 1] != (double) 0) {
       e.resize(n + 2);
       break;
     }
@@ -1046,7 +1057,7 @@ std::vector<double> Run::RSPT(const std::vector<molpro::Operator *> &hams, const
   return e;
 }
 
-void Run::IPT(const molpro::Operator &ham, const State &prototype, const size_t referenceLocation) {
+void Run::IPT(const molpro::Operator& ham, const State& prototype, const size_t referenceLocation) {
   int maxOrder = options.parameter("MAXORDER", std::vector<int>(1, 3)).at(0);
   std::vector<double> energies;
   Wavefunction d(prototype);
@@ -1061,15 +1072,14 @@ void Run::IPT(const molpro::Operator &ham, const State &prototype, const size_t 
                           continuumOrbitalSymmetry, false) != 0)
         goto continuumFound;
   throw std::runtime_error("Continuum orbital cannot be found");
-continuumFound:
+  continuumFound:
   xout << "IPT Q operator" << *_IPT_Q << std::endl;
   _IPT_c.clear();
   _IPT_c.emplace_back(Wavefunction(prototype));
-  _IPT_c[0].set((double)0);
-  _IPT_c[0].set(referenceLocation, (double)1);
+  _IPT_c[0].set((double) 0);
+  _IPT_c[0].set(referenceLocation, (double) 1);
   _IPT_Fock.clear();
-  xout << "gamma00 " << _IPT_c[0].density(1, true) << std::endl;
-  ;
+  xout << "gamma00 " << _IPT_c[0].density(1, true) << std::endl;;
   _IPT_Fock.emplace_back(ham.fock(_IPT_c[0].density(1, true), true, "F00"));
   _IPT_Epsilon.clear();
   auto referenceDeterminant = _IPT_c[0].determinantAt(referenceLocation);
@@ -1088,7 +1098,7 @@ continuumFound:
   xout << "Continuum orbital " << continuumOrbitalOffset + 1 << "." << continuumOrbitalSymmetry + 1 << std::endl;
   _IPT_eta.clear();
   _IPT_eta.push_back(-_IPT_Fock[0].element(ioo, ios, ioo, ios)); // eta[0]
-                                                                 //  _IPT_eta.push_back(0); // eta[1]
+  //  _IPT_eta.push_back(0); // eta[1]
   excK.element(ioo, ios, continuumOrbitalOffset, continuumOrbitalSymmetry, false) = 1;
   excK.m_description = "Excitor";
   xout << excK << std::endl;
@@ -1172,9 +1182,9 @@ continuumFound:
     if (false) { // print A not sure what this is all about!
       _IPT_b0m->set(0);
       for (size_t i = 0; i < ww.back().size(); i++) {
-        ww.back().set((double)0);
-        ww.back().set(i, (double)1);
-        gg.back().set((double)0);
+        ww.back().set((double) 0);
+        ww.back().set(i, (double) 1);
+        gg.back().set((double) 0);
         gg.back().operatorOnWavefunction(_IPT_Fock[0], ww.back());
         xout << "F0[" << i << ":] = " << gg[0].values() << std::endl;
         resid(ww, gg);
@@ -1182,23 +1192,24 @@ continuumFound:
       }
       exit(0);
     }
-    ww.back().set((double)0);
-    ww.back().set(referenceLocation + m % 2, (double)1);
-    molpro::linalg::DIIS<Wavefunction> solver;
-    solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
-    solver.m_thresh = options.parameter("TOL", std::vector<double>(1, (double)1e-8)).at(0);
-    solver.m_maxIterations = options.parameter("MAXIT", std::vector<int>(1, 1000)).at(0);
-    solver.m_linear = true;
-    //      solver.solve(gg,ww);
-    for (size_t iteration = 0; iteration < solver.m_maxIterations; iteration++) {
-      resid(ww, gg);
-      solver.addVector(ww, gg);
-      std::vector<double> shift;
-      shift.push_back(0);
-      update(ww, gg, shift);
-      if (solver.endIteration(ww, gg))
-        break;
-    }
+    ww.back().set((double) 0);
+    ww.back().set(referenceLocation + m % 2, (double) 1);
+//    // TODO reinstate the following, which doesn't compile until handler implementation for Wavefunction is done
+//    molpro::linalg::DIIS<Wavefunction> solver;
+//    solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
+//    solver.m_thresh = options.parameter("TOL", std::vector<double>(1, (double) 1e-8)).at(0);
+//    solver.m_maxIterations = options.parameter("MAXIT", std::vector<int>(1, 1000)).at(0);
+//    solver.m_linear = true;
+//    //      solver.solve(gg,ww);
+//    for (size_t iteration = 0; iteration < solver.m_maxIterations; iteration++) {
+//      resid(ww, gg);
+//      solver.addVector(ww, gg);
+//      std::vector<double> shift;
+//      shift.push_back(0);
+//      update(ww, gg, shift);
+//      if (solver.endIteration(ww, gg))
+//        break;
+//    }
     xout << "Final g: " << gg[0].values() << std::endl;
     //      xout << "Final w: "<<ww[0]->str(2)<<std::endl;
     _IPT_c.push_back(ww[0]);
@@ -1279,11 +1290,11 @@ continuumFound:
     xout << std::endl;
     xout << "Energies:";
     for (auto e = energies.begin(); e != energies.end(); e++)
-      xout << " " << std::accumulate(energies.begin(), e + 1, (double)0);
+      xout << " " << std::accumulate(energies.begin(), e + 1, (double) 0);
     xout << std::endl;
     xout << "Energies:";
     for (auto e = energies.begin(); e != energies.end(); e++)
-      xout << " " << std::accumulate(energies.begin() + 1, e + 1, (double)0);
+      xout << " " << std::accumulate(energies.begin() + 1, e + 1, (double) 0);
     xout << std::endl;
     xout << "Epsilon:";
     for (auto e : _IPT_Epsilon)
@@ -1391,15 +1402,15 @@ continuumFound:
   xout << "ionstate " << ionstate * ionstate << std::endl;
 }
 
-std::vector<double> Run::ISRSPT(const molpro::Operator &ham, const molpro::Operator &ham0, const State &prototype,
+std::vector<double> Run::ISRSPT(const molpro::Operator& ham, const molpro::Operator& ham0, const State& prototype,
                                 int maxOrder, double energyThreshold, int maxIterations) {
   if (maxOrder < 0)
     maxOrder = options.parameter("MAXORDER", std::vector<int>(1, 1000)).at(0);
   if (maxIterations < 0)
     maxIterations = options.parameter("MAXIT", std::vector<int>(1, 1000)).at(0);
-  if (energyThreshold < (double)0)
-    energyThreshold = options.parameter("TOL", std::vector<double>(1, (double)1e-8)).at(0);
-  std::vector<double> e(maxOrder + 1, (double)0);
+  if (energyThreshold < (double) 0)
+    energyThreshold = options.parameter("TOL", std::vector<double>(1, (double) 1e-8)).at(0);
+  std::vector<double> e(maxOrder + 1, (double) 0);
   Wavefunction d(prototype);
   xout << "RSPT wavefunction size=" << d.size() << std::endl;
   d.diagonalOperator(ham0);
@@ -1408,39 +1419,42 @@ std::vector<double> Run::ISRSPT(const molpro::Operator &ham, const molpro::Opera
   gg.emplace_back(prototype);
   ParameterVectorSet ww;
   ww.emplace_back(prototype);
-  ww.back().set((double)0);
-  ww.back().set(reference, (double)1);
+  ww.back().set((double) 0);
+  ww.back().set(reference, (double) 1);
   updater update(d, false);
   residual resid(ham, false);
-  molpro::linalg::LinearEigensystem<Wavefunction> solver; // TODO
-  solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
-  solver.m_thresh = energyThreshold;
-  solver.m_maxIterations = maxIterations;
-  //  solver.solve(gg,ww);
-  for (int iteration = 0; iteration < maxIterations; iteration++) {
-    resid(ww, gg, solver.active());
-    solver.addVector(ww, gg);
-    std::vector<double> shift;
-    shift.push_back(0);
-    update(ww, gg, shift);
-    if (solver.endIteration(ww, gg))
-      break;
-  }
-  //      xout << "Final w: "<<w.str(2)<<std::endl;
-  //      xout << "Final g: "<<g.str(2)<<std::endl;
-  //  return solver.incremental_energies(); // TODO
-  return solver.eigenvalues();
+  // TODO reinstate the following, which doesn't compile until handler implementation for Wavefunction is done
+//  molpro::linalg::LinearEigensystem<Wavefunction> solver; // TODO
+//  solver.m_verbosity = options.parameter("SOLVER_VERBOSITY", std::vector<int>(1, 1)).at(0);
+//  solver.m_thresh = energyThreshold;
+//  solver.m_maxIterations = maxIterations;
+//  //  solver.solve(gg,ww);
+//  int nwork = 1;
+//  for (int iteration = 0; iteration < maxIterations; iteration++) {
+//    resid(ww, gg, nwork);
+//    nwork = solver.addVector(ww, gg);
+//    std::vector<double> shift;
+//    shift.push_back(0);
+//    update(ww, gg, shift);
+//    solver.report();
+//    if (nwork == 0)
+//      break;
+//  }
+//  //      xout << "Final w: "<<w.str(2)<<std::endl;
+//  //      xout << "Final g: "<<g.str(2)<<std::endl;
+//  //  return solver.incremental_energies(); // TODO
+//  return solver.eigenvalues();
 }
 
-void Run::HamiltonianMatrixPrint(molpro::Operator &hamiltonian, const State &prototype, int verbosity) {
+void Run::HamiltonianMatrixPrint(molpro::Operator& hamiltonian, const State& prototype, int verbosity) {
   Wavefunction w(hamiltonian, prototype.nelec, prototype.symmetry, prototype.ms2);
   Wavefunction g(w);
   xout << std::endl << "Full Hamiltonian matrix" << std::endl;
   if (verbosity >= 0) {
     for (size_t i = 0; i < w.size(); i++) {
-      w.set((double)0);
-      w.set(i, (double)1);
-      g.set((double)0);
+      w.set((double) 0);
+      w.set(i, (double) 1);
+      g.set((double) 0);
       g.operatorOnWavefunction(hamiltonian, w);
       for (size_t j = 0; j < w.size(); j++)
         xout << (std::abs(g.at(j)) > 1e-7 ? g.at(j) : 0) << " ";
@@ -1449,7 +1463,7 @@ void Run::HamiltonianMatrixPrint(molpro::Operator &hamiltonian, const State &pro
   }
 }
 
-molpro::Operator *projector(const molpro::Operator &source, const std::string special,
+molpro::Operator* projector(const molpro::Operator& source, const std::string special,
                             const bool forceSpinUnrestricted) {
   molpro::dim_t dims;
   for (auto s = 0; s < 8; s++)
@@ -1489,7 +1503,7 @@ molpro::Operator *projector(const molpro::Operator &source, const std::string sp
   return result;
 }
 
-Eigen::VectorXd int1(const molpro::Operator &hamiltonian, int spin) {
+Eigen::VectorXd int1(const molpro::Operator& hamiltonian, int spin) {
   size_t basisSize = 0;
   for (auto si = 0; si < 8; si++)
     basisSize += hamiltonian.O1(spin > 0).dimension(si);
@@ -1501,7 +1515,7 @@ Eigen::VectorXd int1(const molpro::Operator &hamiltonian, int spin) {
   return result;
 }
 
-Eigen::MatrixXd intJ(const molpro::Operator &hamiltonian, int spini, int spinj) {
+Eigen::MatrixXd intJ(const molpro::Operator& hamiltonian, int spini, int spinj) {
   if (spinj > spini)
     return intJ(hamiltonian, spinj, spini).transpose();
   size_t basisSize = 0;
@@ -1527,7 +1541,7 @@ Eigen::MatrixXd intJ(const molpro::Operator &hamiltonian, int spini, int spinj) 
   return result;
 }
 
-Eigen::MatrixXd intK(const molpro::Operator &hamiltonian, int spin) {
+Eigen::MatrixXd intK(const molpro::Operator& hamiltonian, int spin) {
   size_t basisSize = 0;
   for (auto si = 0; si < 8; si++) {
     basisSize += hamiltonian.O1().dimension(si);
@@ -1579,7 +1593,7 @@ Eigen::MatrixXd intK(const molpro::Operator &hamiltonian, int spin) {
   return result;
 }
 
-molpro::Operator constructOperator(const molpro::FCIdump &dump, bool collective) {
+molpro::Operator constructOperator(const molpro::FCIdump& dump, bool collective) {
   std::vector<char> portableByteStream;
   int lPortableByteStream;
   int rank = 0;
@@ -1590,7 +1604,7 @@ molpro::Operator constructOperator(const molpro::FCIdump &dump, bool collective)
     int verbosity = 0;
     std::vector<int> orbital_symmetries = dump.parameter("ORBSYM");
     molpro::dim_t dim(8);
-    for (const auto &s : orbital_symmetries)
+    for (const auto& s : orbital_symmetries)
       dim.at(s - 1)++;
     molpro::Operator result(dim, 2, dump.parameter("IUHF")[0] > 0, 0, true, false, "Hamiltonian");
     result.zero();
@@ -1598,11 +1612,11 @@ molpro::Operator constructOperator(const molpro::FCIdump &dump, bool collective)
     dump.rewind();
     double value;
     molpro::FCIdump::integralType type;
-    auto &integrals_a = result.O1(true);
-    auto &integrals_b = result.O1(false);
-    auto &integrals_aa = result.O2(true, true);
-    auto &integrals_ab = result.O2(true, false);
-    auto &integrals_bb = result.O2(false, false);
+    auto& integrals_a = result.O1(true);
+    auto& integrals_b = result.O1(false);
+    auto& integrals_aa = result.O2(true, true);
+    auto& integrals_ab = result.O2(true, false);
+    auto& integrals_bb = result.O2(false, false);
     if (verbosity > 0) {
       xout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
       xout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
@@ -1623,8 +1637,8 @@ molpro::Operator constructOperator(const molpro::FCIdump &dump, bool collective)
         std::swap(ok, ol);
         std::swap(sk, sl);
       }
-      unsigned int sij = si ^ sj;
-      unsigned int skl = sk ^ sl;
+      unsigned int sij = si ^sj;
+      unsigned int skl = sk ^sl;
       //      xout << "\nvalue: "<<value<<std::endl;
       //      xout << "s: ijkl "<<si<<sj<<sk<<sl<<std::endl;
       //      xout << "o: ijkl "<<oi<<oj<<ok<<ol<<std::endl;
@@ -1677,7 +1691,7 @@ molpro::Operator constructOperator(const molpro::FCIdump &dump, bool collective)
 #ifdef HAVE_MPI_H
     MPI_Bcast(&lPortableByteStream, 1, MPI_INT, 0, mpi_comm_compute);
 #endif
-    char *buf = (rank == 0) ? portableByteStream.data() : (char *)malloc(lPortableByteStream);
+    char* buf = (rank == 0) ? portableByteStream.data() : (char*) malloc(lPortableByteStream);
 #ifdef HAVE_MPI_H
     MPI_Bcast(buf, lPortableByteStream, MPI_CHAR, 0, mpi_comm_compute);
 #endif
@@ -1690,7 +1704,7 @@ molpro::Operator constructOperator(const molpro::FCIdump &dump, bool collective)
   throw std::runtime_error("No valid operator construction case");
 }
 
-void FCIDump(const molpro::Operator &op, const std::string filename, std::vector<int> orbital_symmetries) {
+void FCIDump(const molpro::Operator& op, const std::string filename, std::vector<int> orbital_symmetries) {
   molpro::FCIdump dump;
   int verbosity = 0;
   if (orbital_symmetries.empty())
@@ -1705,11 +1719,11 @@ void FCIDump(const molpro::Operator &op, const std::string filename, std::vector
   dump.write(filename);
   dump.rewind();
   size_t i, j, k, l;
-  const auto &integrals_a = op.O1(true);
-  const auto &integrals_b = op.O1(false);
-  const auto &integrals_aa = op.O2(true, true);
-  const auto &integrals_ab = op.O2(true, false);
-  const auto &integrals_bb = op.O2(false, false);
+  const auto& integrals_a = op.O1(true);
+  const auto& integrals_b = op.O1(false);
+  const auto& integrals_aa = op.O2(true, true);
+  const auto& integrals_ab = op.O2(true, false);
+  const auto& integrals_bb = op.O2(false, false);
   if (verbosity > 0) {
     xout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
     xout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
@@ -1745,8 +1759,8 @@ void FCIDump(const molpro::Operator &op, const std::string filename, std::vector
               std::swap(ok, ol);
               std::swap(sk, sl);
             }
-            unsigned int sij = si ^ sj;
-            unsigned int skl = sk ^ sl;
+            unsigned int sij = si ^sj;
+            unsigned int skl = sk ^sl;
             if ((sij ^ skl) != op.m_symmetry)
               continue;
             //      xout << "\nvalue: "<<value<<std::endl;
@@ -1783,7 +1797,7 @@ void FCIDump(const molpro::Operator &op, const std::string filename, std::vector
   dump.writeIntegral(0, 0, 0, 0, op.m_O0);
 }
 
-molpro::Operator fockOperator(const molpro::Operator &hamiltonian, const Determinant &reference,
+molpro::Operator fockOperator(const molpro::Operator& hamiltonian, const Determinant& reference,
                               const std::string description) {
   molpro::dim_t dims;
   for (auto s = 0; s < 8; s++)
@@ -1804,7 +1818,7 @@ molpro::Operator fockOperator(const molpro::Operator &hamiltonian, const Determi
     basisSize += hamiltonian.O1().dimension(si);
   // xout <<"reference.stringAlpha.orbitals ";for (size_t i=0; i < reference.stringAlpha.orbitals().size(); i++) xout
   // <<reference.stringAlpha.orbitals()[i]<<" ";xout <<std::endl;
-  for (const auto &o : refAlphaOrbitals) {
+  for (const auto& o : refAlphaOrbitals) {
     //       xout << "gci::Operator::fockOperator Reference alpha: "<<reference.stringAlpha<<std::endl;
     //       xout<< "f alpha, alpha occ: " <<*o << std::endl;
     unsigned int os = reference.orbitalSpace->orbital_symmetries[o - 1];
@@ -1820,13 +1834,13 @@ molpro::Operator fockOperator(const molpro::Operator &hamiltonian, const Determi
                                 reference.orbitalSpace->orbital_symmetries[i - 1],
                                 reference.orbitalSpace->orbitalIndex(j),
                                 reference.orbitalSpace->orbital_symmetries[j - 1], oo, os, oo, os, true, true) -
-            hamiltonian.element(reference.orbitalSpace->orbitalIndex(i),
-                                reference.orbitalSpace->orbital_symmetries[i - 1], oo, os, oo, os,
-                                reference.orbitalSpace->orbitalIndex(j),
-                                reference.orbitalSpace->orbital_symmetries[j - 1], true, true);
+                hamiltonian.element(reference.orbitalSpace->orbitalIndex(i),
+                                    reference.orbitalSpace->orbital_symmetries[i - 1], oo, os, oo, os,
+                                    reference.orbitalSpace->orbitalIndex(j),
+                                    reference.orbitalSpace->orbital_symmetries[j - 1], true, true);
       }
   }
-  for (const auto &o : refBetaOrbitals) {
+  for (const auto& o : refBetaOrbitals) {
     // xout<< "f alpha, beta occ: " <<*o << std::endl;
     unsigned int os = reference.orbitalSpace->orbital_symmetries[o - 1];
     unsigned int oo = reference.orbitalSpace->orbitalIndex(o);
@@ -1843,7 +1857,7 @@ molpro::Operator fockOperator(const molpro::Operator &hamiltonian, const Determi
       }
   }
   if (f.m_uhf) {
-    for (const auto &o : refBetaOrbitals) {
+    for (const auto& o : refBetaOrbitals) {
       // xout<< "f beta, beta occ: " <<*o << std::endl;
       unsigned int os = reference.orbitalSpace->orbital_symmetries[o - 1];
       unsigned int oo = reference.orbitalSpace->orbitalIndex(o);
@@ -1858,13 +1872,13 @@ molpro::Operator fockOperator(const molpro::Operator &hamiltonian, const Determi
                                   reference.orbitalSpace->orbital_symmetries[i - 1],
                                   reference.orbitalSpace->orbitalIndex(j),
                                   reference.orbitalSpace->orbital_symmetries[j - 1], oo, os, oo, os, false, false) -
-              hamiltonian.element(reference.orbitalSpace->orbitalIndex(i),
-                                  reference.orbitalSpace->orbital_symmetries[i - 1], oo, os, oo, os,
-                                  reference.orbitalSpace->orbitalIndex(j),
-                                  reference.orbitalSpace->orbital_symmetries[j - 1], false, false);
+                  hamiltonian.element(reference.orbitalSpace->orbitalIndex(i),
+                                      reference.orbitalSpace->orbital_symmetries[i - 1], oo, os, oo, os,
+                                      reference.orbitalSpace->orbitalIndex(j),
+                                      reference.orbitalSpace->orbital_symmetries[j - 1], false, false);
         }
     }
-    for (const auto &o : refAlphaOrbitals) {
+    for (const auto& o : refAlphaOrbitals) {
       // xout<< "f beta, alpha occ: " <<*o << std::endl;
       unsigned int os = reference.orbitalSpace->orbital_symmetries[o - 1];
       unsigned int oo = reference.orbitalSpace->orbitalIndex(o);
@@ -1884,7 +1898,7 @@ molpro::Operator fockOperator(const molpro::Operator &hamiltonian, const Determi
   return f;
 }
 
-molpro::Operator sameSpinOperator(const molpro::Operator &hamiltonian, const Determinant &reference,
+molpro::Operator sameSpinOperator(const molpro::Operator& hamiltonian, const Determinant& reference,
                                   const std::string description) {
   molpro::dim_t dims;
   for (auto s = 0; s < 8; s++)
@@ -1907,12 +1921,12 @@ molpro::Operator sameSpinOperator(const molpro::Operator &hamiltonian, const Det
 
   *result.O2(true, true).data() = *hamiltonian.O2(true, true).data();
   *result.O2(false, false).data() = *hamiltonian.O2(false, false).data();
-  for (auto &s : *result.O2(true, false).data())
+  for (auto& s : *result.O2(true, false).data())
     s = 0;
   return result;
 }
 
-void gsum(molpro::Operator &op) {
+void gsum(molpro::Operator& op) {
   std::vector<double> O0;
   O0.push_back(op.m_O0);
   gsum(O0, mpi_comm_compute);
@@ -1935,14 +1949,14 @@ void gsum(molpro::Operator &op) {
 #ifdef __cplusplus
 extern "C" {
 #endif
-void gcirun(double *energies, int nenergies, char *fcidump, int64_t communicator) {
+void gcirun(double* energies, int nenergies, char* fcidump, int64_t communicator) {
   molpro::gci::mpi_comm_compute = MPI_Comm_f2c(communicator);
   molpro::gci::Run run(fcidump);
   try {
     std::vector<double> e = run.run();
-    for (int i = 0; i < (nenergies > (int)e.size() ? (int)e.size() : nenergies); i++)
+    for (int i = 0; i < (nenergies > (int) e.size() ? (int) e.size() : nenergies); i++)
       energies[i] = e[i];
-  } catch (char const *c) {
+  } catch (char const* c) {
     xout << "caught error: " << c << std::endl;
   }
   return;
