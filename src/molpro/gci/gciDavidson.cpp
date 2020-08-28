@@ -334,12 +334,15 @@ template <class t_Wavefunction, class t_Operator> void Davidson<t_Wavefunction, 
     reference_electronic_states();
   if (!options.parameter("PRINTMATRIX", "").empty())
     printMatrix(options.parameter("PRINTMATRIX", ""));
+  int nwork = nState;
   for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
     action();
-    solver.addVector(ww, gg);
+    // TODO reinstate the following, which doesn't compile until handler implementation for Wavefunction is done
+//    solver.addVector(ww, gg);
     backup(ww);
     update();
-    if (solver.endIteration(ww, gg))
+    solver.report();
+    if (nwork == 0)
       break;
   }
   if (maxIterations > 0) {
@@ -386,7 +389,8 @@ template <class t_Wavefunction, class t_Operator> void Davidson<t_Wavefunction, 
     const t_Wavefunction &x = ww[k];
     t_Wavefunction &g = gg[k];
     g.zero();
-    if (solver.active().at(k)) {
+    // TODO implement use of working set
+     {
       auto prof = profiler->push("Hc");
       g.operatorOnWavefunction(ham, x, false);
     }
@@ -394,13 +398,13 @@ template <class t_Wavefunction, class t_Operator> void Davidson<t_Wavefunction, 
 }
 
 template <> void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::action() {
-  for (auto &g : gg)
+  for (auto &g : gg) // TODO use working set from solver
     g.zero();
   DivideTasks(10000000000, 1, 1, gg[0].m_array->communicator());
   for (size_t k = 0; k < ww.size(); k++) {
     auto &x = ww[k];
     auto &g = gg[k];
-    if (solver.active().at(k)) {
+    {
       auto prof = profiler->push("Hc");
       g.operatorOnWavefunction(ham, x, false, false);
     }

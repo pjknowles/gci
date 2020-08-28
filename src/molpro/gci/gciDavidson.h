@@ -95,7 +95,9 @@ protected:
   void update();
   //! Store the current solutions in a backup file
   void backup(std::vector<t_Wavefunction> &ww);
-  molpro::linalg::LinearEigensystem<t_Wavefunction> solver; //!< Iterative solver
+  // TODO reinstate the following, which doesn't compile until handler implementation for Wavefunction is done
+//  molpro::linalg::LinearEigensystem<t_Wavefunction> solver; //!< Iterative solver
+  molpro::linalg::LinearEigensystem<std::vector<double>> solver; //!< Iterative solver
 
   double energyThreshold;
   unsigned int nState;
