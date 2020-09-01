@@ -1,8 +1,9 @@
 ---
-Language:        Cpp
-BasedOnStyle:  LLVM
-ColumnLimit:     120
+Language: Cpp
+BasedOnStyle: LLVM
+ColumnLimit: 120
 DerivePointerAlignment: true
 PointerAlignment: Left
+AlwaysBreakTemplateDeclarations: Yes
 ...
 
