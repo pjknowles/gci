@@ -91,9 +91,9 @@ protected:
   //! Seperate energetic contributions from different parts of the Hamiltonian
   void energy_decomposition();
   //! Apply the Hamiltonian on the current solution
-  void action(const std::vector<int>& working_set);
+  void action(const std::vector<int> &working_set);
   //! Get the new vector, $r = A u - \lambda u$
-  void update(const std::vector<int>& working_set);
+  void update(const std::vector<int> &working_set);
   //! Store the current solutions in a backup file
   void backup(std::vector<t_Wavefunction> &ww);
   linalg::LinearEigensystem<t_Wavefunction, t_Wavefunction, t_Wavefunction> solver; //!< Iterative solver

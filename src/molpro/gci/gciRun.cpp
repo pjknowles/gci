@@ -424,16 +424,15 @@ std::vector<double> Run::run() {
 #endif
   } else if (method == "DAVIDSON") {
     if (options.parameter("VIBRONIC", 0) || false) {
-      // TODO bring back once purely electronic CI is working
-      //      if (options.parameter("SECOND_QUANT", 0)) {
-      //        std::cout << "Davidson CI with Vibronic second quantized Hamiltonian" << std::endl;
-      //        auto ham = MixedOperatorSecondQuant(options);
-      //        auto wfn = MixedWavefunction(options, prototype);
-      //        auto solver = run::Davidson<MixedWavefunction, MixedOperatorSecondQuant>{wfn, ham, options};
-      //        solver.run();
-      //      } else {
-      //        throw std::runtime_error("Polynomial Hamiltonian is not supported in the new version");
-      //      }
+      if (options.parameter("SECOND_QUANT", 0)) {
+        std::cout << "Davidson CI with Vibronic second quantized Hamiltonian" << std::endl;
+        auto ham = MixedOperatorSecondQuant(options);
+        auto wfn = MixedWavefunction(options, prototype);
+        auto solver = run::Davidson<MixedWavefunction, MixedOperatorSecondQuant>{wfn, ham, options};
+        solver.run();
+      } else {
+        throw std::runtime_error("Polynomial Hamiltonian is not supported in the new version");
+      }
     } else {
       auto ham = m_hamiltonian;
       auto wfn = Wavefunction{prototype, mpi_comm_compute};

@@ -95,7 +95,7 @@ void Davidson<t_Wavefunction, t_Operator>::printMatrix(const std::string &fname)
 
 void davidson_read_write_array(MixedWavefunction &w, const std::string &fname, unsigned int i, hid_t id, bool save) {
   auto dataset = utils::open_or_create_hdf5_dataset(id, "result_" + std::to_string(i), H5T_NATIVE_DOUBLE, w.size());
-  auto buffer = w.m_array->local_buffer(); // array::Array::LocalBuffer(w);
+  auto buffer = w.distr_buffer.local_buffer(); // array::Array::LocalBuffer(w);
   hsize_t count[1] = {(hsize_t)buffer->size()};
   hsize_t offset[1] = {(hsize_t)buffer->start()};
   auto memspace = H5Screate_simple(1, count, nullptr);
@@ -293,7 +293,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::analysis() {
   // normalise solutions
   for (auto &w : ww) {
     auto ov = w.dot(w);
-    w.m_array->scal(1. / std::sqrt(ov));
+    w.distr_buffer.scal(1. / std::sqrt(ov));
   }
   if (GA_Nodeid() == 0) {
     std::cout << "Analysis:" << std::endl;
@@ -301,7 +301,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::analysis() {
     auto ww_bo = std::vector<std::vector<double>>(nState);
     for (size_t i = 0; i < nState; ++i) {
       for (size_t j_vib = 0; j_vib < nM; ++j_vib) {
-        auto w = ww[i].wavefunctionAt(j_vib, ww[i].m_array->communicator());
+        auto w = ww[i].wavefunctionAt(j_vib, ww[i].distr_buffer.communicator());
         for (const auto &w_ref : *ref_elec_states) {
           auto ov = w.dot(w_ref);
           ww_bo[i].push_back(ov);
@@ -325,7 +325,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::analysis() {
     auto bosonic_assignment = std::vector<std::vector<double>>(nState);
     for (size_t i = 0; i < nState; ++i) {
       for (size_t j_vib = 0; j_vib < nM; ++j_vib) {
-        auto w = ww[i].wavefunctionAt(j_vib, ww[i].m_array->communicator());
+        auto w = ww[i].wavefunctionAt(j_vib, ww[i].distr_buffer.communicator());
         auto ov = w.dot(w);
         bosonic_assignment[i].push_back(ov);
       }
@@ -426,7 +426,7 @@ template <>
 void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::action(const std::vector<int> &working_set) {
   for (auto k : working_set)
     gg[k].zero();
-  DivideTasks(10000000000, 1, 1, gg[0].m_array->communicator());
+  DivideTasks(10000000000, 1, 1, gg[0].distr_buffer.communicator());
   for (auto k : working_set) {
     auto &x = ww[k];
     auto &g = gg[k];
@@ -456,8 +456,7 @@ void Davidson<t_Wavefunction, t_Operator>::backup(std::vector<t_Wavefunction> &w
   davidson_read_write_wfn<t_Wavefunction>(ww, backup_file, true);
 }
 
-// TODO uncomment when Wavefunction is working
-// template class Davidson<MixedWavefunction, MixedOperatorSecondQuant>;
+template class Davidson<MixedWavefunction, MixedOperatorSecondQuant>;
 
 template class Davidson<Wavefunction, molpro::Operator>;
 
