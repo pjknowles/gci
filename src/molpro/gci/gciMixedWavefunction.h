@@ -53,6 +53,7 @@ class MixedWavefunction : virtual public Printable {
 public:
   MPI_Comm m_child_communicator; //!< Communicator for children Wavefunction objects
   using value_type = double;
+  using mapped_type = double;
 
 protected:
   VibSpace m_vibSpace;    //!< Parameters defining the vibrational space of current wavefunction

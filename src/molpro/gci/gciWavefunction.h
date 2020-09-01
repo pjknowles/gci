@@ -14,6 +14,7 @@
 #include "molpro/gci/gciState.h"
 #include "molpro/gci/gciStringSet.h"
 #include <molpro/SMat.h>
+#include <molpro/linalg/array/DistrArrayMPI3.h>
 #include <molpro/memory.h>
 
 namespace molpro {
@@ -29,6 +30,7 @@ class Wavefunction : public State {
 
 public:
   using value_type = double;
+  using mapped_type = double;
   std::map<std::string, double> m_properties;
   std::map<size_t, double> buffer_sparse; ///< alternative storage to buffer, useful when very sparse
   bool m_sparse;                          ///< whether the coefficients are stored in buffer_sparse instead of buffer
@@ -36,6 +38,8 @@ public:
   int m_parallel_size;
   int m_parallel_rank;
   molpro::vector<double> buffer; ///< buffer to hold coefficients describing the object
+  molpro::linalg::array::DistrArrayMPI3 distr_buffer;
+
 protected:
   size_t dimension; ///< the size of the space
   std::vector<size_t> _blockOffset;
@@ -172,6 +176,7 @@ public:
   select(const Wavefunction &measure, const size_t maximumNumber = 1000, const double threshold = 0) const;
 
   void scal(double a);
+  void fill(double a);
 
   /*!
    * \brief push the object's buffer to a file
