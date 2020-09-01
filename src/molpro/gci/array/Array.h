@@ -12,11 +12,12 @@
 #define GCI_ARRAY_ARRAY_TYPE ArrayMPI3
 #include "molpro/gci/array/ArrayMPI3.h"
 #endif
+#include "molpro/linalg/array/DistrArrayMPI3.h"
 
 namespace molpro {
 namespace gci {
 namespace array {
-struct Array : public GCI_ARRAY_ARRAY_TYPE {
+struct Array : public molpro::linalg::array::DistrArrayMPI3 {
   using GCI_ARRAY_ARRAY_TYPE::GCI_ARRAY_ARRAY_TYPE;
 };
 } // namespace array

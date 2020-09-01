@@ -2,6 +2,7 @@
 #include "gciMixedWavefunction.h"
 #include "gciUtils.h"
 #include "gciWavefunction.h"
+#include "wavefunction/WavefunctionHandler.h"
 
 #include "molpro/gci/array/Array.h"
 #include <fstream>
@@ -12,6 +13,19 @@
 namespace molpro {
 namespace gci {
 namespace run {
+namespace {
+template <class T>
+auto make_handlers() {
+  auto rr = std::make_shared<wavefunction::WavefunctionHandler<T, T>>();
+  auto qq = std::make_shared<wavefunction::WavefunctionHandler<T, T>>();
+  auto pp = std::make_shared<wavefunction::WavefunctionHandler<T, T>>();
+  auto rq = std::make_shared<wavefunction::WavefunctionHandler<T, T>>();
+  auto rp = std::make_shared<wavefunction::WavefunctionHandler<T, T>>();
+  auto qr = std::make_shared<wavefunction::WavefunctionHandler<T, T>>();
+  auto qp = std::make_shared<wavefunction::WavefunctionHandler<T, T>>();
+  return std::make_shared<molpro::linalg::iterativesolver::ArrayHandlers<T, T, T>>(rr, qq, pp, rq, rp, qr, qp);
+}
+} // namespace
 
 template <class t_Wavefunction, class t_Operator>
 Davidson<t_Wavefunction, t_Operator>::Davidson(const t_Wavefunction &prototype, const t_Operator &_ham, Options opt)
@@ -19,14 +33,15 @@ Davidson<t_Wavefunction, t_Operator>::Davidson(const t_Wavefunction &prototype, 
       nState(options.parameter("NSTATE", 1)), maxIterations(options.parameter("MAXIT", 1000)),
       solverVerbosity(options.parameter("SOLVER_VERBOSITY", 1)),
       parallel_stringset(options.parameter("PARALLEL_STRINGSET")), restart_file(options.parameter("RESTART_FILE", "")),
-      backup_file(options.parameter("BACKUP_FILE", "")) {
+      backup_file(options.parameter("BACKUP_FILE", "")), solver(make_handlers<t_Wavefunction>()) {
   solver.m_thresh = energyThreshold;
   solver.m_verbosity = solverVerbosity;
   solver.m_maxIterations = (unsigned int)maxIterations;
   solver.m_roots = (size_t)nState;
 }
 
-template <class t_Wavefunction, class t_Operator> void Davidson<t_Wavefunction, t_Operator>::message() const {
+template <class t_Wavefunction, class t_Operator>
+void Davidson<t_Wavefunction, t_Operator>::message() const {
   if (GA_Nodeid() == 0) {
     std::cout << "Davidson eigensolver, maximum iterations=" << maxIterations;
     std::cout << "; number of states=" << nState;
@@ -82,18 +97,18 @@ void davidson_read_write_array(MixedWavefunction &w, const std::string &fname, u
   auto dataset = utils::open_or_create_hdf5_dataset(id, "result_" + std::to_string(i), H5T_NATIVE_DOUBLE, w.size());
   auto buffer = w.m_array->local_buffer(); // array::Array::LocalBuffer(w);
   hsize_t count[1] = {(hsize_t)buffer->size()};
-  hsize_t offset[1] = {(hsize_t)buffer->lo};
+  hsize_t offset[1] = {(hsize_t)buffer->start()};
   auto memspace = H5Screate_simple(1, count, nullptr);
   auto fspace = H5Dget_space(dataset);
   H5Sselect_hyperslab(fspace, H5S_SELECT_SET, offset, nullptr, count, nullptr);
   auto plist_id = H5Pcreate(H5P_DATASET_XFER);
   H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_INDEPENDENT);
   if (save) {
-    auto error = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, &buffer->at(0));
+    auto error = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, buffer->data());
     if (error < 0)
       throw std::runtime_error("davidson_read_write_array(): write failed");
   } else {
-    auto error = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, &buffer->at(0));
+    auto error = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, fspace, plist_id, buffer->data());
     if (error < 0)
       throw std::runtime_error("davidson_read_write_array(): read failed");
   }
@@ -113,12 +128,14 @@ void davidson_read_write_wfn(std::vector<t_Wavefunction> &ww, const std::string 
   }
   H5Fclose(id);
 }
-template <> void davidson_read_write_wfn(std::vector<Wavefunction> &ww, const std::string &fname, bool save) {}
+template <>
+void davidson_read_write_wfn(std::vector<Wavefunction> &ww, const std::string &fname, bool save) {}
 
 template <class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::reference_electronic_states() {}
 
-template <> void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::reference_electronic_states() {
+template <>
+void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::reference_electronic_states() {
   if (ref_elec_states)
     return;
   Wavefunction w = prototype.wavefunctionAt(0, ww[0].m_child_communicator);
@@ -143,9 +160,11 @@ template <> void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::referenc
   }
 }
 
-template <class t_Wavefunction, class t_Operator> void Davidson<t_Wavefunction, t_Operator>::prepareGuess() {}
+template <class t_Wavefunction, class t_Operator>
+void Davidson<t_Wavefunction, t_Operator>::prepareGuess() {}
 
-template <> void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
+template <>
+void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
   if (!restart_file.empty()) {
     std::cout << "Restarting from wfn backup, file = " << restart_file << std::endl;
     davidson_read_write_wfn<MixedWavefunction>(ww, restart_file, false);
@@ -211,9 +230,11 @@ template <> void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareG
   backup(ww);
 }
 
-template <class t_Wavefunction, class t_Operator> void Davidson<t_Wavefunction, t_Operator>::energy_decomposition() {}
+template <class t_Wavefunction, class t_Operator>
+void Davidson<t_Wavefunction, t_Operator>::energy_decomposition() {}
 
-template <> void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::energy_decomposition() {
+template <>
+void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::energy_decomposition() {
   // split Hamiltonian into different parts
   std::map<std::string, MixedOperatorSecondQuant> hams;
   auto names = std::vector<std::string>{"Hvib", "Hel[0]", "Hel[1]", "Lambda[1]", "K[0]", "K[1]", "D[0]", "D[1]"};
@@ -258,9 +279,11 @@ template <> void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::energy_d
   std::cout << "};" << std::endl;
 }
 
-template <class t_Wavefunction, class t_Operator> void Davidson<t_Wavefunction, t_Operator>::analysis() {}
+template <class t_Wavefunction, class t_Operator>
+void Davidson<t_Wavefunction, t_Operator>::analysis() {}
 
-template <> void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::analysis() {
+template <>
+void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::analysis() {
   if (!ref_elec_states)
     return;
   if (!options.parameter("ASSIGN", int(0)))
@@ -325,7 +348,8 @@ template <> void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::analysis
     root.sync();
 }
 
-template <class t_Wavefunction, class t_Operator> void Davidson<t_Wavefunction, t_Operator>::run() {
+template <class t_Wavefunction, class t_Operator>
+void Davidson<t_Wavefunction, t_Operator>::run() {
   auto prof = profiler->push("Davidson");
   message();
   initialize();
@@ -334,15 +358,16 @@ template <class t_Wavefunction, class t_Operator> void Davidson<t_Wavefunction, 
     reference_electronic_states();
   if (!options.parameter("PRINTMATRIX", "").empty())
     printMatrix(options.parameter("PRINTMATRIX", ""));
-  int nwork = nState;
+  auto working_set = std::vector<int>(nState);
+  std::iota(begin(working_set), end(working_set), 0);
   for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
-    action();
-    // TODO reinstate the following, which doesn't compile until handler implementation for Wavefunction is done
-//    solver.addVector(ww, gg);
-    backup(ww);
-    update();
+    action(working_set);
+    solver.addVector(ww, gg);
+    working_set = solver.working_set();
+    update(working_set);
     solver.report();
-    if (nwork == 0)
+    backup(ww);
+    if (working_set.empty())
       break;
   }
   if (maxIterations > 0) {
@@ -357,7 +382,8 @@ template <class t_Wavefunction, class t_Operator> void Davidson<t_Wavefunction, 
   std::cout << "Exit Davidson::run()" << std::endl;
 }
 
-template <class t_Wavefunction, class t_Operator> void Davidson<t_Wavefunction, t_Operator>::initialize() {
+template <class t_Wavefunction, class t_Operator>
+void Davidson<t_Wavefunction, t_Operator>::initialize() {
   if (!diagonalH)
     diagonalH = std::make_shared<t_Wavefunction>(prototype, 0);
   diagonalH->allocate_buffer();
@@ -384,44 +410,44 @@ template <class t_Wavefunction, class t_Operator> void Davidson<t_Wavefunction, 
   }
 }
 
-template <class t_Wavefunction, class t_Operator> void Davidson<t_Wavefunction, t_Operator>::action() {
-  for (size_t k = 0; k < ww.size(); k++) {
-    const t_Wavefunction &x = ww[k];
-    t_Wavefunction &g = gg[k];
-    g.zero();
-    // TODO implement use of working set
-     {
-      auto prof = profiler->push("Hc");
-      g.operatorOnWavefunction(ham, x, false);
-    }
+template <class t_Wavefunction, class t_Operator>
+void Davidson<t_Wavefunction, t_Operator>::action(const std::vector<int> &working_set) {
+  for (auto k : working_set)
+    gg[k].zero();
+  for (auto k : working_set) {
+    const auto &x = ww[k];
+    auto &g = gg[k];
+    auto prof = profiler->push("Hc");
+    g.operatorOnWavefunction(ham, x, false);
   }
 }
 
-template <> void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::action() {
-  for (auto &g : gg) // TODO use working set from solver
-    g.zero();
+template <>
+void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::action(const std::vector<int> &working_set) {
+  for (auto k : working_set)
+    gg[k].zero();
   DivideTasks(10000000000, 1, 1, gg[0].m_array->communicator());
-  for (size_t k = 0; k < ww.size(); k++) {
+  for (auto k : working_set) {
     auto &x = ww[k];
     auto &g = gg[k];
-    {
-      auto prof = profiler->push("Hc");
-      g.operatorOnWavefunction(ham, x, false, false);
-    }
+    auto prof = profiler->push("Hc");
+    g.operatorOnWavefunction(ham, x, false, false);
   }
   for (const auto &g : gg)
     g.sync();
 }
 
-template <class t_Wavefunction, class t_Operator> void Davidson<t_Wavefunction, t_Operator>::update() {
+template <class t_Wavefunction, class t_Operator>
+void Davidson<t_Wavefunction, t_Operator>::update(const std::vector<int> &working_set) {
   auto eigval = solver.eigenvalues();
-  for (size_t state = 0; state < nState; state++) {
+  for (auto state : working_set) {
     t_Wavefunction &cw = ww[state];
     const t_Wavefunction &gw = gg[state];
     auto shift = -eigval[state] + 1e-10;
     shift += 2 * std::numeric_limits<value_type>::epsilon() *
              std::max<value_type>(1, std::abs(diag_val_at_minlocN[state])); // to guard against zero
-    cw.divide(&gw, diagonalH.get(), shift, true, true);
+    cw.divide(&gw, diagonalH.get(), shift, true, false);
+    cw.replicate();
   }
 }
 
@@ -430,7 +456,8 @@ void Davidson<t_Wavefunction, t_Operator>::backup(std::vector<t_Wavefunction> &w
   davidson_read_write_wfn<t_Wavefunction>(ww, backup_file, true);
 }
 
-template class Davidson<MixedWavefunction, MixedOperatorSecondQuant>;
+// TODO uncomment when Wavefunction is working
+// template class Davidson<MixedWavefunction, MixedOperatorSecondQuant>;
 
 template class Davidson<Wavefunction, molpro::Operator>;
 

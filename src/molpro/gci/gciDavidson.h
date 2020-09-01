@@ -48,7 +48,8 @@ namespace run {
  * \param maxIterations The maximum number of iterations to perform
  * \return the energies for each state. Note that only the first nState energies are considered converged
  */
-template <class t_Wavefunction, class t_Operator> class Davidson {
+template <class t_Wavefunction, class t_Operator>
+class Davidson {
 public:
   using ParameterVectorSet = std::vector<t_Wavefunction>;
   using value_type = typename t_Wavefunction::value_type;
@@ -90,14 +91,12 @@ protected:
   //! Seperate energetic contributions from different parts of the Hamiltonian
   void energy_decomposition();
   //! Apply the Hamiltonian on the current solution
-  void action();
+  void action(const std::vector<int>& working_set);
   //! Get the new vector, $r = A u - \lambda u$
-  void update();
+  void update(const std::vector<int>& working_set);
   //! Store the current solutions in a backup file
   void backup(std::vector<t_Wavefunction> &ww);
-  // TODO reinstate the following, which doesn't compile until handler implementation for Wavefunction is done
-//  molpro::linalg::LinearEigensystem<t_Wavefunction> solver; //!< Iterative solver
-  molpro::linalg::LinearEigensystem<std::vector<double>> solver; //!< Iterative solver
+  linalg::LinearEigensystem<t_Wavefunction, t_Wavefunction, t_Wavefunction> solver; //!< Iterative solver
 
   double energyThreshold;
   unsigned int nState;

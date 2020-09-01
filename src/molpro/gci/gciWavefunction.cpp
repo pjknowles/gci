@@ -14,11 +14,13 @@
 #include <iomanip>
 #include <iostream>
 #include <molpro/Profiler.h>
+#include <molpro/linalg/array/util/Distribution.h>
 #include <set>
 #include <vector>
 
 namespace molpro {
 namespace gci {
+using molpro::linalg::array::DistrArrayMPI3;
 
 int _mpi_rank(MPI_Comm comm) {
   int r;
@@ -83,8 +85,13 @@ void Wavefunction::buildStrings() {
 void Wavefunction::allocate_buffer() {
   if (m_sparse)
     buffer_sparse.clear();
-  else
+  else {
     buffer.resize(dimension, (double)0);
+    distr_buffer = DistrArrayMPI3(dimension, m_communicator);
+    DistrArrayMPI3::index_type start, end;
+    std::tie(start, end) = distr_buffer.distribution().range(m_parallel_rank);
+    distr_buffer.allocate_buffer({&buffer[start], end - start});
+  }
 }
 
 void Wavefunction::set(size_t offset, const double val) {
@@ -235,6 +242,8 @@ void Wavefunction::scal(double a) {
   for (auto &b : buffer)
     b *= a;
 }
+
+void Wavefunction::fill(double a) { std::fill(begin(), end(), a); }
 
 Wavefunction &Wavefunction::operator*=(const double &value) {
   for (auto &b : buffer)
