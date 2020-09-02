@@ -34,7 +34,7 @@ public:
   std::map<std::string, double> m_properties;
   std::map<size_t, double> buffer_sparse; ///< alternative storage to buffer, useful when very sparse
   bool m_sparse;                          ///< whether the coefficients are stored in buffer_sparse instead of buffer
-  MPI_Comm m_communicator;
+  MPI_Comm m_communicator = MPI_COMM_NULL;
   int m_parallel_size;
   int m_parallel_rank;
   molpro::vector<double> buffer; ///< buffer to hold coefficients describing the object
@@ -65,6 +65,7 @@ public:
   explicit Wavefunction(const State &state, MPI_Comm communicator = mpi_comm_compute);
 
   Wavefunction(const Wavefunction &source, int option, MPI_Comm communicator = MPI_COMM_NULL);
+  Wavefunction(const Wavefunction &source);
 
   std::vector<StringSet> alphaStrings; ///< The alpha-spin strings defining the CI basis
   std::vector<StringSet> betaStrings;  ///< The beta-spin strings defining the CI basis

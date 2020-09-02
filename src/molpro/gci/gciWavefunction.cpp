@@ -56,11 +56,19 @@ Wavefunction::Wavefunction(const Wavefunction &source, int option, MPI_Comm comm
     : m_sparse(source.m_sparse), m_communicator(communicator), m_parallel_rank(-1), m_parallel_size(0),
       dimension(source.dimension) {
   *this = source;
+  if (!buffer.empty()) {
+    distr_buffer = DistrArrayMPI3(dimension, m_communicator);
+    DistrArrayMPI3::index_type start, end;
+    std::tie(start, end) = distr_buffer.distribution().range(m_parallel_rank);
+    distr_buffer.allocate_buffer({&buffer[start], end - start});
+  }
   if (m_communicator == MPI_COMM_NULL)
     m_communicator = source.m_communicator;
   m_parallel_rank = _mpi_rank(m_communicator);
   m_parallel_size = _mpi_size(m_communicator);
 }
+
+Wavefunction::Wavefunction(const Wavefunction &source) : Wavefunction(source, 0, source.m_communicator) {}
 
 void Wavefunction::buildStrings() {
   profiler->start("buildStrings");

@@ -8,8 +8,9 @@ ORBSYM =1,5,1,5,3,2,1,6,7,5,
 ISYM =1,
 OCC =1,1,1,1,1,1,0,0,0,0,
 CLOSED =1,1,1,1,1,1,0,0,0,0,
-NSTATE =3,
-TOL =1.0E-10,
+NSTATE =4,
+!PRINTMATRIX =c2.hamiltonian,
+TOL =1.0E-9,
 MAXIT =50,
 &END
  1.946724590439144    1    1    1    1
