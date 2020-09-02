@@ -38,6 +38,9 @@ Davidson<t_Wavefunction, t_Operator>::Davidson(const t_Wavefunction &prototype, 
   solver.m_verbosity = solverVerbosity;
   solver.m_maxIterations = (unsigned int)maxIterations;
   solver.m_roots = (size_t)nState;
+  solver.m_hermitian = true;
+  solver.m_maxQ = 100;
+  solver.m_verbosity = 1;
 }
 
 template <class t_Wavefunction, class t_Operator>
@@ -58,7 +61,8 @@ void Davidson<t_Wavefunction, t_Operator>::printMatrix(const std::string &fname)
   auto file = std::ofstream(fname);
   if (!file.is_open())
     throw std::runtime_error("Couldn't open file " + fname);
-  file << std::setprecision(15) << std::fixed;
+  //  file << std::setprecision(15) << std::fixed;
+  file << std::scientific << std::setprecision(15);
   t_Wavefunction w(ww[0]);
   t_Wavefunction action(gg[0]);
   w.allocate_buffer();
@@ -74,22 +78,31 @@ void Davidson<t_Wavefunction, t_Operator>::printMatrix(const std::string &fname)
       H[i][j] = action.at(j);
   }
   if (GA_Nodeid() == 0) {
-    file << "(* Hamiltonian matrix (nxn) *)" << std::endl;
-    file << "n = " << n << std::endl;
-    file << " H = {";
+    //    file << "(* Hamiltonian matrix (nxn) *)" << std::endl;
+    //    file << "n = " << n << std::endl;
+    file << n << std::endl;
+    //    file << " H = {";
     for (size_t i = 0; i < n; ++i) {
-      file << "{";
+      //      file << "{";
       for (size_t j = 0; j < n; ++j) {
-        if (j == n - 1)
-          file << H[i][j] << "";
+        auto v = H[i][j];
+        auto vs = std::ostringstream{};
+        vs << std::scientific << std::setprecision(15);
+        if (std::abs(v) < 1.0e-12)
+          file << "0 ";
         else
-          file << H[i][j] << ",";
+          file << v << " ";
+        //        if (j == n - 1)
+        //          file << vs.str() << "";
+        //        else
+        //          file << vs.str() << ",";
       }
-      if (i == n - 1)
-        file << "}};" << std::endl;
-      else
-        file << "}," << std::endl;
+      //      if (i == n - 1)
+      //        file << "}};" << std::endl;
+      //      else
+      //        file << "}," << std::endl;
     }
+    file << std::endl;
   }
 }
 
@@ -363,11 +376,11 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
   for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
     action(working_set);
     solver.addVector(ww, gg);
-    working_set = solver.working_set();
+    solver.working_set();
     update(working_set);
     solver.report();
     backup(ww);
-    if (working_set.empty())
+    if (solver.working_set().empty())
       break;
   }
   if (maxIterations > 0) {
@@ -377,6 +390,7 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     xout << std::endl;
     analysis();
   }
+  std::cout << solver.statistics() << std::endl;
   if (options.parameter("ENERGY_DECOMPOSITION", 0))
     energy_decomposition();
   std::cout << "Exit Davidson::run()" << std::endl;
@@ -446,7 +460,7 @@ void Davidson<t_Wavefunction, t_Operator>::update(const std::vector<int> &workin
     auto shift = -eigval[state] + 1e-10;
     shift += 2 * std::numeric_limits<value_type>::epsilon() *
              std::max<value_type>(1, std::abs(diag_val_at_minlocN[state])); // to guard against zero
-    cw.divide(&gw, diagonalH.get(), shift, true, false);
+    cw.divide(&gw, diagonalH.get(), shift, true, true);
     cw.replicate();
   }
 }
