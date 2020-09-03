@@ -29,7 +29,7 @@ auto make_handlers() {
 
 template <class t_Wavefunction, class t_Operator>
 Davidson<t_Wavefunction, t_Operator>::Davidson(const t_Wavefunction &prototype, const t_Operator &_ham, Options opt)
-    : prototype(prototype), ham(_ham), options(std::move(opt)), energyThreshold(options.parameter("TOL", 1e-13)),
+    : prototype(prototype), ham(_ham), options(std::move(opt)), energyThreshold(options.parameter("TOL", 1e-9)),
       nState(options.parameter("NSTATE", 1)), maxIterations(options.parameter("MAXIT", 1000)),
       solverVerbosity(options.parameter("SOLVER_VERBOSITY", 1)),
       parallel_stringset(options.parameter("PARALLEL_STRINGSET")), restart_file(options.parameter("RESTART_FILE", "")),
@@ -382,8 +382,8 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
       std::copy(begin(working_set), end(working_set), std::ostream_iterator<int>(std::cout, ","));
       std::cout << std::endl;
     }
-    update(working_set);
     solver.report();
+    update(working_set);
     if (true)
       std::cout << solver.statistics() << std::endl;
     backup(ww);
