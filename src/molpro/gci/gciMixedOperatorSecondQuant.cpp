@@ -109,7 +109,7 @@ inline PersistentOperator create_persistentoperator(const std::string &fcidump, 
     op->m_description = description;
     op->ensure_dirac();
   }
-  auto p_op = PersistentOperator(op, description, root, hid_file);
+  auto p_op = PersistentOperator(op, description, root, hid_file, true);
   return p_op;
 }
 
