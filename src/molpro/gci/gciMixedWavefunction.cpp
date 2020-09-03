@@ -38,7 +38,7 @@ Wavefunction MixedWavefunction::wavefunctionAt(size_t iVib, MPI_Comm commun) con
 
 void MixedWavefunction::ga_wfn_block_bound(int iVib, int *lo, int *hi, int dimension) {
   lo[0] = iVib * dimension;
-  hi[0] = lo[0] + dimension - 1;
+  hi[0] = lo[0] + dimension;
 }
 
 void MixedWavefunction::copy_to_local(const MixedWavefunction &w, int iVib, Wavefunction &wfn) {
@@ -48,6 +48,7 @@ void MixedWavefunction::copy_to_local(const MixedWavefunction &w, int iVib, Wave
   int lo, hi, ld = dimension;
   w.ga_wfn_block_bound(iVib, &lo, &hi, dimension);
   w.distr_buffer.get(lo, hi, buffer);
+  return;
 }
 
 void MixedWavefunction::put(int iVib, Wavefunction &wfn) {
