@@ -376,9 +376,16 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
   for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
     action(working_set);
     solver.addVector(ww, gg);
-    solver.working_set();
+    working_set = solver.working_set();
+    if (false) {
+      std::cout << "working set = ";
+      std::copy(begin(working_set), end(working_set), std::ostream_iterator<int>(std::cout, ","));
+      std::cout << std::endl;
+    }
     update(working_set);
     solver.report();
+    if (false)
+      std::cout << solver.statistics() << std::endl;
     backup(ww);
     if (solver.working_set().empty())
       break;
@@ -390,7 +397,6 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     xout << std::endl;
     analysis();
   }
-  std::cout << solver.statistics() << std::endl;
   if (options.parameter("ENERGY_DECOMPOSITION", 0))
     energy_decomposition();
   std::cout << "Exit Davidson::run()" << std::endl;
@@ -426,9 +432,9 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
 
 template <class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::action(const std::vector<int> &working_set) {
-  for (auto k : working_set)
+  for (size_t k = 0; k < working_set.size(); ++k)
     gg[k].zero();
-  for (auto k : working_set) {
+  for (size_t k = 0; k < working_set.size(); ++k) {
     const auto &x = ww[k];
     auto &g = gg[k];
     auto prof = profiler->push("Hc");
@@ -438,10 +444,11 @@ void Davidson<t_Wavefunction, t_Operator>::action(const std::vector<int> &workin
 
 template <>
 void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::action(const std::vector<int> &working_set) {
-  for (auto k : working_set)
+  for (size_t k = 0; k < working_set.size(); ++k)
     gg[k].zero();
+  gg[0].sync();
   DivideTasks(10000000000, 1, 1, gg[0].distr_buffer.communicator());
-  for (auto k : working_set) {
+  for (size_t k = 0; k < working_set.size(); ++k) {
     auto &x = ww[k];
     auto &g = gg[k];
     auto prof = profiler->push("Hc");
@@ -454,7 +461,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::action(const std::ve
 template <class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::update(const std::vector<int> &working_set) {
   auto eigval = solver.eigenvalues();
-  for (auto state : working_set) {
+  for (size_t state = 0; state < working_set.size(); ++state) {
     t_Wavefunction &cw = ww[state];
     const t_Wavefunction &gw = gg[state];
     auto shift = -eigval[state] + 1e-10;
