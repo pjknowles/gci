@@ -4,7 +4,6 @@
 #include "gciWavefunction.h"
 #include "wavefunction/WavefunctionHandler.h"
 
-#include "molpro/gci/array/Array.h"
 #include <fstream>
 #include <ga.h>
 #include <hdf5.h>

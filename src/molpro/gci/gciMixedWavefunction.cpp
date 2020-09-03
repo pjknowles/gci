@@ -1,6 +1,5 @@
 #include "gciMixedWavefunction.h"
 #include "gciHProductSet.h"
-#include "molpro/gci/array/Array.h"
 
 #include <ga.h>
 #include <mpi.h>
