@@ -1,61 +1,59 @@
-#include "sharedCounter.h"
-//TODO a cleaner separation of library-internal headers
-#include "gci.h"
-#include "gciRun.h"
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-#include "memory.h"
-#include <unistd.h>
+// TODO a cleaner separation of library-internal headers
+#include "molpro/gci/gci.h"
+#include "molpro/gci/gciRun.h"
 #include <cstring>
-#include <fcntl.h>
-using namespace gci;
-
-
-extern int gci::parallel_size;
-extern int gci::parallel_rank;
-extern bool gci::molpro_plugin;
+#include <iomanip>
+#include <iostream>
+#include <macdecls.h>
+#include <molpro/memory.h>
+#include <unistd.h>
 
 #ifndef MOLPRO
-#include <cerrno>
-#include <cstring>
-#include <sys/param.h>
-#include "PluginGuest.h"
-std::string get_working_path() {
-  char temp[MAXPATHLEN];
-  return (getcwd(temp, MAXPATHLEN) ? std::string(temp) : std::string(""));
-}
+
+#include <molpro/PluginGuest.h>
+
 int main(int argc, char *argv[])
-//int main()
+// int main()
 {
   char fcidumpname[1024] = "gci.fcidump";
-  molpro_plugin = false;
+  molpro::gci::molpro_plugin = false;
   MPI_Init(&argc, &argv);
-  MPI_Comm_size(MPI_COMM_WORLD, &parallel_size);
-  MPI_Comm_rank(MPI_COMM_WORLD, &parallel_rank);
-  if (parallel_rank > 0) freopen("/dev/null", "w", stdout);
-  PluginGuest plugin("MOLPRO");
+  GA_Initialize();
+  molpro::gci::mpi_comm_compute = GA_MPI_Comm();
+  MPI_Comm_size(molpro::gci::mpi_comm_compute, &molpro::gci::parallel_size);
+  MPI_Comm_rank(molpro::gci::mpi_comm_compute, &molpro::gci::parallel_rank);
+  if (molpro::gci::parallel_rank == 0)
+    std::cout << "MPI_Comm_size = " << molpro::gci::parallel_size << std::endl;
+  if (molpro::gci::parallel_rank > 0)
+    freopen("/dev/null", "w", stdout);
+  molpro::PluginGuest plugin("MOLPRO", molpro::gci::mpi_comm_compute);
   if (plugin.active()) {
-    if (!plugin.send("GIVE OPERATOR HAMILTONIAN FCIDUMP GCI")) throw std::logic_error("Unexpected plugin failure");
+    if (!plugin.send("GIVE OPERATOR HAMILTONIAN FCIDUMP GCI"))
+      throw std::logic_error("Unexpected plugin failure");
     strcpy(fcidumpname, plugin.receive().c_str());
   }
-  if (argc > 1) strcpy(fcidumpname, argv[1]);
+  if (argc > 1)
+    strcpy(fcidumpname, argv[1]);
 
-  size_t memory = 1000000000;
+  size_t memory = 500000000;
+  size_t ga_memory = 500000000;
   for (int i = 2; i < argc; i++) {
     std::string s(argv[i]);
     size_t equals = s.find('=');
     if (equals != std::string::npos && s.substr(0, equals) == "MEMORY")
       memory = static_cast<size_t>(std::stol(s.substr(equals + 1)));
+    if (equals != std::string::npos && s.substr(0, equals) == "GAMEMORY")
+      ga_memory = static_cast<size_t>(std::stol(s.substr(equals + 1)));
   }
   memory_initialize(memory);
-  std::cout << "memory initialised to " << memory_remaining() << std::endl;
+  MA_init(C_CHAR, 10000000, ga_memory);
+  if (molpro::gci::parallel_rank == 0)
+    std::cout << "memory initialised to " << memory_remaining() << std::endl;
   size_t memory_allocated = memory_remaining();
 
   {
-    Run run(fcidumpname);
-    if (argc < 3 ||
-        plugin.active()) {
+    molpro::gci::Run run(fcidumpname);
+    if (argc < 3 || plugin.active()) {
       run.options.addParameter("METHOD", "DAVIDSON");
       // run.options.addParameter("PROFILER","0");
     } else
@@ -66,14 +64,15 @@ int main(int argc, char *argv[])
           run.options.addParameter(s.substr(0, equals), s.substr(equals + 1), true);
       }
     std::vector<double> e = run.run();
-//  xout << "e after run:"; for (size_t i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;
+    //  xout << "e after run:"; for (size_t i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;
     if (plugin.active()) {
       // send the energy back
       if (plugin.send("TAKE PROPERTY ENERGY")) {
         std::stringstream ss;
         ss << std::fixed << std::setprecision(16);
-        for (const double &ee : e)
+        for (const double &ee : e) {
           ss << ee << " ";
+        }
         plugin.send(ss.str());
       }
     }
@@ -83,7 +82,7 @@ int main(int argc, char *argv[])
       size_t pos = std::min(densityname.rfind('.'), densityname.size());
       densityname.replace(pos, densityname.size() - pos, ".density.");
       densityname += std::to_string(state + 1) + ".fcidump";
-      FCIDump(run.m_densityMatrices[state],densityname);
+      molpro::gci::FCIDump(run.m_densityMatrices[state], densityname);
       if (plugin.active()) { // send the density back
         if (plugin.send("TAKE DENSITY FCIDUMP"))
           plugin.send(densityname);
@@ -94,7 +93,9 @@ int main(int argc, char *argv[])
   xout << "initial memory=" << memory_allocated << ", remaining memory=" << memory_remaining() << std::endl;
   if (plugin.active())
     plugin.send("");
+  GA_Terminate();
   MPI_Finalize();
   return 0;
 }
+
 #endif
