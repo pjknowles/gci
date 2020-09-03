@@ -39,7 +39,7 @@ Davidson<t_Wavefunction, t_Operator>::Davidson(const t_Wavefunction &prototype, 
   solver.m_maxIterations = (unsigned int)maxIterations;
   solver.m_roots = (size_t)nState;
   solver.m_hermitian = true;
-  solver.m_maxQ = 100;
+  solver.m_maxQ = 1000;
   solver.m_verbosity = 1;
 }
 
@@ -384,7 +384,7 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     }
     update(working_set);
     solver.report();
-    if (false)
+    if (true)
       std::cout << solver.statistics() << std::endl;
     backup(ww);
     if (solver.working_set().empty())
