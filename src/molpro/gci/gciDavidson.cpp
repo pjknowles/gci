@@ -390,6 +390,9 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     if (solver.working_set().empty())
       break;
   }
+  working_set.resize(nState);
+  std::iota(begin(working_set), end(working_set), 0);
+  solver.solution(working_set, ww, gg);
   if (maxIterations > 0) {
     xout << "energies: ";
     for (unsigned int i = 0; i < nState; ++i)
@@ -422,6 +425,7 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
         throw std::logic_error("Davidson::initialize duplicate guess vector, n =" + std::to_string(n));
     roots[root] = n;
     ww.back().set(n, 1.0);
+    auto l = ww.back().distr_buffer.local_buffer();
     gg.emplace_back(prototype, 0);
     gg.back().allocate_buffer();
     gg.back().settilesize(options.parameter("TILESIZE", std::vector<int>(1, -1)).at(0),
