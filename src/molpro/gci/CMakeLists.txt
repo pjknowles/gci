@@ -17,7 +17,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)
 
 add_subdirectory(schedule)
-add_subdirectory(array)
 add_subdirectory(wavefunction)
 
 LibraryManager_BLAS(${PROJECT_NAME} PUBLIC Intel10_64lp_seq Intel10_64lp)
