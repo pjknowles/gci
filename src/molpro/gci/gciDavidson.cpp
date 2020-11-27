@@ -33,13 +33,13 @@ Davidson<t_Wavefunction, t_Operator>::Davidson(const t_Wavefunction &prototype, 
       solverVerbosity(options.parameter("SOLVER_VERBOSITY", 1)),
       parallel_stringset(options.parameter("PARALLEL_STRINGSET")), restart_file(options.parameter("RESTART_FILE", "")),
       backup_file(options.parameter("BACKUP_FILE", "")), solver(make_handlers<t_Wavefunction>()) {
-  solver.m_thresh = energyThreshold;
-  solver.m_verbosity = solverVerbosity;
-  solver.m_maxIterations = (unsigned int)maxIterations;
-  solver.m_roots = (size_t)nState;
-  solver.m_hermitian = true;
-  solver.m_maxQ = 1000;
-  solver.m_verbosity = 1;
+  solver.set_convergence_threshold(energyThreshold);
+//  solver.m_verbosity = solverVerbosity;
+//  solver.m_maxIterations = (unsigned int)maxIterations;
+  solver.set_n_roots(nState);
+//  solver.m_hermitian = true;
+//  solver.m_maxQ = 1000;
+//  solver.m_verbosity = 1;
 }
 
 template <class t_Wavefunction, class t_Operator>
@@ -374,7 +374,7 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
   std::iota(begin(working_set), end(working_set), 0);
   for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
     action(working_set);
-    solver.addVector(ww, gg);
+    solver.add_vector(ww, gg);
     working_set = solver.working_set();
     if (false) {
       std::cout << "working set = ";
