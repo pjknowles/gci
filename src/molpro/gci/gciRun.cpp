@@ -4,7 +4,7 @@
 #include <molpro/Operator.h>
 #include <molpro/gci/wavefunction/WavefunctionHandler.h>
 #include <molpro/linalg/IterativeSolver.h>
-#include <molpro/linalg/itsolv/ArrayHandlers.h>
+#include <molpro/linalg/iterativesolver/ArrayHandlers.h>
 
 #include "gciDavidson.h"
 #include "gciMixedWavefunction.h"
@@ -48,7 +48,7 @@ auto make_handlers() {
   auto rp = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
   auto qr = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
   auto qp = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
-  return std::make_shared<molpro::linalg::itsolv::ArrayHandlers<Wavefunction, Wavefunction, Wavefunction>>(
+  return std::make_shared<molpro::linalg::iterativesolver::ArrayHandlers<Wavefunction, Wavefunction, Wavefunction>>(
       rr, qq, pp, rq, rp, qr, qp);
 }
 } // namespace
