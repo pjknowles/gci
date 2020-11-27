@@ -22,7 +22,7 @@ auto make_handlers() {
   auto rp = std::make_shared<wavefunction::WavefunctionHandler<T, T>>();
   auto qr = std::make_shared<wavefunction::WavefunctionHandler<T, T>>();
   auto qp = std::make_shared<wavefunction::WavefunctionHandler<T, T>>();
-  return std::make_shared<molpro::linalg::iterativesolver::ArrayHandlers<T, T, T>>(rr, qq, pp, rq, rp, qr, qp);
+  return std::make_shared<molpro::linalg::itsolv::ArrayHandlers<T, T, T>>(rr, qq, pp, rq, rp, qr, qp);
 }
 } // namespace
 
