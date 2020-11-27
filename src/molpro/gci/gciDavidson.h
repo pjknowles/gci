@@ -2,8 +2,7 @@
 #define GCI_GCIDAVIDSON_H
 
 #include <molpro/Operator.h>
-#include <molpro/linalg/itsolv/IterativeSolver.h>
-#include <molpro/linalg/itsolv/LinearEigensystemA.h>
+#include <molpro/linalg/IterativeSolver.h>
 #include <vector>
 
 #include "molpro/gci/gci.h"
@@ -97,7 +96,7 @@ protected:
   void update(const std::vector<int> &working_set);
   //! Store the current solutions in a backup file
   void backup(std::vector<t_Wavefunction> &ww);
-  linalg::itsolv::LinearEigensystemA<t_Wavefunction, t_Wavefunction, t_Wavefunction> solver; //!< Iterative solver
+  linalg::LinearEigensystem<t_Wavefunction, t_Wavefunction, t_Wavefunction> solver; //!< Iterative solver
 
   double energyThreshold;
   unsigned int nState;

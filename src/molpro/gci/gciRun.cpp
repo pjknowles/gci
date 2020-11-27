@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <molpro/Operator.h>
 #include <molpro/gci/wavefunction/WavefunctionHandler.h>
+#include <molpro/linalg/IterativeSolver.h>
 #include <molpro/linalg/itsolv/ArrayHandlers.h>
 
 #include "gciDavidson.h"
