@@ -25,19 +25,18 @@ auto make_handlers() {
   return std::make_shared<molpro::linalg::itsolv::ArrayHandlers<T, T, T>>(rr, qq, pp, rq, rp, qr, qp);
 }
 } // namespace
-
 template <class t_Wavefunction, class t_Operator>
 Davidson<t_Wavefunction, t_Operator>::Davidson(const t_Wavefunction &prototype, const t_Operator &_ham, Options opt)
     : prototype(prototype), ham(_ham), options(std::move(opt)), energyThreshold(options.parameter("TOL", 1e-9)),
       nState(options.parameter("NSTATE", 1)), maxIterations(options.parameter("MAXIT", 1000)),
       solverVerbosity(options.parameter("SOLVER_VERBOSITY", 1)),
       parallel_stringset(options.parameter("PARALLEL_STRINGSET")), restart_file(options.parameter("RESTART_FILE", "")),
-      backup_file(options.parameter("BACKUP_FILE", "")), solver(make_handlers<t_Wavefunction>()) {
-  solver.set_convergence_threshold(energyThreshold);
+      backup_file(options.parameter("BACKUP_FILE", "")), solver(linalg::itsolv::create_LinearEigensystem<t_Wavefunction,t_Wavefunction,t_Wavefunction>("Davidson","",make_handlers<t_Wavefunction>())) {
+  solver->set_convergence_threshold_value(energyThreshold);
 //  solver.m_verbosity = solverVerbosity;
 //  solver.m_maxIterations = (unsigned int)maxIterations;
-  solver.set_n_roots(nState);
-//  solver.m_hermitian = true;
+  solver->set_n_roots(nState);
+  solver->set_hermiticity(true);
 //  solver.m_maxQ = 1000;
 //  solver.m_verbosity = 1;
 }
@@ -374,28 +373,28 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
   std::iota(begin(working_set), end(working_set), 0);
   for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
     action(working_set);
-    solver.add_vector(ww, gg);
-    working_set = solver.working_set();
+    solver->add_vector(ww, gg);
+    working_set = solver->working_set();
     if (false) {
       std::cout << "working set = ";
       std::copy(begin(working_set), end(working_set), std::ostream_iterator<int>(std::cout, ","));
       std::cout << std::endl;
     }
-    solver.report();
+    solver->report();
     update(working_set);
     if (true)
-      std::cout << solver.statistics() << std::endl;
+      std::cout << solver->statistics() << std::endl;
     backup(ww);
-    if (solver.working_set().empty())
+    if (solver->working_set().empty())
       break;
   }
   working_set.resize(nState);
   std::iota(begin(working_set), end(working_set), 0);
-  solver.solution(working_set, ww, gg);
+  solver->solution(working_set, ww, gg);
   if (maxIterations > 0) {
     xout << "energies: ";
     for (unsigned int i = 0; i < nState; ++i)
-      xout << solver.eigenvalues()[i] << ", ";
+      xout << solver->eigenvalues()[i] << ", ";
     xout << std::endl;
     analysis();
   }
@@ -463,7 +462,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::action(const std::ve
 
 template <class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::update(const std::vector<int> &working_set) {
-  auto eigval = solver.eigenvalues();
+  auto eigval = solver->eigenvalues();
   for (size_t state = 0; state < working_set.size(); ++state) {
     t_Wavefunction &cw = ww[state];
     const t_Wavefunction &gw = gg[state];

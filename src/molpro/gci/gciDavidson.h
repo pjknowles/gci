@@ -3,7 +3,7 @@
 
 #include <molpro/Operator.h>
 #include <molpro/linalg/itsolv/IterativeSolver.h>
-#include <molpro/linalg/itsolv/LinearEigensystem.h>
+#include <molpro/linalg/itsolv/SolverFactory.h>
 #include <vector>
 
 #include "molpro/gci/gci.h"
@@ -49,9 +49,9 @@ namespace run {
  * \param maxIterations The maximum number of iterations to perform
  * \return the energies for each state. Note that only the first nState energies are considered converged
  */
-template <class t_Wavefunction, class t_Operator>
+template<class t_Wavefunction, class t_Operator>
 class Davidson {
-public:
+ public:
   using ParameterVectorSet = std::vector<t_Wavefunction>;
   using value_type = typename t_Wavefunction::value_type;
 
@@ -62,7 +62,7 @@ public:
    * @param options Global options defining the state of the whole calculation. Options relevant to the calculation
    *        are extracted into DavidsonOptions member.
    */
-  explicit Davidson(const t_Wavefunction &prototype, const t_Operator &_ham, Options options);
+  explicit Davidson(const t_Wavefunction& prototype, const t_Operator& _ham, Options options);
 
   /*!
    * @brief Runs the calculation.
@@ -70,16 +70,16 @@ public:
   void run();
 
   t_Wavefunction prototype;                  //!< Prototype wavefunction
-  const t_Operator &ham;                     //!< Hamiltonian operator that is being diagonalized
+  const t_Operator& ham;                     //!< Hamiltonian operator that is being diagonalized
   Options options;                           //!< Options governing the type of calculation
   std::shared_ptr<t_Wavefunction> diagonalH; //!< Stored diagonal values of the hamiltonian operator
-                                             //    std::vector<value_type> eigVal; //!< Solution eigenvalues
-                                             //    std::vector<t_Wavefunction> eigVec; //!< Solution eigenvectors
+  //    std::vector<value_type> eigVal; //!< Solution eigenvalues
+  //    std::vector<t_Wavefunction> eigVec; //!< Solution eigenvectors
   ParameterVectorSet ww;                     //!< Set of current solutions
   ParameterVectorSet gg;                     //!< Set of residual vectors
-protected:
+ protected:
   std::shared_ptr<std::vector<Wavefunction>> ref_elec_states; //!< Set of reference electronic states
-  void printMatrix(const std::string &fname) const;
+  void printMatrix(const std::string& fname) const;
   void message() const;
   //! Initializes containers necessary for running the calculation
   void initialize();
@@ -92,12 +92,13 @@ protected:
   //! Seperate energetic contributions from different parts of the Hamiltonian
   void energy_decomposition();
   //! Apply the Hamiltonian on the current solution
-  void action(const std::vector<int> &working_set);
+  void action(const std::vector<int>& working_set);
   //! Get the new vector, $r = A u - \lambda u$
-  void update(const std::vector<int> &working_set);
+  void update(const std::vector<int>& working_set);
   //! Store the current solutions in a backup file
-  void backup(std::vector<t_Wavefunction> &ww);
-  linalg::itsolv::LinearEigensystem<t_Wavefunction, t_Wavefunction, t_Wavefunction> solver; //!< Iterative solver
+  void backup(std::vector<t_Wavefunction>& ww);
+  std::unique_ptr<linalg::itsolv::LinearEigensystem<t_Wavefunction, t_Wavefunction, t_Wavefunction>>
+      solver; //!< Iterative solver
 
   double energyThreshold;
   unsigned int nState;
@@ -110,8 +111,8 @@ protected:
   std::vector<double> diag_val_at_minlocN;
 };
 
-template <class t_Wavefunction>
-void davidson_read_write_wfn(std::vector<t_Wavefunction> &ww, const std::string &fname, bool save);
+template<class t_Wavefunction>
+void davidson_read_write_wfn(std::vector<t_Wavefunction>& ww, const std::string& fname, bool save);
 
 } // namespace run
 } // namespace gci

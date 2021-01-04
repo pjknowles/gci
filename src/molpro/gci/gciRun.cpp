@@ -9,9 +9,19 @@
 #include "gciMixedWavefunction.h"
 #include "gciMolpro.h"
 #include "gciRun.h"
+#include <molpro/linalg/itsolv/SolverFactory-implementation.h>
 #ifdef MOLPRO
 #include "gciMolpro.h"
 #endif
+
+namespace molpro::linalg {
+using molpro::gci::MixedWavefunction;
+using molpro::gci::Wavefunction;
+template
+class molpro::linalg::itsolv::SolverFactory<MixedWavefunction, MixedWavefunction, MixedWavefunction>;
+template
+class molpro::linalg::itsolv::SolverFactory<Wavefunction, Wavefunction, Wavefunction>;
+}
 
 namespace molpro {
 namespace gci {
