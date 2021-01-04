@@ -3,6 +3,7 @@
 #include "gciUtils.h"
 #include "gciWavefunction.h"
 #include "wavefunction/WavefunctionHandler.h"
+#include <molpro/linalg/itsolv/LinearEigensystemDavidsonOptions.h>
 
 #include <fstream>
 #include <ga.h>
@@ -31,7 +32,11 @@ Davidson<t_Wavefunction, t_Operator>::Davidson(const t_Wavefunction &prototype, 
       nState(options.parameter("NSTATE", 1)), maxIterations(options.parameter("MAXIT", 1000)),
       solverVerbosity(options.parameter("SOLVER_VERBOSITY", 1)),
       parallel_stringset(options.parameter("PARALLEL_STRINGSET")), restart_file(options.parameter("RESTART_FILE", "")),
-      backup_file(options.parameter("BACKUP_FILE", "")), solver(linalg::itsolv::create_LinearEigensystem<t_Wavefunction,t_Wavefunction,t_Wavefunction>("Davidson","",make_handlers<t_Wavefunction>())) {
+      backup_file(options.parameter("BACKUP_FILE", "")), solver(linalg::itsolv::create_LinearEigensystem<t_Wavefunction,t_Wavefunction,t_Wavefunction>(
+          "Davidson","max_size_qspace=10"
+//molpro::linalg::itsolv::LinearEigensystemDavidsonOptions()
+        ,make_handlers<t_Wavefunction>()
+    )) {
   solver->set_convergence_threshold_value(energyThreshold);
 //  solver.m_verbosity = solverVerbosity;
 //  solver.m_maxIterations = (unsigned int)maxIterations;
