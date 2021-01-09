@@ -390,6 +390,7 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
     if (true)
       std::cout << solver->statistics() << std::endl;
     backup(ww);
+    solver->end_iteration(ww,gg);
     if (solver->working_set().empty())
       break;
   }
@@ -470,12 +471,12 @@ void Davidson<t_Wavefunction, t_Operator>::update(const std::vector<int> &workin
   auto eigval = solver->eigenvalues();
   for (size_t state = 0; state < working_set.size(); ++state) {
     t_Wavefunction &cw = ww[state];
-    const t_Wavefunction &gw = gg[state];
+    t_Wavefunction &gw = gg[state];
     auto shift = -eigval[state] + 1e-10;
     shift += 2 * std::numeric_limits<value_type>::epsilon() *
              std::max<value_type>(1, std::abs(diag_val_at_minlocN[state])); // to guard against zero
-    cw.divide(&gw, diagonalH.get(), shift, true, true);
-    cw.replicate();
+    gw.divide(&gw, diagonalH.get(), shift, false, true);
+    gw.replicate();
   }
 }
 
