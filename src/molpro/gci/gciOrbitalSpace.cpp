@@ -6,7 +6,7 @@ namespace gci {
 
 void OrbitalSpace::load(const Options &dump, int verbosity) {
   if (verbosity)
-    xout << "Load OrbitalSpace from Options object" << std::endl;
+    cout << "Load OrbitalSpace from Options object" << std::endl;
   load(dump.parameter("ORBSYM", std::vector<int>{0}), dump.parameter("IUHF") != 0, verbosity);
 }
 
@@ -18,7 +18,7 @@ void OrbitalSpace::load(const std::vector<int> syms, bool uhf, int verbosity) {
     at((*s) - 1)++;
   }
   calculateOffsets(); // set up the rest of the underlying SymmetrySpace object
-  //    xout << this->str(2) << std::endl;
+  //    cout << this->str(2) << std::endl;
 
   pairSpace[-1] = SymmetrySpace("Antisymmetric pairs of orbitals");
   pairSpace[0] = SymmetrySpace("Pairs of orbitals");
@@ -31,7 +31,7 @@ void OrbitalSpace::load(const std::vector<int> syms, bool uhf, int verbosity) {
   pairSpace[-1].calculateOffsets();
   pairSpace[0].calculateOffsets();
   pairSpace[1].calculateOffsets();
-  //    xout << "symmetricPairSpace constructed: " << pairSpace[1];
+  //    cout << "symmetricPairSpace constructed: " << pairSpace[1];
 }
 
 size_t OrbitalSpace::pairIndex(unsigned int i, unsigned int j, int parity) const {
@@ -40,7 +40,7 @@ size_t OrbitalSpace::pairIndex(unsigned int i, unsigned int j, int parity) const
   unsigned int isym = orbital_symmetries[i - 1];
   unsigned int jsym = orbital_symmetries[j - 1];
   if (parity == 0 || isym > jsym) {
-    //      xout < i<<" "<<j<<" "<< offset(isym^jsym,isym,parity) + jj*at(isym)+ii<<std::endl;
+    //      cout < i<<" "<<j<<" "<< offset(isym^jsym,isym,parity) + jj*at(isym)+ii<<std::endl;
     return offset(isym ^ jsym, isym, parity) + jj * at(isym) + ii;
   } else {
     if (parity > 0 && isym == jsym)

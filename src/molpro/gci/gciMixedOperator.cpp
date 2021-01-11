@@ -33,8 +33,8 @@ molpro::Operator constructOperatorT1(const molpro::FCIdump &dump) {
     auto &integrals_b = result.O1(false);
     integrals_b.assign(0);
     if (verbosity > 0) {
-      xout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
-      xout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
+      cout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
+      cout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
     }
     unsigned int si, sj, sk, sl;
     si = sj = sk = sl = 8;
@@ -58,7 +58,7 @@ molpro::Operator constructOperatorT1(const molpro::FCIdump &dump) {
         result.m_O0 = value;
     }
     if (verbosity > 0)
-      xout << result << std::endl;
+      cout << result << std::endl;
     portableByteStream = result.bytestream().data();
     lPortableByteStream = portableByteStream.size();
   }

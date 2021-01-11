@@ -1,6 +1,10 @@
 #ifdef MOLPRO
-#include "gciMolpro.h"
-#include "molpro_config.h"
+//#include "gciMolpro.h"
+//#include "molpro_config.h"
+#include "cic/ItfFortranInt.h"
+using itf::GetOptionF;
+using itf::GetOptionI;
+using itf::GetOptionS;
 #else
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE

@@ -1,7 +1,7 @@
 #include "gciMolpro.h"
 #include <Eigen/Dense>
 #include <cassert>
-#ifndef MOLPRO
+#ifndef MOLPRO_NO_LONGER
 
 namespace molpro {
 namespace gci {

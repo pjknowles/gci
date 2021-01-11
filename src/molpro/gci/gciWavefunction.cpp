@@ -1,4 +1,9 @@
 #include "gciWavefunction.h"
+#ifdef MOLPRO
+#include "cic/ItfFortranInt.h"
+using namespace itf;
+#endif
+
 
 #include "gci.h"
 #include "gciMolpro.h"
@@ -201,19 +206,19 @@ void Wavefunction::diagonalOperator(const molpro::Operator &op) {
     }
     offset += nsa * nsb;
   }
-  //  xout << "diagonal elements"<<std::endl; for (size_t i=0; i < buffer.size(); i++) xout <<" "<<buffer[i]; xout
+  //  cout << "diagonal elements"<<std::endl; for (size_t i=0; i < buffer.size(); i++) cout <<" "<<buffer[i]; cout
   //  <<std::endl;
 }
 
 void Wavefunction::axpy(double a, const Wavefunction &xx) {
-  //  xout << "Wavefunction::axpy initial=";
-  //  for (size_t i=0; i<buffer.size(); i++) xout<<" "<<buffer[i]; xout << std::endl;
-  //  xout << "Wavefunction::axpy x=";
-  //  for (size_t i=0; i<buffer.size(); i++) xout<<" "<<xx.buffer[i]; xout << std::endl;
+  //  cout << "Wavefunction::axpy initial=";
+  //  for (size_t i=0; i<buffer.size(); i++) cout<<" "<<buffer[i]; cout << std::endl;
+  //  cout << "Wavefunction::axpy x=";
+  //  for (size_t i=0; i<buffer.size(); i++) cout<<" "<<xx.buffer[i]; cout << std::endl;
   for (size_t i = 0; i < buffer.size(); i++)
     buffer[i] += xx.buffer[i] * a;
-  //  xout << "Wavefunction::axpy result=";
-  //  for (size_t i=0; i<buffer.size(); i++) xout<<" "<<buffer[i]; xout << std::endl;
+  //  cout << "Wavefunction::axpy result=";
+  //  for (size_t i=0; i<buffer.size(); i++) cout<<" "<<buffer[i]; cout << std::endl;
 }
 
 void Wavefunction::axpy(double a, const std::map<size_t, double> &x) {
@@ -228,7 +233,7 @@ Wavefunction::select(const Wavefunction &measure, const size_t maximumNumber, co
   assert(buffer.size() == measure.size());
   for (size_t i = 0; i < buffer.size(); i++) {
     auto test = buffer[i] * measure.buffer[i];
-    //    xout << "select "<<buffer[i]<<" "<<measure.buffer[i]<<std::endl;
+    //    cout << "select "<<buffer[i]<<" "<<measure.buffer[i]<<std::endl;
     if (test > threshold) {
       sortlist.insert(std::make_pair(test, i));
       if (sortlist.size() > maximumNumber)
@@ -271,7 +276,7 @@ Wavefunction &Wavefunction::operator*=(const double &value) {
 Wavefunction &Wavefunction::operator+=(const Wavefunction &other) {
   if (!compatible(other))
     throw std::domain_error("attempt to add incompatible Wavefunction objects");
-  //  xout << "Wavefunction::operator += &this=" << this <<" &other="<<&other <<std::endl;
+  //  cout << "Wavefunction::operator += &this=" << this <<" &other="<<&other <<std::endl;
   for (size_t i = 0; i < buffer.size(); i++)
     buffer[i] += other.buffer[i];
   return *this;
@@ -310,9 +315,9 @@ Wavefunction &Wavefunction::operator/=(const Wavefunction &other) {
 double Wavefunction::update(const Wavefunction &diagonalH, double &eTruncated, double const dEmax) {
   if (!compatible(diagonalH))
     throw std::domain_error("attempt to combine incompatible Wavefunction objects");
-  //  xout << "Wavefunction::update this="; for (size_t i=0; i<buffer.size(); i++) xout<<buffer[i]<<" ";xout
-  //  <<std::endl; xout << "Wavefunction::update diagonalH="; for (size_t i=0; i<diagonalH.buffer.size(); i++)
-  //  xout<<diagonalH.buffer[i]<<" ";xout <<std::endl;
+  //  cout << "Wavefunction::update this="; for (size_t i=0; i<buffer.size(); i++) cout<<buffer[i]<<" ";cout
+  //  <<std::endl; cout << "Wavefunction::update diagonalH="; for (size_t i=0; i<diagonalH.buffer.size(); i++)
+  //  cout<<diagonalH.buffer[i]<<" ";cout <<std::endl;
   size_t imin = 0;
   size_t imax = buffer.size();
   eTruncated = 0;
@@ -553,11 +558,6 @@ size_t Wavefunction::stringSymmetry(size_t offset, unsigned int axis) const {
 
 size_t Wavefunction::blockOffset(unsigned int syma) const { return _blockOffset.at(syma); }
 
-#ifdef MOLPRO
-#include "gciMolpro.h"
-using namespace itf;
-#endif
-
 void MXM(double *Out, const double *A, const double *B, uint nRows, uint nLink, uint nCols, bool AddToDest,
          int nStrideLink = -1) {
   const bool debug = false;
@@ -565,19 +565,19 @@ void MXM(double *Out, const double *A, const double *B, uint nRows, uint nLink, 
   prof += 2 * nLink * size_t(nCols) * nRows;
   if (nStrideLink < 0) {
     if (debug && AddToDest)
-      xout << "MXM initial Out\n" << Eigen::Map<Eigen::MatrixXd>(Out, nRows, nCols) << std::endl;
+      cout << "MXM initial Out\n" << Eigen::Map<Eigen::MatrixXd>(Out, nRows, nCols) << std::endl;
     if (debug)
-      xout << "MXM A\n" << Eigen::Map<const Eigen::MatrixXd>(A, nRows, nLink) << std::endl;
+      cout << "MXM A\n" << Eigen::Map<const Eigen::MatrixXd>(A, nRows, nLink) << std::endl;
     MxmDrvNN(Out, A, B, nRows, nLink, nCols, AddToDest);
   } else {
     //      if (debug) // how to make const and Stride work together?
-    //        xout << "MXM A\n"<<Eigen::Map<const Eigen::MatrixXd>(A,nRows,nLink,
+    //        cout << "MXM A\n"<<Eigen::Map<const Eigen::MatrixXd>(A,nRows,nLink,
     //        Eigen::Stride<Eigen::Dynamic,Eigen::Dynamic>(1, -nStrideLink))<<std::endl;
     MxmDrvTN(Out, A, B, nRows, nLink, static_cast<uint>(nStrideLink), nCols, AddToDest);
   }
   if (debug) {
-    xout << "MXM B\n" << Eigen::Map<const Eigen::MatrixXd>(B, nLink, nCols) << std::endl;
-    xout << "MXM Out\n" << Eigen::Map<Eigen::MatrixXd>(Out, nRows, nCols) << std::endl;
+    cout << "MXM B\n" << Eigen::Map<const Eigen::MatrixXd>(B, nLink, nCols) << std::endl;
+    cout << "MXM Out\n" << Eigen::Map<Eigen::MatrixXd>(Out, nRows, nCols) << std::endl;
   }
 }
 
@@ -607,33 +607,33 @@ void Wavefunction::operatorOnWavefunction(
   } else if (!m_sparse)
     for (auto &b : buffer)
       b = 0;
-  //  xout <<"residual after 0-electron:"<<std::endl<<str(2)<<std::endl;
+  //  cout <<"residual after 0-electron:"<<std::endl<<str(2)<<std::endl;
 
-  //  xout <<std::endl<<"w in operatorOnWavefunction="<<w.str(2)<<std::endl;
+  //  cout <<std::endl<<"w in operatorOnWavefunction="<<w.str(2)<<std::endl;
   DivideTasks(99999999, 1, 1, m_communicator);
   const auto alphaActiveStrings = w.activeStrings(true);
   const auto betaActiveStrings = w.activeStrings(false);
-  //  xout << "betaActiveStrings"<<std::endl;
-  //  for (const auto& s : betaActiveStrings) for (const auto& ss : s) xout <<ss<<std::endl;
+  //  cout << "betaActiveStrings"<<std::endl;
+  //  for (const auto& s : betaActiveStrings) for (const auto& ss : s) cout <<ss<<std::endl;
 
   if (true) {
     auto p = profiler->push("1-electron RI");
     size_t nsaaMax = 1000000000;
     size_t nsbbMax = 1000000000;
     std::vector<StringSet> bbs;
-    //    xout << "before bbs emplace "<<std::endl;
+    //    cout << "before bbs emplace "<<std::endl;
     for (unsigned int symb = 0; symb < 8; symb++) {
       //        bbs.emplace_back(w.betaStrings,1,0,symb,parallel_stringset);
       bbs.emplace_back(betaActiveStrings, 1, 0, symb, parallel_stringset);
     }
-    //    xout << "after bbs emplace "<<std::endl;
+    //    cout << "after bbs emplace "<<std::endl;
     for (unsigned int syma = 0; syma < 8; syma++) {
       //          StringSet aa(w.alphaStrings,1,0,syma,parallel_stringset);
       StringSet aa(alphaActiveStrings, 1, 0, syma, parallel_stringset);
-      //      xout << "after making StringSet aa "<<std::endl;
+      //      cout << "after making StringSet aa "<<std::endl;
       for (unsigned int symb = 0; symb < 8; symb++) { // symmetry of N-1 electron state
         unsigned int symexc = w.symmetry ^ syma ^ symb;
-        //        xout << "syma="<<syma<<" symb="<<symb<<" symexc="<<symexc<<std::endl;
+        //        cout << "syma="<<syma<<" symb="<<symb<<" symexc="<<symexc<<std::endl;
         if (m_tilesize > 0) {
           nsaaMax = m_tilesize / double(betaStrings[symb].size()) + 1;
           nsbbMax = m_tilesize / double(alphaStrings[symb].size()) + 1;
@@ -646,7 +646,7 @@ void Wavefunction::operatorOnWavefunction(
           auto ham = h.O1(true).blockCopy(symexc);
           if (ham.cols() < 1)
             continue;
-          //        for (const auto& aaa: aa) xout <<"N-1 alpha member "<<aaa<<std::endl;
+          //        for (const auto& aaa: aa) cout <<"N-1 alpha member "<<aaa<<std::endl;
           for (StringSet::const_iterator aa1, aa0 = aa.begin();
                aa1 = aa0 + nsaaMax > aa.end() ? aa.end() : aa0 + nsaaMax, aa0 < aa.end();
                aa0 = aa1) { // loop over alpha batches
@@ -654,17 +654,17 @@ void Wavefunction::operatorOnWavefunction(
               continue;
             TransitionDensity d(w, aa0, aa1, w.betaStrings[symb].begin(), w.betaStrings[symb].end(), molpro::parityEven,
                                 true, false);
-            //            xout << "alpha transition density" << d << "\n" << w.betaStrings[symb].size() << aa1 - aa0 <<
+            //            cout << "alpha transition density" << d << "\n" << w.betaStrings[symb].size() << aa1 - aa0 <<
             //            " "
             //                 << d.size() << std::endl;
             TransitionDensity e(d, false);
-            //            xout << "hamiltonian block\n" << ham << std::endl;
-            //                        xout << "ham dimensions "<<ham.rows()<<" "<<ham.cols()<<std::endl;
+            //            cout << "hamiltonian block\n" << ham << std::endl;
+            //                        cout << "ham dimensions "<<ham.rows()<<" "<<ham.cols()<<std::endl;
             MXM(&e[0], &d[0], &ham(0, 0), std::distance(aa0, aa1) * w.betaStrings[symb].size(), ham.rows(), ham.cols(),
                 false);
-            //            xout << "alpha e" << e << std::endl;
+            //            cout << "alpha e" << e << std::endl;
             e.action(*this);
-            //            xout << "this after action " << values() << std::endl;
+            //            cout << "this after action " << values() << std::endl;
           }
         }
         const auto &bb = bbs[symb];
@@ -679,13 +679,13 @@ void Wavefunction::operatorOnWavefunction(
               continue;
             TransitionDensity d(w, w.alphaStrings[syma].begin(), w.alphaStrings[syma].end(), bb0, bb1,
                                 molpro::parityEven, false, true);
-            //            xout << "beta transition density"<<d<<std::endl;
+            //            cout << "beta transition density"<<d<<std::endl;
             TransitionDensity e(d, false);
             MXM(&e[0], &d[0], &ham(0, 0), std::distance(bb0, bb1) * w.alphaStrings[syma].size(), ham.rows(), ham.cols(),
                 false);
-            //            xout << "beta e"<<e<<std::endl;
+            //            cout << "beta e"<<e<<std::endl;
             e.action(*this);
-            //            xout << "this after action "<<values()<<std::endl;
+            //            cout << "this after action "<<values()<<std::endl;
           }
         }
       }
@@ -696,7 +696,7 @@ void Wavefunction::operatorOnWavefunction(
     auto tilesize = m_tilesize;
     auto alphatilesize = m_alphatilesize;
     auto betatilesize = m_betatilesize;
-    //    xout << "object tile sizes "<< m_tilesize<<","<<m_alphatilesize<<","<<m_betatilesize<<std::endl;
+    //    cout << "object tile sizes "<< m_tilesize<<","<<m_alphatilesize<<","<<m_betatilesize<<std::endl;
     size_t nsaaMax = 1000000000;
     size_t nsbbMax = 1000000000;
     size_t offset = 0, nsa = 0, nsb = 0;
@@ -721,8 +721,8 @@ void Wavefunction::operatorOnWavefunction(
           nsa = aa1 - aa0;
           nsb = bb1 - bb0;
           if (NextTask(m_communicator)) {
-            //                    xout << "offset="<<offset <<", nsa="<<nsa <<", nsb="<<nsb<<std::endl;
-            //        xout << bb0-bb.begin()<<std::endl;
+            //                    cout << "offset="<<offset <<", nsa="<<nsa <<", nsb="<<nsb<<std::endl;
+            //        cout << bb0-bb.begin()<<std::endl;
             {
               TransitionDensity d(w, aa0, aa1, bb0, bb1, molpro::parityEven, true, !h.m_uhf);
               if (nsb == bb.size())
@@ -747,8 +747,8 @@ void Wavefunction::operatorOnWavefunction(
       }
     }
   }
-  //  xout <<"residual after 1-electron:"<<values()<<std::endl;
-  //  xout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
+  //  cout <<"residual after 1-electron:"<<values()<<std::endl;
+  //  cout <<"residual after 1-electron:"<<std::endl<<str(2)<<std::endl;
 
   if (h.m_rank > 1) { // two-electron contribution, alpha-alpha
     auto p = profiler->push("aa integrals");
@@ -757,7 +757,7 @@ void Wavefunction::operatorOnWavefunction(
       profiler->start("StringSet aa");
       StringSet aa(alphaActiveStrings, 2, 0, syma, parallel_stringset);
       profiler->stop("StringSet aa");
-      //      xout << "number of alpha-alpha-excited strings=" << aa.size() << std::endl;
+      //      cout << "number of alpha-alpha-excited strings=" << aa.size() << std::endl;
       if (aa.empty())
         continue;
       for (unsigned int symb = 0; symb < 8; symb++) {
@@ -783,7 +783,7 @@ void Wavefunction::operatorOnWavefunction(
       }
     }
   }
-  //  xout <<"residual after alpha-alpha on process "<<m_parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
+  //  cout <<"residual after alpha-alpha on process "<<m_parallel_rank<<" "<<buffer[0]<<std::endl<<str(2)<<std::endl;
 
   if (h.m_rank > 1)
     if (true || h.m_uhf) { // two-electron contribution, beta-beta
@@ -813,7 +813,7 @@ void Wavefunction::operatorOnWavefunction(
           }
         }
       }
-      //      xout <<"residual after beta-beta on process "<<m_parallel_rank<<"
+      //      cout <<"residual after beta-beta on process "<<m_parallel_rank<<"
       //      "<<buffer[0]<<std::endl<<str(2)<<std::endl;
     }
 
@@ -834,7 +834,7 @@ void Wavefunction::operatorOnWavefunction(
         unsigned int symexc = symb ^ syma ^ w.symmetry;
         size_t nexc = h.O2(true, false, false).block_size(symexc);
         {
-          //                        xout << "syma="<<syma<<", symb="<<symb<<", symexc="<<symexc<<std::endl;
+          //                        cout << "syma="<<syma<<", symb="<<symb<<", symexc="<<symexc<<std::endl;
           auto pro = profiler->push("StringSet iterator loops");
           for (StringSet::iterator aa1, aa0 = aa.begin();
                aa1 = aa0 + nsaaMax > aa.end() ? aa.end() : aa0 + nsaaMax, aa0 < aa.end();
@@ -855,7 +855,7 @@ void Wavefunction::operatorOnWavefunction(
         }
       }
     }
-    //      xout <<"residual after alpha-beta on process "<<m_parallel_rank<<"
+    //      cout <<"residual after alpha-beta on process "<<m_parallel_rank<<"
     //      "<<buffer[0]<<std::endl<<str(2)<<std::endl;
   }
 
@@ -901,7 +901,7 @@ molpro::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const
         TransitionDensity d(*this, alphaStrings[syma].begin(), alphaStrings[syma].end(), betaStrings[symb].begin(),
                             betaStrings[symb].end(), (hermitian ? molpro::parityEven : molpro::parityNone), true,
                             !result.m_uhf);
-        //      xout << "Transition density\n"<<d<<std::endl;
+        //      cout << "Transition density\n"<<d<<std::endl;
         MXM(&((*result.O1(true).data())[0]), &d[0], &(bra->buffer[offset]),
             orbitalSpace->total(0, (hermitian ? molpro::parityEven : molpro::parityNone)), nsa * nsb, 1, true,
             nsa * nsb);
@@ -961,15 +961,15 @@ molpro::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const
                               molpro::parityOddPacked, false, false);
           TransitionDensity e(*bra, aa0, aa1, betaStrings[symb].begin(), betaStrings[symb].end(),
                               molpro::parityOddPacked, false, false);
-          //                      xout <<"Daa: "<<d.str(2)<<std::endl;
-          //                      xout <<"Eaa: "<<e.str(2)<<std::endl;
-          //                xout << "result goes to "<<&result.O2(true,true).block(symexc)[0]<<std::endl;
-          //                xout << "result goes to "<<&result.O2(true,true).blockM(symexc)(0,0)<<std::endl;
-          //                xout << "initial result "<<result.O2(true,true).blockM(symexc)(0,0)<<std::endl;
+          //                      cout <<"Daa: "<<d.str(2)<<std::endl;
+          //                      cout <<"Eaa: "<<e.str(2)<<std::endl;
+          //                cout << "result goes to "<<&result.O2(true,true).block(symexc)[0]<<std::endl;
+          //                cout << "result goes to "<<&result.O2(true,true).blockM(symexc)(0,0)<<std::endl;
+          //                cout << "initial result "<<result.O2(true,true).blockM(symexc)(0,0)<<std::endl;
           MXM(&result.O2(true, true, false).block(symexc)[0], &d[0], &e[0], nexc, nsa * nsb, nexc, true,
               nsa * nsb); // not yet right for non-symmetric tdm
-          //                xout << "final result "<<result.O2(true,true,false).blockM(symexc)(0,0)<<std::endl;
-          //                      xout << "result"<<result.O2(true,true,false).blockM(symexc)<<std::endl;
+          //                cout << "final result "<<result.O2(true,true,false).blockM(symexc)(0,0)<<std::endl;
+          //                      cout << "result"<<result.O2(true,true,false).blockM(symexc)<<std::endl;
         }
       }
     }
@@ -1033,14 +1033,14 @@ molpro::Operator Wavefunction::density(int rank, bool uhf, bool hermitian, const
                 continue;
               TransitionDensity d(*this, aa0, aa1, bb0, bb1, molpro::parityNone, false, false);
               TransitionDensity e(*bra, aa0, aa1, bb0, bb1, molpro::parityNone, false, false);
-              //                      xout <<"D: "<<d.str(2)<<std::endl;
-              //                      xout <<"E: "<<e.str(2)<<std::endl;
-              //                      xout << "ab result before
-              //                      MXM"<<result.O2(true,false,false).str("result",2)<<std::endl; xout << "dimensions
+              //                      cout <<"D: "<<d.str(2)<<std::endl;
+              //                      cout <<"E: "<<e.str(2)<<std::endl;
+              //                      cout << "ab result before
+              //                      MXM"<<result.O2(true,false,false).str("result",2)<<std::endl; cout << "dimensions
               //                      "<<nexc<<nsa*nsb<<std::endl;
               MXM(&result.O2(true, false, false).block(symexc)[0], &d[0], &e[0], nexc, nsa * nsb, nexc, true,
                   nsa * nsb); // not yet right for non-symmetric tdm
-              //                      xout << "ab result"<<result.O2(true,false,false).str("result",2)<<std::endl;
+              //                      cout << "ab result"<<result.O2(true,false,false).str("result",2)<<std::endl;
             }
           }
         }
@@ -1149,10 +1149,10 @@ Wavefunction &Wavefunction::addAbsPower(const Wavefunction &c, const double k, c
 
   if (!compatible(c))
     throw std::domain_error("attempt to add incompatible Wavefunction objects");
-  //  xout <<"addAbsPower initial=";
+  //  cout <<"addAbsPower initial=";
   //  for (size_t i=0; i<buffer.size(); i++)
-  //    xout <<" "<<buffer[i];
-  //  xout <<std::endl;
+  //    cout <<" "<<buffer[i];
+  //  cout <<std::endl;
   size_t imin = 0;
   size_t imax = buffer.size();
   for (size_t i = imin; i < imax; i++) {
@@ -1161,10 +1161,10 @@ Wavefunction &Wavefunction::addAbsPower(const Wavefunction &c, const double k, c
     else if (c.buffer[i])
       buffer[i] += factor * pow(fabs(c.buffer[i]), k) * c.buffer[i];
   }
-  //  xout <<"addAbsPower final=";
+  //  cout <<"addAbsPower final=";
   //  for (size_t i=0; i<buffer.size(); i++)
-  //    xout <<" "<<buffer[i];
-  //  xout <<std::endl;
+  //    cout <<" "<<buffer[i];
+  //  cout <<std::endl;
   return *this;
 }
 
@@ -1194,10 +1194,10 @@ std::vector<StringSet> Wavefunction::activeStrings(bool spinUp) const {
     }
     for (const auto &ww : buffer_sparse) {
       const auto det = determinantAt(ww.first);
-      //      xout << "activeStrings " << ww.first << " : " << ww.second << std::endl;
-      //      xout <<" symmetry calculated "<<stringSymmetry(ww.first,axis)<<std::endl;
-      //      xout <<" det "<<det<<std::endl;
-      //      xout <<" strings "<<det.stringAlpha<<", "<<det.stringBeta<<std::endl;
+      //      cout << "activeStrings " << ww.first << " : " << ww.second << std::endl;
+      //      cout <<" symmetry calculated "<<stringSymmetry(ww.first,axis)<<std::endl;
+      //      cout <<" det "<<det<<std::endl;
+      //      cout <<" strings "<<det.stringAlpha<<", "<<det.stringBeta<<std::endl;
       results[stringSymmetry(ww.first, axis)].push_back((spinUp ? det.stringAlpha : det.stringBeta));
     }
   } else {
@@ -1224,9 +1224,9 @@ std::vector<StringSet> Wavefunction::activeStrings(bool spinUp) const {
     }
   }
   //  for (unsigned int sym = 0; sym < 8; sym++) {
-  //    xout << "symmetry "<<sym<<std::endl;
+  //    cout << "symmetry "<<sym<<std::endl;
   //    for (const auto &r : results[sym])
-  //      xout << r << std::endl;
+  //      cout << r << std::endl;
   //  }
   return results;
 }

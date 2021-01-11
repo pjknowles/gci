@@ -1,25 +1,17 @@
 #ifndef GCI_SRC_MOLPRO_GCI_SCHEDULE_SHAREDCOUNTERGA_H
 #define GCI_SRC_MOLPRO_GCI_SCHEDULE_SHAREDCOUNTERGA_H
-#ifdef MOLPRO
-#include "molpro_config.h"
-#endif
-#if !defined(MOLPRO)
+#if !defined(MOLPRO_NO_LONGER) // TODO MOLPRO might not have global arrays
 
 #include <mpi.h>
 
 #include <ga-mpi.h>
 #include <ga.h>
+#include <molpro/mpi.h>
 
-#ifdef MOLPRO
-#include "ppidd.h"
-//#define MPI_COMM_COMPUTE MPI_Comm_f2c(PPIDD_Worker_comm())
-#else
-//#define MPI_COMM_COMPUTE MPI_COMM_WORLD
-#endif
 #else
 #define SHAREDCOUNTER_DUMMY
-#define MPI_Comm int
-#define MPI_Win int
+//#define MPI_Comm int
+//#define MPI_Win int
 //#define MPI_COMM_COMPUTE 0
 #endif
 
