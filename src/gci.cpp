@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
   molpro::gci::molpro_plugin = false;
   MPI_Init(&argc, &argv);
   GA_Initialize();
-  molpro::gci::mpi_comm_compute = GA_MPI_Comm();
+  molpro::gci::mpi_comm_compute = molpro::mpi::comm_global();
   MPI_Comm_size(molpro::gci::mpi_comm_compute, &molpro::gci::parallel_size);
   MPI_Comm_rank(molpro::gci::mpi_comm_compute, &molpro::gci::parallel_rank);
   if (molpro::gci::parallel_rank == 0)
@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
   if (argc > 1)
     strcpy(fcidumpname, argv[1]);
 
-  size_t memory = 500000000;
+  size_t memory = 4000000000; // TODO reduce this when memory leak has been found
   size_t ga_memory = 500000000;
   for (int i = 2; i < argc; i++) {
     std::string s(argv[i]);
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
           run.options.addParameter(s.substr(0, equals), s.substr(equals + 1), true);
       }
     std::vector<double> e = run.run();
-    //  xout << "e after run:"; for (size_t i=0; i<e.size(); i++) xout <<" "<<e[i]; xout <<std::endl;
+    //  cout << "e after run:"; for (size_t i=0; i<e.size(); i++) cout <<" "<<e[i]; cout <<std::endl;
     if (plugin.active()) {
       // send the energy back
       if (plugin.send("TAKE PROPERTY ENERGY")) {
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  xout << "initial memory=" << memory_allocated << ", remaining memory=" << memory_remaining() << std::endl;
+  cout << "initial memory=" << memory_allocated << ", remaining memory=" << memory_remaining() << std::endl;
   if (plugin.active())
     plugin.send("");
   GA_Terminate();

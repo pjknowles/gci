@@ -3,6 +3,7 @@
 #include "gciUtils.h"
 #include "gciWavefunction.h"
 #include "wavefunction/WavefunctionHandler.h"
+#include <molpro/linalg/itsolv/LinearEigensystemDavidsonOptions.h>
 
 #include <fstream>
 #include <ga.h>
@@ -22,34 +23,37 @@ auto make_handlers() {
   auto rp = std::make_shared<wavefunction::WavefunctionHandler<T, T>>();
   auto qr = std::make_shared<wavefunction::WavefunctionHandler<T, T>>();
   auto qp = std::make_shared<wavefunction::WavefunctionHandler<T, T>>();
-  return std::make_shared<molpro::linalg::iterativesolver::ArrayHandlers<T, T, T>>(rr, qq, pp, rq, rp, qr, qp);
+  return std::make_shared<molpro::linalg::itsolv::ArrayHandlers<T, T, T>>(rr, qq, pp, rq, rp, qr, qp);
 }
 } // namespace
-
 template <class t_Wavefunction, class t_Operator>
 Davidson<t_Wavefunction, t_Operator>::Davidson(const t_Wavefunction &prototype, const t_Operator &_ham, Options opt)
     : prototype(prototype), ham(_ham), options(std::move(opt)), energyThreshold(options.parameter("TOL", 1e-9)),
       nState(options.parameter("NSTATE", 1)), maxIterations(options.parameter("MAXIT", 1000)),
       solverVerbosity(options.parameter("SOLVER_VERBOSITY", 1)),
       parallel_stringset(options.parameter("PARALLEL_STRINGSET")), restart_file(options.parameter("RESTART_FILE", "")),
-      backup_file(options.parameter("BACKUP_FILE", "")), solver(make_handlers<t_Wavefunction>()) {
-  solver.m_thresh = energyThreshold;
-  solver.m_verbosity = solverVerbosity;
-  solver.m_maxIterations = (unsigned int)maxIterations;
-  solver.m_roots = (size_t)nState;
-  solver.m_hermitian = true;
-  solver.m_maxQ = 1000;
-  solver.m_verbosity = 1;
+      backup_file(options.parameter("BACKUP_FILE", "")), solver(linalg::itsolv::create_LinearEigensystem<t_Wavefunction,t_Wavefunction,t_Wavefunction>(
+          "Davidson","max_size_qspace=10"
+//molpro::linalg::itsolv::LinearEigensystemDavidsonOptions()
+        ,make_handlers<t_Wavefunction>()
+    )) {
+  solver->set_convergence_threshold(1e-5);// TODO get this from options
+//  solver.m_verbosity = solverVerbosity;
+//  solver.m_maxIterations = (unsigned int)maxIterations;
+  solver->set_n_roots(nState);
+  solver->set_hermiticity(true);
+//  solver.m_maxQ = 1000;
+//  solver.m_verbosity = 1;
 }
 
 template <class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::message() const {
   if (GA_Nodeid() == 0) {
-    std::cout << "Davidson eigensolver, maximum iterations=" << maxIterations;
-    std::cout << "; number of states=" << nState;
-    std::cout << "; energy threshold=" << std::scientific << std::setprecision(1) << energyThreshold << std::endl;
-    std::cout << "size of Fock space=" << prototype.size() << std::endl;
-    xout << std::fixed << std::setprecision(12);
+    cout << "Davidson eigensolver, maximum iterations=" << maxIterations;
+    cout << "; number of states=" << nState;
+    cout << "; energy threshold=" << std::scientific << std::setprecision(1) << energyThreshold << std::endl;
+    cout << "size of Fock space=" << prototype.size() << std::endl;
+    cout << std::fixed << std::setprecision(12);
   }
 }
 
@@ -178,7 +182,7 @@ void Davidson<t_Wavefunction, t_Operator>::prepareGuess() {}
 template <>
 void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
   if (!restart_file.empty()) {
-    std::cout << "Restarting from wfn backup, file = " << restart_file << std::endl;
+    cout << "Restarting from wfn backup, file = " << restart_file << std::endl;
     davidson_read_write_wfn<MixedWavefunction>(ww, restart_file, false);
     return;
   }
@@ -193,7 +197,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
     root.zero();
   auto id = GA_Nodeid();
   if (id == 0) {
-    std::cout << "Entered Davidson::prepareGuess()" << std::endl;
+    cout << "Entered Davidson::prepareGuess()" << std::endl;
     // get number of electronic states from options
     auto nM = options.parameter("NMODAL", int(0));
     int nElSt = nState / nM + nState % nM ? 1 : 0;
@@ -213,7 +217,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
         init_guess[i * nM * nElStG + iVibSt * nElStG + iElSt] = 1.0;
       }
     } else {
-      xout << "Read guess from file, " << guess_file << std::endl;
+      cout << "Read guess from file, " << guess_file << std::endl;
       auto input = std::ifstream(guess_file);
       std::string val;
       while (std::getline(input, val))
@@ -235,7 +239,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
         ww[i].put(iVibSt, wfn);
       }
     }
-    std::cout << "Exit Davidson::prepareGuess()" << std::endl;
+    cout << "Exit Davidson::prepareGuess()" << std::endl;
   }
   for (auto &root : ww)
     root.sync();
@@ -252,43 +256,43 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::energy_decomposition
   auto names = std::vector<std::string>{"Hvib", "Hel[0]", "Hel[1]", "Lambda[1]", "K[0]", "K[1]", "D[0]", "D[1]"};
   for (const auto &name : names)
     hams.insert({name, MixedOperatorSecondQuant(ham, name)});
-  std::cout << "Energetic contributions from different terms of the Hamiltonian" << std::endl;
+  cout << "Energetic contributions from different terms of the Hamiltonian" << std::endl;
   auto format_string = std::string{"{:8} "};
-  std::cout << "State  ";
+  cout << "State  ";
   for (const auto &name : names)
-    std::cout << name << "    ";
-  std::cout << std::endl;
+    cout << name << "    ";
+  cout << std::endl;
   for (size_t i = 0; i < ww.size(); ++i) {
     auto &w = ww[i];
     auto &g = gg[i];
     auto ov = w.dot(w);
     auto norm = 1. / std::sqrt(ov);
-    std::cout << "{" << i;
+    cout << "{" << i;
     for (const auto &name : names) {
       g.zero();
       g.operatorOnWavefunction(hams.at(name), w);
       ov = g.dot(w);
       auto e = ov / norm;
-      std::cout << ",   " << e;
+      cout << ",   " << e;
     }
-    std::cout << "}" << std::endl;
+    cout << "}" << std::endl;
   }
-  std::cout << "Vibrational Density matrix " << std::endl;
-  std::cout << "dm"
+  cout << "Vibrational Density matrix " << std::endl;
+  cout << "dm"
             << " = {";
   for (size_t i = 0; i < ww.size(); ++i) {
-    std::cout << "{";
+    cout << "{";
     auto dm = ww[i].vibDensity();
     for (size_t j = 0; j < dm.size(); ++j) {
-      std::cout << dm[j];
+      cout << dm[j];
       if (j != dm.size() - 1)
-        std::cout << ", ";
+        cout << ", ";
     }
-    std::cout << "}";
+    cout << "}";
     if (i != ww.size() - 1)
-      std::cout << "," << std::endl;
+      cout << "," << std::endl;
   }
-  std::cout << "};" << std::endl;
+  cout << "};" << std::endl;
 }
 
 template <class t_Wavefunction, class t_Operator>
@@ -308,7 +312,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::analysis() {
     w.distr_buffer.scal(1. / std::sqrt(ov));
   }
   if (GA_Nodeid() == 0) {
-    std::cout << "Analysis:" << std::endl;
+    cout << "Analysis:" << std::endl;
     // transform to basis of BO electronic states
     auto ww_bo = std::vector<std::vector<double>>(nState);
     for (size_t i = 0; i < nState; ++i) {
@@ -343,17 +347,17 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::analysis() {
       }
     }
     // Print out
-    std::cout << "electronic assignment" << std::endl;
+    cout << "electronic assignment" << std::endl;
     for (size_t i = 0; i < nState; ++i) {
       for (auto ov : electronic_assignment[i])
-        std::cout << ov << ",";
-      std::cout << std::endl;
+        cout << ov << ",";
+      cout << std::endl;
     }
-    std::cout << "bosonic assignment" << std::endl;
+    cout << "bosonic assignment" << std::endl;
     for (size_t i = 0; i < nState; ++i) {
       for (auto ov : bosonic_assignment[i])
-        std::cout << ov << ",";
-      std::cout << std::endl;
+        cout << ov << ",";
+      cout << std::endl;
     }
   }
   for (auto &root : ww)
@@ -374,34 +378,35 @@ void Davidson<t_Wavefunction, t_Operator>::run() {
   std::iota(begin(working_set), end(working_set), 0);
   for (unsigned int iteration = 1; iteration <= maxIterations; iteration++) {
     action(working_set);
-    solver.addVector(ww, gg);
-    working_set = solver.working_set();
+    solver->add_vector(ww, gg);
+    working_set = solver->working_set();
     if (false) {
-      std::cout << "working set = ";
-      std::copy(begin(working_set), end(working_set), std::ostream_iterator<int>(std::cout, ","));
-      std::cout << std::endl;
+      cout << "working set = ";
+      std::copy(begin(working_set), end(working_set), std::ostream_iterator<int>(cout, ","));
+      cout << std::endl;
     }
-    solver.report();
+    solver->report();
     update(working_set);
     if (true)
-      std::cout << solver.statistics() << std::endl;
+      cout << solver->statistics() << std::endl;
     backup(ww);
-    if (solver.working_set().empty())
+    solver->end_iteration(ww,gg);
+    if (solver->working_set().empty())
       break;
   }
   working_set.resize(nState);
   std::iota(begin(working_set), end(working_set), 0);
-  solver.solution(working_set, ww, gg);
+  solver->solution(working_set, ww, gg);
   if (maxIterations > 0) {
-    xout << "energies: ";
+    cout << "energies: ";
     for (unsigned int i = 0; i < nState; ++i)
-      xout << solver.eigenvalues()[i] << ", ";
-    xout << std::endl;
+      cout << solver->eigenvalues()[i] << ", ";
+    cout << std::endl;
     analysis();
   }
   if (options.parameter("ENERGY_DECOMPOSITION", 0))
     energy_decomposition();
-  std::cout << "Exit Davidson::run()" << std::endl;
+  cout << "Exit Davidson::run()" << std::endl;
 }
 
 template <class t_Wavefunction, class t_Operator>
@@ -463,15 +468,15 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::action(const std::ve
 
 template <class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::update(const std::vector<int> &working_set) {
-  auto eigval = solver.eigenvalues();
+  auto eigval = solver->eigenvalues();
   for (size_t state = 0; state < working_set.size(); ++state) {
     t_Wavefunction &cw = ww[state];
-    const t_Wavefunction &gw = gg[state];
+    t_Wavefunction &gw = gg[state];
     auto shift = -eigval[state] + 1e-10;
     shift += 2 * std::numeric_limits<value_type>::epsilon() *
              std::max<value_type>(1, std::abs(diag_val_at_minlocN[state])); // to guard against zero
-    cw.divide(&gw, diagonalH.get(), shift, true, true);
-    cw.replicate();
+    gw.divide(&gw, diagonalH.get(), shift, false, true);
+    gw.replicate();
   }
 }
 

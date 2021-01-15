@@ -1,6 +1,10 @@
 #ifndef GCI_H
 #define GCI_H
 
+#include <molpro/iostream.h>
+//#define xout molpro::cout
+//using xout = molpro::cout;
+using molpro::cout;
 #include <cstdint>
 #include <cstring>
 #include <memory>
@@ -13,19 +17,10 @@
 
 #include <ga-mpi.h>
 #include <ga.h>
+#include <molpro/mpi.h>
 
-#ifndef MOLPRO
-#define xout std::cout
-#else
-#include "gciMolpro.h"
-#include "molpro_config.h"
-#include "ppidd.h"
-#ifdef HAVE_MPI_H
-#define MPI_COMM_COMPUTE MPI_Comm_f2c(PPIDD_Worker_comm())
-#else
-#define MPI_COMM_NULL 0
-#endif
-#endif
+//#define MPI_COMM_COMPUTE MPI_Comm_f2c(PPIDD_Worker_comm())
+//#define MPI_COMM_NULL 0
 #ifdef HAVE_MPI_H
 
 #include <climits>
@@ -113,14 +108,14 @@ inline bool NextTask(MPI_Comm communicator) {
   if (__my_first_task[communicator] + __task_granularity[communicator] <= __task[communicator])
     __my_first_task[communicator] = nextval(communicator) * __task_granularity[communicator];
   return (__task[communicator]++ >= __my_first_task[communicator] &&
-          __task[communicator] <= __my_first_task[communicator] + __task_granularity[communicator]);
+      __task[communicator] <= __my_first_task[communicator] + __task_granularity[communicator]);
 }
 
 inline void EndTasks(MPI_Comm communicator) {}
 
 // simple task distribution assembly
 
-inline void gather_chunks(double *buffer, const size_t length, const size_t chunk, MPI_Comm communicator) {
+inline void gather_chunks(double* buffer, const size_t length, const size_t chunk, MPI_Comm communicator) {
   int parallel_rank, parallel_size;
   MPI_Comm_size(communicator, &parallel_size);
   MPI_Comm_rank(communicator, &parallel_rank);
@@ -128,13 +123,13 @@ inline void gather_chunks(double *buffer, const size_t length, const size_t chun
     std::vector<int> recvcounts(static_cast<unsigned long>(parallel_size)),
         displs(static_cast<unsigned long>(parallel_size));
     displs[0] = 0;
-    for (size_t i = 1; i < (size_t)parallel_size; i++) {
-      displs[i] = static_cast<int>((int)i * chunk);
-      if (displs[i] > (int)(length))
-        displs[i] = (int)length;
+    for (size_t i = 1; i < (size_t) parallel_size; i++) {
+      displs[i] = static_cast<int>((int) i * chunk);
+      if (displs[i] > (int) (length))
+        displs[i] = (int) length;
       recvcounts[i - 1] = displs[i] - displs[i - 1];
     }
-    recvcounts[parallel_size - 1] = (int)(length)-displs[parallel_size - 1];
+    recvcounts[parallel_size - 1] = (int) (length) - displs[parallel_size - 1];
 //        xout << "nsa="<<nsa<<std::endl;
 //        xout << "displ:"; for (size_t i=0; i<(size_t)parallel_size; i++) xout <<" "<<displs[i]; xout <<std::endl;
 //        xout << "recvcounts:"; for (size_t i=0; i<(size_t)parallel_size; i++) xout <<" "<<recvcounts[i]; xout
@@ -145,7 +140,7 @@ inline void gather_chunks(double *buffer, const size_t length, const size_t chun
   }
 }
 
-void inline gsum(double *buffer, size_t len, MPI_Comm communicator) {
+void inline gsum(double* buffer, size_t len, MPI_Comm communicator) {
 #ifdef HAVE_MPI_H
   //    int parallel_rank, parallel_size;
   //    MPI_Comm_size(communicator, &parallel_size);
@@ -162,7 +157,7 @@ void inline gsum(double *buffer, size_t len, MPI_Comm communicator) {
 #endif
 }
 
-void inline gsum(std::map<size_t, double> &buffer, MPI_Comm communicator) {
+void inline gsum(std::map<size_t, double>& buffer, MPI_Comm communicator) {
 #ifdef HAVE_MPI_H
   int parallel_rank, parallel_size;
   MPI_Comm_size(communicator, &parallel_size);
@@ -170,12 +165,12 @@ void inline gsum(std::map<size_t, double> &buffer, MPI_Comm communicator) {
   std::map<size_t, double> result;
   for (int rank = 0; rank < parallel_size; rank++) {
     size_t siz = buffer.size();
-    MPI_Bcast(&siz, (int)1, MPI_SIZE_T, rank, communicator);
+    MPI_Bcast(&siz, (int) 1, MPI_SIZE_T, rank, communicator);
     std::vector<size_t> addresses(siz);
     std::vector<double> values(siz);
     if (rank == parallel_rank) {
       size_t i = 0;
-      for (const auto &b : buffer) {
+      for (const auto& b : buffer) {
         addresses[i] = b.first;
         values[i] = b.second;
         ++i;

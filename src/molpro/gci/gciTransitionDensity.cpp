@@ -41,9 +41,9 @@ TransitionDensity::TransitionDensity(const Wavefunction &w, const StringSet::con
       m_deltaBeta(w.betaStrings[0].proto.nelec - m_betaStringsBegin->nelec),
       m_excitations((m_deltaAlpha + m_deltaBeta) % 2 ? w.orbitalSpace->operator[](m_symexc)
                                                      : w.orbitalSpace->total(m_symexc, m_parity)) {
-  //  xout << "time on entering TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() <<"
-  //  "<< gci::profiler->getResources().wall << std::endl; xout << "size(): " << memory::array<double>::size() <<
-  //  std::endl; xout << m_nsa << " " << m_nsb << " " << m_excitations << " " << m_nsa * m_nsb * m_excitations <<" =
+  //  cout << "time on entering TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() <<"
+  //  "<< gci::profiler->getResources().wall << std::endl; cout << "size(): " << memory::array<double>::size() <<
+  //  std::endl; cout << m_nsa << " " << m_nsb << " " << m_excitations << " " << m_nsa * m_nsb * m_excitations <<" =
   //  "<<size() << std::endl;
   assert(molpro::array<double>::size() == m_nsa * m_nsb * m_excitations);
   if (empty())
@@ -158,7 +158,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w, const StringSet::con
     const size_t wnsb = w.betaStrings[wsymb].size();
     // assumes that alphaStrings, betaStrings are contiguous ordered subsets of wavefunction strings
     const size_t woffset = w.blockOffset(wsyma) + m_betaStringsBegin->index(w.betaStrings[wsymb]);
-    //    xout << "alpha wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<std::endl;
+    //    cout << "alpha wsyma="<<wsyma<<", wsymb="<<wsymb<<", woffset="<<woffset<<std::endl;
 
     size_t offa = 0;
     for (auto s = m_alphaStringsBegin; s != m_alphaStringsEnd; s++) {
@@ -298,12 +298,12 @@ TransitionDensity::TransitionDensity(const Wavefunction &w, const StringSet::con
       }
     }
   } else {
-    xout << "deltaAlpha=" << m_deltaAlpha << ", deltaBeta=" << m_deltaBeta << std::endl;
+    cout << "deltaAlpha=" << m_deltaAlpha << ", deltaBeta=" << m_deltaBeta << std::endl;
     throw std::logic_error("unimplemented case");
   }
-  //  size_t populated=0; for (const_iterator x=begin(); x!=end(); x++) if (*x !=(double)0) ++populated; xout
+  //  size_t populated=0; for (const_iterator x=begin(); x!=end(); x++) if (*x !=(double)0) ++populated; cout
   //  <<"TransitionDensity population="<<((double)populated)/((double)size()+1)<<std::endl;
-  //  xout << "time on leaving TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() <<"
+  //  cout << "time on leaving TransitionDensity " << std::chrono::steady_clock::now().time_since_epoch().count() <<"
   //  "<< gci::profiler->getResources().wall << std::endl;
 }
 
@@ -534,7 +534,7 @@ void TransitionDensity::action(Wavefunction &w) const {
       }
     }
   } else {
-    xout << "deltaAlpha=" << m_deltaAlpha << ", deltaBeta=" << m_deltaBeta << std::endl;
+    cout << "deltaAlpha=" << m_deltaAlpha << ", deltaBeta=" << m_deltaBeta << std::endl;
     throw std::logic_error("unimplemented case");
   }
 }
@@ -565,9 +565,9 @@ std::string TransitionDensity::str(int verbosity, unsigned int columns) const {
   if (verbosity < 0)
     return std::string("");
   std::ostringstream s;
-  //  xout <<"TransitionDensity::str size()="<<size()<<std::endl;
+  //  cout <<"TransitionDensity::str size()="<<size()<<std::endl;
   if (size() != m_nsa * m_nsb * m_excitations) {
-    xout << "wrong size in TransitionDensity::str " << size() << " " << m_nsa * m_nsb * m_excitations << std::endl;
+    cout << "wrong size in TransitionDensity::str " << size() << " " << m_nsa * m_nsb * m_excitations << std::endl;
     throw std::range_error("help");
   }
   if (!empty())

@@ -336,8 +336,8 @@ molpro::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(const mo
     auto &integrals_b = result.O1(false);
     integrals_b.assign(0);
     if (verbosity > 0) {
-      xout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
-      xout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
+      cout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
+      cout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
     }
     unsigned int si, sj, sk, sl;
     si = sj = sk = sl = 8;
@@ -356,13 +356,13 @@ molpro::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(const mo
 
       if (type == molpro::FCIdump::I1a) {
         if (verbosity > 1)
-          xout << "ha(" << oi << "," << oj << ") = " << value << std::endl;
+          cout << "ha(" << oi << "," << oj << ") = " << value << std::endl;
         if (si != sj)
           continue;
         integrals_a.block(si).at(oi * (oi + 1) / 2 + oj) = value;
       } else if (type == molpro::FCIdump::I1b) {
         if (verbosity > 1)
-          xout << "hb(" << oi << "," << oj << ") = " << value << std::endl;
+          cout << "hb(" << oi << "," << oj << ") = " << value << std::endl;
         if (si != sj)
           continue;
         integrals_b.block(si).at(oi * (oi + 1) / 2 + oj) = value;
@@ -370,7 +370,7 @@ molpro::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(const mo
         result.m_O0 = value;
     }
     if (verbosity > 0)
-      xout << result << std::endl;
+      cout << result << std::endl;
     if (collective) {
       portableByteStream = result.bytestream().data();
       lPortableByteStream = portableByteStream.size();
@@ -420,10 +420,10 @@ molpro::Operator MixedOperatorSecondQuant::constructK(const molpro::FCIdump &dum
     auto &integrals_ab = result.O2(true, false);
     auto &integrals_bb = result.O2(false, false);
     if (verbosity > 0) {
-      xout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
-      xout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
-      xout << "integral addresses " << &integrals_aa << " " << &integrals_ab << " " << &integrals_bb << std::endl;
-      xout << "integral sizes " << integrals_aa.size() << " " << integrals_ab.size() << " " << integrals_bb.size()
+      cout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
+      cout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
+      cout << "integral addresses " << &integrals_aa << " " << &integrals_ab << " " << &integrals_bb << std::endl;
+      cout << "integral sizes " << integrals_aa.size() << " " << integrals_ab.size() << " " << integrals_bb.size()
            << std::endl;
     }
     unsigned int si, sj, sk, sl;
@@ -447,13 +447,13 @@ molpro::Operator MixedOperatorSecondQuant::constructK(const molpro::FCIdump &dum
         result.m_O0 = value;
     }
     if (verbosity > 0)
-      xout << result << std::endl;
+      cout << result << std::endl;
     if (verbosity > 1)
-      xout << "int1:\n" << int1(result, 1) << std::endl;
+      cout << "int1:\n" << int1(result, 1) << std::endl;
     if (verbosity > 1)
-      xout << "intJ:\n" << intJ(result, 1, 1) << std::endl;
+      cout << "intJ:\n" << intJ(result, 1, 1) << std::endl;
     if (verbosity > 1)
-      xout << "intK:\n" << intK(result, 1) << std::endl;
+      cout << "intK:\n" << intK(result, 1) << std::endl;
     if (collective) {
       portableByteStream = result.bytestream().data();
       lPortableByteStream = portableByteStream.size();
@@ -503,10 +503,10 @@ molpro::Operator MixedOperatorSecondQuant::constructD(const molpro::FCIdump &dum
     auto &integrals_ab = result.O2(true, false);
     auto &integrals_bb = result.O2(false, false);
     if (verbosity > 0) {
-      xout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
-      xout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
-      xout << "integral addresses " << &integrals_aa << " " << &integrals_ab << " " << &integrals_bb << std::endl;
-      xout << "integral sizes " << integrals_aa.size() << " " << integrals_ab.size() << " " << integrals_bb.size()
+      cout << "integral addresses " << &integrals_a << " " << &integrals_b << std::endl;
+      cout << "integral addresses " << &integrals_a.block(0)[0] << " " << &integrals_b.block(0)[0] << std::endl;
+      cout << "integral addresses " << &integrals_aa << " " << &integrals_ab << " " << &integrals_bb << std::endl;
+      cout << "integral sizes " << integrals_aa.size() << " " << integrals_ab.size() << " " << integrals_bb.size()
            << std::endl;
     }
     unsigned int si, sj, sk, sl;
@@ -562,13 +562,13 @@ molpro::Operator MixedOperatorSecondQuant::constructD(const molpro::FCIdump &dum
         result.m_O0 = value;
     }
     if (verbosity > 0)
-      xout << result << std::endl;
+      cout << result << std::endl;
     if (verbosity > 1)
-      xout << "int1:\n" << int1(result, 1) << std::endl;
+      cout << "int1:\n" << int1(result, 1) << std::endl;
     if (verbosity > 1)
-      xout << "intJ:\n" << intJ(result, 1, 1) << std::endl;
+      cout << "intJ:\n" << intJ(result, 1, 1) << std::endl;
     if (verbosity > 1)
-      xout << "intK:\n" << intK(result, 1) << std::endl;
+      cout << "intK:\n" << intK(result, 1) << std::endl;
     if (collective) {
       portableByteStream = result.bytestream().data();
       lPortableByteStream = portableByteStream.size();

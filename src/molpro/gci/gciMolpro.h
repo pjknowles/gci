@@ -1,7 +1,7 @@
 #ifndef GCIMOLPRO_H
 #define GCIMOLPRO_H
 #include <cstdlib>
-#ifdef MOLPRO
+#ifdef MOLPRO_NO_LONGER
 #include <cic/ItfCommon.h>
 #include <cic/ItfFortranInt.h>
 #include <cic/ItfMpp.h>
