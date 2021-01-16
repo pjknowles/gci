@@ -322,13 +322,13 @@ std::unique_ptr<molpro::Profiler> profiler = nullptr;
 std::vector<double> Run::run() {
   if (profiler == nullptr)
     profiler =
-        std::make_unique<molpro::Profiler>("GCI", molpro::Profiler::sortMethod::wall, INT_MAX, gci::mpi_comm_compute);
+        std::make_unique<molpro::Profiler>("GCI");
   create_new_counter(mpi_comm_compute);
   _sub_communicator = create_new_comm();
   profiler->reset("GCI");
   int activeLvl = options.parameter("PROFACTIVE", -1);
   if (activeLvl >= 0)
-    profiler->active(activeLvl);
+    profiler->set_max_depth(activeLvl);
   cout << "PROGRAM * GCI (General Configuration Interaction)     Author: Peter Knowles, 2014" << std::endl;
   std::vector<double> energies;
   std::string method = options.parameter("METHOD", std::vector<std::string>(1, "DAVIDSON")).at(0);
@@ -473,8 +473,8 @@ std::vector<double> Run::run() {
   {
     auto profile = options.parameter("PROFILER", std::vector<int>(1, -1)).at(0);
     if (profile > 1)
-      cout << profiler->str(profile, false) << std::endl;
-    cout << profiler->str(profile, true) << std::endl;
+      cout << profiler->str(mpi_comm_compute, false) << std::endl;
+    cout << profiler->str(mpi_comm_compute, true) << std::endl;
   }
   _nextval_counter[mpi_comm_compute].reset(nullptr);
 
