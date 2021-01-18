@@ -9,7 +9,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(LibraryManager)
 set(MPI ON CACHE BOOL "Whether to build with MPI" FORCE)
-LibraryManager_Project(MPI_OPTION)
+LibraryManager_Project(MPI_OPTION FORTRAN_OPTION)
 
 ########## Options ##########
 option(GCI_TEST "Whether to force tests to be built" OFF)
