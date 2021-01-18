@@ -1,7 +1,11 @@
 #ifndef GCI_GCIUTILS_H
 #define GCI_GCIUTILS_H
 
+#ifdef HAVE_HDF5
 #include <hdf5.h>
+#else // HAVE_HDF5
+#define hid_t int
+#endif // HAVE_HDF5
 #include <mpi.h>
 #include <string>
 
