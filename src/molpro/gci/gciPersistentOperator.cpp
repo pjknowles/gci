@@ -26,6 +26,7 @@ PersistentOperator::PersistentOperator(hid_t id, std::string _description)
     : m_file_id(id), m_description(std::move(_description)), m_on_disk(true) {}
 
 void PersistentOperator::store_bytestream(const std::shared_ptr<molpro::Operator> &op, int root) {
+#ifdef HAVE_HDF5
   hid_t dataset;
   if (parallel_rank == root) {
     if (op == nullptr)
@@ -46,9 +47,13 @@ void PersistentOperator::store_bytestream(const std::shared_ptr<molpro::Operator
     dataset = utils::open_or_create_hdf5_dataset(m_file_id, m_description, H5T_NATIVE_CHAR, size);
   }
   H5Dclose(dataset);
+#else // HAVE_HDF5
+  throw std::logic_error("HDF5 support not compiled");
+#endif // HAVE_HDF5
 }
 
 std::shared_ptr<molpro::Operator> PersistentOperator::get() const {
+#ifdef HAVE_HDF5
   if (!m_on_disk)
     return m_op;
   auto buffer = std::vector<char>();
@@ -71,6 +76,9 @@ std::shared_ptr<molpro::Operator> PersistentOperator::get() const {
   H5Pclose(plist_id);
   auto op = std::make_shared<molpro::Operator>(molpro::Operator::construct(buffer.data()));
   return op;
+#else // HAVE_HDF5
+  throw std::logic_error("HDF5 support not compiled");
+#endif // HAVE_HDF5
 }
 
 } // namespace gci

@@ -1,7 +1,11 @@
 #ifndef GCI_GCIPERSISTENTOPERATOR_H
 #define GCI_GCIPERSISTENTOPERATOR_H
 
+#ifdef HAVE_HDF5
 #include <hdf5.h>
+#else // HAVE_HDF5
+#define hid_t int
+#endif // HAVE_HDF5
 #include <memory>
 #include <molpro/Operator.h>
 

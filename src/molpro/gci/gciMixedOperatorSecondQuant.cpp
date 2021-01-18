@@ -93,7 +93,11 @@ MixedOperatorSecondQuant::~MixedOperatorSecondQuant() {
   elHam2.clear();
   mixedHam.clear();
   if (hdf5_file_owner) {
+#ifdef HAVE_HDF5
     H5Fclose(hid_file);
+#else // HAVE_HDF5
+    throw std::logic_error("HDF5 support not compiled");
+#endif // HAVE_HDF5
   }
 }
 

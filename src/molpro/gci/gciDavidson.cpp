@@ -7,7 +7,11 @@
 
 #include <fstream>
 #include <ga.h>
+#ifdef HAVE_HDF5
 #include <hdf5.h>
+#else // HAVE_HDF5
+#define hid_t int
+#endif // HAVE_HDF5
 #include <iomanip>
 
 namespace molpro {
@@ -110,6 +114,7 @@ void Davidson<t_Wavefunction, t_Operator>::printMatrix(const std::string &fname)
 }
 
 void davidson_read_write_array(MixedWavefunction &w, const std::string &fname, unsigned int i, hid_t id, bool save) {
+#ifdef HAVE_HDF5
   auto dataset = utils::open_or_create_hdf5_dataset(id, "result_" + std::to_string(i), H5T_NATIVE_DOUBLE, w.size());
   auto buffer = w.distr_buffer.local_buffer(); // array::Array::LocalBuffer(w);
   hsize_t count[1] = {(hsize_t)buffer->size()};
@@ -132,6 +137,9 @@ void davidson_read_write_array(MixedWavefunction &w, const std::string &fname, u
   H5Sclose(fspace);
   H5Sclose(memspace);
   H5Pclose(plist_id);
+#else //HAVE_HDF5
+  throw std::logic_error("HDF5 support not compiled");
+#endif //HAVE_HDF5
 }
 
 template <typename t_Wavefunction>
@@ -142,7 +150,11 @@ void davidson_read_write_wfn(std::vector<t_Wavefunction> &ww, const std::string 
   for (auto i = 0ul; i < ww.size(); ++i) {
     davidson_read_write_array(ww[i], fname, i, id, save);
   }
+#ifdef HAVE_HDF5
   H5Fclose(id);
+#else // HAVE_HDF5
+  throw std::logic_error("HDF5 support not compiled");
+#endif // HAVE_HDF5
 }
 template <>
 void davidson_read_write_wfn(std::vector<Wavefunction> &ww, const std::string &fname, bool save) {}

@@ -17,6 +17,7 @@ option(GCI_SHAREDCOUNTER_MPI3 "Use MPI3 RMA implementation of SharedCounter" ON)
 option(GCI_SHAREDCOUNTER_GA "Use Global Arrays implementation of SharedCounter" OFF)
 option(GCI_ARRAY_MPI3 "Use MPI3 RMA implementation of Array" ON)
 option(GCI_ARRAY_GA "Use Global Arrays implementation of Array" OFF)
+option(GCI_HDF5 "Build using parallel HDF5 (some features missing if off)" ON)
 
 ########## Dependencies ##########
 
