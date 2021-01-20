@@ -473,8 +473,8 @@ std::vector<double> Run::run() {
   {
     auto profile = options.parameter("PROFILER", std::vector<int>(1, -1)).at(0);
     if (profile > 1)
-      cout << profiler->str(mpi_comm_compute, false) << std::endl;
-    cout << profiler->str(mpi_comm_compute, true) << std::endl;
+      cout << profiler->str(false) << std::endl;
+    cout << profiler->str(true) << std::endl;
   }
   _nextval_counter[mpi_comm_compute].reset(nullptr);
 
