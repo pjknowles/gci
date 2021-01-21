@@ -732,6 +732,7 @@ std::vector<double> Run::Davidson(const molpro::Operator& ham, const State& prot
   //  //  auto natorb = dynamic_cast<std::shared_ptr<Wavefunction> >(ww[0])->Wavefunction::naturalOrbitals();
   //  //  cout << "natorb:\n"<<natorb<<std::endl;
   //  return solver.eigenvalues();
+  throw std::logic_error("Unexpected call of obsolete function");
 }
 
 std::vector<double> Run::CSDavidson(const molpro::Operator& ham, const State& prototype, double energyThreshold,
@@ -1470,6 +1471,7 @@ std::vector<double> Run::ISRSPT(const molpro::Operator& ham, const molpro::Opera
   //  //      cout << "Final g: "<<g.str(2)<<std::endl;
   //  //  return solver.incremental_energies(); // TODO
   //  return solver.eigenvalues();
+  throw std::logic_error("Unexpected call of obsolete function");
 }
 
 void Run::HamiltonianMatrixPrint(molpro::Operator& hamiltonian, const State& prototype, int verbosity) {

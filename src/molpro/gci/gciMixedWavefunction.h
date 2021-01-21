@@ -82,6 +82,7 @@ public:
   /*!
    * @brief Returns a wavefunction corresponding to vibrational product under offset
    * @param iVib Index to the vibrational product
+   * @param commun MPI communicator
    * @return Reference to a wavefunction under offset
    */
   Wavefunction wavefunctionAt(size_t iVib, MPI_Comm commun) const;
@@ -97,6 +98,7 @@ public:
    * @param iVib vibrational index of the electronic Wavefunction
    * @param lo index of the start of the block
    * @param hi index of the end of the block (inclusive)
+   * @param dimension TODO
    */
   static void ga_wfn_block_bound(int iVib, int *lo, int *hi, int dimension);
   static void copy_to_local(const MixedWavefunction &w, int iVib, Wavefunction &wfn);
@@ -118,6 +120,7 @@ public:
   /*!
    * @brief Set this object to the diagonal elements of the hamiltonian
    * \param ham Fully second quantized mixed Hamiltonian operator
+   * \param parallel_stringset Whether stringsets are constructed in parallel
    */
   void diagonalOperator(const MixedOperatorSecondQuant &ham, bool parallel_stringset = false);
 
