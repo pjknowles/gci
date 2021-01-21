@@ -53,6 +53,7 @@ public:
    * \param nelec Number of electrons
    * \param symmetry Spatial symmetry
    * \param ms2 Sz quantum number times 2
+   * \param communicator MPI Communicator
    */
   Wavefunction(OrbitalSpace h, int nelec, int symmetry, int ms2, MPI_Comm communicator = mpi_comm_compute);
 
@@ -61,6 +62,7 @@ public:
   /*!
    * \brief Construct a Wavefunction object from a State prototype
    * \param state the State prototype
+   * \param communicator MPI Communicator
    */
   explicit Wavefunction(const State &state, MPI_Comm communicator = mpi_comm_compute);
 

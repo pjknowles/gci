@@ -18,7 +18,7 @@ enum class parity_t : int {
 /*!
  * @brief Unique hash value for this excitation string for a given parity
  * @note Exchange of excitation strings for different modes is alway symmetric.
- * @param parity Symmetry for exchange of modals in excitation string
+ * @param exchange Symmetry for exchange of modals in excitation string
  * @return
  */
 size_t hash(const VibExcitation &exc, int nMode, int nModal, parity_t hermiticity, parity_t exchange);

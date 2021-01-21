@@ -58,7 +58,7 @@ class Davidson {
   /*!
    * @brief Sets up the linear eigenvalue problem
    * @param prototype Prototype wavefunction; it defines the Fock space for the problem.
-   * @param ham Hamiltonian operator that is to be diagonalised
+   * @param _ham Hamiltonian operator that is to be diagonalised
    * @param options Global options defining the state of the whole calculation. Options relevant to the calculation
    *        are extracted into DavidsonOptions member.
    */
@@ -93,7 +93,7 @@ class Davidson {
   void energy_decomposition();
   //! Apply the Hamiltonian on the current solution
   void action(const std::vector<int>& working_set);
-  //! Get the new vector, $r = A u - \lambda u$
+  //! Get the new vector, $r = A u - lambda u$
   void update(const std::vector<int>& working_set);
   //! Store the current solutions in a backup file
   void backup(std::vector<t_Wavefunction>& ww);
