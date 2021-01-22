@@ -1,6 +1,4 @@
 #ifdef MOLPRO
-//#include "gciMolpro.h"
-//#include "molpro_config.h"
 #include "cic/ItfFortranInt.h"
 using itf::GetOptionF;
 using itf::GetOptionI;

@@ -1,12 +1,12 @@
 LibraryManager_Append(${PROJECT_NAME}
         SOURCES
-        gciDeterminant.cpp gciExcitationSet.cpp gciFile.cpp gciMolpro.cpp gciOptions.cpp gciOrbitalSpace.cpp gciRun.cpp
+        gciDeterminant.cpp gciExcitationSet.cpp gciFile.cpp gciOptions.cpp gciOrbitalSpace.cpp gciRun.cpp
         gciState.cpp gciString.cpp gciStringSet.cpp gciSymmetrySpace.cpp gciTransitionDensity.cpp gciWavefunction.cpp
         gciHProduct.cpp gciHProductSet.cpp gciMixedOperator.cpp gciMixedWavefunction.cpp
         gciVibSpace.cpp gciDavidson.cpp gciPersistentOperator.cpp gciMixedOperatorSecondQuant.cpp gciVibOperator.cpp
         gciUtils.cpp
         PUBLIC_HEADER
-        gci.h gciDeterminant.h gciExcitationSet.h gciFile.h gciMolpro.h gciOptions.h gciOrbitals.h gciOrbitalSpace.h
+        gci.h gciDeterminant.h gciExcitationSet.h gciFile.h gciOptions.h gciOrbitals.h gciOrbitalSpace.h
         gciPrintable.h gciRun.h gciState.h gciString.h gciStringSet.h gciSymmetrySpace.h gciTransitionDensity.h
         gciWavefunction.h gciHProduct.h gciHProductSet.h gciMixedOperator.h gciMixedWavefunction.h
         gciVibSpace.h gciDavidson.h gciPersistentOperator.h gciMixedOperatorSecondQuant.h gciVibOperator.h

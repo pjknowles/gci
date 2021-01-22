@@ -1,6 +1,3 @@
-#ifdef MOLPRO
-#include "molpro_config.h"
-#endif
 #include "gci.h"
 #include "gciFile.h"
 #include <unistd.h>

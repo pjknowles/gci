@@ -1,12 +1,16 @@
 #include "gciWavefunction.h"
-#ifdef MOLPRO
-#include "cic/ItfFortranInt.h"
-using namespace itf;
+
+#if defined __has_include
+#if __has_include(<mkl.h>)
+#include <mkl.h>
+#else
+#include <cblas.h>
+#endif
+#else
+#include <cblas.h>
 #endif
 
-
 #include "gci.h"
-#include "gciMolpro.h"
 #include "gciOrbitals.h"
 #include "gciRun.h"
 #include "gciStringSet.h"
@@ -558,6 +562,7 @@ size_t Wavefunction::stringSymmetry(size_t offset, unsigned int axis) const {
 
 size_t Wavefunction::blockOffset(unsigned int syma) const { return _blockOffset.at(syma); }
 
+using uint = unsigned int;
 void MXM(double *Out, const double *A, const double *B, uint nRows, uint nLink, uint nCols, bool AddToDest,
          int nStrideLink = -1) {
   const bool debug = false;
@@ -568,12 +573,14 @@ void MXM(double *Out, const double *A, const double *B, uint nRows, uint nLink, 
       cout << "MXM initial Out\n" << Eigen::Map<Eigen::MatrixXd>(Out, nRows, nCols) << std::endl;
     if (debug)
       cout << "MXM A\n" << Eigen::Map<const Eigen::MatrixXd>(A, nRows, nLink) << std::endl;
-    MxmDrvNN(Out, A, B, nRows, nLink, nCols, AddToDest);
+    cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, nRows, nCols, nLink, 1, A, nRows, B, nLink,
+                AddToDest ? 1 : 0, Out, nRows);
   } else {
     //      if (debug) // how to make const and Stride work together?
     //        cout << "MXM A\n"<<Eigen::Map<const Eigen::MatrixXd>(A,nRows,nLink,
     //        Eigen::Stride<Eigen::Dynamic,Eigen::Dynamic>(1, -nStrideLink))<<std::endl;
-    MxmDrvTN(Out, A, B, nRows, nLink, static_cast<uint>(nStrideLink), nCols, AddToDest);
+    cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, nRows, nCols, nLink, 1, A, static_cast<uint>(nStrideLink), B,
+                nLink, AddToDest ? 1 : 0, Out, nRows);
   }
   if (debug) {
     cout << "MXM B\n" << Eigen::Map<const Eigen::MatrixXd>(B, nLink, nCols) << std::endl;

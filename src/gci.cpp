@@ -8,7 +8,7 @@
 #include <molpro/memory.h>
 #include <unistd.h>
 
-#ifndef MOLPRO
+//#ifndef MOLPRO
 
 #include <molpro/PluginGuest.h>
 
@@ -98,4 +98,4 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-#endif
+//#endif

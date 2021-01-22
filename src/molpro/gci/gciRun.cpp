@@ -7,22 +7,35 @@
 
 #include "gciDavidson.h"
 #include "gciMixedWavefunction.h"
-//#include "gciMolpro.h"
 #include "gciRun.h"
 #include <molpro/linalg/itsolv/SolverFactory-implementation.h>
+#include <stdint.h>
 #ifdef MOLPRO
-//#include "gciMolpro.h"
 #include "cic/ItfFortranInt.h"
 #endif
+
+inline void set_molpro_variable(const std::string& name, const std::vector<double>& values, size_t offset = 0,
+                         size_t length = SIZE_MAX) {
+#ifdef MOLPRO
+  itf::SetVariables(name.c_str(), &(values.at(offset)), (unsigned int)std::min(values.size() - offset, length), (unsigned int)0,
+                    "");
+#endif
+}
+template <class T>
+inline void set_molpro_variable(const std::string& name, const std::vector<T>& ivalues, size_t offset = 0,
+                         size_t length = SIZE_MAX) {
+  std::vector<double> values;
+  for (const auto& iv : ivalues)
+    values.push_back(iv);
+  set_molpro_variable(name, values, offset, length);
+}
 
 namespace molpro::linalg {
 using molpro::gci::MixedWavefunction;
 using molpro::gci::Wavefunction;
-template
-class molpro::linalg::itsolv::SolverFactory<MixedWavefunction, MixedWavefunction, MixedWavefunction>;
-template
-class molpro::linalg::itsolv::SolverFactory<Wavefunction, Wavefunction, Wavefunction>;
-}
+template class molpro::linalg::itsolv::SolverFactory<MixedWavefunction, MixedWavefunction, MixedWavefunction>;
+template class molpro::linalg::itsolv::SolverFactory<Wavefunction, Wavefunction, Wavefunction>;
+} // namespace molpro::linalg
 
 namespace molpro {
 namespace gci {
@@ -321,8 +334,7 @@ Run::Run(std::string fcidump) : m_hamiltonian(constructOperator(molpro::FCIdump(
 std::unique_ptr<molpro::Profiler> profiler = nullptr;
 std::vector<double> Run::run() {
   if (profiler == nullptr)
-    profiler =
-        std::make_unique<molpro::Profiler>("GCI");
+    profiler = std::make_unique<molpro::Profiler>("GCI");
   create_new_counter(mpi_comm_compute);
   _sub_communicator = create_new_comm();
   profiler->reset("GCI");
@@ -403,9 +415,7 @@ std::vector<double> Run::run() {
     cout << std::endl;
     energies.resize(1);
     energies[0] = totalEnergy;
-#ifdef MOLPRO
-    itf::SetVariables("ENERGY_MP", &(emp.at(1)), (unsigned int)emp.size() - 1, (unsigned int)0, "");
-#endif
+    set_molpro_variable("ENERGY_MP", emp, 1);
   } else if (method == "IPT") {
     cout << "Ionisation perturbation theory" << std::endl;
     //    Operator h0 = m_hamiltonian.fockOperator(referenceDeterminant);
@@ -430,9 +440,7 @@ std::vector<double> Run::run() {
     cout << std::endl;
     energies.resize(1);
     energies[0] = totalEnergy;
-#ifdef MOLPRO
-    itf::SetVariables("ENERGY_MP", &(emp.at(1)), (unsigned int)emp.size() - 1, (unsigned int)0, "");
-#endif
+    set_molpro_variable("ENERGY_MP", emp, 1);
   } else if (method == "DAVIDSON") {
     if (options.parameter("VIBRONIC", 0) || false) {
       if (options.parameter("SECOND_QUANT", 0)) {
@@ -453,9 +461,7 @@ std::vector<double> Run::run() {
     }
   } else if (method == "CS") {
     energies = CSDavidson(m_hamiltonian, prototype);
-#ifdef MOLPRO
-    //    itf::SetVariables( "ENERGY_METHOD", &(emp.at(1)), (unsigned int) emp.size()-1, (unsigned int) 0, "" );
-#endif
+    //    set_molpro_variable("ENERGY_METHOD",emp,1);
   } else if (method == "DIIS") {
     energies = DIIS(m_hamiltonian, prototype);
   } else if (method == "HAMILTONIAN")
@@ -801,7 +807,7 @@ std::vector<double> Run::CSDavidson(const molpro::Operator& ham, const State& pr
     // "<<reducedHamiltonian[j+(n+1)*i]; cout << std::endl; } }
     std::vector<double> eigenvectors(reducedHamiltonian);
     std::vector<double> eigenvalues(n + 1);
-//    Diagonalize(&eigenvectors[0], &eigenvalues[0], (unsigned int)(n + 1), (unsigned int)(n + 1));
+    //    Diagonalize(&eigenvectors[0], &eigenvalues[0], (unsigned int)(n + 1), (unsigned int)(n + 1));
     throw std::runtime_error("unimplemented");
     e.resize((nState > n + 1 ? n + 1 : nState));
     e.assign(eigenvalues.begin(), eigenvalues.begin() + e.size());
@@ -978,11 +984,9 @@ std::vector<double> Run::CSDavidson(const molpro::Operator& ham, const State& pr
         if (fcumulative[i] > 1 - 1e-8 || (edges[i] < 1e-4 && i > 0 && fcumulative[i] == fcumulative[i - 1]))
           break;
       }
-#ifdef MOLPRO
       // put the histogram to Molpro variable space
-      itf::SetVariables("HISTOGRAM_X", &edges[0], (unsigned int)nhist, 0, "");
-      itf::SetVariables("HISTOGRAM_Y", &fcumulative[0], (unsigned int)nhist, 0, "");
-#endif
+      set_molpro_variable("HISTOGRAM_X", edges);
+      set_molpro_variable("HISTOGRAM_Y", cumulative);
       profiler->stop("Histogram");
     }
     break;

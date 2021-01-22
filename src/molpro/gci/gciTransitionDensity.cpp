@@ -1,8 +1,16 @@
 #include "gciTransitionDensity.h"
-#include "gciMolpro.h"
 #include <iostream>
 #include <iterator>
 #include <sstream>
+#if defined __has_include
+#if __has_include(<mkl.h>)
+#include <mkl.h>
+#else
+#include <cblas.h>
+#endif
+#else
+#include <cblas.h>
+#endif
 
 // using TransitionDensity = gci::TransitionDensity;
 namespace molpro {
@@ -556,8 +564,11 @@ molpro::Operator TransitionDensity::density(const Wavefunction &w) const {
   if (m_nsa * m_nsb != (w.blockOffset(syma + 1) - w.blockOffset(syma)))
     throw std::range_error("Wrong dimensions, TransitionDensity::density"); // present implementation only for complete
                                                                             // space in TransitionDensity
-  MxmDrvTN(&((*result.O1(true).data())[0]), &this->at(0), &(w.buffer[w.blockOffset(syma)]), m_excitations,
-           m_nsa * m_nsb, 1, 1);
+  double *out = &((*result.O1(true).data())[0]);
+  const double *a = &at(0);
+  const double *b = &(w.buffer[w.blockOffset(syma)]);
+  cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, m_excitations, 1, m_nsa * m_nsb, 1, a, 1, b, m_nsa * m_nsb,
+              false ? 1 : 0, out, m_excitations);
   return result;
 }
 
