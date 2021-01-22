@@ -21,6 +21,16 @@ add_subdirectory(wavefunction)
 
 LibraryManager_BLAS(${PROJECT_NAME} PUBLIC Intel10_64lp_seq Intel10_64lp)
 target_compile_definitions(${PROJECT_NAME} PRIVATE -DBLAS)
+if (NOT MKL)
+    find_library(cblas cblas)
+    if (NOT cblas STREQUAL cblas-NOTFOUND)
+        message(STATUS "Found cblas=${cblas}")
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${cblas})
+        get_filename_component(_lib ${cblas} DIRECTORY)
+        get_filename_component(_prefix ${_lib} DIRECTORY)
+        target_include_directories(${PROJECT_NAME} PUBLIC ${_prefix}/include)
+    endif ()
+endif ()
 
 target_link_libraries(${PROJECT_NAME} PUBLIC MPI::MPI_CXX ga::ga)
 
