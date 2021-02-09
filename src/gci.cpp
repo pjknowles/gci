@@ -7,6 +7,7 @@
 #include <macdecls.h>
 #include <molpro/memory.h>
 #include <unistd.h>
+#include <ga.h>
 
 //#ifndef MOLPRO
 

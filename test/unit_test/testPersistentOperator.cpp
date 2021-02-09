@@ -6,6 +6,7 @@
 #include <molpro/gci/gciUtils.h>
 
 #include "parallel_utils.h"
+#include <ga.h>
 
 using ::testing::ContainerEq;
 using ::testing::Pointwise;

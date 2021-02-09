@@ -1,5 +1,6 @@
 #ifndef GCI_PARALLEL_UTILS_H
 #define GCI_PARALLEL_UTILS_H
+#include <ga.h>
 
 class Lock {
 public:

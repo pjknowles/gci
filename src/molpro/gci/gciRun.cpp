@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <ga.h>
 #include <iomanip>
 #include <molpro/Operator.h>
 #include <molpro/gci/wavefunction/WavefunctionHandler.h>
@@ -42,9 +41,11 @@ namespace gci {
 
 MPI_Comm create_new_comm() {
   MPI_Comm new_comm = MPI_COMM_NULL;
-  MPI_Comm_split(mpi_comm_compute, GA_Nodeid(), GA_Nodeid(), &new_comm);
+  int id;
+  MPI_Comm_rank(molpro::gci::mpi_comm_compute,&id);
+  MPI_Comm_split(mpi_comm_compute, id, id, &new_comm);
   if (new_comm == MPI_COMM_NULL)
-    GA_Error((char*)"Failed to create a new communicator", 0);
+    throw std::runtime_error("Failed to create a new communicator");
   return new_comm;
 }
 

@@ -15,8 +15,6 @@ using molpro::cout;
 
 #include "molpro/gci/schedule/SharedCounter.h"
 
-#include <ga-mpi.h>
-#include <ga.h>
 #include <molpro/mpi.h>
 
 //#define MPI_COMM_COMPUTE MPI_Comm_f2c(PPIDD_Worker_comm())
