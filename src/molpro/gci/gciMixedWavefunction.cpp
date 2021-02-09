@@ -1,7 +1,6 @@
 #include "gciMixedWavefunction.h"
 #include "gciHProductSet.h"
 
-#include <ga.h>
 #include <mpi.h>
 
 namespace molpro {
