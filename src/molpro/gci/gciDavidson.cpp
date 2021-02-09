@@ -6,7 +6,6 @@
 #include <molpro/linalg/itsolv/LinearEigensystemDavidsonOptions.h>
 
 #include <fstream>
-#include <ga.h>
 #ifdef HAVE_HDF5
 #include <hdf5.h>
 #else // HAVE_HDF5
@@ -52,7 +51,9 @@ Davidson<t_Wavefunction, t_Operator>::Davidson(const t_Wavefunction &prototype, 
 
 template <class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::message() const {
-  if (GA_Nodeid() == 0) {
+  int id;
+  MPI_Comm_rank(molpro::gci::mpi_comm_compute, &id);
+  if (id == 0) {
     cout << "Davidson eigensolver, maximum iterations=" << maxIterations;
     cout << "; number of states=" << nState;
     cout << "; energy threshold=" << std::scientific << std::setprecision(1) << energyThreshold << std::endl;
@@ -63,7 +64,9 @@ void Davidson<t_Wavefunction, t_Operator>::message() const {
 
 template <class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::printMatrix(const std::string &fname) const {
-  if (GA_Nodeid() != 0)
+  int id;
+  MPI_Comm_rank(molpro::gci::mpi_comm_compute,&id);
+  if (id != 0)
     return;
   auto file = std::ofstream(fname);
   if (!file.is_open())
@@ -84,7 +87,7 @@ void Davidson<t_Wavefunction, t_Operator>::printMatrix(const std::string &fname)
     for (size_t j = 0; j < n; ++j)
       H[i][j] = action.at(j);
   }
-  if (GA_Nodeid() == 0) {
+  {
     //    file << "(* Hamiltonian matrix (nxn) *)" << std::endl;
     //    file << "n = " << n << std::endl;
     file << n << std::endl;
@@ -207,7 +210,8 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
     return;
   for (auto &root : ww)
     root.zero();
-  auto id = GA_Nodeid();
+  int id;
+  MPI_Comm_rank(molpro::gci::mpi_comm_compute,&id);
   if (id == 0) {
     cout << "Entered Davidson::prepareGuess()" << std::endl;
     // get number of electronic states from options
@@ -237,7 +241,7 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::prepareGuess() {
           init_guess.push_back(std::stod(val));
         }
       if (init_guess.size() != guess_size)
-        GA_Error((char *)"initial guess vector is of the wrong size", 0);
+        throw std::runtime_error("initial guess vector is of the wrong size");
     }
     for (auto i = 0ul; i < nState; ++i) {
       for (int iVibSt = 0; iVibSt < nM; ++iVibSt) {
@@ -323,7 +327,9 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::analysis() {
     auto ov = w.dot(w);
     w.distr_buffer.scal(1. / std::sqrt(ov));
   }
-  if (GA_Nodeid() == 0) {
+  int id;
+  MPI_Comm_rank(molpro::gci::mpi_comm_compute,&id);
+  if (id == 0) {
     cout << "Analysis:" << std::endl;
     // transform to basis of BO electronic states
     auto ww_bo = std::vector<std::vector<double>>(nState);
@@ -431,12 +437,14 @@ void Davidson<t_Wavefunction, t_Operator>::initialize() {
   for (auto i = 0ul; i < nState; ++i)
     diag_val_at_minlocN.push_back(diagonalH->at(diag_minlocN[i]));
   std::vector<int> roots(nState, 0);
+  int id;
+  MPI_Comm_rank(molpro::gci::mpi_comm_compute,&id);
   for (unsigned int root = 0; root < nState; root++) {
     ww.emplace_back(prototype, 0);
     ww.back().allocate_buffer();
     ww.back().zero();
     auto n = diag_minlocN[root];
-    if (GA_Nodeid() == 0)
+    if (id == 0)
       if (std::count(roots.begin(), roots.begin() + root, n) != 0)
         throw std::logic_error("Davidson::initialize duplicate guess vector, n =" + std::to_string(n));
     roots[root] = n;
