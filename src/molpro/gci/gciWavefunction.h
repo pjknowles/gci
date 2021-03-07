@@ -38,7 +38,7 @@ public:
   int m_parallel_size;
   int m_parallel_rank;
   molpro::vector<double> buffer; ///< buffer to hold coefficients describing the object
-  molpro::linalg::array::DistrArrayMPI3 distr_buffer;
+  std::shared_ptr<molpro::linalg::array::DistrArrayMPI3> distr_buffer; // TODO should really be unique_ptr but then we'd need to write an explicit operator=()
 
 protected:
   size_t dimension; ///< the size of the space

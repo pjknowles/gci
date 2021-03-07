@@ -1,14 +1,6 @@
 #include "gciWavefunction.h"
 
-#if defined __has_include
-#if __has_include(<mkl.h>)
-#include <mkl.h>
-#else
-#include <cblas.h>
-#endif
-#else
-#include <cblas.h>
-#endif
+#include <molpro/cblas.h>
 
 #include "gci.h"
 #include "gciOrbitals.h"
@@ -66,10 +58,14 @@ Wavefunction::Wavefunction(const Wavefunction &source, int option, MPI_Comm comm
       dimension(source.dimension) {
   *this = source;
   if (!buffer.empty()) {
-    distr_buffer = DistrArrayMPI3(dimension, m_communicator);
+    int ranks;
+    MPI_Comm_size(m_communicator,&ranks);
+    auto distribution = molpro::linalg::array::util::make_distribution_spread_remainder<DistrArrayMPI3::index_type>(dimension,ranks);
     DistrArrayMPI3::index_type start, end;
-    std::tie(start, end) = distr_buffer.distribution().range(m_parallel_rank);
-    distr_buffer.allocate_buffer({&buffer[start], end - start});
+    std::tie(start, end) = distribution.range(m_parallel_rank);
+    distr_buffer.reset(new DistrArrayMPI3(std::make_unique<molpro::linalg::array::util::Distribution<DistrArrayMPI3::index_type>>(distribution),
+                                          m_communicator,
+                                          molpro::linalg::array::span::Span<double>(&buffer[start], end - start)));
   }
   if (m_communicator == MPI_COMM_NULL)
     m_communicator = source.m_communicator;
@@ -104,10 +100,17 @@ void Wavefunction::allocate_buffer() {
     buffer_sparse.clear();
   else {
     buffer.resize(dimension, (double)0);
-    distr_buffer = DistrArrayMPI3(dimension, m_communicator);
+    int ranks;
+    MPI_Comm_size(m_communicator,&ranks);
+    auto distribution = molpro::linalg::array::util::make_distribution_spread_remainder<DistrArrayMPI3::index_type>(dimension,ranks);
     DistrArrayMPI3::index_type start, end;
-    std::tie(start, end) = distr_buffer.distribution().range(m_parallel_rank);
-    distr_buffer.allocate_buffer({&buffer[start], end - start});
+    std::tie(start, end) = distribution.range(m_parallel_rank);
+    distr_buffer.reset(new DistrArrayMPI3(std::make_unique<molpro::linalg::array::util::Distribution<DistrArrayMPI3::index_type>>(
+        distribution),
+                                          m_communicator,
+                                          molpro::linalg::array::span::Span<double>(&buffer[start], end - start)));
+//    std::tie(start, end) = distr_buffer.distribution().range(m_parallel_rank);
+//    distr_buffer.allocate_buffer({&buffer[start], end - start});
   }
 }
 
