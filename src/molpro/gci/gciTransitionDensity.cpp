@@ -2,15 +2,7 @@
 #include <iostream>
 #include <iterator>
 #include <sstream>
-#if defined __has_include
-#if __has_include(<mkl.h>)
-#include <mkl.h>
-#else
-#include <cblas.h>
-#endif
-#else
-#include <cblas.h>
-#endif
+#include <molpro/cblas.h>
 
 // using TransitionDensity = gci::TransitionDensity;
 namespace molpro {

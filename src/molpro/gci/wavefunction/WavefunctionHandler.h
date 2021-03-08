@@ -42,7 +42,7 @@ public:
   }
 
   std::map<size_t, value_type_abs> select_max_dot(size_t n, const AL &x, const AR &y) override {
-    return x.distr_buffer.select_max_dot(n, y.distr_buffer);
+    return x.distr_buffer->select_max_dot(n, *y.distr_buffer);
   }
 
 protected:

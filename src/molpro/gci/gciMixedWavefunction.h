@@ -3,6 +3,7 @@
 
 #include <mpi.h>
 #include <vector>
+#include <memory>
 
 #include "molpro/gci/gciHProductSet.h"
 #include "molpro/gci/gciMixedOperator.h"
@@ -69,7 +70,7 @@ protected:
   Wavefunction m_prototype;
 
 public:
-  molpro::linalg::array::DistrArrayMPI3 distr_buffer; //!< array storing the actual buffer and performing linear algebra
+  std::shared_ptr<molpro::linalg::array::DistrArrayMPI3> distr_buffer; //!< array storing the actual buffer and performing linear algebra
 
   explicit MixedWavefunction(const Options &options, const State &prototype, MPI_Comm head_commun = mpi_comm_compute);
 
