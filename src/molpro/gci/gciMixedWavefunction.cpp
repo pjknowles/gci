@@ -2,6 +2,7 @@
 #include "gciHProductSet.h"
 
 #include <mpi.h>
+#include <molpro/linalg/array/util/Distribution.h>
 
 namespace molpro {
 namespace gci {
@@ -22,9 +23,14 @@ void MixedWavefunction::allocate_buffer() {
 //  distr_buffer.allocate_buffer();
 }
 
-MixedWavefunction::MixedWavefunction(const MixedWavefunction &source)
+MixedWavefunction::MixedWavefunction(const MixedWavefunction& source)
     : m_child_communicator(source.m_child_communicator), m_vibSpace(source.m_vibSpace), m_vibBasis(source.m_vibBasis),
-      m_elDim(source.m_elDim), m_prototype(source.m_prototype), distr_buffer(source.distr_buffer) {}
+      m_elDim(source.m_elDim), m_prototype(source.m_prototype), distr_buffer(source.distr_buffer) {
+  distr_buffer.reset(new molpro::linalg::array::DistrArrayMPI3(std::make_unique<molpro::linalg::array::util::Distribution<
+                                                                   molpro::linalg::array::DistrArrayMPI3::index_type>>(source.distr_buffer->distribution()),
+                                                               source.distr_buffer->communicator()));
+  *distr_buffer = *source.distr_buffer;
+}
 
 MixedWavefunction::MixedWavefunction(const MixedWavefunction &source, int option) : MixedWavefunction(source) {}
 
@@ -47,7 +53,7 @@ void MixedWavefunction::copy_to_local(const MixedWavefunction &w, int iVib, Wave
   auto dimension = wfn.dimension;
   int lo, hi, ld = dimension;
   w.ga_wfn_block_bound(iVib, &lo, &hi, dimension);
-  (*w.distr_buffer).get(lo, hi, buffer);
+  w.distr_buffer->get(lo, hi, buffer);
   return;
 }
 
@@ -57,7 +63,7 @@ void MixedWavefunction::put(int iVib, Wavefunction &wfn) {
   auto dimension = wfn.dimension;
   int lo, hi, ld = dimension;
   ga_wfn_block_bound(iVib, &lo, &hi, dimension);
-  (*distr_buffer).put(lo, hi, buffer);
+  distr_buffer->put(lo, hi, buffer);
 }
 
 void MixedWavefunction::accumulate(int iVib, Wavefunction &wfn) {

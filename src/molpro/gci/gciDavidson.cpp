@@ -488,13 +488,13 @@ void Davidson<MixedWavefunction, MixedOperatorSecondQuant>::action(const std::ve
 
 template <class t_Wavefunction, class t_Operator>
 void Davidson<t_Wavefunction, t_Operator>::update(const std::vector<int> &working_set) {
-  auto eigval = solver->eigenvalues();
+  auto eigval = solver->working_set_eigenvalues();
   for (size_t state = 0; state < working_set.size(); ++state) {
     t_Wavefunction &cw = ww[state];
     t_Wavefunction &gw = gg[state];
     auto shift = -eigval[state] + 1e-10;
     shift += 2 * std::numeric_limits<value_type>::epsilon() *
-             std::max<value_type>(1, std::abs(diag_val_at_minlocN[state])); // to guard against zero
+             std::max<value_type>(1, std::abs(diag_val_at_minlocN[working_set[state]])); // to guard against zero
     gw.divide(&gw, diagonalH.get(), shift, false, true);
     gw.replicate();
   }
