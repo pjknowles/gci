@@ -12,6 +12,7 @@
 #ifdef MOLPRO
 #include "cic/ItfFortranInt.h"
 #endif
+using uint = unsigned int;
 
 inline void set_molpro_variable(const std::string& name, const std::vector<double>& values, size_t offset = 0,
                          size_t length = SIZE_MAX) {
