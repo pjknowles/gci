@@ -53,6 +53,8 @@ set(SYMMETRY_MATRIX_DOUBLE ON CACHE BOOL "Whether to build and test symmetry_mat
 set(SYMMETRY_MATRIX_COMPLEXDOUBLE OFF CACHE BOOL "Whether to build and test symmetry_matrix with complex-double data type")
 set(SYMMETRY_MATRIX_FLOAT OFF CACHE BOOL "Whether to build and test symmetry_matrix with float data type")
 DependencyManager_Populate(FCIdump)
+set(LINEARALGEBRA_ARRAY_GA ${GCI_SHAREDCOUNTER_GA})
+set(LINEARALGEBRA_ARRAY_HDF5 ${GCI_HDF5})
 DependencyManager_Populate(LinearAlgebra)
 DependencyManager_Populate(memory)
 DependencyManager_Populate(molpro-plugin)
