@@ -270,15 +270,15 @@ void MixedWavefunction::axpy(double a, const MixedWavefunction &w) { distr_buffe
 void MixedWavefunction::sync() const { distr_buffer->sync(); }
 void MixedWavefunction::zero() { distr_buffer->zero(); }
 size_t MixedWavefunction::size() const { return distr_buffer->size(); }
-double MixedWavefunction::at(unsigned long i) const { return distr_buffer->at(i); }
-void MixedWavefunction::set(unsigned long i, double v) { distr_buffer->set(i, v); }
+double MixedWavefunction::at(size_t i) const { return distr_buffer->at(i); }
+void MixedWavefunction::set(size_t i, double v) { distr_buffer->set(i, v); }
 void MixedWavefunction::divide(const MixedWavefunction *y, const MixedWavefunction *z, double shift, bool append,
                                bool negative) {
   distr_buffer->divide(*y->distr_buffer, *z->distr_buffer, shift, append, negative);
 }
 std::vector<size_t> MixedWavefunction::minlocN(int n) const { return distr_buffer->min_loc_n(n); }
-double MixedWavefunction::dot(const std::map<unsigned long, double> &w) const { return distr_buffer->dot(w); }
-void MixedWavefunction::axpy(double a, const std::map<unsigned long, double> &w) { distr_buffer->axpy(a, w); }
+double MixedWavefunction::dot(const std::map<size_t, double> &w) const { return distr_buffer->dot(w); }
+void MixedWavefunction::axpy(double a, const std::map<size_t, double> &w) { distr_buffer->axpy(a, w); }
 void MixedWavefunction::scal(double a) { distr_buffer->scal(a); }
 void MixedWavefunction::fill(double a) { distr_buffer->fill(a); }
 

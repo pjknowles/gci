@@ -143,16 +143,16 @@ public:
   std::string str(int v = 0, unsigned int c = 0) const override { return ""; }
 
   [[nodiscard]] double dot(const MixedWavefunction &w) const;
-  [[nodiscard]] double dot(const std::map<unsigned long int, double> &w) const;
-  void axpy(double a, const std::map<unsigned long int, double> &w);
+  [[nodiscard]] double dot(const std::map<size_t, double> &w) const;
+  void axpy(double a, const std::map<size_t, double> &w);
   void axpy(double a, const MixedWavefunction &w);
   //! allocates the array buffer
   void allocate_buffer();
   void sync() const;
   void zero();
   size_t size() const;
-  double at(unsigned long i) const;
-  void set(unsigned long i, double v);
+  double at(size_t i) const;
+  void set(size_t i, double v);
   void scal(double a);
   void fill(double a);
   void divide(const MixedWavefunction *y, const MixedWavefunction *z, double shift = 0, bool append = false,
