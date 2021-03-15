@@ -15,7 +15,6 @@ public:
    * \brief Create a new file
    */
   File();
-  ~File();
 
   /*!
    * \brief write data to the file
