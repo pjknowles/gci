@@ -32,7 +32,10 @@ if (NOT MKL)
     endif ()
 endif ()
 
-target_link_libraries(${PROJECT_NAME} PUBLIC MPI::MPI_CXX ga::ga)
+target_link_libraries(${PROJECT_NAME} PUBLIC MPI::MPI_CXX)
+if (GCI_SHAREDCOUNTER_GA OR GCI_ARRAY_GA)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ga::ga)
+endif ()
 
 if (GCI_HDF5)
     message(STATUS "Building gci with HDF5")
