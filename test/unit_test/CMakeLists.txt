@@ -17,12 +17,12 @@ add_executable(test-gci
 target_link_libraries(test-gci PUBLIC molpro::gci gmock_main)
 gtest_discover_tests(test-gci)
 
-if (GCI_HDF5)
+if (GCI_HDF5 AND TARGET ga::ga)
     add_executable(test-gci-parallel
             main.cpp parallel_utils.h
             testPersistentOperator.cpp
             )
-    target_link_libraries(test-gci-parallel PUBLIC molpro::gci gmock_main)
+    target_link_libraries(test-gci-parallel PUBLIC molpro::gci gmock_main ga::ga)
     target_compile_definitions(test-gci-parallel PRIVATE "DATA_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/data\"")
     add_test(NAME test-gci-parallel
             COMMAND ${MPIEXEC_EXECUTABLE} ${MPIOPTIONS} ${MPIEXEC_NUMPROC_FLAG} 2 ${MPIEXEC_PREFLAGS}
