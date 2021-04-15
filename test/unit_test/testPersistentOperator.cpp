@@ -6,6 +6,7 @@
 #include <molpro/gci/gciUtils.h>
 
 #include "parallel_utils.h"
+#include <ga.h>
 
 using ::testing::ContainerEq;
 using ::testing::Pointwise;
@@ -32,9 +33,13 @@ public:
   }
 
   ~PersistentOperatorDataF() {
+#ifdef HAVE_HDF5
     H5Fclose(file_id);
     if (molpro::gci::parallel_rank == 0)
       std::remove(fname_hdf5.c_str());
+#else // HAVE_HDF5
+    throw std::logic_error("HDF5 support not compiled");
+#endif // HAVE_HDF5
   }
 
   std::string fname_op_rank1;

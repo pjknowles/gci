@@ -93,7 +93,9 @@ MixedOperatorSecondQuant::~MixedOperatorSecondQuant() {
   elHam2.clear();
   mixedHam.clear();
   if (hdf5_file_owner) {
+#ifdef HAVE_HDF5
     H5Fclose(hid_file);
+#endif // HAVE_HDF5
   }
 }
 
@@ -391,6 +393,7 @@ molpro::Operator MixedOperatorSecondQuant::constructOperatorAntisymm1el(const mo
       free(buf);
     return result;
   }
+  throw std::logic_error("Unexpected non-collective non-master call");
 }
 
 molpro::Operator MixedOperatorSecondQuant::constructK(const molpro::FCIdump &dump, bool collective) {
@@ -474,6 +477,7 @@ molpro::Operator MixedOperatorSecondQuant::constructK(const molpro::FCIdump &dum
       free(buf);
     return result;
   }
+  throw std::logic_error("Unexpected non-collective non-master call");
 }
 
 molpro::Operator MixedOperatorSecondQuant::constructD(const molpro::FCIdump &dump, bool collective) {
@@ -589,6 +593,7 @@ molpro::Operator MixedOperatorSecondQuant::constructD(const molpro::FCIdump &dum
       free(buf);
     return result;
   }
+  throw std::logic_error("Unexpected non-collective non-master call");
 }
 
 bool MixedOperatorSecondQuant::connected(const HProduct &bra, const HProduct &ket) const {

@@ -8,7 +8,7 @@
 #define GCI_SCHEDULE_SHAREDCOUNTER_TYPE SharedCounterMPI3
 #include "molpro/gci/schedule/SharedCounterMPI3.h"
 #else
-#define GCI_SCHEDULE_SHAREDCOUNTER_TYPE SharedConterMPI3
+#define GCI_SCHEDULE_SHAREDCOUNTER_TYPE SharedCounterMPI3
 #include "molpro/gci/schedule/SharedCounterMPI3.h"
 #endif
 

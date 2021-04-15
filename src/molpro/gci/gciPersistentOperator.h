@@ -1,7 +1,11 @@
 #ifndef GCI_GCIPERSISTENTOPERATOR_H
 #define GCI_GCIPERSISTENTOPERATOR_H
 
+#ifdef HAVE_HDF5
 #include <hdf5.h>
+#else // HAVE_HDF5
+#define hid_t int
+#endif // HAVE_HDF5
 #include <memory>
 #include <molpro/Operator.h>
 
@@ -27,7 +31,7 @@ public:
    * @note only root process writes to disk, other process participate in updating structure of hdf5 file
    *
    * @param op pointer to the operator that will be stored
-   * @param description unique description of the operator
+   * @param _description unique description of the operator
    * @param root rank of the root process
    * @param id id of hdf5 file
    * @param in_memory flags operator to be stored in memory, irrespective of its size

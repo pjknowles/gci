@@ -36,10 +36,16 @@ public:
 class TransitionDensity : public molpro::array<double>, public Printable {
 public:
   /*!
-   * \brief Construct a TransitionDensity from a wavefunction to a subset of space defined by sets of alpha and beta
-   * String objects \param w \param alphaStringsBegin \param alphaStringsEnd \param betaStringsBegin \param
-   * betaStringsEnd \param parity \param doAlpha whether to process alpha excitations \param doBeta whether to process
-   * beta excitations
+   * \brief Construct a TransitionDensity from a wavefunction to a subset of space defined by sets of alpha and beta String objects
+   * \param w
+   * \param alphaStringsBegin
+   * \param alphaStringsEnd
+   * \param betaStringsBegin
+   * \param * betaStringsEnd
+   * \param parity
+   * \param doAlpha
+   * whether to process alpha excitations
+   * \param doBeta whether to process beta excitations
    */
   TransitionDensity(const Wavefunction &w, const StringSet::const_iterator &alphaStringsBegin,
                     const StringSet::const_iterator &alphaStringsEnd, const StringSet::const_iterator &betaStringsBegin,

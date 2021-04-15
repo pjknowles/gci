@@ -179,6 +179,8 @@ protected:
    * @tparam Func Function evaluating the operator, given the mode, highest modal and the difference (bra - ket)
    * @param bra Vibrational Hartree product for the bra
    * @param ket Vibrational Hartree product for the ket
+   * @param func TODO
+   * @param targetMode TODO
    * @return
    */
   double QtypeOperator(const HProduct &bra, const HProduct &ket, const std::function<double(double, int, int)> &func,

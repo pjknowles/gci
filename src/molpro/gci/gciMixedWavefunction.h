@@ -3,6 +3,7 @@
 
 #include <mpi.h>
 #include <vector>
+#include <memory>
 
 #include "molpro/gci/gciHProductSet.h"
 #include "molpro/gci/gciMixedOperator.h"
@@ -69,7 +70,7 @@ protected:
   Wavefunction m_prototype;
 
 public:
-  molpro::linalg::array::DistrArrayMPI3 distr_buffer; //!< array storing the actual buffer and performing linear algebra
+  std::shared_ptr<molpro::linalg::array::DistrArrayMPI3> distr_buffer; //!< array storing the actual buffer and performing linear algebra
 
   explicit MixedWavefunction(const Options &options, const State &prototype, MPI_Comm head_commun = mpi_comm_compute);
 
@@ -82,6 +83,7 @@ public:
   /*!
    * @brief Returns a wavefunction corresponding to vibrational product under offset
    * @param iVib Index to the vibrational product
+   * @param commun MPI communicator
    * @return Reference to a wavefunction under offset
    */
   Wavefunction wavefunctionAt(size_t iVib, MPI_Comm commun) const;
@@ -97,6 +99,7 @@ public:
    * @param iVib vibrational index of the electronic Wavefunction
    * @param lo index of the start of the block
    * @param hi index of the end of the block (inclusive)
+   * @param dimension TODO
    */
   static void ga_wfn_block_bound(int iVib, int *lo, int *hi, int dimension);
   static void copy_to_local(const MixedWavefunction &w, int iVib, Wavefunction &wfn);
@@ -118,6 +121,7 @@ public:
   /*!
    * @brief Set this object to the diagonal elements of the hamiltonian
    * \param ham Fully second quantized mixed Hamiltonian operator
+   * \param parallel_stringset Whether stringsets are constructed in parallel
    */
   void diagonalOperator(const MixedOperatorSecondQuant &ham, bool parallel_stringset = false);
 
@@ -139,16 +143,16 @@ public:
   std::string str(int v = 0, unsigned int c = 0) const override { return ""; }
 
   [[nodiscard]] double dot(const MixedWavefunction &w) const;
-  [[nodiscard]] double dot(const std::map<unsigned long int, double> &w) const;
-  void axpy(double a, const std::map<unsigned long int, double> &w);
+  [[nodiscard]] double dot(const std::map<size_t, double> &w) const;
+  void axpy(double a, const std::map<size_t, double> &w);
   void axpy(double a, const MixedWavefunction &w);
   //! allocates the array buffer
   void allocate_buffer();
   void sync() const;
   void zero();
   size_t size() const;
-  double at(unsigned long i) const;
-  void set(unsigned long i, double v);
+  double at(size_t i) const;
+  void set(size_t i, double v);
   void scal(double a);
   void fill(double a);
   void divide(const MixedWavefunction *y, const MixedWavefunction *z, double shift = 0, bool append = false,

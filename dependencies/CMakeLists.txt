@@ -2,7 +2,7 @@ include(FetchContent)
 FetchContent_Declare(
         dependency_manager
         GIT_REPOSITORY https://gitlab.com/dependencymanager/dependency-manager.git
-        GIT_TAG 0.1.5
+        GIT_TAG 0.2.0
 )
 FetchContent_MakeAvailable(dependency_manager)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" PARENT_SCOPE)
@@ -15,6 +15,8 @@ DependencyManager_Declare(Profiler https://gitlab+deploy-token-74792:Bj6FL_cWqz_
 DependencyManager_Declare(symmetry_matrix https://gitlab+deploy-token-74793:dLXMspxsDJozbVw7VBRF@gitlab.com/molpro/symmetry_matrix.git)
 DependencyManager_Declare(utilities https://gitlab+deploy-token-181030:whWoM4qkenzjGjWsFTxj@gitlab.com/molpro/utilities.git)
 
+if (GCI_ARRAY_GA OR GCI_SHAREDCOUNTER_GA OR  ${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
+    message ("Finding GA")
 set(GA_RUNTIME "MPI_RMA" CACHE STRING "overwriting default for GA runtime protocol")
 if (NOT TARGET ga::ga)
     find_program(ga-config ga-config)
@@ -35,7 +37,7 @@ if (NOT TARGET ga::ga)
         include(FetchContent)
         FetchContent_Declare(
                 ga
-                GIT_REPOSITORY https://github.com/GlobalArrays/ga
+                GIT_REPOSITORY https://github.com/GlobalArrays/ga.git
                 GIT_TAG 2518e23433385bfa3726d507b8cd0d7ed038021b
         )
         FetchContent_MakeAvailable(ga)
@@ -53,6 +55,7 @@ if (NOT TARGET ga::ga)
                 DESTINATION lib/cmake/ga)
     endif (ga-config)
 endif ()
+endif()
 
 set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
