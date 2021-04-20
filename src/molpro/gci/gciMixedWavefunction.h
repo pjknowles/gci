@@ -1,9 +1,9 @@
 #ifndef GCI_GCIMIXEDWAVEFUNCTION_H
 #define GCI_GCIMIXEDWAVEFUNCTION_H
 
+#include <memory>
 #include <mpi.h>
 #include <vector>
-#include <memory>
 
 #include "molpro/gci/gciHProductSet.h"
 #include "molpro/gci/gciMixedOperator.h"
@@ -70,16 +70,19 @@ protected:
   Wavefunction m_prototype;
 
 public:
-  std::shared_ptr<molpro::linalg::array::DistrArrayMPI3> distr_buffer; //!< array storing the actual buffer and performing linear algebra
+  std::shared_ptr<molpro::linalg::array::DistrArrayMPI3>
+      distr_buffer; //!< array storing the actual buffer and performing linear algebra
 
   explicit MixedWavefunction(const Options &options, const State &prototype, MPI_Comm head_commun = mpi_comm_compute);
 
   MixedWavefunction(const MixedWavefunction &source);
   MixedWavefunction(const MixedWavefunction &source, int option);
   MixedWavefunction &operator=(const MixedWavefunction &source);
+  MixedWavefunction(const std::map<size_t, double> &source);
 
   ~MixedWavefunction();
 
+  MixedWavefunction &operator=(const std::map<size_t, double> &source);
   /*!
    * @brief Returns a wavefunction corresponding to vibrational product under offset
    * @param iVib Index to the vibrational product

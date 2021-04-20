@@ -33,8 +33,8 @@ inline void set_molpro_variable(const std::string& name, const std::vector<T>& i
 namespace molpro::linalg {
 using molpro::gci::MixedWavefunction;
 using molpro::gci::Wavefunction;
-template class molpro::linalg::itsolv::SolverFactory<MixedWavefunction, MixedWavefunction, MixedWavefunction>;
-template class molpro::linalg::itsolv::SolverFactory<Wavefunction, Wavefunction, Wavefunction>;
+template class molpro::linalg::itsolv::SolverFactory<MixedWavefunction, MixedWavefunction>;
+template class molpro::linalg::itsolv::SolverFactory<Wavefunction, Wavefunction>;
 } // namespace molpro::linalg
 
 namespace molpro {

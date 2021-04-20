@@ -1,8 +1,9 @@
 #include "gciMixedWavefunction.h"
 #include "gciHProductSet.h"
+#include <stdexcept>
 
-#include <mpi.h>
 #include <molpro/linalg/array/util/Distribution.h>
+#include <mpi.h>
 
 namespace molpro {
 namespace gci {
@@ -17,19 +18,36 @@ MixedWavefunction::MixedWavefunction(const Options &options, const State &protot
   allocate_buffer();
 }
 
+MixedWavefunction::MixedWavefunction(const std::map<size_t, double> &source)
+    : m_child_communicator(_sub_communicator), m_vibSpace(1, 1, 1), m_vibBasis(m_vibSpace), m_elDim(0),
+      m_prototype(State(), m_child_communicator) {
+  throw std::logic_error("unimplementable");
+}
+
 MixedWavefunction::~MixedWavefunction() = default;
 
 void MixedWavefunction::allocate_buffer() {
-//  distr_buffer.allocate_buffer();
+  //  distr_buffer.allocate_buffer();
 }
 
-MixedWavefunction::MixedWavefunction(const MixedWavefunction& source)
+MixedWavefunction::MixedWavefunction(const MixedWavefunction &source)
     : m_child_communicator(source.m_child_communicator), m_vibSpace(source.m_vibSpace), m_vibBasis(source.m_vibBasis),
       m_elDim(source.m_elDim), m_prototype(source.m_prototype), distr_buffer(source.distr_buffer) {
-  distr_buffer.reset(new molpro::linalg::array::DistrArrayMPI3(std::make_unique<molpro::linalg::array::util::Distribution<
-                                                                   molpro::linalg::array::DistrArrayMPI3::index_type>>(source.distr_buffer->distribution()),
-                                                               source.distr_buffer->communicator()));
+  distr_buffer.reset(new molpro::linalg::array::DistrArrayMPI3(
+      std::make_unique<molpro::linalg::array::util::Distribution<molpro::linalg::array::DistrArrayMPI3::index_type>>(
+          source.distr_buffer->distribution()),
+      source.distr_buffer->communicator()));
   *distr_buffer = *source.distr_buffer;
+}
+
+MixedWavefunction & MixedWavefunction::operator=(const std::map<size_t,double> &source) {
+  auto& x = *distr_buffer;
+      x.fill(0);
+      auto lb = x.local_buffer();
+      auto start = lb->start();
+      for (const auto &v : source)
+      if (v.first >= start and v.first < start + lb->size())
+      (*lb)[v.first - start] = v.second;
 }
 
 MixedWavefunction::MixedWavefunction(const MixedWavefunction &source, int option) : MixedWavefunction(source) {}

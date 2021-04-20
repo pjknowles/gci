@@ -97,7 +97,7 @@ class Davidson {
   void update(const std::vector<int>& working_set);
   //! Store the current solutions in a backup file
   void backup(std::vector<t_Wavefunction>& ww);
-  std::unique_ptr<linalg::itsolv::LinearEigensystem<t_Wavefunction, t_Wavefunction, t_Wavefunction>>
+  std::unique_ptr<linalg::itsolv::LinearEigensystem<t_Wavefunction, t_Wavefunction, std::map<size_t, typename t_Wavefunction::value_type>>>
       solver; //!< Iterative solver
 
   double energyThreshold;

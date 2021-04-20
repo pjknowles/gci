@@ -95,6 +95,13 @@ void Wavefunction::buildStrings() {
   profiler->stop("buildStrings");
 }
 
+Wavefunction& Wavefunction::operator=( const std::map<size_t, double> &source) {
+  std::fill(buffer.begin(), buffer.end(), 0);
+  for (const auto &s : source)
+    *(buffer.begin() + s.first) = s.second;
+  return *this;
+}
+
 void Wavefunction::allocate_buffer() {
   if (m_sparse)
     buffer_sparse.clear();

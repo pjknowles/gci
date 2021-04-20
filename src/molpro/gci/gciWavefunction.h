@@ -72,6 +72,7 @@ public:
   std::vector<StringSet> alphaStrings; ///< The alpha-spin strings defining the CI basis
   std::vector<StringSet> betaStrings;  ///< The beta-spin strings defining the CI basis
 
+  Wavefunction &operator=(const std::map<size_t, double> &source);
   void allocate_buffer();                                                     ///< allocate buffer to full size
   size_t size() const { return m_sparse ? buffer_sparse.size() : dimension; } ///< the size of the space
 
