@@ -4,6 +4,7 @@
 #include <molpro/gci/wavefunction/WavefunctionHandler.h>
 #include <molpro/linalg/itsolv/ArrayHandlers.h>
 
+#include "Problem.h"
 #include "gciDavidson.h"
 #include "gciMixedWavefunction.h"
 #include "gciRun.h"
@@ -15,15 +16,15 @@
 using uint = unsigned int;
 
 inline void set_molpro_variable(const std::string& name, const std::vector<double>& values, size_t offset = 0,
-                         size_t length = SIZE_MAX) {
+                                size_t length = SIZE_MAX) {
 #ifdef MOLPRO
-  itf::SetVariables(name.c_str(), &(values.at(offset)), (unsigned int)std::min(values.size() - offset, length), (unsigned int)0,
-                    "");
+  itf::SetVariables(name.c_str(), &(values.at(offset)), (unsigned int)std::min(values.size() - offset, length),
+                    (unsigned int)0, "");
 #endif
 }
 template <class T>
 inline void set_molpro_variable(const std::string& name, const std::vector<T>& ivalues, size_t offset = 0,
-                         size_t length = SIZE_MAX) {
+                                size_t length = SIZE_MAX) {
   std::vector<double> values;
   for (const auto& iv : ivalues)
     values.push_back(iv);
@@ -43,7 +44,7 @@ namespace gci {
 MPI_Comm create_new_comm() {
   MPI_Comm new_comm = MPI_COMM_NULL;
   int id;
-  MPI_Comm_rank(molpro::gci::mpi_comm_compute,&id);
+  MPI_Comm_rank(molpro::gci::mpi_comm_compute, &id);
   MPI_Comm_split(mpi_comm_compute, id, id, &new_comm);
   if (new_comm == MPI_COMM_NULL)
     throw std::runtime_error("Failed to create a new communicator");
@@ -65,16 +66,29 @@ std::map<MPI_Comm, long int> __task_granularity{{mpi_comm_compute, 1}};
 using ParameterVectorSet = std::vector<Wavefunction>;
 using scalar = double;
 namespace {
+// auto make_handlers() {
+//   auto rr = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
+//   auto qq = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
+//   auto pp = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
+//   auto rq = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
+//   auto rp = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
+//   auto qr = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
+//   auto qp = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
+//   return std::make_shared<molpro::linalg::itsolv::ArrayHandlers<Wavefunction, Wavefunction, Wavefunction>>(
+//       rr, qq, pp, rq, rp, qr, qp);
+// }
 auto make_handlers() {
-  auto rr = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
-  auto qq = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
-  auto pp = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
-  auto rq = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
-  auto rp = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
-  auto qr = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
-  auto qp = std::make_shared<wavefunction::WavefunctionHandler<Wavefunction, Wavefunction>>();
-  return std::make_shared<molpro::linalg::itsolv::ArrayHandlers<Wavefunction, Wavefunction, Wavefunction>>(
-      rr, qq, pp, rq, rp, qr, qp);
+  using R = Wavefunction;
+  using Q = Wavefunction;
+  using P = std::map<size_t, R::value_type>;
+  auto rr = std::make_shared<wavefunction::WavefunctionHandler<R, R>>();
+  auto qq = std::make_shared<wavefunction::WavefunctionHandler<R, R>>();
+  auto pp = std::make_shared<molpro::linalg::array::ArrayHandlerSparse<P, P>>();
+  auto rq = std::make_shared<wavefunction::WavefunctionHandler<R, R>>();
+  auto rp = std::make_shared<wavefunction::WavefunctionHandlerSparse<R, P>>();
+  auto qr = std::make_shared<wavefunction::WavefunctionHandler<R, R>>();
+  auto qp = std::make_shared<wavefunction::WavefunctionHandlerSparse<R, P>>();
+  return std::make_shared<molpro::linalg::itsolv::ArrayHandlers<R, Q, P>>(rr, qq, pp, rq, rp, qr, qp);
 }
 } // namespace
 
@@ -454,6 +468,22 @@ std::vector<double> Run::run() {
       } else {
         throw std::runtime_error("Polynomial Hamiltonian is not supported in the new version");
       }
+    } else if (options.parameter("SIMPLIFIED", 0)) {
+      std::cout << "SIMPLIFIED chosen, hamiltonian:\n"<<m_hamiltonian<<std::endl;
+      auto solver = linalg::itsolv::create_LinearEigensystem<Wavefunction, Wavefunction>(
+          "Davidson", "max_size_qspace=10", make_handlers());
+      std::vector<Wavefunction> parameters,actions;
+      for (int work=0; work<1; work++) {
+        parameters.emplace_back(prototype, mpi_comm_compute);
+        parameters.back().allocate_buffer();
+        actions.emplace_back(prototype, mpi_comm_compute);
+        actions.back().allocate_buffer();
+        actions.back().settilesize(options.parameter("TILESIZE", std::vector<int>(1, -1)).at(0),
+                              options.parameter("ALPHATILESIZE", std::vector<int>(1, -1)).at(0),
+                              options.parameter("BETATILESIZE", std::vector<int>(1, -1)).at(0));
+      }
+      Problem problem(m_hamiltonian);
+      solver->solve(parameters, actions, problem, true);
     } else {
       auto ham = m_hamiltonian;
       auto wfn = Wavefunction{prototype, mpi_comm_compute};
@@ -1642,6 +1672,7 @@ molpro::Operator constructOperator(const molpro::FCIdump& dump, bool collective)
       dim.at(s - 1)++;
     molpro::Operator result(dim, 2, dump.parameter("IUHF")[0] > 0, 0, true, false, "Hamiltonian");
     result.zero();
+    result.set_dirty();
 
     dump.rewind();
     double value;

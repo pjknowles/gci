@@ -115,6 +115,9 @@ void constructDMcoupling(std::map<std::string, MixedOperatorSecondQuant::hel_t> 
                          const std::string &fcidump_f, const std::vector<double> &gamma,
                          const std::vector<double> &freq, int nmode, int nmodal);
 
+inline std::ostream& operator<<(std::ostream& o, const MixedOperatorSecondQuant& op) {
+  return o;
+}
 } // namespace gci
 } // namespace molpro
 
