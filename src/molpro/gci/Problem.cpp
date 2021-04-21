@@ -21,7 +21,6 @@ void molpro::gci::Problem::p_action(const std::vector<std::vector<value_t>>& p_c
                                     const CVecRef<std::map<size_t, container_t::value_type>>& pparams,
                                     const VecRef<container_t>& actions) const {
   for (size_t k = 0; k < p_coefficients.size(); k++) {
-    assert(m_P.size() == p_coefficients[k].size());
     Wavefunction& g = actions[k];
     Wavefunction w(g);
     w.m_sparse = true;
