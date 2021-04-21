@@ -8,12 +8,13 @@ namespace molpro::gci {
 
 class Problem : public molpro::linalg::itsolv::Problem<Wavefunction> {
   const molpro::Operator& m_hamiltonian;
+  const State& m_prototype;
 
 public:
   using linalg::itsolv::Problem<Wavefunction>::container_t;
   using P = std::map<size_t, container_t::value_type>;
   using linalg::itsolv::Problem<container_t>::value_t;
-  Problem(const Operator& hamiltonian);
+  Problem(const Operator& hamiltonian, const State& prototype);
   Problem() = delete;
   //  value_t residual(const R& parameters, R& residual) const override;
   void action(const CVecRef<container_t>& parameters, const VecRef<container_t>& actions) const override;

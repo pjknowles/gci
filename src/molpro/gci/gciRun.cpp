@@ -468,22 +468,33 @@ std::vector<double> Run::run() {
       } else {
         throw std::runtime_error("Polynomial Hamiltonian is not supported in the new version");
       }
-    } else if (options.parameter("SIMPLIFIED", 0)) {
-      std::cout << "SIMPLIFIED chosen, hamiltonian:\n"<<m_hamiltonian<<std::endl;
+    } else if (options.parameter("SIMPLIFIED", 1)) {
       auto solver = linalg::itsolv::create_LinearEigensystem<Wavefunction, Wavefunction>(
           "Davidson", "max_size_qspace=10", make_handlers());
-      std::vector<Wavefunction> parameters,actions;
-      for (int work=0; work<1; work++) {
+      auto verbosity = options.parameter("SOLVER_VERBOSITY",1);
+      if (verbosity == 0) solver->set_verbosity(linalg::itsolv::Verbosity::Summary);
+      if (verbosity == 1) solver->set_verbosity(linalg::itsolv::Verbosity::Iteration);
+      if (verbosity > 1) solver->set_verbosity(linalg::itsolv::Verbosity::Detailed);
+      solver->set_n_roots(options.parameter("NSTATE", 1));
+      solver->set_max_iter(options.parameter("MAXIT", 1000));
+      solver->set_convergence_threshold(options.parameter("CONVERGENCE_THRESHOLD", 1e-5));
+      solver->set_hermiticity(true);
+      std::vector<Wavefunction> parameters, actions;
+      for (int work = 0; work < solver->n_roots(); work++) {
         parameters.emplace_back(prototype, mpi_comm_compute);
         parameters.back().allocate_buffer();
         actions.emplace_back(prototype, mpi_comm_compute);
         actions.back().allocate_buffer();
         actions.back().settilesize(options.parameter("TILESIZE", std::vector<int>(1, -1)).at(0),
-                              options.parameter("ALPHATILESIZE", std::vector<int>(1, -1)).at(0),
-                              options.parameter("BETATILESIZE", std::vector<int>(1, -1)).at(0));
+                                   options.parameter("ALPHATILESIZE", std::vector<int>(1, -1)).at(0),
+                                   options.parameter("BETATILESIZE", std::vector<int>(1, -1)).at(0));
       }
-      Problem problem(m_hamiltonian);
+      solver->set_max_p(std::min(std::max(options.parameter("PSPACE", 100), static_cast<int>(solver->n_roots())),
+                                 static_cast<int>(parameters.front().size())));
+      if (options.parameter("P_THRESHOLD",double(0))!=0) solver->set_p_threshold(options.parameter("P_THRESHOLD",double(0)));
+      Problem problem(m_hamiltonian, prototype);
       solver->solve(parameters, actions, problem, true);
+      energies = solver->eigenvalues();
     } else {
       auto ham = m_hamiltonian;
       auto wfn = Wavefunction{prototype, mpi_comm_compute};
