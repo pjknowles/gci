@@ -5,6 +5,7 @@ LibraryManager_Append(${PROJECT_NAME}
         gciHProduct.cpp gciHProductSet.cpp gciMixedOperator.cpp gciMixedWavefunction.cpp
         gciVibSpace.cpp gciDavidson.cpp gciPersistentOperator.cpp gciMixedOperatorSecondQuant.cpp gciVibOperator.cpp
         gciUtils.cpp
+        Problem.cpp Problem.h
         PUBLIC_HEADER
         gci.h gciDeterminant.h gciExcitationSet.h gciFile.h gciOptions.h gciOrbitals.h gciOrbitalSpace.h
         gciPrintable.h gciRun.h gciState.h gciString.h gciStringSet.h gciSymmetrySpace.h gciTransitionDensity.h
