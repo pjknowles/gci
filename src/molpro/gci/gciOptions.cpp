@@ -55,10 +55,9 @@ int Options::parameter(const std::string &key, int def) const {
 
 double Options::parameter(const std::string &key, double def) const {
 #ifdef MOLPRO
-  FORTINT r = GetOptionF(key.c_str(), "GCI");
+  FORTDBL r = GetOptionF(key.c_str(), "GCI");
   //  xout << "GetOptionF gives "<<r<<std::endl;
-  if (r != (FORTDBL)-1)
-    return static_cast<double>(r);
+  return static_cast<double>(r);
 #endif
   return parameter(key, std::vector<double>{def})[0];
 }
