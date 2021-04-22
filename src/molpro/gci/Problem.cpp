@@ -1,4 +1,5 @@
 #include "Problem.h"
+#include <molpro/mpi.h>
 
 molpro::gci::Problem::Problem(const molpro::Operator& hamiltonian, const State& prototype)
     : m_hamiltonian(hamiltonian), m_prototype(prototype) {}
@@ -6,6 +7,12 @@ molpro::gci::Problem::Problem(const molpro::Operator& hamiltonian, const State& 
 void molpro::gci::Problem::action(const CVecRef<container_t>& parameters, const VecRef<container_t>& actions) const {
   for (size_t k = 0; k < parameters.size(); k++) {
     const auto& v = parameters[k].get();
+//#ifdef HAVE_MPI_H
+//    auto distribution = v.distr_buffer->distribution();
+//    for (int rank = 0; rank < mpi::size_global(); rank++)
+//      MPI_Bcast((void*)(v.buffer.data() + distribution.range(rank).first),
+//                distribution.range(rank).second - distribution.range(rank).first, MPI_DOUBLE, rank, mpi::comm_global());
+//#endif
     auto& a = actions[k].get();
     a.fill(0);
     a.operatorOnWavefunction(m_hamiltonian, v);
@@ -66,5 +73,11 @@ void molpro::gci::Problem::precondition(const VecRef<container_t>& action, const
     auto alb = a.distr_buffer->local_buffer();
     for (int i = 0; i < alb->size(); i++)
       (*alb)[i] /= ((*dlb)[i] - shift[k] + 1e-15);
+#ifdef HAVE_MPI_H
+    auto distribution = a.distr_buffer->distribution();
+    for (int rank = 0; rank < mpi::size_global(); rank++)
+      MPI_Bcast((void*)(a.buffer.data() + distribution.range(rank).first),
+                distribution.range(rank).second - distribution.range(rank).first, MPI_DOUBLE, rank, mpi::comm_global());
+#endif
   }
 }

@@ -1,17 +1,20 @@
 LibraryManager_Append(${PROJECT_NAME}
         SOURCES
-        gciDeterminant.cpp gciExcitationSet.cpp gciFile.cpp gciOptions.cpp gciOrbitalSpace.cpp gciRun.cpp
-        gciState.cpp gciString.cpp gciStringSet.cpp gciSymmetrySpace.cpp gciTransitionDensity.cpp gciWavefunction.cpp
+        gciDeterminant.cpp gciExcitationSet.cpp gciFile.cpp gciOrbitalSpace.cpp gciRun.cpp
+        gciString.cpp gciStringSet.cpp gciSymmetrySpace.cpp gciTransitionDensity.cpp gciWavefunction.cpp
         gciHProduct.cpp gciHProductSet.cpp gciMixedOperator.cpp gciMixedWavefunction.cpp
         gciVibSpace.cpp gciDavidson.cpp gciPersistentOperator.cpp gciMixedOperatorSecondQuant.cpp gciVibOperator.cpp
-        gciUtils.cpp
+        gciState.cpp gciUtils.cpp
         Problem.cpp Problem.h
-        PUBLIC_HEADER
-        gci.h gciDeterminant.h gciExcitationSet.h gciFile.h gciOptions.h gciOrbitals.h gciOrbitalSpace.h
-        gciPrintable.h gciRun.h gciState.h gciString.h gciStringSet.h gciSymmetrySpace.h gciTransitionDensity.h
-        gciWavefunction.h gciHProduct.h gciHProductSet.h gciMixedOperator.h gciMixedWavefunction.h
+        gciDeterminant.h gciExcitationSet.h gciFile.h gciOptions.h gciOrbitals.h gciOrbitalSpace.h
+        gciPrintable.h gciString.h gciStringSet.h gciSymmetrySpace.h gciTransitionDensity.h
+        gciHProduct.h gciHProductSet.h gciMixedOperator.h gciMixedWavefunction.h
         gciVibSpace.h gciDavidson.h gciPersistentOperator.h gciMixedOperatorSecondQuant.h gciVibOperator.h
-        gciVibExcitation.h gciUtils.h)
+        gciVibExcitation.h gciUtils.h
+        gci.h
+        PUBLIC_HEADER
+        gciState.h gciWavefunction.h gciRun.h
+        )
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_14)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)

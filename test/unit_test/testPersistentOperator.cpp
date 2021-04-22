@@ -4,6 +4,7 @@
 #include <molpro/gci/gciPersistentOperator.h>
 #include <molpro/gci/gciRun.h>
 #include <molpro/gci/gciUtils.h>
+#include <molpro/FCIdump.h>
 
 #include "parallel_utils.h"
 #include <ga.h>

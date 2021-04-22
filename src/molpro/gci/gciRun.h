@@ -1,17 +1,15 @@
 #ifndef GCIRUN_H
 #define GCIRUN_H
 #include <cstdint>
-#include <molpro/FCIdump.h>
-#include <molpro/SMat.h>
 #include <vector>
 
-#include "molpro/gci/gci.h"
-#include "molpro/gci/gciOptions.h"
 #include "molpro/gci/gciState.h"
 #include "molpro/gci/gciWavefunction.h"
 
 namespace molpro {
+class FCIdump;
 namespace gci {
+class Options;
 /*!
  * \brief The Run class encapsulates a complete calculation using gci
  */
