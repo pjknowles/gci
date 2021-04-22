@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <iomanip>
 #include <molpro/Operator.h>
+#include "molpro/gci/gciWavefunction.h"
+#include <molpro/FCIdump.h>
 #include <molpro/gci/wavefunction/WavefunctionHandler.h>
 #include <molpro/linalg/itsolv/ArrayHandlers.h>
 
@@ -10,6 +12,7 @@
 #include "gciRun.h"
 #include <molpro/linalg/itsolv/SolverFactory-implementation.h>
 #include <stdint.h>
+#include "gciOptions.h"
 #ifdef MOLPRO
 #include "cic/ItfFortranInt.h"
 #endif

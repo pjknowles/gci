@@ -1,6 +1,7 @@
 // TODO a cleaner separation of library-internal headers
 #include "molpro/gci/gci.h"
 #include "molpro/gci/gciRun.h"
+#include "molpro/gci/gciWavefunction.h"
 #include <cstring>
 #include <iomanip>
 #include <iostream>

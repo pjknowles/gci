@@ -48,6 +48,7 @@ MixedWavefunction & MixedWavefunction::operator=(const std::map<size_t,double> &
       for (const auto &v : source)
       if (v.first >= start and v.first < start + lb->size())
       (*lb)[v.first - start] = v.second;
+      return *this;
 }
 
 MixedWavefunction::MixedWavefunction(const MixedWavefunction &source, int option) : MixedWavefunction(source) {}
