@@ -10,6 +10,7 @@ cache:
     - Doxyfile
 job:
   image: ${CI_REGISTRY}/molpro/${CI_PROJECT_NAME}
+  tags: knowles-group-pool
   script:
     - TOP=$PWD
     - PROJECT_NAME=gci
