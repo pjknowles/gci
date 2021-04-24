@@ -38,7 +38,7 @@ public:
   int m_parallel_size;
   int m_parallel_rank;
   molpro::vector<double> buffer; ///< buffer to hold coefficients describing the object
-  std::shared_ptr<molpro::linalg::array::DistrArrayMPI3> distr_buffer; // TODO should really be unique_ptr but then we'd need to write an explicit operator=()
+  std::unique_ptr<molpro::linalg::array::DistrArrayMPI3> distr_buffer;
 
 protected:
   size_t dimension; ///< the size of the space
@@ -72,6 +72,7 @@ public:
   std::vector<StringSet> alphaStrings; ///< The alpha-spin strings defining the CI basis
   std::vector<StringSet> betaStrings;  ///< The beta-spin strings defining the CI basis
 
+  Wavefunction &operator=(const Wavefunction& source);
   Wavefunction &operator=(const std::map<size_t, double> &source);
   void allocate_buffer();                                                     ///< allocate buffer to full size
   size_t size() const { return m_sparse ? buffer_sparse.size() : dimension; } ///< the size of the space

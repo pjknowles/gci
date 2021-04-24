@@ -54,18 +54,22 @@ Wavefunction::Wavefunction(const State &state, MPI_Comm communicator)
 }
 
 Wavefunction::Wavefunction(const Wavefunction &source, int option, MPI_Comm communicator)
-    : m_sparse(source.m_sparse), m_communicator(communicator), m_parallel_rank(-1), m_parallel_size(0),
-      dimension(source.dimension) {
-  *this = source;
+    : State(source), m_properties(source.m_properties), buffer_sparse(source.buffer_sparse), m_sparse(source.m_sparse),
+      m_communicator(source.m_communicator), m_parallel_size(source.m_parallel_size),
+      m_parallel_rank(source.m_parallel_rank), buffer(source.buffer), dimension(source.dimension),
+      _blockOffset(source._blockOffset), m_tilesize(source.m_tilesize), m_alphatilesize(source.m_alphatilesize),
+      m_betatilesize(source.m_betatilesize), alphaStrings(source.alphaStrings), betaStrings(source.betaStrings) {
+  //  *this = source;
   if (!buffer.empty()) {
     int ranks;
-    MPI_Comm_size(m_communicator,&ranks);
-    auto distribution = molpro::linalg::array::util::make_distribution_spread_remainder<DistrArrayMPI3::index_type>(dimension,ranks);
+    MPI_Comm_size(m_communicator, &ranks);
+    auto distribution =
+        molpro::linalg::array::util::make_distribution_spread_remainder<DistrArrayMPI3::index_type>(dimension, ranks);
     DistrArrayMPI3::index_type start, end;
     std::tie(start, end) = distribution.range(m_parallel_rank);
-    distr_buffer.reset(new DistrArrayMPI3(std::make_unique<molpro::linalg::array::util::Distribution<DistrArrayMPI3::index_type>>(distribution),
-                                          m_communicator,
-                                          molpro::linalg::array::span::Span<double>(&buffer[start], end - start)));
+    distr_buffer.reset(new DistrArrayMPI3(
+        std::make_unique<molpro::linalg::array::util::Distribution<DistrArrayMPI3::index_type>>(distribution),
+        m_communicator, molpro::linalg::array::span::Span<double>(&buffer[start], end - start)));
   }
   if (m_communicator == MPI_COMM_NULL)
     m_communicator = source.m_communicator;
@@ -95,7 +99,7 @@ void Wavefunction::buildStrings() {
   profiler->stop("buildStrings");
 }
 
-Wavefunction& Wavefunction::operator=( const std::map<size_t, double> &source) {
+Wavefunction &Wavefunction::operator=(const std::map<size_t, double> &source) {
   std::fill(buffer.begin(), buffer.end(), 0);
   for (const auto &s : source)
     *(buffer.begin() + s.first) = s.second;
@@ -108,16 +112,16 @@ void Wavefunction::allocate_buffer() {
   else {
     buffer.resize(dimension, (double)0);
     int ranks;
-    MPI_Comm_size(m_communicator,&ranks);
-    auto distribution = molpro::linalg::array::util::make_distribution_spread_remainder<DistrArrayMPI3::index_type>(dimension,ranks);
+    MPI_Comm_size(m_communicator, &ranks);
+    auto distribution =
+        molpro::linalg::array::util::make_distribution_spread_remainder<DistrArrayMPI3::index_type>(dimension, ranks);
     DistrArrayMPI3::index_type start, end;
     std::tie(start, end) = distribution.range(m_parallel_rank);
-    distr_buffer.reset(new DistrArrayMPI3(std::make_unique<molpro::linalg::array::util::Distribution<DistrArrayMPI3::index_type>>(
-        distribution),
-                                          m_communicator,
-                                          molpro::linalg::array::span::Span<double>(&buffer[start], end - start)));
-//    std::tie(start, end) = distr_buffer.distribution().range(m_parallel_rank);
-//    distr_buffer.allocate_buffer({&buffer[start], end - start});
+    distr_buffer.reset(new DistrArrayMPI3(
+        std::make_unique<molpro::linalg::array::util::Distribution<DistrArrayMPI3::index_type>>(distribution),
+        m_communicator, molpro::linalg::array::span::Span<double>(&buffer[start], end - start)));
+    //    std::tie(start, end) = distr_buffer.distribution().range(m_parallel_rank);
+    //    distr_buffer.allocate_buffer({&buffer[start], end - start});
   }
 }
 
@@ -278,14 +282,18 @@ Wavefunction &Wavefunction::operator*=(const double &value) {
   return *this;
 }
 
-// Wavefunction& Wavefunction::operator = ( const Wavefunction &other)
-//{
-//    if (this != &other) {
-//    if (! compatible(other)) throw std::domain_error("attempt to copy between incompatible Wavefunction objects");
-//        *this = other;
-//    }
-//    return *this;
-//}
+Wavefunction &Wavefunction::operator=(const Wavefunction &other) {
+  if (this != &other) {
+    if (dimension != other.dimension)
+      throw std::domain_error("attempt to copy between incompatible Wavefunction objects");
+    if (not other.buffer.empty()) {
+      if (buffer.empty())
+        allocate_buffer();
+      std::copy(other.buffer.begin(), other.buffer.end(), buffer.begin());
+    }
+  }
+  return *this;
+}
 
 Wavefunction &Wavefunction::operator+=(const Wavefunction &other) {
   if (!compatible(other))
@@ -497,6 +505,10 @@ std::string Wavefunction::str(int verbosity, unsigned int columns) const {
 }
 
 bool Wavefunction::compatible(const Wavefunction &other) const {
+  if (other.buffer.empty()) {
+    std::cout << "Wavefunction::compatible dimension=" << dimension << " " << other.dimension << std::endl;
+    std::cout << "Wavefunction::compatible buffer.size()=" << buffer.size() << " " << other.buffer.size() << std::endl;
+  }
   return dimension == other.dimension && buffer.size() == other.buffer.size();
 }
 
