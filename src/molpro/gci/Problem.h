@@ -1,7 +1,7 @@
 #ifndef GCI_SRC_MOLPRO_GCI_PROBLEM_H_
 #define GCI_SRC_MOLPRO_GCI_PROBLEM_H_
 #include "gciWavefunction.h"
-#include <molpro/Operator.h>
+#include <molpro/symmetry_matrix/Operator.h>
 #include <molpro/linalg/itsolv/IterativeSolver.h>
 
 namespace molpro::gci {

@@ -4,7 +4,7 @@
 #include "molpro/gci/gciPrintable.h"
 #include <iostream>
 #include <memory>
-#include <molpro/SMat.h>
+#include <molpro/symmetry_matrix/SMat.h>
 #include <numeric>
 
 namespace molpro {

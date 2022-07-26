@@ -56,24 +56,17 @@ else ()
     set(LINEARALGEBRA_ARRAY_HDF5 OFF CACHE BOOL "")
 endif ()
 
-set(SYMMETRY_MATRIX_DOUBLE ON CACHE BOOL "Whether to build and test symmetry_matrix with double data type")
-set(SYMMETRY_MATRIX_COMPLEXDOUBLE OFF CACHE BOOL "Whether to build and test symmetry_matrix with complex-double data type")
-set(SYMMETRY_MATRIX_FLOAT OFF CACHE BOOL "Whether to build and test symmetry_matrix with float data type")
 DependencyManager_Populate(FCIdump)
 set(LINEARALGEBRA_ARRAY_GA ${GCI_SHAREDCOUNTER_GA})
 set(LINEARALGEBRA_ARRAY_HDF5 ${GCI_HDF5})
-DependencyManager_Populate(LinearAlgebra)
-DependencyManager_Populate(memory)
+DependencyManager_Populate(iterative-solver)
 DependencyManager_Populate(molpro-plugin)
 DependencyManager_Populate(Profiler)
-DependencyManager_Populate(symmetry_matrix)
 DependencyManager_Populate(utilities)
 target_link_libraries(${PROJECT_NAME} PUBLIC
         molpro::FCIdump
-        molpro::LinearAlgebra
-        molpro::memory
+        molpro::iterative-solver
         molpro::molpro-plugin
         molpro::Profiler
-        molpro::symmetry_matrix
         molpro::utilities
         )

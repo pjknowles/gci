@@ -1,7 +1,7 @@
 #ifndef GCI_GCIDAVIDSON_H
 #define GCI_GCIDAVIDSON_H
 
-#include <molpro/Operator.h>
+#include <molpro/symmetry_matrix/Operator.h>
 #include <molpro/linalg/itsolv/IterativeSolver.h>
 #include <molpro/linalg/itsolv/SolverFactory.h>
 #include <vector>

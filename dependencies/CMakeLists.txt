@@ -7,13 +7,11 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(dependency_manager)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" PARENT_SCOPE)
 
-DependencyManager_Declare(FCIdump https://gitlab.com/molpro/fcidump.git)
-DependencyManager_Declare(LinearAlgebra https://gitlab+deploy-token-186248:BVoGyrUG_o7zpBfCcsLD@gitlab.com/molpro/linearalgebra.git)
-DependencyManager_Declare(memory git@github.com:molpro/memory)
-DependencyManager_Declare(molpro-plugin https://gitlab.com/molpro/molpro-plugin.git)
-DependencyManager_Declare(Profiler https://gitlab+deploy-token-74792:Bj6FL_cWqz_8y2PNDycx@gitlab.com/molpro/profiler.git)
-DependencyManager_Declare(symmetry_matrix https://gitlab+deploy-token-74793:dLXMspxsDJozbVw7VBRF@gitlab.com/molpro/symmetry_matrix.git)
-DependencyManager_Declare(utilities https://gitlab+deploy-token-181030:whWoM4qkenzjGjWsFTxj@gitlab.com/molpro/utilities.git)
+DependencyManager_Declare(FCIdump https://github.com/molpro/fcidump.git)
+DependencyManager_Declare(iterative-solver https://github.com/molpro/iterative-solver.git)
+DependencyManager_Declare(molpro-plugin https://github.com/molpro/molpro-plugin.git)
+DependencyManager_Declare(Profiler https://github.com/molpro/profiler.git)
+DependencyManager_Declare(utilities https://github.com/molpro/utilities.git)
 
 if (GCI_ARRAY_GA OR GCI_SHAREDCOUNTER_GA OR  ${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
     message ("Finding GA")
@@ -28,6 +26,13 @@ if (NOT TARGET ga::ga)
             string(STRIP "${ga-${f}}" ga-${f})
             separate_arguments(ga-${f} NATIVE_COMMAND "${ga-${f}}")
         endforeach ()
+        message(STATUS "initial ga-libs ${ga-libs}")
+        string(FIND "${ga-libs}" "-framework;Accelerate" ga-accelerate)
+        if (NOT ga-accelerate EQUAL -1)
+            string(REPLACE ";-framework;Accelerate" "" ga-libs "${ga-libs}")
+            string(APPEND ga-ldflags ";-framework;Accelerate")
+        endif ()
+        message(STATUS "modified ga-libs ${ga-libs}")
         add_library(ga::ga INTERFACE IMPORTED GLOBAL)
         target_link_libraries(ga::ga INTERFACE "${ga-libs};${ga-network_libs}")
         target_link_options(ga::ga INTERFACE "${ga-ldflags};${ga-network_ldflags}")
@@ -53,7 +58,7 @@ if (NOT TARGET ga::ga)
                 FILE gaTargets.cmake
                 NAMESPACE ga::
                 DESTINATION lib/cmake/ga)
-    endif (ga-config)
+    endif ()
 endif ()
 endif()
 
@@ -61,5 +66,5 @@ set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
         googletest
         GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG "release-1.8.1"
+        GIT_TAG "release-1.12.1"
 )

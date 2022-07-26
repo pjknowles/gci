@@ -13,7 +13,7 @@
 #include "molpro/gci/gciPrintable.h"
 #include "molpro/gci/gciState.h"
 #include "molpro/gci/gciStringSet.h"
-#include <molpro/SMat.h>
+#include <molpro/symmetry_matrix/SMat.h>
 #include <molpro/linalg/array/DistrArrayMPI3.h>
 #include <molpro/memory.h>
 

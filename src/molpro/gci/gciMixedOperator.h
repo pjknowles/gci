@@ -2,7 +2,7 @@
 #define GCI_GCIMIXEDOPERATOR_H
 
 #include <molpro/FCIdump.h>
-#include <molpro/Operator.h>
+#include <molpro/symmetry_matrix/Operator.h>
 #include <vector>
 
 #include "gciHProduct.h"

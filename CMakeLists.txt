@@ -4,12 +4,13 @@ project(gci CXX)
 include(FetchContent)
 FetchContent_Declare(
         LibraryManager
-        GIT_REPOSITORY https://gitlab+deploy-token-178345:RQZa2rmdwnV7Hdwg8XEq@gitlab.com/molpro/LibraryManager.git
-        GIT_TAG 0.7.0
+        GIT_REPOSITORY https://github.com/molpro/library-manager
+        GIT_TAG 0.11.3
 )
 FetchContent_MakeAvailable(LibraryManager)
 set(MPI ON CACHE BOOL "Whether to build with MPI" FORCE)
-LibraryManager_Project(MPI_OPTION FORTRAN_OPTION)
+set(FORTRAN OFF)
+LibraryManager_Project(MPI_OPTION)
 
 ########## Options ##########
 option(GCI_TEST "Whether to force tests to be built" OFF)
@@ -39,6 +40,8 @@ DependencyManagerDocs_Add(${PROJECT_NAME}
         # FILES README.md
         DOC_URL "https://molpro.gitlab.io/gci/${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}"
         # projects whose documentation has to be built before the current project.
-        DEPENDS FCIdump LinearAlgebra memory molpro-plugin Profiler symmetry_matrix utilities
+        DEPENDS FCIdump iterative-solver molpro-plugin Profiler
+#        symmetry_matrix
+        utilities
         )
 

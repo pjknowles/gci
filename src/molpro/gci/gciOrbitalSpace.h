@@ -3,7 +3,7 @@
 #include "gciOptions.h"
 #include "gciSymmetrySpace.h"
 #include <map>
-#include <molpro/Operator.h>
+#include <molpro/symmetry_matrix/Operator.h>
 
 namespace molpro {
 namespace gci {

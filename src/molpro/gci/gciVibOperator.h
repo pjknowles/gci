@@ -1,7 +1,7 @@
 #ifndef GCI_GCIVIBOPERATOR_H
 #define GCI_GCIVIBOPERATOR_H
 
-#include <molpro/Operator.h>
+#include <molpro/symmetry_matrix/Operator.h>
 
 #include "molpro/gci/gciHProduct.h"
 #include "molpro/gci/gciVibExcitation.h"

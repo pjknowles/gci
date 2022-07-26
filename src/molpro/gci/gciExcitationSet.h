@@ -1,7 +1,7 @@
 #ifndef GCIEXCITATIONSET_H
 #define GCIEXCITATIONSET_H
 #include "molpro/gci/gciString.h"
-#include <molpro/SMat.h>
+#include <molpro/symmetry_matrix/SMat.h>
 #include <vector>
 
 namespace molpro {

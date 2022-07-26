@@ -7,7 +7,7 @@
 #define hid_t int
 #endif // HAVE_HDF5
 #include <memory>
-#include <molpro/Operator.h>
+#include <molpro/symmetry_matrix/Operator.h>
 
 namespace molpro {
 namespace gci {

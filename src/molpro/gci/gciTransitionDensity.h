@@ -1,7 +1,7 @@
 #ifndef GCITRANSITIONDENSITY_H
 #define GCITRANSITIONDENSITY_H
-#include <molpro/Operator.h>
-#include <molpro/SMat.h>
+#include <molpro/symmetry_matrix/Operator.h>
+#include <molpro/symmetry_matrix/SMat.h>
 #include <molpro/memory.h>
 #include <vector>
 
