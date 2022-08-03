@@ -10,7 +10,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" PARENT_SCOPE)
 DependencyManager_Declare(FCIdump https://github.com/molpro/fcidump.git)
 DependencyManager_Declare(iterative-solver https://github.com/molpro/iterative-solver.git)
 DependencyManager_Declare(molpro-plugin https://github.com/molpro/molpro-plugin.git)
-DependencyManager_Declare(Profiler https://github.com/molpro/profiler.git)
+DependencyManager_Declare(profiler https://github.com/molpro/profiler.git)
 DependencyManager_Declare(utilities https://github.com/molpro/utilities.git)
 
 if (GCI_ARRAY_GA OR GCI_SHAREDCOUNTER_GA OR  ${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})

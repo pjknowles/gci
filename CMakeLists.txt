@@ -18,7 +18,7 @@ option(GCI_SHAREDCOUNTER_MPI3 "Use MPI3 RMA implementation of SharedCounter" ON)
 option(GCI_SHAREDCOUNTER_GA "Use Global Arrays implementation of SharedCounter" OFF)
 option(GCI_ARRAY_MPI3 "Use MPI3 RMA implementation of Array" ON)
 option(GCI_ARRAY_GA "Use Global Arrays implementation of Array" OFF)
-option(GCI_HDF5 "Build using parallel HDF5 (some features missing if off)" ON)
+option(GCI_HDF5 "Build using parallel HDF5 (some features missing if off)" OFF)
 
 ########## Dependencies ##########
 
@@ -38,10 +38,8 @@ endif ()
 include(DependencyManagerDocs)
 DependencyManagerDocs_Add(${PROJECT_NAME}
         # FILES README.md
-        DOC_URL "https://molpro.gitlab.io/gci/${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}"
+        DOC_URL "https://molpro.github.io/gci"
         # projects whose documentation has to be built before the current project.
-        DEPENDS FCIdump iterative-solver molpro-plugin Profiler
-#        symmetry_matrix
-        utilities
+        DEPENDS FCIdump iterative-solver molpro-plugin profiler utilities
         )
 
