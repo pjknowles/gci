@@ -40,6 +40,6 @@ DependencyManagerDocs_Add(${PROJECT_NAME}
         # FILES README.md
         DOC_URL "https://molpro.github.io/gci"
         # projects whose documentation has to be built before the current project.
-        DEPENDS FCIdump iterative-solver molpro-plugin profiler utilities
+        DEPENDS fcidump iterative-solver molpro-plugin profiler utilities
         )
 

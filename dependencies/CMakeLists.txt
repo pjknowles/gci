@@ -7,7 +7,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(dependency_manager)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" PARENT_SCOPE)
 
-DependencyManager_Declare(FCIdump https://github.com/molpro/fcidump.git)
+DependencyManager_Declare(fcidump https://github.com/molpro/fcidump.git)
 DependencyManager_Declare(iterative-solver https://github.com/molpro/iterative-solver.git)
 DependencyManager_Declare(molpro-plugin https://github.com/molpro/molpro-plugin.git)
 DependencyManager_Declare(profiler https://github.com/molpro/profiler.git)
