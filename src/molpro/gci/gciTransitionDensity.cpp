@@ -28,7 +28,7 @@ TransitionDensity::TransitionDensity(const Wavefunction &w, const StringSet::con
                             ((w.alphaStrings[0].proto.nelec - alphaStringsBegin->nelec + w.betaStrings[0].proto.nelec -
                               betaStringsBegin->nelec) %
                                      2
-                                 ? w.orbitalSpace->operator[](w.symmetry ^ alphaStringsBegin->computed_symmetry() ^
+                                 ? w.orbitalSpace->at(w.symmetry ^ alphaStringsBegin->computed_symmetry() ^
                                                               betaStringsBegin->computed_symmetry())
                                  : w.orbitalSpace->total(w.symmetry ^ alphaStringsBegin->computed_symmetry() ^
                                                              betaStringsBegin->computed_symmetry(),

@@ -664,8 +664,8 @@ void Wavefunction::operatorOnWavefunction(
         unsigned int symexc = w.symmetry ^ syma ^ symb;
         //        cout << "syma="<<syma<<" symb="<<symb<<" symexc="<<symexc<<std::endl;
         if (m_tilesize > 0) {
-          nsaaMax = m_tilesize / double(betaStrings[symb].size()) + 1;
-          nsbbMax = m_tilesize / double(alphaStrings[symb].size()) + 1;
+          nsaaMax = size_t(m_tilesize) / std::max(size_t(1),betaStrings[symb].size()) + 1;
+          nsbbMax = size_t(m_tilesize) / std::max(size_t(1),alphaStrings[symb].size()) + 1;
         }
         if (m_alphatilesize > 0 && m_betatilesize > 0) {
           nsaaMax = m_alphatilesize;
