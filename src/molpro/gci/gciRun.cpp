@@ -590,7 +590,7 @@ std::vector<double> Run::run() {
 }
 
 Run::~Run() {
-  std::cout << *profiler << std::endl;
+  cout << *profiler << std::endl;
   profiler.reset();
   _nextval_counter.clear();
 }
